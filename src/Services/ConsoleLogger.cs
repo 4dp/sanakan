@@ -1,4 +1,6 @@
-﻿using Shinden.Logger;
+﻿#pragma warning disable 1591
+
+using Shinden.Logger;
 using System;
 
 namespace Sanakan.Services

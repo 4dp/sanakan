@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿#pragma warning disable 1591
+
+using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Sanakan.Config;
@@ -14,10 +16,10 @@ namespace Sanakan
 {
     class Sanakan
     {
+        private SynchronizedExecutor _executor;
         private ShindenClient _shindenClient;
         private DiscordSocketClient _client;
         private CommandHandler _handler;
-        private IExecutor _executor;
         private IConfig _config;
         private ILogger _logger;
 
@@ -61,7 +63,8 @@ namespace Sanakan
             await _client.StartAsync();
 
             _executor = new SynchronizedExecutor();
-            _shindenClient = new ShindenClient(new Auth(tmpCnf.ShindenToken, tmpCnf.ShindenUserAgent, "X-Sinku"), _logger);
+            _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token, 
+                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
 
             var services = new ServiceCollection()
                 .AddSingleton(_shindenClient)
@@ -71,6 +74,8 @@ namespace Sanakan
                 .AddSingleton(_client)
                 .BuildServiceProvider();
 
+            _executor.Initialize(services);
+            
             _handler = new CommandHandler(services, _client, _config, _logger, _executor);
             await _handler.InitializeAsync();
 

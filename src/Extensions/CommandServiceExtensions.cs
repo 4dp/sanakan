@@ -1,4 +1,6 @@
-﻿using Discord.Commands;
+﻿#pragma warning disable 1591
+
+using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
