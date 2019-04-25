@@ -19,6 +19,7 @@ namespace Sanakan.Services.Session
         private IServiceProvider _provider;
         private IExecutor _executor;
         private ILogger _logger;
+        private Timer _timer;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private List<ISession> _sessions = new List<ISession>();
@@ -34,6 +35,14 @@ namespace Sanakan.Services.Session
         {
             _provider = provider;
 
+            _timer = new Timer(async _ =>
+            {
+                await AutoValidate();
+            },
+            null,
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(30));
+
             _client.MessageReceived += HandleMessageAsync;
             _client.ReactionAdded += HandleReactionAddedAsync;
             _client.ReactionRemoved += HandleReactionRemovedAsync;
@@ -48,8 +57,11 @@ namespace Sanakan.Services.Session
 
             try
             {
-                session.MarkAsAdded();
+                if (_sessions.Count < 1)
+                    ToggleAutoValidation(true);
+
                 _sessions.Add(session);
+                session.MarkAsAdded();
             }
             finally
             {
@@ -179,5 +191,34 @@ namespace Sanakan.Services.Session
             await RunSessions(userSessions, new SessionContext(channel, thisUser, thisMessage, _client, reaction, false)).ConfigureAwait(false);
         }
 
+        private void ToggleAutoValidation(bool on)
+        {
+            if (on)
+                _timer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
+            else
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        private async Task AutoValidate()
+        {
+            if (_sessions.Count < 1)
+            {
+                ToggleAutoValidation(false);
+                return;
+            }
+
+            try
+            {
+                for (int i = _sessions.Count; i > 0; i--)
+                {
+                    if (!_sessions[i - 1].IsValid())
+                        await DisposeAsync(_sessions[i - 1]);
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.Log($"Session: autovalidate error {ex}");
+            }
+        }
     }
 }

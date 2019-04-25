@@ -60,6 +60,7 @@ namespace Sanakan.Modules
 
             var session = new Session(Context.User)
             {
+                TimeoutMs = 40000,
                 Id = "Inna sesja2",
                 Event = ExecuteOn.Message,
                 OnExecute = async (context, curr) =>

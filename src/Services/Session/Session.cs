@@ -55,14 +55,16 @@ namespace Sanakan.Services.Session
             if (!_added)
             {
                 _added = true;
-                _timer = Stopwatch.StartNew();
+
+                if (TimeoutMs > 0)
+                    _timer = Stopwatch.StartNew();
             }
         }
 
         public bool IsValid()
         {
             if (_timer == null) return true;
-            return _timer.ElapsedMilliseconds > TimeoutMs;
+            return _timer.ElapsedMilliseconds <= TimeoutMs;
         }
 
         public async Task DisposeAsync()
