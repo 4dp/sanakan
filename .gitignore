@@ -1,0 +1,14 @@
+.vs
+.vscode
+*.sln
+SanakanTests/bin
+SanakanTests/obj
+SanakanTests/Properties
+bin
+obj
+GOut
+Properties
+nohup.out
+Config.json
+ConfigDebug.json
+/UnitTestProject1/obj
