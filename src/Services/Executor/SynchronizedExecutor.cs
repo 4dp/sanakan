@@ -30,11 +30,13 @@ namespace Sanakan.Services.Executor
             return false;
         }
 
-        private void RunWorker() => _ = Task.Run(async () => await ProcessCommandsAsync());
+        public void RunWorker() => _ = Task.Run(async () => await ProcessCommandsAsync());
 
         private async Task ProcessCommandsAsync()
         {
-            await _semaphore.WaitAsync(0);
+            if (!await _semaphore.WaitAsync(0))
+                return;
+
             try
             {
                 while (_queue.Count > 0)

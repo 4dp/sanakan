@@ -75,7 +75,6 @@ namespace Sanakan
                 .BuildServiceProvider();
 
             _executor.Initialize(services);
-            
             _handler = new CommandHandler(services, _client, _config, _logger, _executor);
             await _handler.InitializeAsync();
 
