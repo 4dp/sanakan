@@ -7,6 +7,7 @@ using Sanakan.Config;
 using Sanakan.Services;
 using Sanakan.Services.Commands;
 using Sanakan.Services.Executor;
+using Sanakan.Services.Session;
 using Shinden;
 using Shinden.Logger;
 using System;
@@ -19,6 +20,7 @@ namespace Sanakan
         private SynchronizedExecutor _executor;
         private ShindenClient _shindenClient;
         private DiscordSocketClient _client;
+        private SessionManager _sessions;
         private CommandHandler _handler;
         private IConfig _config;
         private ILogger _logger;
@@ -63,18 +65,21 @@ namespace Sanakan
             await _client.StartAsync();
 
             _executor = new SynchronizedExecutor();
+            _sessions = new SessionManager(_client, _executor, _logger);
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token, 
                 tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
 
             var services = new ServiceCollection()
                 .AddSingleton(_shindenClient)
                 .AddSingleton(_executor)
+                .AddSingleton(_sessions)
                 .AddSingleton(_config)
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .BuildServiceProvider();
 
             _executor.Initialize(services);
+            _sessions.Initialize(services);
             _handler = new CommandHandler(services, _client, _config, _logger, _executor);
             await _handler.InitializeAsync();
 

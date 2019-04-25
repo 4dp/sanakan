@@ -8,7 +8,6 @@ using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Shinden.Logger;
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -63,16 +62,8 @@ namespace Sanakan.Services.Commands
 
                         default:
                         case RunMode.Sync:
-                            var timer = Stopwatch.StartNew();
-                            while (!_executor.TryAdd(res.Command))
-                            {
-                                await Task.Delay(10);
-                                if (timer.ElapsedMilliseconds > 1000)
-                                {
+                            if (!_executor.TryAdd(res.Command, TimeSpan.FromSeconds(1)))
                                     await context.Channel.SendMessageAsync("", embed: "Przekroczono czas oczekiwania!".ToEmbedMessage(EMType.Error).Build());
-                                    break;
-                                }
-                            }
                             break;
                     }
                 }

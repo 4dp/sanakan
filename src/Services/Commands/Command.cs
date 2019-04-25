@@ -20,7 +20,7 @@ namespace Sanakan.Services.Commands
         public ParseResult Result { get; private set; }
         public ICommandContext Context { get; private set; }
 
-        public async Task<IResult> ExecuteAsync(IServiceProvider provider)
-            => await Match.ExecuteAsync(Context, Result, provider).ConfigureAwait(false);
+        public async Task<bool> ExecuteAsync(IServiceProvider provider)
+            => (await Match.ExecuteAsync(Context, Result, provider).ConfigureAwait(false)).IsSuccess;
     }
 }

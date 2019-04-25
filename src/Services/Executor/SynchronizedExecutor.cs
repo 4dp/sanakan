@@ -20,9 +20,9 @@ namespace Sanakan.Services.Executor
             RunWorker();
         }
 
-        public bool TryAdd(IExecutable task) 
+        public bool TryAdd(IExecutable task, TimeSpan timeout) 
         {
-            if (_queue.TryAdd(task))
+            if (_queue.TryAdd(task, timeout))
             {
                 RunWorker();
                 return true;
@@ -41,7 +41,7 @@ namespace Sanakan.Services.Executor
             {
                 while (_queue.Count > 0)
                 {
-                    if (_queue.TryTake(out var cmd))
+                    if (_queue.TryTake(out var cmd, 50))
                     {
                         await cmd.ExecuteAsync(_provider);
                     }
