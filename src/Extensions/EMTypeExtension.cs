@@ -9,13 +9,8 @@ namespace Sanakan.Extensions
         Neutral, Warning, Success, Error, Info, Bot
     }
 
-    public static class EmbedBuilderExtension
+    public static class EMTypeExtension
     {
-        public static EmbedBuilder ToEmbedMessage(this string message, EMType type = EMType.Neutral, bool icon = false)
-        {
-            return new EmbedBuilder().WithColor(type.Color()).WithDescription($"{type.Emoji(!icon)}{message}");
-        }
-
         public static string Emoji(this EMType type, bool hide = false)
         {
             if (hide) return "";
