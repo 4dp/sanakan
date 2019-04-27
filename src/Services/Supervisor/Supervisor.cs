@@ -1,12 +1,14 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Extensions;
+using Shinden.Logger;
 
 namespace Sanakan.Services.Supervisor
 {
@@ -20,17 +22,38 @@ namespace Sanakan.Services.Supervisor
         private const int COMMAND_MOD = 2;
         private const int UNCONNECTED_MOD = -2;
 
-        private Dictionary<ulong, SupervisorEntity> _mem;
+        private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private Dictionary<ulong, Dictionary<ulong, SupervisorEntity>> _guilds;
 
-        private DiscordSocketClient _client { get; set; }
-        private IConfig _config { get; set; }
+        private DiscordSocketClient _client;
+        private ILogger _logger;
+        private IConfig _config;
+        private Timer _timer;
 
-        public Supervisor(DiscordSocketClient client, IConfig config)
+        public Supervisor(DiscordSocketClient client, IConfig config, ILogger logger)
         {
             _client = client;
             _config = config;
+            _logger = logger;
 
-            _mem = new Dictionary<ulong, SupervisorEntity>();
+            _guilds = new Dictionary<ulong, Dictionary<ulong, SupervisorEntity>>();
+
+            _timer = new Timer(async _ =>
+            {
+                await _semaphore.WaitAsync();
+
+                try
+                {
+                    AutoValidate();
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            },
+            null,
+            TimeSpan.FromMinutes(5),
+            TimeSpan.FromMinutes(5));
 
             _client.MessageReceived += HandleMessageAsync;
         }
@@ -47,14 +70,40 @@ namespace Sanakan.Services.Supervisor
             var user = msg.Author as SocketGuildUser;
             if (user == null) return;
 
-            var messageContent = GetMessageContent(msg);
-            if (!_mem.Any(x => x.Key == user.Id))
+            _ = Task.Run(async () => 
             {
-                _mem.Add(user.Id, new SupervisorEntity(messageContent));
+                await _semaphore.WaitAsync();
+
+                try
+                {
+                    await Analize(user, msg);
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            });
+
+            await Task.CompletedTask;
+        }
+
+        private async Task Analize(SocketGuildUser user, SocketUserMessage message)
+        {
+            if (!_guilds.Any(x => x.Key == user.Guild.Id))
+            {
+                _guilds.Add(user.Guild.Id, new Dictionary<ulong, SupervisorEntity>());
                 return;
             }
 
-            var susspect = _mem[user.Id];
+            var guild = _guilds[user.Guild.Id];
+            var messageContent = GetMessageContent(message);
+            if (!guild.Any(x => x.Key == user.Id))
+            {
+                guild.Add(user.Id, new SupervisorEntity(messageContent));
+                return;
+            }
+
+            var susspect = guild[user.Id];
             if (!susspect.IsValid())
             {
                 susspect = new SupervisorEntity(messageContent);
@@ -72,7 +121,7 @@ namespace Sanakan.Services.Supervisor
             switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), true))
             {
                 case Action.Warn:
-                    await msg.Channel.SendMessageAsync("", 
+                    await message.Channel.SendMessageAsync("",
                         embed: $"{user.Mention} zaraz przekroczysz granicę!".ToEmbedMessage(EMType.Bot).Build());
                     break;
 
@@ -129,6 +178,34 @@ namespace Sanakan.Services.Supervisor
                 content = message?.Attachments?.FirstOrDefault()?.Filename ?? "embed";
 
             return content;
+        }
+
+        private void AutoValidate()
+        {
+            try
+            {
+                var toClean = new Dictionary<ulong, List<ulong>>(); 
+                foreach (var guild in _guilds)
+                {
+                    var usrs = new List<ulong>();
+                    foreach (var susspect in guild.Value)
+                    {
+                        if (!susspect.Value.IsValid())
+                            usrs.Add(susspect.Key);
+                    }
+                    toClean.Add(guild.Key, usrs);
+                }
+
+                foreach(var guild in toClean)
+                {
+                    foreach(var uId in guild.Value)
+                        _guilds[guild.Key][uId] = new SupervisorEntity("c");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"Supervisor: autovalidate error {ex}");
+            }
         }
     }
 }

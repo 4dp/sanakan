@@ -8,6 +8,7 @@ using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Shinden.Logger;
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -21,20 +22,24 @@ namespace Sanakan.Services.Commands
         private IExecutor _executor;
         private ILogger _logger;
         private IConfig _config;
+        private Helper _helper;
 
-        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, IConfig config, ILogger logger, IExecutor executor)
+        public CommandHandler(DiscordSocketClient client, IConfig config, ILogger logger, IExecutor executor)
         {
             _client = client;
             _config = config;
             _logger = logger;
             _executor = executor;
-            _provider = provider;
             _cmd = new CommandService();
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(IServiceProvider provider, Helper helper)
         {
-            await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            _helper = helper;
+            _provider = provider;
+
+            _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));
 
             _client.MessageReceived += HandleCommandAsync;
         }
@@ -77,7 +82,9 @@ namespace Sanakan.Services.Commands
 
                         case CommandError.ParseFailed:
                         case CommandError.BadArgCount:
-                            await context.Channel.SendMessageAsync($"Help need!");
+                            var cmd = _cmd.Search(context, argPos);
+                            if (cmd.Commands.Count > 0)
+                                await context.Channel.SendMessageAsync(_helper.GetCommandInfo(cmd.Commands.First().Command));
                             break;
 
                         case CommandError.UnmetPrecondition:

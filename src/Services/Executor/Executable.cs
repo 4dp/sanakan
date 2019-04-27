@@ -14,6 +14,7 @@ namespace Sanakan.Services.Executor
         public async Task<bool> ExecuteAsync(IServiceProvider provider)
         {
             _task.Start();
+
             await Task.CompletedTask;
 
             return _task.Result;

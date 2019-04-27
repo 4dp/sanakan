@@ -27,16 +27,38 @@ namespace Sanakan
         private Daemonizer _daemon;
         private IConfig _config;
         private ILogger _logger;
+        private Helper _helper;
 
         public static void Main() => new Sanakan().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
         {
+            LoadConfig();
+            CreateModules();
+            AddSigTermHandler();
+
+            var tmpCnf = _config.Get();
+            await _client.LoginAsync(TokenType.Bot, tmpCnf.BotToken);
+            await _client.SetGameAsync(tmpCnf.Prefix + "pomoc");
+            await _client.StartAsync();
+
+            var services = BuildProvider();
+
+            _executor.Initialize(services);
+            _sessions.Initialize(services);
+            await _handler.InitializeAsync(services, _helper);
+
+            await Task.Delay(-1);
+        }
+
+        private void CreateModules()
+        {
             _logger = new ConsoleLogger();
+
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 AlwaysDownloadUsers = true,
-                MessageCacheSize = 250,
+                MessageCacheSize = 200,
             });
 
             _client.Log += log =>
@@ -45,12 +67,29 @@ namespace Sanakan
                 return Task.CompletedTask;
             };
 
+            _helper = new Helper(_config);
+            _executor = new SynchronizedExecutor();
+            _daemon = new Daemonizer(_client, _logger, _config);
+            _supervisor = new Supervisor(_client, _config, _logger);
+            _sessions = new SessionManager(_client, _executor, _logger);
+            _handler = new CommandHandler(_client, _config, _logger, _executor);
+
+            var tmpCnf = _config.Get();
+            _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
+                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
+        }
+
+        private void LoadConfig()
+        {
 #if !DEBUG
             _config = new ConfigManager("Config.json");
 #else
             _config = new ConfigManager("ConfigDebug.json");
 #endif
+        }
 
+        private void AddSigTermHandler()
+        {
             Console.CancelKeyPress += delegate
             {
                 _ = Task.Run(async () =>
@@ -61,34 +100,19 @@ namespace Sanakan
                     Environment.Exit(0);
                 });
             };
+        }
 
-            var tmpCnf = _config.Get();
-            await _client.LoginAsync(TokenType.Bot, tmpCnf.BotToken);
-            await _client.SetGameAsync(tmpCnf.Prefix + "pomoc");
-            await _client.StartAsync();
-
-            _executor = new SynchronizedExecutor();
-            _supervisor = new Supervisor(_client, _config);
-            _daemon = new Daemonizer(_client, _logger, _config);
-            _sessions = new SessionManager(_client, _executor, _logger);
-            _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token, 
-                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
-
-            var services = new ServiceCollection()
+        private IServiceProvider BuildProvider()
+        {
+            return new ServiceCollection()
                 .AddSingleton(_shindenClient)
                 .AddSingleton(_executor)
                 .AddSingleton(_sessions)
                 .AddSingleton(_config)
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
+                .AddSingleton(_helper)
                 .BuildServiceProvider();
-
-            _executor.Initialize(services);
-            _sessions.Initialize(services);
-            _handler = new CommandHandler(services, _client, _config, _logger, _executor);
-            await _handler.InitializeAsync();
-
-            await Task.Delay(-1);
         }
     }
 }

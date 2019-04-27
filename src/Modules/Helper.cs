@@ -1,7 +1,8 @@
 ﻿#pragma warning disable 1591
 
 using Discord.Commands;
-using Sanakan.Services.Session;
+using Sanakan.Extensions;
+using System;
 using System.Threading.Tasks;
 
 namespace Sanakan.Modules
@@ -9,82 +10,34 @@ namespace Sanakan.Modules
     [Name("Ogólne")]
     public class Helper : ModuleBase<SocketCommandContext>
     {
-        private SessionManager _sessions;
+        private Services.Helper _helper;
 
-        public Helper(SessionManager sessions)
+        public Helper(Services.Helper helper)
         {
-            _sessions = sessions;
+            _helper = helper;
         }
 
-        [Command("test", RunMode = RunMode.Async)]
-        public async Task MakeTestAsync()
+        [Command("pomoc", RunMode = RunMode.Async)]
+        [Alias("h", "help")]
+        [Summary("wyświetla listę poleceń")]
+        [Remarks("odcinki")]
+        public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
         {
-            var msg = await ReplyAsync("test in async");
-            await Task.Delay(2000);
-            await msg.ModifyAsync(x => x.Content = "test in async - done");
-
-            var session = new Session(Context.User)
+            if (command != null)
             {
-                Id = "Inna sesja",
-                Event = ExecuteOn.Message,
-                OnExecute = async (context, curr) =>
+                try
                 {
-                    if (context.Message.Content == "dziala?")
-                    {
-                        await msg.ModifyAsync(x => x.Content = "lol, nie");
-                        return true;
-                    }
-                    return false;
-                },
-                OnDispose = async () =>
-                {
-                    await Task.Delay(5000);
-                    await msg.DeleteAsync();
+                    await ReplyAsync(_helper.GiveHelpAboutPublicCmd(command));
                 }
-            };
+                catch (Exception ex)
+                {
+                    await ReplyAsync("", embed: ex.Message.ToEmbedMessage(EMType.Error).Build());
+                }
 
-            if (_sessions.SessionExist(session))
-            {
-                await msg.ModifyAsync(x => x.Content = "juz jestem");
                 return;
             }
-            await _sessions.TryAddSession(session);
-        }
 
-        [Command("test2")]
-        public async Task MakeTest2Async()
-        {
-            var msg = await ReplyAsync("test2 in async");
-            await Task.Delay(2000);
-            await msg.ModifyAsync(x => x.Content = "test2 in async - done");
-
-            var session = new Session(Context.User)
-            {
-                TimeoutMs = 40000,
-                Id = "Inna sesja2",
-                Event = ExecuteOn.Message,
-                OnExecute = async (context, curr) =>
-                {
-                    if (context.Message.Content == "dziala?")
-                    {
-                        await msg.ModifyAsync(x => x.Content = "lol, nie");
-                        return true;
-                    }
-                    return false;
-                },
-                OnDispose = async () =>
-                {
-                    await Task.Delay(5000);
-                    await msg.DeleteAsync();
-                }
-            };
-
-            if (_sessions.SessionExist(session))
-            {
-                await msg.ModifyAsync(x => x.Content = "juz jestem");
-                return;
-            }
-            await _sessions.TryAddSession(session);
+            await ReplyAsync(_helper.GivePublicHelp());
         }
     }
 }
