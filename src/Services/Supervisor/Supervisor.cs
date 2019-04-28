@@ -70,7 +70,7 @@ namespace Sanakan.Services.Supervisor
             var user = msg.Author as SocketGuildUser;
             if (user == null) return;
 
-            _ = Task.Run(async () => 
+            _ = Task.Run(async () =>
             {
                 await _semaphore.WaitAsync();
 
@@ -117,8 +117,22 @@ namespace Sanakan.Services.Supervisor
                 susspect.Add(thisMessage);
             }
 
-            //TODO: check if has "user role"
-            switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), true))
+            bool hasRole = true;
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                var gConfig = db.Guilds.FirstOrDefault(x => x.Id == user.Guild.Id);
+                if (gConfig != null)
+                {
+                    if (gConfig.UserRole != 0)
+                        hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole);
+
+                    if (gConfig.AdminRole != 0)
+                        if (user.Roles.Any(x => x.Id == gConfig.AdminRole))
+                            return;
+                }
+            }
+
+            switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole))
             {
                 case Action.Warn:
                     await message.Channel.SendMessageAsync("",
@@ -155,11 +169,11 @@ namespace Sanakan.Services.Supervisor
                 mTotal += UNCONNECTED_MOD;
                 mSpecified += UNCONNECTED_MOD;
             }
-            
+
             int mWSpec = mSpecified - 1;
             int mWTot = mTotal - 1;
 
-            if ((total == mWTot || specified == mWSpec) && hasRole) 
+            if ((total == mWTot || specified == mWSpec) && hasRole)
                 return Action.Warn;
 
             if (total > mTotal || specified > mSpecified)
@@ -184,7 +198,7 @@ namespace Sanakan.Services.Supervisor
         {
             try
             {
-                var toClean = new Dictionary<ulong, List<ulong>>(); 
+                var toClean = new Dictionary<ulong, List<ulong>>();
                 foreach (var guild in _guilds)
                 {
                     var usrs = new List<ulong>();
@@ -196,9 +210,9 @@ namespace Sanakan.Services.Supervisor
                     toClean.Add(guild.Key, usrs);
                 }
 
-                foreach(var guild in toClean)
+                foreach (var guild in toClean)
                 {
-                    foreach(var uId in guild.Value)
+                    foreach (var uId in guild.Value)
                         _guilds[guild.Key][uId] = new SupervisorEntity("c");
                 }
             }

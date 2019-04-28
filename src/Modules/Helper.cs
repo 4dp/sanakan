@@ -2,13 +2,14 @@
 
 using Discord.Commands;
 using Sanakan.Extensions;
+using Sanakan.Services.Commands;
 using System;
 using System.Threading.Tasks;
 
 namespace Sanakan.Modules
 {
     [Name("Ogólne")]
-    public class Helper : ModuleBase<SocketCommandContext>
+    public class Helper : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
 

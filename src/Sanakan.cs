@@ -36,6 +36,7 @@ namespace Sanakan
             LoadConfig();
             CreateModules();
             AddSigTermHandler();
+            EnsureDbIsCreated();
 
             var tmpCnf = _config.Get();
             await _client.LoginAsync(TokenType.Bot, tmpCnf.BotToken);
@@ -49,6 +50,14 @@ namespace Sanakan
             await _handler.InitializeAsync(services, _helper);
 
             await Task.Delay(-1);
+        }
+
+        private void EnsureDbIsCreated()
+        {
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                db.Database.EnsureCreated();
+            }
         }
 
         private void CreateModules()
@@ -112,6 +121,7 @@ namespace Sanakan
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
+                .AddDbContext<Database.GuildConfigContext>()
                 .BuildServiceProvider();
         }
     }

@@ -4,20 +4,24 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Extensions;
+using Sanakan.Preconditions;
+using Sanakan.Services.Commands;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sanakan.Modules
 {
-    [Name("Moderacja"), Group("mod"), DontAutoLoad, RequireUserPermission(GuildPermission.Administrator)]
-    public class Moderation : ModuleBase<SocketCommandContext>
+    [Name("Moderacja"), Group("mod"), DontAutoLoad, RequireAdminRole]
+    public class Moderation : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
+        private Database.GuildConfigContext _dbConfigContext;
 
-        public Moderation(Services.Helper helper)
+        public Moderation(Services.Helper helper, Database.GuildConfigContext dbConfigContext)
         {
             _helper = helper;
+            _dbConfigContext = dbConfigContext;
         }
 
         [Command("kasuj", RunMode = RunMode.Async)]
@@ -35,7 +39,7 @@ namespace Sanakan.Modules
                 var enumerable = await channel.GetMessagesAsync(count).FlattenAsync();
                 await channel.DeleteMessagesAsync(enumerable).ConfigureAwait(false);
 
-                await ReplyAsync("", embed: $"Usunięto {count} ostatnich wiadomości!".ToEmbedMessage(EMType.Bot).Build());
+                await ReplyAsync("", embed: $"Usunięto {count} ostatnich wiadomości.".ToEmbedMessage(EMType.Bot).Build());
             }
         }
 
@@ -52,8 +56,73 @@ namespace Sanakan.Modules
                 var userMessages = enumerable.Where(x => x.Author == user);
                 await channel.DeleteMessagesAsync(userMessages).ConfigureAwait(false);
 
-                await ReplyAsync("", embed: $"Usunięto wiadomości {user.Mention}!".ToEmbedMessage(EMType.Bot).Build());
+                await ReplyAsync("", embed: $"Usunięto wiadomości {user.Mention}.".ToEmbedMessage(EMType.Bot).Build());
             }
+        }
+
+        [Command("admin")]
+        [Summary("ustawia role administratora")]
+        [Remarks("34125343243432")]
+        public async Task SetAdminRoleAsync([Summary("id roli")]SocketRole role)
+        {
+            if (role == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono roli na serwerze.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var config = _dbConfigContext.Guilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
+            if (config == null)
+            {
+                config = new Database.Models.Configuration.GuildOptions
+                {
+                    Id = Context.Guild.Id
+                };
+                await _dbConfigContext.Guilds.AddAsync(config);
+            }
+
+            if (config.AdminRole == role.Id)
+            {
+                await ReplyAsync("", embed: $"Rola {role.Mention} już jest ustawiona jako rola administratora.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            config.AdminRole = role.Id;
+            await _dbConfigContext.SaveChangesAsync();
+
+            await ReplyAsync("", embed: $"Ustawiono {role.Mention} jako role administratora.".ToEmbedMessage(EMType.Error).Build());
+        }
+
+        [Command("tfight")]
+        [Summary("ustawia śmieciowy kanał walk waifu")]
+        [Remarks("")]
+        public async Task SetTrashFightWaifuChannelAsync()
+        {
+            var config = _dbConfigContext.Guilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
+            if (config == null)
+            {
+                config = new Database.Models.Configuration.GuildOptions
+                {
+                    Id = Context.Guild.Id
+                };
+                await _dbConfigContext.Guilds.AddAsync(config);
+            }
+
+            if (config.WaifuConfig == null)
+            {
+                config.WaifuConfig = new Database.Models.Configuration.Waifu();
+            }
+
+            if (config.WaifuConfig.TrashFightChannel == Context.Channel.Id)
+            {
+                await ReplyAsync("", embed: $"Kanał `{Context.Channel.Name}` już jest ustawiona jako kanał śmieciowy walk waifu.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            config.WaifuConfig.TrashFightChannel = Context.Channel.Id;
+            await _dbConfigContext.SaveChangesAsync();
+
+            await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako jako kanał śmieciowy walk waifu.".ToEmbedMessage(EMType.Error).Build());
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]

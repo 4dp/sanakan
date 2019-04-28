@@ -8,6 +8,7 @@ namespace Sanakan.Config
         public string BotToken { get; set; }
         public bool Supervision { get; set; }
         public bool Demonization { get; set; }
+        public string ConnectionString { get; set; }
         public ConfigShinden Shinden { get; set; }
     }
 
