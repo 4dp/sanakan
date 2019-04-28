@@ -2,6 +2,7 @@
 
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using System;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace Sanakan.Preconditions
             var config = (IConfig)services.GetService(typeof(IConfig));
             using (var db = new Database.GuildConfigContext(config))
             {
-                var gConfig = db.Guilds.FirstOrDefault(x => x.Id == context.Guild.Id);
+                var gConfig = await db.Guilds.FirstOrDefaultAsync(x => x.Id == context.Guild.Id);
                 if (gConfig != null) return CheckUser(user);
 
                 var role = context.Guild.GetRole(gConfig.AdminRole);

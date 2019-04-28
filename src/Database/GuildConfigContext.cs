@@ -28,7 +28,7 @@ namespace Sanakan.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySql(_config.Get().ConnectionString);
+            optionsBuilder.UseLazyLoadingProxies().UseMySql(_config.Get().ConnectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

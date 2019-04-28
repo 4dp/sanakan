@@ -121,6 +121,7 @@ namespace Sanakan
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
+                .AddSingleton<Moderator>()
                 .AddDbContext<Database.GuildConfigContext>()
                 .BuildServiceProvider();
         }

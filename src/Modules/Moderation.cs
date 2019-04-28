@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
@@ -16,11 +17,13 @@ namespace Sanakan.Modules
     public class Moderation : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
+        private Services.Moderator _moderation;
         private Database.GuildConfigContext _dbConfigContext;
 
-        public Moderation(Services.Helper helper, Database.GuildConfigContext dbConfigContext)
+        public Moderation(Services.Helper helper, Services.Moderator moderation, Database.GuildConfigContext dbConfigContext)
         {
             _helper = helper;
+            _moderation = moderation;
             _dbConfigContext = dbConfigContext;
         }
 
@@ -46,7 +49,7 @@ namespace Sanakan.Modules
         [Command("kasuju", RunMode = RunMode.Async)]
         [Alias("purneu")]
         [Summary("usuwa wiadomośći danego użytkownika")]
-        [Remarks("karna 12")]
+        [Remarks("karna")]
         public async Task DeleteUserMesegesAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             await Context.Message.DeleteAsync();
@@ -60,6 +63,28 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("config")]
+        [Summary("wyświetla konfiguracje serwera")]
+        [Remarks("")]
+        public async Task ShowConfigAsync()
+        {
+            var config = await _dbConfigContext.Guilds.FirstOrDefaultAsync(x => x.Id == Context.Guild.Id);
+            if (config == null)
+            {
+                config = new Database.Models.Configuration.GuildOptions
+                {
+                    Id = Context.Guild.Id
+                };
+                await _dbConfigContext.Guilds.AddAsync(config);
+
+                config.WaifuConfig = new Database.Models.Configuration.Waifu();
+
+                await _dbConfigContext.SaveChangesAsync();
+            }
+
+            await ReplyAsync("", embed: _moderation.GetConfiguration(config, Context).WithTitle($"Konfiguracja {Context.Guild.Name}:").Build());
+        }
+
         [Command("admin")]
         [Summary("ustawia role administratora")]
         [Remarks("34125343243432")]
@@ -71,7 +96,7 @@ namespace Sanakan.Modules
                 return;
             }
 
-            var config = _dbConfigContext.Guilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
+            var config = await _dbConfigContext.Guilds.FirstOrDefaultAsync(x => x.Id == Context.Guild.Id);
             if (config == null)
             {
                 config = new Database.Models.Configuration.GuildOptions
@@ -98,7 +123,7 @@ namespace Sanakan.Modules
         [Remarks("")]
         public async Task SetTrashFightWaifuChannelAsync()
         {
-            var config = _dbConfigContext.Guilds.FirstOrDefault(x => x.Id == Context.Guild.Id);
+            var config = await _dbConfigContext.Guilds.FirstOrDefaultAsync(x => x.Id == Context.Guild.Id);
             if (config == null)
             {
                 config = new Database.Models.Configuration.GuildOptions
