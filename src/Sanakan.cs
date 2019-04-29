@@ -77,7 +77,7 @@ namespace Sanakan
             };
 
             _helper = new Helper(_config);
-            _executor = new SynchronizedExecutor();
+            _executor = new SynchronizedExecutor(_logger);
             _daemon = new Daemonizer(_client, _logger, _config);
             _supervisor = new Supervisor(_client, _config, _logger);
             _sessions = new SessionManager(_client, _executor, _logger);

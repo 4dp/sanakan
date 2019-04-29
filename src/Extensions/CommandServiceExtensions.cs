@@ -42,7 +42,6 @@ namespace Sanakan.Extensions
                 return new Services.Commands.SearchResult(bestCandidate.Value);
             }
 
-
             var parseResultsDict = new Dictionary<CommandMatch, ParseResult>();
             foreach (var pair in successfulPreconditions)
             {
@@ -73,7 +72,7 @@ namespace Sanakan.Extensions
                 }
 
                 var totalArgsScore = (argValuesScore + paramValuesScore) / 2;
-                return match.Command.Priority + totalArgsScore * 0.99f;
+                return match.Command.Priority + (totalArgsScore * 0.99f);
             }
 
             var parseResults = parseResultsDict

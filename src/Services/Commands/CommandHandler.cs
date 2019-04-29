@@ -72,38 +72,42 @@ namespace Sanakan.Services.Commands
                             break;
                     }
                 }
-                else if (res.Result != null)
-                {
-                    switch (res.Result.Error)
+                else await ProcessResultAsync(res.Result, context, argPos);
+            }
+        }
+
+        private async Task ProcessResultAsync(IResult result, SocketCommandContext context, int argPos)
+        {
+            if (result == null) return;
+
+            switch (result.Error)
+            {
+                case CommandError.MultipleMatches:
+                    await context.Channel.SendMessageAsync("", embed: "Dopasowano wielu użytkowników!".ToEmbedMessage(EMType.Error).Build());
+                    break;
+
+                case CommandError.ParseFailed:
+                case CommandError.BadArgCount:
+                    var cmd = _cmd.Search(context, argPos);
+                    if (cmd.Commands.Count > 0)
+                        await context.Channel.SendMessageAsync(_helper.GetCommandInfo(cmd.Commands.First().Command));
+                    break;
+
+                case CommandError.UnmetPrecondition:
+                    if (result.ErrorReason.StartsWith("|IMAGE|"))
                     {
-                        case CommandError.MultipleMatches:
-                            await context.Channel.SendMessageAsync("", embed: "Dopasowano wielu użytkowników!".ToEmbedMessage(EMType.Error).Build());
-                            break;
+                        var emb = new EmbedBuilder()
+                            .WithImageUrl(result.ErrorReason.Remove(0, 7))
+                            .WithColor(EMType.Error.Color());
 
-                        case CommandError.ParseFailed:
-                        case CommandError.BadArgCount:
-                            var cmd = _cmd.Search(context, argPos);
-                            if (cmd.Commands.Count > 0)
-                                await context.Channel.SendMessageAsync(_helper.GetCommandInfo(cmd.Commands.First().Command));
-                            break;
-
-                        case CommandError.UnmetPrecondition:
-                            if (res.Result.ErrorReason.StartsWith("|IMAGE|"))
-                            {
-                                var emb = new EmbedBuilder()
-                                    .WithImageUrl(res.Result.ErrorReason.Remove(0, 7))
-                                    .WithColor(EMType.Error.Color());
-
-                                await context.Channel.SendMessageAsync("", embed: emb.Build());
-                            }
-                            else await context.Channel.SendMessageAsync("", embed: res.Result.ErrorReason.ToEmbedMessage(EMType.Error).Build());
-                            break;
-
-                        default:
-                            _logger.Log(res.Result.ErrorReason);
-                            break;
+                        await context.Channel.SendMessageAsync("", embed: emb.Build());
                     }
-                }
+                    else await context.Channel.SendMessageAsync("", embed: result.ErrorReason.ToEmbedMessage(EMType.Error).Build());
+                    break;
+
+                default:
+                    _logger.Log(result.ErrorReason);
+                    break;
             }
         }
     }

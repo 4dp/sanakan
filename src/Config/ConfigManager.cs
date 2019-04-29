@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using Newtonsoft.Json;
+using Sanakan.Config.Model;
 using System;
 using System.IO;
 
@@ -47,6 +48,5 @@ namespace Sanakan.Config
                 throw new Exception($"File \"{_path}\" not found!");
             }
         }
-
     }
 }

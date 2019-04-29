@@ -1,6 +1,6 @@
 ﻿#pragma warning disable 1591
 
-namespace Sanakan.Config
+namespace Sanakan.Config.Model
 {
     public class ConfigModel
     {
@@ -10,12 +10,5 @@ namespace Sanakan.Config
         public bool Demonization { get; set; }
         public string ConnectionString { get; set; }
         public ConfigShinden Shinden { get; set; }
-    }
-
-    public class ConfigShinden
-    {
-        public string Token { get; set; }
-        public string UserAgent { get; set; }
-        public string Marmolade { get; set; }
     }
 }
