@@ -28,7 +28,7 @@ namespace Sanakan.Modules
         }
 
         [Command("kasuj", RunMode = RunMode.Async)]
-        [Alias("purne")]
+        [Alias("prune")]
         [Summary("usuwa x ostatnich wiadomośći")]
         [Remarks("12")]
         public async Task DeleteMesegesAsync([Summary("liczba wiadomości")]int count)
@@ -47,7 +47,7 @@ namespace Sanakan.Modules
         }
 
         [Command("kasuju", RunMode = RunMode.Async)]
-        [Alias("purneu")]
+        [Alias("pruneu")]
         [Summary("usuwa wiadomośći danego użytkownika")]
         [Remarks("karna")]
         public async Task DeleteUserMesegesAsync([Summary("użytkownik")]SocketGuildUser user)
