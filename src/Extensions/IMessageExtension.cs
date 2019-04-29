@@ -6,6 +6,5 @@ namespace Sanakan.Extensions
     {
         public static string GetLocalCreatedAtShortDateTime(this IMessage message)
             => $"{message.CreatedAt.DateTime.ToLocalTime().ToShortDateString()} {message.CreatedAt.DateTime.ToLocalTime().ToShortTimeString()}";
-
     }
 }
