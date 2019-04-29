@@ -1,14 +1,12 @@
 ﻿#pragma warning disable 1591
 
-using System;
-using System.Threading;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Extensions;
-using Shinden.Logger;
 
 namespace Sanakan.Services
 {
@@ -64,8 +62,36 @@ namespace Sanakan.Services
         {
             return new EmbedBuilder
             {
-                //TODO: build log
+                Author = new EmbedAuthorBuilder().WithUser(message.Author, true),
+                Description = message.Content.TrimToLength(1800),
+                Color = EMType.Warning.Color(),
+                Fields = GetFields(message)
             }.Build();
+        }
+
+        private List<EmbedFieldBuilder> GetFields(IMessage message)
+        {
+            return new List<EmbedFieldBuilder>
+            {
+                new EmbedFieldBuilder
+                {
+                    IsInline = true,
+                    Name = "Napisano:",
+                    Value = message.GetLocalCreatedAtShortDateTime()
+                },
+                new EmbedFieldBuilder
+                {
+                    IsInline = true,
+                    Name = "Kanał:",
+                    Value = message.Channel.Name
+                },
+                new EmbedFieldBuilder
+                {
+                    IsInline = true,
+                    Name = "Załączniki:",
+                    Value = message.Attachments?.Count
+                }
+            };
         }
     }
 }
