@@ -283,6 +283,40 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono {role.Mention} jako role na poziom `{level}`.".ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("selfrole")]
+        [Summary("dodaje nową role do automatycznego zarządzania")]
+        [Remarks("34125343243432 newsy")]
+        public async Task SetSelfRoleAsync([Summary("id roli")]SocketRole role, [Summary("nazwa")][Remainder]string name)
+        {
+            if (role == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono roli na serwerze.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+            var rol = config.SelfRoles.FirstOrDefault(x => x.Role == role.Id);
+            if (rol != null)
+            {
+                config.SelfRoles.Remove(rol);
+                await _dbConfigContext.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                await ReplyAsync("", embed: $"Usunięto {role.Mention} z listy roli automatycznego zarządzania.".ToEmbedMessage(EMType.Success).Build());
+                return;
+            }
+
+            rol = new Database.Models.Configuration.SelfRole { Role = role.Id, Name = name };
+            config.SelfRoles.Add(rol);
+            await _dbConfigContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+            await ReplyAsync("", embed: $"Ustawiono {role.Mention} jako role automatycznego zarządzania: `{name}`.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("myland")]
         [Summary("dodaje nowy myland")]
         [Remarks("34125343243432 64325343243432 Kopacze")]

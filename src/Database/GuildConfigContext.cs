@@ -18,6 +18,7 @@ namespace Sanakan.Database
             _config = config;
         }
 
+        public DbSet<SelfRole> SelfRoles { get; set; }
         public DbSet<GuildOptions> Guilds { get; set; }
         public DbSet<LevelRole> LevelRoles { get; set; }
         public DbSet<CommandChannel> CommandChannels { get; set; }
@@ -32,7 +33,7 @@ namespace Sanakan.Database
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             QueryCacheManager.DefaultMemoryCacheEntryOptions = new MemoryCacheEntryOptions() { SlidingExpiration = TimeSpan.FromHours(4) };
-            optionsBuilder.UseLazyLoadingProxies().UseMySql(_config.Get().ConnectionString);
+            optionsBuilder.UseMySql(_config.Get().ConnectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -54,6 +55,14 @@ namespace Sanakan.Database
                     .WithOne(w => w.Waifu);
                 entity.HasOne(e => e.GuildOptions)
                     .WithOne(g => g.WaifuConfig);
+            });
+
+            modelBuilder.Entity<SelfRole>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GuildOptions)
+                    .WithMany(g => g.SelfRoles);
             });
 
             modelBuilder.Entity<CommandChannel>(entity =>

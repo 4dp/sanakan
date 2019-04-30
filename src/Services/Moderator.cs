@@ -21,6 +21,9 @@ namespace Sanakan.Services
             var rolPerLvlCnt = config.RolesPerLevel?.Count;
             string roles = (rolPerLvlCnt > 0) ? $"({rolPerLvlCnt}) `config role`" : "--";
 
+            var selfRolesCnt = config.SelfRoles?.Count;
+            string selfRoles = (selfRolesCnt > 0) ? $"({selfRolesCnt}) `config selfrole`" : "--";
+
             var landsCnt = config.Lands?.Count;
             string lands = (landsCnt > 0) ? $"({landsCnt}) `config lands`" : "--";
 
@@ -57,6 +60,7 @@ namespace Sanakan.Services
                             + $"**NonExp**: {wExp}\n"
                             + $"**CmdCh**: {cmdCh}\n"
                             + $"**Roles**: {roles}\n"
+                            + $"**SelfRoles**: {selfRoles}\n"
                             + $"**MyLands**: {lands}".TrimToLength(1950)
             };
         }

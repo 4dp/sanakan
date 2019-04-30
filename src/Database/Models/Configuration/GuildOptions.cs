@@ -26,6 +26,7 @@ namespace Sanakan.Database.Models.Configuration
         public virtual ICollection<CommandChannel> CommandChannels { get; set; }
         public virtual ICollection<ModeratorRoles> ModeratorRoles { get; set; }
         public virtual ICollection<LevelRole> RolesPerLevel { get; set; }
+        public virtual ICollection<SelfRole> SelfRoles { get; set; }
         public virtual ICollection<MyLand> Lands { get; set; }
     }
 }
