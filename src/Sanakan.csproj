@@ -30,6 +30,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
     <PackageReference Include="Shinden.NET" Version="0.3.6-beta" />
+    <PackageReference Include="Z.EntityFramework.Plus.QueryCache.EFCore" Version="1.7.20" />
+    <PackageReference Include="Z.EntityFramework.Plus.QueryDeferred.EFCore" Version="1.7.1" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Extensions;
 
@@ -48,7 +47,7 @@ namespace Sanakan.Services
 
             using (var db = new Database.GuildConfigContext(_config))
             {
-                var config = await db.Guilds.FirstOrDefaultAsync(x => x.Id == channel.Guild.Id);
+                var config = await db.GetCachedGuildFullConfigAsync(channel.Guild.Id);
                 if (config == null) return;
 
                 var ch = channel.Guild.GetTextChannel(config.LogChannel);

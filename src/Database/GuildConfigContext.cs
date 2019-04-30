@@ -1,8 +1,11 @@
 ﻿#pragma warning disable 1591
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Sanakan.Config;
 using Sanakan.Database.Models.Configuration;
+using System;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Database
 {
@@ -28,6 +31,7 @@ namespace Sanakan.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            QueryCacheManager.DefaultMemoryCacheEntryOptions = new MemoryCacheEntryOptions() { SlidingExpiration = TimeSpan.FromHours(4) };
             optionsBuilder.UseLazyLoadingProxies().UseMySql(_config.Get().ConnectionString);
         }
 

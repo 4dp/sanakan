@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Extensions;
 using Shinden.Logger;
@@ -121,7 +120,7 @@ namespace Sanakan.Services.Supervisor
             bool hasRole = true;
             using (var db = new Database.GuildConfigContext(_config))
             {
-                var gConfig = await db.Guilds.FirstOrDefaultAsync(x => x.Id == user.Guild.Id);
+                var gConfig = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
                 if (gConfig != null)
                 {
                     if (gConfig.UserRole != 0)
