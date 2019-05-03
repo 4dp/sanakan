@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using Sanakan.Config;
-using Sanakan.Database;
 
 namespace Sanakan.Services.Commands
 {
