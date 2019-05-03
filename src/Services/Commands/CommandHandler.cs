@@ -38,6 +38,8 @@ namespace Sanakan.Services.Commands
             _helper = helper;
             _provider = provider;
 
+            _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
+
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));
 
@@ -82,6 +84,9 @@ namespace Sanakan.Services.Commands
 
             switch (result.Error)
             {
+                case CommandError.UnknownCommand:
+                    break;
+
                 case CommandError.MultipleMatches:
                     await context.Channel.SendMessageAsync("", embed: "Dopasowano wielu użytkowników!".ToEmbedMessage(EMType.Error).Build());
                     break;

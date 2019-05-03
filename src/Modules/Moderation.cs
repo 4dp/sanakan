@@ -65,8 +65,8 @@ namespace Sanakan.Modules
 
         [Command("config")]
         [Summary("wyświetla konfiguracje serwera")]
-        [Remarks("")]
-        public async Task ShowConfigAsync()
+        [Remarks("mods")]
+        public async Task ShowConfigAsync([Summary("typ(opcjonalne)")][Remainder]Services.ConfigType type = Services.ConfigType.Global)
         {
             var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             if (config == null)
@@ -82,7 +82,7 @@ namespace Sanakan.Modules
                 await _dbConfigContext.SaveChangesAsync();
             }
 
-            await ReplyAsync("", embed: _moderation.GetConfiguration(config, Context).WithTitle($"Konfiguracja {Context.Guild.Name}:").Build());
+            await ReplyAsync("", embed: _moderation.GetConfiguration(config, Context, type).WithTitle($"Konfiguracja {Context.Guild.Name}:").Build());
         }
 
         [Command("adminr")]
