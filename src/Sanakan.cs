@@ -55,7 +55,7 @@ namespace Sanakan
 
         private void EnsureDbIsCreated()
         {
-            using (var db = new Database.GuildConfigContext(_config))
+            using (var db = new Database.BuildDatabaseContext(_config))
             {
                 db.Database.EnsureCreated();
             }
@@ -125,6 +125,8 @@ namespace Sanakan
                 .AddSingleton(_helper)
                 .AddSingleton<Moderator>()
                 .AddSingleton<Services.Shinden>()
+                .AddDbContext<Database.UserContext>()
+                .AddDbContext<Database.ManagmentContext>()
                 .AddDbContext<Database.GuildConfigContext>()
                 .BuildServiceProvider();
         }

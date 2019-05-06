@@ -110,7 +110,7 @@ namespace Sanakan.Modules
         [Command("info", RunMode = RunMode.Async)]
         [Summary("wyświetla informacje o bocie")]
         [Remarks("")]
-        public async Task GiveBotnfoAsync()
+        public async Task GiveBotInfoAsync()
         {
             var proc = System.Diagnostics.Process.GetCurrentProcess();
             string info = $"**Sanakan ({typeof(Sanakan).Assembly.GetName().Version})**:\n"
