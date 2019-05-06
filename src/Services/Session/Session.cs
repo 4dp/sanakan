@@ -88,7 +88,7 @@ namespace Sanakan.Services.Session
                     return true;
 
                 var res = OnExecute(context, this).Result;
-                if (!res && RunMode == RunMode.Sync && OnSyncEnd != null)
+                if (res && RunMode == RunMode.Sync && OnSyncEnd != null)
                 {
                     _ = Task.Run(async () =>
                    {
