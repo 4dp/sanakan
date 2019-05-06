@@ -124,6 +124,7 @@ namespace Sanakan
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
                 .AddSingleton<Moderator>()
+                .AddSingleton<Services.Shinden>()
                 .AddDbContext<Database.GuildConfigContext>()
                 .BuildServiceProvider();
         }

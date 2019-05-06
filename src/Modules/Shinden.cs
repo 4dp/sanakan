@@ -66,50 +66,49 @@ namespace Sanakan.Modules
         [Command("anime", RunMode = RunMode.Async)]
         [Alias("bajka")]
         [Summary("wyświetla informacje o anime")]
-        [Remarks("Gintama")]
+        [Remarks("Soul Eater")]
         public async Task SearchAnimeAsync([Summary("tytuł")][Remainder]string title)
         {
-            if (title.Equals("fate/loli")) title = "Fate/kaleid Liner Prisma Illya";
+            await _shinden.SendSearchInfoAsync(Context, title, QuickSearchType.Anime);
+        }
 
+        [Command("manga", RunMode = RunMode.Async)]
+        [Alias("komiks")]
+        [Summary("wyświetla informacje o mandze")]
+        [Remarks("Gintama")]
+        public async Task SearchMangaAsync([Summary("tytuł")][Remainder]string title)
+        {
+            await _shinden.SendSearchInfoAsync(Context, title, QuickSearchType.Manga);
+        }
+
+        [Command("postać", RunMode = RunMode.Async)]
+        [Alias("postac", "character")]
+        [Summary("wyświetla informacje o postaci")]
+        [Remarks("Gintoki")]
+        public async Task SearchCharacterAsync([Summary("imie")][Remainder]string name)
+        {
             var session = new SearchSession(Context.User, _shclient);
             if (_session.SessionExist(session)) return;
-            
-            var res = await _shclient.Search.QuickSearchAsync(title, QuickSearchType.Anime);
-            if (res.IsSuccessStatusCode())
+
+            var response = await _shclient.Search.CharacterAsync(name);
+            if (!response.IsSuccessStatusCode())
             {
-                var list = res.Body;
-                var toSend = _shinden.GetSearchAnimeOrMangaResponse(list);
+                await ReplyAsync("", embed: _shinden.GetResponseFromSearchCode(response).ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
 
-                if (list.Count == 1)
-                {
-                    var info = (await _shclient.Title.GetInfoAsync(list.First())).Body;
-                    await ReplyAsync("", false, info.ToEmbed());
-                }
-                else
-                {
-                    Discord.Rest.RestUserMessage[] msg = new Discord.Rest.RestUserMessage[10];
-                    for (int index = 0; index < toSend.Length; index++)
-                    {
-                        if(toSend[index] != null) msg[index] = await Context.Channel.SendMessageAsync(toSend[index]);
-                    }
+            var list = response.Body;
+            var toSend = _shinden.GetSearchResponse(list, "Wybierz postać którą chcesz wyświetlić poprzez wpisanie numeru odpowadającemu jej na liście.");
 
-                    session.SList = list;
-                    session.Messages = msg;
-                    await _session.TryAddSession(session);
-                }
+            if (list.Count == 1)
+            {
+                var info = (await _shclient.GetCharacterInfoAsync(list.First())).Body;
+                await ReplyAsync("", false, info.ToEmbed());
             }
             else
             {
-                string toSend = "";
-                switch (res.Code)
-                {
-                    case System.Net.HttpStatusCode.NotFound: toSend = "Brak wyników!";
-                        break;
-
-                    default: toSend = $"Brak połączenia z Shindenem! ({res.Code})";
-                        break;
-                }
-                await ReplyAsync("", false, toSend.ToEmbedMessage(EMType.Error).Build());
+                session.PList = list;
+                await _shinden.SendSearchResponseAsync(Context, toSend, session);
             }
         }
     }

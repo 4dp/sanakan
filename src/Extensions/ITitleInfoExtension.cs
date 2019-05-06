@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using Shinden.Models;
 using Discord;
-using Sanakan.Services;
 using System;
 
 namespace Sanakan.Extensions
@@ -114,95 +113,10 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static List<EmbedFieldBuilder> GetFields(this IAnimeTitleInfo info)
+        public static List<EmbedFieldBuilder> GetFields(this ITitleInfo info)
         {
-            List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
-            if (info.AlternativeTitles.Count > 0)
-            {
-                fields.Add(new EmbedFieldBuilder()
-                {
-                    Name = "Tytuły alternatywne",
-                    Value = string.Join(", ", info.AlternativeTitles).TrimToLength(EmbedFieldBuilder.MaxFieldValueLength),
-                    IsInline = false
-                });
-            }
+            var fields = new List<EmbedFieldBuilder>();
 
-            foreach(var tagType in info.TagCategories)
-            {
-                fields.Add(new EmbedFieldBuilder()
-                {
-                    Name = tagType.Name.TrimToLength(EmbedFieldBuilder.MaxFieldNameLength),
-                    Value = string.Join(", ", tagType.Tags).TrimToLength(EmbedFieldBuilder.MaxFieldValueLength),
-                    IsInline = false
-                });
-            }
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Typ",
-                Value = info.Type.ToName(),
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Id",
-                Value = info.Id,
-                IsInline = true
-            });
-
-            if (info.EpisodesCount.HasValue)
-            {
-                if (info.EpisodesCount > 0)
-                {
-                    fields.Add(new EmbedFieldBuilder()
-                    {
-                        Name = "Epizody",
-                        Value = info.EpisodesCount,
-                        IsInline = true
-                    });
-                }
-            }
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Status",
-                Value = info.Status.ToName(),
-                IsInline = true
-            });
-
-            if (info.TotalRating.HasValue)
-            {
-                if (info.TotalRating > 0)
-                {
-                    fields.Add(new EmbedFieldBuilder()
-                    {
-                        Name = "Ocena ogólna",
-                        Value = info.TotalRating.Value.ToString("0.0"),
-                        IsInline = true
-                    });
-                }
-            }
-            return fields;
-        }
-
-        public static Embed ToEmbed(this IMangaTitleInfo info)
-        {
-            return new EmbedBuilder()
-            {
-                Title = info.Title.TrimToLength(EmbedBuilder.MaxTitleLength),
-                Description = info.Description.Content.TrimToLength(1000),
-                ThumbnailUrl = info.CoverUrl,
-                Color = EMType.Info.Color(),
-                Fields = info.GetFields(),
-                Footer = info.GetFooter(),
-                Url = info.MangaUrl,
-            }.Build();
-        }
-
-        public static List<EmbedFieldBuilder> GetFields(this IMangaTitleInfo info)
-        {
-            List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
             if (info.AlternativeTitles.Count > 0)
             {
                 fields.Add(new EmbedFieldBuilder()
@@ -225,35 +139,8 @@ namespace Sanakan.Extensions
 
             fields.Add(new EmbedFieldBuilder()
             {
-                Name = "Typ",
-                Value = info.Type.ToName(),
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
                 Name = "Id",
                 Value = info.Id,
-                IsInline = true
-            });
-
-            if (info.ChaptersCount.HasValue)
-            {
-                if (info.ChaptersCount > 0)
-                {
-                    fields.Add(new EmbedFieldBuilder()
-                    {
-                        Name = "Rozdziały",
-                        Value = info.ChaptersCount,
-                        IsInline = true
-                    });
-                }
-            }
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Status",
-                Value = info.Status.ToName(),
                 IsInline = true
             });
 
@@ -269,8 +156,75 @@ namespace Sanakan.Extensions
                     });
                 }
             }
-            
+
+            string typeVal = "--";
+            string statVal = "--";
+            if (info is IAnimeTitleInfo aif)
+            {
+                typeVal = aif.Type.ToName();
+                statVal = aif.Status.ToName();
+
+                if (aif.EpisodesCount.HasValue)
+                {
+                    if (aif.EpisodesCount > 0)
+                    {
+                        fields.Add(new EmbedFieldBuilder()
+                        {
+                            Name = "Epizody",
+                            Value = aif.EpisodesCount,
+                            IsInline = true
+                        });
+                    }
+                }
+            }
+            else if (info is IMangaTitleInfo mif)
+            {
+                typeVal = mif.Type.ToName();
+                statVal = mif.Status.ToName();
+
+                if (mif.ChaptersCount.HasValue)
+                {
+                    if (mif.ChaptersCount > 0)
+                    {
+                        fields.Add(new EmbedFieldBuilder()
+                        {
+                            Name = "Rozdziały",
+                            Value = mif.ChaptersCount,
+                            IsInline = true
+                        });
+                    }
+                }
+            }
+
+            fields.Add(new EmbedFieldBuilder()
+            {
+                Name = "Typ",
+                Value = typeVal,
+                IsInline = true
+            });
+
+            fields.Add(new EmbedFieldBuilder()
+            {
+                Name = "Status",
+                Value = statVal,
+                IsInline = true
+            });
+
             return fields;
+        }
+
+        public static Embed ToEmbed(this IMangaTitleInfo info)
+        {
+            return new EmbedBuilder()
+            {
+                Title = info.Title.TrimToLength(EmbedBuilder.MaxTitleLength),
+                Description = info.Description.Content.TrimToLength(1000),
+                ThumbnailUrl = info.CoverUrl,
+                Color = EMType.Info.Color(),
+                Fields = info.GetFields(),
+                Footer = info.GetFooter(),
+                Url = info.MangaUrl,
+            }.Build();
         }
     }
 }

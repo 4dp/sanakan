@@ -69,11 +69,11 @@ namespace Sanakan.Services.Session
 
         public async Task DisposeAsync()
         {
-            _timer = null;
-            _owners = null;
-
             if (OnDispose != null)
                 await OnDispose();
+
+            _timer = null;
+            _owners = null;
 
             OnDispose = null;
             OnExecute = null;

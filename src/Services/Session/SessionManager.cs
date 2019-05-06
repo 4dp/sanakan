@@ -89,10 +89,10 @@ namespace Sanakan.Services.Session
 
             try
             {
-                await session.DisposeAsync().ConfigureAwait(false);
-
                 if (_sessions.Contains(session))
                     _sessions.Remove(session);
+
+                await session.DisposeAsync().ConfigureAwait(false);
             }
             finally
             {

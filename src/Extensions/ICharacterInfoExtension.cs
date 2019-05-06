@@ -3,8 +3,6 @@
 using System.Collections.Generic;
 using Shinden.Models;
 using Discord;
-using Sanakan.Services;
-using System;
 
 namespace Sanakan.Extensions
 {
@@ -25,49 +23,45 @@ namespace Sanakan.Extensions
 
         public static List<EmbedFieldBuilder> GetFields(this ICharacterInfo info)
         {
-            List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
-
-            fields.Add(new EmbedFieldBuilder()
+            var fields = new List<EmbedFieldBuilder>
             {
-                Name = "Płeć",
-                Value = info.Gender.ToModel(),
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Wiek",
-                Value = info.Age > 0 ? $"{info.Age}" : "??",
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Wzrost",
-                Value = info.Height > 0 ? $"{info.Height}" : "??",
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Waga",
-                Value = info.Weight > 0 ? $"{info.Weight}" : "??",
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Grupa krwii",
-                Value = string.IsNullOrEmpty(info.Bloodtype) ? "??" : $"{info.Bloodtype}",
-                IsInline = true
-            });
-
-            fields.Add(new EmbedFieldBuilder()
-            {
-                Name = "Historyczna",
-                Value = info.IsReal ? "Tak" : "Nie",
-                IsInline = true
-            });
+                new EmbedFieldBuilder
+                {
+                    Name = "Płeć",
+                    Value = info.Gender.ToModel(),
+                    IsInline = true
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Wiek",
+                    Value = info.Age > 0 ? $"{info.Age}" : "??",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Wzrost",
+                    Value = info.Height > 0 ? $"{info.Height}" : "??",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Waga",
+                    Value = info.Weight > 0 ? $"{info.Weight}" : "??",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Grupa krwii",
+                    Value = string.IsNullOrEmpty(info.Bloodtype) ? "??" : $"{info.Bloodtype}",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder
+                {
+                    Name = "Historyczna",
+                    Value = info.IsReal ? "Tak" : "Nie",
+                    IsInline = true
+                }
+            };
 
             if (info.Gender == Sex.Female)
             {
