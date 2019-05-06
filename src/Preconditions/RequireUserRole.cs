@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Sanakan.Preconditions
 {
-    public class RequireAdminRole : PreconditionAttribute
+    public class RequireUserRole : PreconditionAttribute
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
@@ -23,20 +23,16 @@ namespace Sanakan.Preconditions
             using (var db = new Database.GuildConfigContext(config))
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(context.Guild.Id);
-                if (gConfig == null) return CheckUser(user);
+                if (gConfig == null) return PreconditionResult.FromSuccess();
 
-                var role = context.Guild.GetRole(gConfig.AdminRole);
-                if (role == null) return CheckUser(user);
+                var role = context.Guild.GetRole(gConfig.UserRole);
+                if (role == null) return PreconditionResult.FromSuccess();
 
                 if (user.Roles.Any(x => x.Id == role.Id)) return PreconditionResult.FromSuccess();
-                return CheckUser(user);
+                if (user.GuildPermissions.Administrator) return PreconditionResult.FromSuccess();
+                
+                return PreconditionResult.FromError($"Do użycia tego polecenia wymagana jest rola {role.Mention}");
             }
-        }
-
-        private PreconditionResult CheckUser(SocketGuildUser user)
-        {
-            if (user.GuildPermissions.Administrator) return PreconditionResult.FromSuccess();
-            return PreconditionResult.FromError($"|IMAGE|https://i.giphy.com/RX3vhj311HKLe.gif");
         }
     }
 }

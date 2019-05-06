@@ -1,7 +1,10 @@
 ﻿#pragma warning disable 1591
 
+using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Config;
+using Sanakan.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -175,6 +178,146 @@ namespace Sanakan.Services
         {
             public string Prefix { get; set; }
             public List<string> Commands { get; set; }
+        }
+
+        public Embed GetInfoAboutUser(SocketGuildUser user)
+        {
+            return new EmbedBuilder
+            {
+                Author = new EmbedAuthorBuilder().WithUser(user),
+                ThumbnailUrl = user.GetAvatarUrl(),
+                Fields = GetInfoUserFields(user),
+                Color = EMType.Info.Color(),
+            }.Build();
+        }
+
+        private List<EmbedFieldBuilder> GetInfoUserFields(SocketGuildUser user)
+        {
+            string roles = "Brak";
+            if (user.Roles.Count > 1)
+            {
+                roles = "";
+                foreach (var item in user.Roles.OrderByDescending(x => x.Position))
+                    if (!item.IsEveryone) 
+                        roles += $"{item.Mention}\n";
+            }
+
+            return new List<EmbedFieldBuilder>
+            {
+                new EmbedFieldBuilder()
+                {
+                    Name = "Id",
+                    Value = user.Id,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Pseudo",
+                    Value = user.Nickname ?? "Brak",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Status",
+                    Value = user.Status.ToString(),
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Bot",
+                    Value = user.IsBot ? "Tak" : "Nie",
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Utworzono",
+                    Value = user.CreatedAt.DateTime.ToString(),
+                    IsInline = false
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Dołączono",
+                    Value = user.JoinedAt.ToString().Split('+')[0],
+                    IsInline = false
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = $"Role[{user.Roles.Count - 1}]",
+                    Value = roles,
+                    IsInline = false
+                }
+            };
+        }
+
+        public Embed GetInfoAboutServer(SocketGuild guild)
+        {
+            return new EmbedBuilder
+            {
+                ThumbnailUrl = guild.IconUrl.Split('?')[0] ?? "https://i.imgur.com/xVIMQiB.jpg",
+                Author = new EmbedAuthorBuilder
+                {
+                    IconUrl = guild.IconUrl ?? "https://i.imgur.com/xVIMQiB.jpg",
+                    Name = guild.Name
+                },
+                Fields = GetInfoGuildFields(guild),
+                Color = EMType.Info.Color(),
+            }.Build();
+        }
+
+        private List<EmbedFieldBuilder> GetInfoGuildFields(SocketGuild guild)
+        {
+            string roles = "";
+            foreach (var item in guild.Roles.OrderByDescending(x => x.Position))
+            {
+                if (!item.IsEveryone && !ulong.TryParse(item.Name, out var id)) 
+                    roles += item.Mention + " ";
+            }
+
+            return new List<EmbedFieldBuilder>()
+            {
+                new EmbedFieldBuilder()
+                {
+                    Name = "Id",
+                    Value = guild.Id,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Właściciel",
+                    Value = guild.Owner.Mention,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Utworzono",
+                    Value = guild.CreatedAt.DateTime.ToString(),
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Liczba użytkowników",
+                    Value = guild.Users.Count,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Kanały tekstowe",
+                    Value = guild.TextChannels.Count,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = "Kanały głosowe",
+                    Value = guild.VoiceChannels.Count,
+                    IsInline = true
+                },
+                new EmbedFieldBuilder()
+                {
+                    Name = $"Role[{guild.Roles.Count}]",
+                    Value = roles.TrimToLength(EmbedFieldBuilder.MaxFieldValueLength),
+                    IsInline = false
+                }
+            };
         }
     }
 }
