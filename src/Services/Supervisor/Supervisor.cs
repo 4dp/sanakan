@@ -120,30 +120,27 @@ namespace Sanakan.Services.Supervisor
                 susspect.Add(thisMessage);
             }
 
-            SocketRole userRole = null;
-            SocketRole muteRole = null;
-            ITextChannel notifChannel = null;
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
-                if (gConfig != null)
-                {
-                    if (gConfig.UserRole != 0)
-                        userRole = user.Roles.FirstOrDefault(x => x.Id == gConfig.UserRole);
+                if (gConfig == null) return;
 
-                    if (gConfig.AdminRole != 0)
-                        if (user.Roles.Any(x => x.Id == gConfig.AdminRole))
-                            return;
+                if (gConfig.AdminRole != 0)
+                    if (user.Roles.Any(x => x.Id == gConfig.AdminRole))
+                        return;
 
-                    if (gConfig.MuteRole != 0)
-                        muteRole = user.Guild.GetRole(gConfig.MuteRole);
+                var muteRole = user.Guild.GetRole(gConfig.MuteRole);
+                var userRole = user.Guild.GetRole(gConfig.UserRole);
+                var notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
 
-                    if (gConfig.NotificationChannel != 0)
-                        notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
-                }
+                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), user.Roles.Any(x => x.Id == gConfig.UserRole));
+                await MakeActionAsync(action, user, message, userRole, muteRole, notifChannel);
             }
+        }
 
-            switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), userRole != null))
+        private async Task MakeActionAsync(Action action, SocketGuildUser user, SocketUserMessage message, SocketRole userRole, SocketRole muteRole, ITextChannel notifChannel)
+        {
+            switch (action)
             {
                 case Action.Warn:
                     await message.Channel.SendMessageAsync("",
@@ -155,11 +152,11 @@ namespace Sanakan.Services.Supervisor
                     {
                         if (user.Roles.Contains(muteRole))
                             return;
-                        
+
                         using (var db = new Database.ManagmentContext(_config))
                         {
-                            await _moderator.NotifyAboutPenaltyAsync(user, notifChannel,
-                                await _moderator.MuteUserAysnc(user, muteRole, userRole, db, 24, "spam/flood"));
+                            var info = await _moderator.MuteUserAysnc(user, muteRole, userRole, db, 24, "spam/flood");
+                            await _moderator.NotifyAboutPenaltyAsync(user, notifChannel, info);
                         }
                     }
                     break;
