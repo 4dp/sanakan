@@ -1,7 +1,15 @@
-﻿using Discord;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Database.Models.Configuration;
+using Sanakan.Database.Models.Management;
 using Sanakan.Extensions;
+using Shinden.Logger;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Services
 {
@@ -22,6 +30,13 @@ namespace Sanakan.Services
 
     public class Moderator
     {
+        private ILogger _logger;
+
+        public Moderator(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         private EmbedBuilder GetFullConfiguration(GuildOptions config, SocketCommandContext context)
         {
             var modsRolesCnt = config.ModeratorRoles?.Count;
@@ -237,6 +252,114 @@ namespace Sanakan.Services
                 case ConfigType.Global:
                     return GetFullConfiguration(config, context);
             }
+        }
+
+        public async Task NotifyAboutPenaltyAsync(SocketGuildUser user, ITextChannel channel,
+            PenaltyInfo info, string byWho = "automat")
+        {
+            var embed = new EmbedBuilder
+            {
+                Color = (info.Type == PenaltyType.Mute) ? EMType.Warning.Color() : EMType.Error.Color(),
+                Footer = new EmbedFooterBuilder().WithText($"Przez: {byWho}"),
+                Description = $"Powód: {info.Reason}".TrimToLength(1800),
+                Author = new EmbedAuthorBuilder().WithUser(user),
+                Fields = new List<EmbedFieldBuilder>
+                {
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "UserId:",
+                        Value = $"{user.Id}",
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Typ:",
+                        Value = info.Type,
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Kiedy:",
+                        Value = $"{info.StartDate.ToShortDateString()} {info.StartDate.ToShortTimeString()}"
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Na ile:",
+                        Value = $"{info.DurationInHours/24} dni {info.DurationInHours%24} godzin",
+                    }
+                }
+            };
+
+            if (channel != null)
+                await channel.SendMessageAsync("", embed: embed.Build());
+
+            try
+            {
+                var dm = await user.GetOrCreateDMChannelAsync();
+                if (dm != null)
+                {
+                    await dm.SendMessageAsync($"Elo! Zostałeś ukarany mutem na {info.DurationInHours/24} dni {info.DurationInHours%24} godzin. Pozdrawiam serdecznie!");
+                    await dm.CloseAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"in mute: {ex}");
+            }
+        }
+
+        public async Task<PenaltyInfo> MuteUserAysnc(SocketGuildUser user, SocketRole muteRole, SocketRole userRole, 
+            Database.ManagmentContext db, long duration, string reason = "nie podano", IEnumerable<ModeratorRoles> modRoles = null)
+        {
+            var info = new PenaltyInfo
+            {
+                User = user.Id,
+                Reason = reason,
+                Guild = user.Guild.Id,
+                Type = PenaltyType.Mute,
+                StartDate = DateTime.Now,
+                DurationInHours = duration,
+            };
+
+            await db.Penalties.AddAsync(info);
+
+            if (userRole != null)
+            {
+                if (user.Roles.Contains(userRole))
+                {
+                    await user.RemoveRoleAsync(userRole);
+                    info.Roles.Add(new OwnedRole
+                    {
+                        Role = userRole.Id
+                    });
+                }
+            }
+
+            if (modRoles != null)
+            {
+                foreach (var r in modRoles)
+                {
+                    var role = user.Roles.FirstOrDefault(x => x.Id == r.Role);
+                    if (role == null) continue;
+
+                    await user.RemoveRoleAsync(role);
+                    info.Roles.Add(new OwnedRole
+                    {
+                        Role = role.Id
+                    });
+                }
+            }
+
+            if (!user.Roles.Contains(muteRole))
+                await user.AddRoleAsync(muteRole);
+
+            await db.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"mute-{user.Guild.Id}" });
+
+            return info;
         }
     }
 }

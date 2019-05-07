@@ -12,13 +12,17 @@ namespace Sanakan.Services.Supervisor
         public DateTime LastMessage { get; private set; }
         public int TotalMessages { get; private set; }
 
-        public SupervisorEntity(string contentOfFirstMessage)
+        public SupervisorEntity(string contentOfFirstMessage) : this()
+        {
+            TotalMessages = 1;
+            Messages.Add(new SupervisorMessage(contentOfFirstMessage));
+        }
+        
+        public SupervisorEntity()
         {
             Messages = new List<SupervisorMessage>();
             LastMessage = DateTime.Now;
-            TotalMessages = 1;
-
-            Messages.Add(new SupervisorMessage(contentOfFirstMessage));
+            TotalMessages = 0;
         }
 
         public SupervisorMessage Get(string content) => Messages.FirstOrDefault(x => x.Content == content);

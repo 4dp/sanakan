@@ -13,7 +13,7 @@ namespace Sanakan.Database.Models.Management
         public ulong Id { get; set; }
         public ulong User { get; set; }
         public ulong Guild { get; set; }
-        public string Reeason { get; set; }
+        public string Reason { get; set; }
         public PenaltyType Type { get; set; }
         public DateTime StartDate { get; set; }
         public long DurationInHours { get; set; }

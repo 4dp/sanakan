@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Extensions;
@@ -26,12 +27,14 @@ namespace Sanakan.Services.Supervisor
         private Dictionary<ulong, Dictionary<ulong, SupervisorEntity>> _guilds;
 
         private DiscordSocketClient _client;
+        private Moderator _moderator;
         private ILogger _logger;
         private IConfig _config;
         private Timer _timer;
 
-        public Supervisor(DiscordSocketClient client, IConfig config, ILogger logger)
+        public Supervisor(DiscordSocketClient client, IConfig config, ILogger logger, Moderator moderator)
         {
+            _moderator = moderator;
             _client = client;
             _config = config;
             _logger = logger;
@@ -117,22 +120,30 @@ namespace Sanakan.Services.Supervisor
                 susspect.Add(thisMessage);
             }
 
-            bool hasRole = true;
+            SocketRole userRole = null;
+            SocketRole muteRole = null;
+            ITextChannel notifChannel = null;
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
                 if (gConfig != null)
                 {
                     if (gConfig.UserRole != 0)
-                        hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole);
+                        userRole = user.Roles.FirstOrDefault(x => x.Id == gConfig.UserRole);
 
                     if (gConfig.AdminRole != 0)
                         if (user.Roles.Any(x => x.Id == gConfig.AdminRole))
                             return;
+
+                    if (gConfig.MuteRole != 0)
+                        muteRole = user.Guild.GetRole(gConfig.MuteRole);
+
+                    if (gConfig.NotificationChannel != 0)
+                        notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
                 }
             }
 
-            switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole))
+            switch (MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), userRole != null))
             {
                 case Action.Warn:
                     await message.Channel.SendMessageAsync("",
@@ -140,7 +151,17 @@ namespace Sanakan.Services.Supervisor
                     break;
 
                 case Action.Mute:
-                    //TODO: mute / database
+                    if (muteRole != null)
+                    {
+                        if (user.Roles.Contains(muteRole))
+                            return;
+                        
+                        using (var db = new Database.ManagmentContext(_config))
+                        {
+                            await _moderator.NotifyAboutPenaltyAsync(user, notifChannel,
+                                await _moderator.MuteUserAysnc(user, muteRole, userRole, db, 24, "spam/flood"));
+                        }
+                    }
                     break;
 
                 case Action.Ban:
@@ -213,7 +234,7 @@ namespace Sanakan.Services.Supervisor
                 foreach (var guild in toClean)
                 {
                     foreach (var uId in guild.Value)
-                        _guilds[guild.Key][uId] = new SupervisorEntity("c");
+                        _guilds[guild.Key][uId] = new SupervisorEntity();
                 }
             }
             catch (Exception ex)

@@ -19,12 +19,15 @@ namespace Sanakan.Modules
         private Services.Helper _helper;
         private Services.Moderator _moderation;
         private Database.GuildConfigContext _dbConfigContext;
+        private Database.ManagmentContext _dbManagmentContext;
 
-        public Moderation(Services.Helper helper, Services.Moderator moderation, Database.GuildConfigContext dbConfigContext)
+        public Moderation(Services.Helper helper, Services.Moderator moderation, 
+            Database.GuildConfigContext dbConfigContext, Database.ManagmentContext dbManagmentContext)
         {
             _helper = helper;
             _moderation = moderation;
             _dbConfigContext = dbConfigContext;
+            _dbManagmentContext = dbManagmentContext;
         }
 
         [Command("kasuj", RunMode = RunMode.Async)]
@@ -63,13 +66,56 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("mute")]
+        [Summary("wycisza użytkownika")]
+        [Remarks("karna")]
+        public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")]string reason = "nie podano")
+        {
+            SocketRole muteRole = null;
+            SocketRole userRole = null;
+            ITextChannel notifChannel = null;
+
+            var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (config.NotificationChannel != 0)
+                notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+
+            if (config.UserRole != 0)
+                userRole = Context.Guild.GetRole(config.UserRole);
+
+            if (config.MuteRole != 0)
+                muteRole = Context.Guild.GetRole(config.MuteRole);
+
+            if (muteRole == null)
+            {
+                await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (user.Roles.Contains(muteRole))
+            {
+                await ReplyAsync("", embed: $"{user.Mention} już jest wyciszony.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var info = await _moderation.MuteUserAysnc(user, muteRole, userRole, _dbManagmentContext, duration, reason);
+            await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"");
+
+            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("config")]
         [Summary("wyświetla konfiguracje serwera")]
         [Remarks("mods")]
         public async Task ShowConfigAsync([Summary("typ(opcjonalne)")][Remainder]Services.ConfigType type = Services.ConfigType.Global)
         {
             var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            if (config == null)
+            if (config == null) 
             {
                 config = new Database.Models.Configuration.GuildOptions
                 {

@@ -28,6 +28,7 @@ namespace Sanakan
         private Daemonizer _daemon;
         private IConfig _config;
         private ILogger _logger;
+        private Moderator _mod;
         private Helper _helper;
 
         public static void Main() => new Sanakan().MainAsync().GetAwaiter().GetResult();
@@ -77,12 +78,13 @@ namespace Sanakan
                 return Task.CompletedTask;
             };
 
+            _mod = new Moderator(_logger);
             _helper = new Helper(_config);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _daemon = new Daemonizer(_client, _logger, _config);
-            _supervisor = new Supervisor(_client, _config, _logger);
             _sessions = new SessionManager(_client, _executor, _logger);
+            _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
 
             var tmpCnf = _config.Get();
@@ -123,7 +125,7 @@ namespace Sanakan
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
-                .AddSingleton<Moderator>()
+                .AddSingleton(_mod)
                 .AddSingleton<Services.Shinden>()
                 .AddDbContext<Database.UserContext>()
                 .AddDbContext<Database.ManagmentContext>()
