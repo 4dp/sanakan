@@ -155,7 +155,7 @@ namespace Sanakan.Services.Supervisor
 
                         using (var db = new Database.ManagmentContext(_config))
                         {
-                            var info = await _moderator.MuteUserAysnc(user, muteRole, userRole, db, 24, "spam/flood");
+                            var info = await _moderator.MuteUserAysnc(user, muteRole, null, userRole, db, 24, "spam/flood");
                             await _moderator.NotifyAboutPenaltyAsync(user, notifChannel, info);
                         }
                     }

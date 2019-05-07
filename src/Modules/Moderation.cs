@@ -95,7 +95,49 @@ namespace Sanakan.Modules
             }
 
             var usr = Context.User as SocketGuildUser;
-            var info = await _moderation.MuteUserAysnc(user, muteRole, userRole, _dbManagmentContext, duration, reason);
+            var info = await _moderation.MuteUserAysnc(user, muteRole, null, userRole, _dbManagmentContext, duration, reason);
+            await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
+
+            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("mute mod")]
+        [Summary("wycisza moderatora")]
+        [Remarks("karna")]
+        public async Task MuteModUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
+        {
+            var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+            var muteModRole = Context.Guild.GetRole(config.ModMuteRole);
+            var userRole = Context.Guild.GetRole(config.UserRole);
+            var muteRole = Context.Guild.GetRole(config.MuteRole);
+
+            if (muteRole == null)
+            {
+                await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (muteModRole == null)
+            {
+                await ReplyAsync("", embed: "Rola wyciszająca moderatora nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (user.Roles.Contains(muteRole))
+            {
+                await ReplyAsync("", embed: $"{user.Mention} już jest wyciszony.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var usr = Context.User as SocketGuildUser;
+            var info = await _moderation.MuteUserAysnc(user, muteRole, muteModRole, userRole, _dbManagmentContext, duration, reason, config.ModeratorRoles);
             await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
 
             await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
@@ -114,6 +156,7 @@ namespace Sanakan.Modules
             }
 
             var muteRole = Context.Guild.GetRole(config.MuteRole);
+            var muteModRole = Context.Guild.GetRole(config.ModMuteRole);
             if (muteRole == null)
             {
                 await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
@@ -126,7 +169,7 @@ namespace Sanakan.Modules
                 return;
             }
 
-            await _moderation.UnmuteUserAsync(user, muteRole, _dbManagmentContext);
+            await _moderation.UnmuteUserAsync(user, muteRole, muteModRole, _dbManagmentContext);
             await ReplyAsync("", embed: $"{user.Mention} już nie jest wyciszony.".ToEmbedMessage(EMType.Success).Build());
         }
 

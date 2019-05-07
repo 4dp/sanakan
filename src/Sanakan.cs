@@ -78,10 +78,10 @@ namespace Sanakan
                 return Task.CompletedTask;
             };
 
-            _mod = new Moderator(_logger);
             _helper = new Helper(_config);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
+            _mod = new Moderator(_logger, _config, _client);
             _daemon = new Daemonizer(_client, _logger, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
