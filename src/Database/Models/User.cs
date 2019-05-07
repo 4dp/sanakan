@@ -17,7 +17,6 @@ namespace Sanakan.Database.Models
         public long ScCnt { get; set; }
         public long Level { get; set; }
         public long ExpCnt { get; set; }
-        public double PointExpCnt { get; set; }
         public ProfileType ProfileType { get; set; }
         public string BackgroundProfileUri { get; set; }
         public string StatsReplacementProfileUri { get; set; }

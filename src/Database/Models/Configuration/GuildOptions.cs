@@ -18,6 +18,8 @@ namespace Sanakan.Database.Models.Configuration
         public ulong ToDoChannel { get; set; }
         public ulong NsfwChannel { get; set; }
         public ulong LogChannel { get; set; }
+        public string WelcomeMessage { get; set; }
+        public string GoodbyeMessage { get; set; }
 
         public virtual Waifu WaifuConfig { get; set; }
 

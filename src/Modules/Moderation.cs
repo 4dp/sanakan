@@ -182,6 +182,48 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: await _moderation.GetMutedListAsync(_dbManagmentContext, Context));
         }
 
+        [Command("przywitanie")]
+        [Alias("welcome")]
+        [Summary("ustawia/wyświetla wiadomośc przywitania")]
+        [Remarks("No elo ^mention!")]
+        public async Task SetOrShowWelcomeMessage([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        {
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+            if (messsage == null)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość przywitalna:**\n\n{config?.WelcomeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            config.WelcomeMessage = messsage;
+            await _dbConfigContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość przywitalną.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("pożegnanie")]
+        [Alias("pozegnanie", "goodbye")]
+        [Summary("ustawia/wyświetla wiadomośc pożegnalną")]
+        [Remarks("Nara ^nick?")]
+        public async Task SetOrShowGoodbyeMessage([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        {
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+            if (messsage == null)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość pożegnalna:**\n\n{config?.GoodbyeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            config.GoodbyeMessage = messsage;
+            await _dbConfigContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość pożegnalną.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("config")]
         [Summary("wyświetla konfiguracje serwera")]
         [Remarks("mods")]

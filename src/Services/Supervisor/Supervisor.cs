@@ -57,8 +57,9 @@ namespace Sanakan.Services.Supervisor
             null,
             TimeSpan.FromMinutes(5),
             TimeSpan.FromMinutes(5));
-
+#if !DEBUG
             _client.MessageReceived += HandleMessageAsync;
+#endif
         }
 
         private async Task HandleMessageAsync(SocketMessage message)
@@ -133,7 +134,8 @@ namespace Sanakan.Services.Supervisor
                 var userRole = user.Guild.GetRole(gConfig.UserRole);
                 var notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
 
-                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), user.Roles.Any(x => x.Id == gConfig.UserRole));
+                bool hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole) || gConfig.UserRole == 0;
+                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole);
                 await MakeActionAsync(action, user, message, userRole, muteRole, notifChannel);
             }
         }
@@ -162,7 +164,7 @@ namespace Sanakan.Services.Supervisor
                     break;
 
                 case Action.Ban:
-                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban)");
+                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban) spam/flood");
                     break;
 
                 default:
