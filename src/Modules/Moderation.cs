@@ -7,6 +7,7 @@ using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
@@ -173,7 +174,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"{user.Mention} już nie jest wyciszony.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("wyciszeni")]
+        [Command("wyciszeni", RunMode = RunMode.Async)]
         [Alias("show muted")]
         [Summary("wyświetla wyciszonych użytkowników")]
         [Remarks("")]
@@ -222,6 +223,29 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
 
             await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość pożegnalną.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("role", RunMode = RunMode.Async)]
+        [Summary("wyświetla role serwera")]
+        [Remarks("")]
+        public async Task ShowRolesAsync()
+        {
+            string tmg = "";
+            var msg = new List<String>();
+            foreach(var item in Context.Guild.Roles)
+            {
+                string mg = tmg + $"{item.Mention} `{item.Mention}`\n";
+                if ((mg.Length) > 2000)
+                {
+                    msg.Add(tmg);
+                    tmg = "";
+                }
+                tmg += $"{item.Mention} `{item.Mention}`\n";
+            }
+            msg.Add(tmg);
+
+            foreach (var content in msg)
+                await ReplyAsync("", embed: content.ToEmbedMessage(EMType.Bot).Build());
         }
 
         [Command("config")]

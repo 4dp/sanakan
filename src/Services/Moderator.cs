@@ -85,23 +85,25 @@ namespace Sanakan.Services
                             continue;
                         }
 
-                        switch (penalty.Type)
+                        if (penalty.Type == PenaltyType.Mute)
                         {
-                            case PenaltyType.Ban:
-                                var ban = await guild.GetBanAsync(user);
-                                if (ban != null) await guild.RemoveBanAsync(user);
-                                break;
-
-                            case PenaltyType.Mute:
-                                await UnmuteUserGuildAsync(user, muteRole, muteModRole, penalty.Roles);
-                                break;
-
-                            default:
-                                return;
+                            await UnmuteUserGuildAsync(user, muteRole, muteModRole, penalty.Roles);
+                            await RemovePenaltyFromDb(db, penalty);
                         }
                     }
                 }
-                await RemovePenaltyFromDb(db, penalty);
+                else
+                {
+                    if ((DateTime.Now - penalty.StartDate).TotalHours > penalty.DurationInHours)
+                    {
+                        if (penalty.Type == PenaltyType.Ban)
+                        {
+                            var ban = await guild.GetBanAsync(penalty.User);
+                            if (ban != null) await guild.RemoveBanAsync(penalty.User);
+                        }
+                        await RemovePenaltyFromDb(db, penalty);
+                    }
+                }
             }
         }
 

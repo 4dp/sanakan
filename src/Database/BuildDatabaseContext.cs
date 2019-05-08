@@ -45,7 +45,6 @@ namespace Sanakan.Database
         public DbSet<WaifuFightChannel> WaifuFightChannels { get; set; }
         public DbSet<PenaltyInfo> Penalties { get; set; }
         public DbSet<OwnedRole> OwnedRoles { get; set; }
-        public DbSet<LeaverInfo> Leavers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -242,11 +241,6 @@ namespace Sanakan.Database
             });
 
             // Managment
-            modelBuilder.Entity<LeaverInfo>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-            });
-
             modelBuilder.Entity<PenaltyInfo>(entity =>
             {
                 entity.HasKey(e => e.Id);

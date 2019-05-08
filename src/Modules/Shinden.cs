@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
@@ -10,6 +11,7 @@ using Shinden;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Modules
 {
@@ -19,12 +21,14 @@ namespace Sanakan.Modules
         private ShindenClient _shclient;
         private SessionManager _session;
         private Services.Shinden _shinden;
+        private Database.UserContext _dbUserContext;
 
-        public Shinden(ShindenClient client, SessionManager session, Services.Shinden shinden)
+        public Shinden(ShindenClient client, SessionManager session, Services.Shinden shinden, Database.UserContext userContext)
         {
             _shclient = client;
             _session = session;
             _shinden = shinden;
+            _dbUserContext = userContext;
         }
 
         [Command("odcinki", RunMode = RunMode.Async)]
@@ -110,6 +114,59 @@ namespace Sanakan.Modules
                 session.PList = list;
                 await _shinden.SendSearchResponseAsync(Context, toSend, session);
             }
+        }
+
+        [Command("połącz")]
+        [Alias("connect", "polacz", "połacz", "polącz")]
+        [Summary("łączy funkcje bota, z kontem na stronie")]
+        [Remarks("https://shinden.pl/user/136-mo0nisi44")]
+        public async Task ConnectAsync([Summary("adres do profilu")]string url)
+        {
+            switch (_shinden.ParseUrlToShindenId(url, out var shindenId))
+            {
+                case Services.UrlParsingError.InvalidUrl:
+                    await ReplyAsync("", embed: "Wygląda na to, że podałeś niepoprawny link.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+
+                case Services.UrlParsingError.InvalidUrlForum:
+                await ReplyAsync("", embed: "Wygląda na to, że podałeś link do forum zamiast strony.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+
+                default:
+                case Services.UrlParsingError.None:
+                    break;
+            }
+
+            var response = await _shclient.User.GetAsync(shindenId);
+            if (response.IsSuccessStatusCode())
+            {
+                var user = response.Body;
+                var userNameInDiscord = (Context.User as SocketGuildUser).Nickname ?? Context.User.Username;
+                
+                if (!user.Name.Equals(userNameInDiscord))
+                {
+                    await ReplyAsync("", embed: "Wykryto próbę podszycia się. Nieładnie!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (_dbUserContext.Users.Any(x => x.Shinden == shindenId))
+                {
+                    await ReplyAsync("", embed: "Wygląda na to, że ktoś już połączył się z tym kontem.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var botuser = _dbUserContext.Users.FirstOrDefault(x => x.Id == Context.User.Id);
+                botuser.Shinden = shindenId;
+
+                await _dbUserContext.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"users" });
+
+                await ReplyAsync("", embed: "Konta zostały połączone.".ToEmbedMessage(EMType.Success).Build());
+                return;
+            }
+
+            await ReplyAsync("", embed: $"Brak połączenia z Shindenem! ({response.Code})".ToEmbedMessage(EMType.Error).Build());
         }
     }
 }

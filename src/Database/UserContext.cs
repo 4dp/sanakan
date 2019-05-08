@@ -6,7 +6,7 @@ using Sanakan.Database.Models;
 
 namespace Sanakan.Database
 {
-    class UserContext : DbContext
+    public class UserContext : DbContext
     {
         private IConfig _config;
 
