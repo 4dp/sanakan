@@ -187,12 +187,18 @@ namespace Sanakan.Modules
         [Alias("welcome")]
         [Summary("ustawia/wyświetla wiadomośc przywitania")]
         [Remarks("No elo ^mention!")]
-        public async Task SetOrShowWelcomeMessage([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        public async Task SetOrShowWelcomeMessageAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
         {
             var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
             if (messsage == null)
             {
                 await ReplyAsync("", embed: $"**Wiadomość przywitalna:**\n\n{config?.WelcomeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (messsage.Length > 2000)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość jest za długa!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
@@ -202,6 +208,33 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
 
             await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość przywitalną.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("przywitaniepw")]
+        [Alias("welcomepw")]
+        [Summary("ustawia/wyświetla wiadomośc przywitania wysyłanego na pw")]
+        [Remarks("No elo ^mention!")]
+        public async Task SetOrShowWelcomeMessagePWAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        {
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+            if (messsage == null)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość przywitalna pw:**\n\n{config?.WelcomeMessagePW ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (messsage.Length > 2000)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość jest za długa!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            config.WelcomeMessagePW = messsage;
+            await _dbConfigContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość przywitalną wysyłaną na pw.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("pożegnanie")]
@@ -214,6 +247,12 @@ namespace Sanakan.Modules
             if (messsage == null)
             {
                 await ReplyAsync("", embed: $"**Wiadomość pożegnalna:**\n\n{config?.GoodbyeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (messsage.Length > 2000)
+            {
+                await ReplyAsync("", embed: $"**Wiadomość jest za długa!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
@@ -578,6 +617,26 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
 
             await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał logowania usuniętych wiadomości.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("helloch")]
+        [Summary("ustawia kanał witania nowych użytkowników")]
+        [Remarks("")]
+        public async Task SetGreetingChannelAsync()
+        {
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+            if (config.GreetingChannel == Context.Channel.Id)
+            {
+                await ReplyAsync("", embed: $"Kanał `{Context.Channel.Name}` już jest ustawiony jako kanał witania nowych użytkowników.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            config.GreetingChannel = Context.Channel.Id;
+            await _dbConfigContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+            await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał witania nowych użytkowników.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("notifch")]

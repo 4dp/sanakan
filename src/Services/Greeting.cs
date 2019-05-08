@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -20,9 +21,10 @@ namespace Sanakan.Services
             _client = client;
             _logger = logger;
             _config = config;
-
+#if !DEBUG
             _client.UserJoined += UserJoinedAsync;
             _client.UserLeft += UserLeftAsync;
+#endif
         }
 
         private async Task UserJoinedAsync(SocketGuildUser user)
@@ -33,7 +35,21 @@ namespace Sanakan.Services
                 if (config?.WelcomeMessage == null) return;
                 if (config.WelcomeMessage == "off") return;
 
-                await SendMessageAsync(ReplaceTags(user, config.WelcomeMessage), user.Guild.GetTextChannel(config.GreetingsChannel));
+                await SendMessageAsync(ReplaceTags(user, config.WelcomeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
+
+                if (config?.WelcomeMessagePW == null) return;
+                if (config.WelcomeMessagePW == "off") return;
+
+                try
+                {
+                    var pw = await user.GetOrCreateDMChannelAsync();
+                    await pw.SendMessageAsync(ReplaceTags(user, config.WelcomeMessagePW));
+                    await pw.CloseAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Greeting: {ex}");
+                }
             }
         }
 
@@ -45,7 +61,7 @@ namespace Sanakan.Services
                 if (config?.GoodbyeMessage == null) return;
                 if (config.GoodbyeMessage == "off") return;
 
-                await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingsChannel));
+                await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
             }
         }
 

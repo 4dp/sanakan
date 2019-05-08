@@ -26,6 +26,7 @@ namespace Sanakan
         private Supervisor _supervisor;
         private DeletedLog _deleted;
         private Daemonizer _daemon;
+        private Greeting _greeting;
         private IConfig _config;
         private ILogger _logger;
         private Moderator _mod;
@@ -82,6 +83,7 @@ namespace Sanakan
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
+            _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
