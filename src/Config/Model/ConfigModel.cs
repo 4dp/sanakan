@@ -10,5 +10,6 @@ namespace Sanakan.Config.Model
         public bool Demonization { get; set; }
         public string ConnectionString { get; set; }
         public ConfigShinden Shinden { get; set; }
+        public ConfigExp Exp { get; set; }
     }
 }

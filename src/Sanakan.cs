@@ -23,6 +23,7 @@ namespace Sanakan
         private DiscordSocketClient _client;
         private SessionManager _sessions;
         private CommandHandler _handler;
+        private ExperienceManager _exp;
         private Supervisor _supervisor;
         private DeletedLog _deleted;
         private Daemonizer _daemon;
@@ -85,6 +86,7 @@ namespace Sanakan
             _mod = new Moderator(_logger, _config, _client);
             _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
+            _exp = new ExperienceManager(_client, _executor, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
@@ -128,6 +130,7 @@ namespace Sanakan
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
                 .AddSingleton(_mod)
+                .AddSingleton(_exp)
                 .AddSingleton<Services.Shinden>()
                 .AddDbContext<Database.UserContext>()
                 .AddDbContext<Database.ManagmentContext>()

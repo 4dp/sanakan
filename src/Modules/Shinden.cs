@@ -155,7 +155,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var botuser = _dbUserContext.Users.FirstOrDefault(x => x.Id == Context.User.Id);
+                var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
                 botuser.Shinden = shindenId;
 
                 await _dbUserContext.SaveChangesAsync();

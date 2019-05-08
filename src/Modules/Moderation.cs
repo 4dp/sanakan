@@ -241,7 +241,7 @@ namespace Sanakan.Modules
         [Alias("pozegnanie", "goodbye")]
         [Summary("ustawia/wyświetla wiadomośc pożegnalną")]
         [Remarks("Nara ^nick?")]
-        public async Task SetOrShowGoodbyeMessage([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        public async Task SetOrShowGoodbyeMessageAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
         {
             var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
             if (messsage == null)

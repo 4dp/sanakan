@@ -29,6 +29,8 @@ namespace Sanakan.Services
 
         private async Task UserJoinedAsync(SocketGuildUser user)
         {
+            if (user.IsBot || user.IsWebhook) return;
+
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
@@ -55,6 +57,8 @@ namespace Sanakan.Services
 
         private async Task UserLeftAsync(SocketGuildUser user)
         {
+            if (user.IsBot || user.IsWebhook) return;
+
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);

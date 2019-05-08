@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Sanakan.Database.Models;
 using Sanakan.Database.Models.Configuration;
 using Sanakan.Database.Models.Management;
 using System.Collections.Generic;
@@ -37,6 +38,22 @@ namespace Sanakan.Extensions
         public static async Task<IEnumerable<PenaltyInfo>> GetCachedFullPenalties(this Database.ManagmentContext context)
         {
             return (await context.Penalties.Include(x => x.Roles).FromCacheAsync(new string[] { $"mute" })).ToList();
+        }
+
+        public static async Task<User> GetUserOrCreateAsync(this Database.UserContext context, ulong userId)
+        {
+            var user = await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats)
+                .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats)
+                .Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck)
+                .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack).FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user == null)
+            {
+                user = user.Default(userId);
+                await context.Users.AddAsync(user);
+            }
+
+            return user;
         }
     }
 }
