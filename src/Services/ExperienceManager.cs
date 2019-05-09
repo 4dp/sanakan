@@ -19,6 +19,7 @@ namespace Sanakan.Services
         private Dictionary<ulong, double> _exp;
         private Dictionary<ulong, ulong> _messages;
         private Dictionary<ulong, ulong> _commands;
+        private Dictionary<ulong, DateTime> _saved;
         private Dictionary<ulong, ulong> _characters;
 
         private DiscordSocketClient _client;
@@ -32,6 +33,7 @@ namespace Sanakan.Services
             _config = config;
 
             _exp = new Dictionary<ulong, double>();
+            _saved = new Dictionary<ulong, DateTime>();
             _messages = new Dictionary<ulong, ulong>();
             _commands = new Dictionary<ulong, ulong>();
             _characters = new Dictionary<ulong, ulong>();
@@ -75,6 +77,17 @@ namespace Sanakan.Services
             CalculateExpAndCreateTask(user, message);
         }
 
+        private bool CheckLastSave(ulong userId)
+        {
+            if (!_saved.Any(x => x.Key == userId))
+            {
+                _saved.Add(userId, DateTime.Now);
+                return false;
+            }
+
+            return (DateTime.Now - _saved[userId].AddHours(1)).TotalSeconds > 1;
+        }
+
         private void CountMessage(ulong userId, bool isCommand)
         {
             if (!_messages.Any(x => x.Key == userId))
@@ -111,10 +124,11 @@ namespace Sanakan.Services
             _exp[user.Id] += exp;
 
             var saved = _exp[user.Id];
-            if (saved < SAVE_AT) return;
+            if (saved < SAVE_AT && !CheckLastSave(user.Id)) return;
 
             var fullP = (long)Math.Floor(saved);
             _exp[message.Author.Id] -= fullP;
+            _saved[user.Id] = DateTime.Now;
 
             var task = CreateTask(user, message.Channel, fullP, _messages[user.Id], _commands[user.Id], _characters[user.Id]);
             _characters[user.Id] = 0;
