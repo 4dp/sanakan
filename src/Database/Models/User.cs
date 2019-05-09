@@ -21,6 +21,7 @@ namespace Sanakan.Database.Models
         public string BackgroundProfileUri { get; set; }
         public string StatsReplacementProfileUri { get; set; }
         public ulong MessagesCnt { get; set; }
+        public ulong CommandsCnt { get; set; }
         public DateTime MeasureDate { get; set; }
         public ulong MessagesCntAtDate { get; set; }
         public ulong CharacterCntFromDate { get; set; }

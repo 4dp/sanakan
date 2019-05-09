@@ -5,6 +5,13 @@ namespace Sanakan.Extensions
 {
     public static class UserExtension
     {
+        public static bool IsCharCounterActive(this User u)
+        {
+            bool month = DateTime.Now.Month == u.MeasureDate.Month;
+            bool year =  DateTime.Now.Year == u.MeasureDate.Year;
+            return month & year;
+        }
+
         public static User Default(this User u, ulong id)
         {
             return new User
@@ -16,14 +23,15 @@ namespace Sanakan.Extensions
                 ExpCnt = 10,
                 Shinden = 0,
                 MessagesCnt = 0,
+                CommandsCnt = 0,
                 MessagesCntAtDate = 0,
                 IsBlacklisted = false,
                 CharacterCntFromDate = 0,
-                MeasureDate = DateTime.Now,
                 ProfileType = ProfileType.Stats,
                 StatsReplacementProfileUri = "none",
                 BackgroundProfileUri = $"defBg.png",
                 GameDeck = new GameDeck { Waifu = 0 },
+                MeasureDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
                 Stats = new UserStats
                 {
                     Hit = 0,
