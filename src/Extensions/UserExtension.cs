@@ -6,11 +6,7 @@ namespace Sanakan.Extensions
     public static class UserExtension
     {
         public static bool IsCharCounterActive(this User u)
-        {
-            bool month = DateTime.Now.Month == u.MeasureDate.Month;
-            bool year =  DateTime.Now.Year == u.MeasureDate.Year;
-            return month & year;
-        }
+            => DateTime.Now.Month == u.MeasureDate.Month && DateTime.Now.Year == u.MeasureDate.Year;
 
         public static User Default(this User u, ulong id)
         {

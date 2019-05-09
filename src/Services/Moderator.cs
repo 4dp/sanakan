@@ -150,7 +150,7 @@ namespace Sanakan.Services
                             + $"**W Trash Fight:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashFightChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Trash Spawn:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashSpawnChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Trash Cmd:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashCommandsChannel ?? 0)?.Mention ?? "--"}\n"
-                            + $"**Notification:** {context.Guild.GetTextChannel(config.NotificationChannel)?.Mention ?? "--"}\n"
+                            + $"**Powiadomienia:** {context.Guild.GetTextChannel(config.NotificationChannel)?.Mention ?? "--"}\n"
                             + $"**Przywitalnia:** {context.Guild.GetTextChannel(config.GreetingChannel)?.Mention ?? "--"}\n"
                             + $"**Raport:** {context.Guild.GetTextChannel(config.RaportChannel)?.Mention ?? "--"}\n"
                             + $"**Todos:** {context.Guild.GetTextChannel(config.ToDoChannel)?.Mention ?? "--"}\n"
@@ -160,19 +160,19 @@ namespace Sanakan.Services
 
                             + $"**W Cmd**: {wcmd}\n"
                             + $"**W Fight**: {wfCh}\n"
-                            + $"**Mods**: {mods}\n"
-                            + $"**NonExp**: {wExp}\n"
-                            + $"**NonSup**: {wSup}\n"
-                            + $"**CmdCh**: {cmdCh}\n"
-                            + $"**Roles**: {roles}\n"
-                            + $"**SelfRoles**: {selfRoles}\n"
-                            + $"**MyLands**: {lands}".TrimToLength(1950)
+                            + $"**Role modów**: {mods}\n"
+                            + $"**Bez exp**: {wExp}\n"
+                            + $"**Bez nadzoru**: {wSup}\n"
+                            + $"**Polecenia**: {cmdCh}\n"
+                            + $"**Role na lvl**: {roles}\n"
+                            + $"**AutoRole**: {selfRoles}\n"
+                            + $"**Krainy**: {lands}".TrimToLength(1950)
             };
         }
 
         private EmbedBuilder GetSelfRolesConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**SelfRoles:**\n\n";
+            string value = "**AutoRole:**\n\n";
             if (config.SelfRoles?.Count > 0)
             {
                 foreach (var role in config.SelfRoles)
@@ -185,7 +185,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetModRolesConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Moderator roles:**\n\n";
+            string value = "**Role moderatorów:**\n\n";
             if (config.ModeratorRoles?.Count > 0)
             {
                 foreach (var role in config.ModeratorRoles)
@@ -198,7 +198,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetLandsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Lands:**\n\n";
+            string value = "**Krainy:**\n\n";
             if (config.Lands?.Count > 0)
             {
                 foreach (var land in config.Lands)
@@ -211,7 +211,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetLevelRolesConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Role:**\n\n";
+            string value = "**Role na poziom:**\n\n";
             if (config.RolesPerLevel?.Count > 0)
             {
                 foreach (var role in config.RolesPerLevel)
@@ -224,7 +224,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetCmdChannelsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Cmd Channels:**\n\n";
+            string value = "**Kanały poleceń:**\n\n";
             if (config.CommandChannels?.Count > 0)
             {
                 foreach (var channel in config.CommandChannels)
@@ -237,7 +237,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetWaifuCmdChannelsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Waifu Cmd Channels:**\n\n";
+            string value = "**Kanały poleceń waifu:**\n\n";
             if (config.WaifuConfig?.CommandChannels?.Count > 0)
             {
                 foreach (var channel in config.WaifuConfig.CommandChannels)
@@ -250,7 +250,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetWaifuFightChannelsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**Waifu Fight Channels:**\n\n";
+            string value = "**Kanały walk waifu:**\n\n";
             if (config.WaifuConfig?.FightChannels?.Count > 0)
             {
                 foreach (var channel in config.WaifuConfig.FightChannels)
@@ -263,7 +263,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetNonExpChannelsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**NonExp Channels:**\n\n";
+            string value = "**Kanały bez exp:**\n\n";
             if (config.ChannelsWithoutExp?.Count > 0)
             {
                 foreach (var channel in config.ChannelsWithoutExp)
@@ -276,7 +276,7 @@ namespace Sanakan.Services
 
         private EmbedBuilder GetNonSupChannelsConfig(GuildOptions config, SocketCommandContext context)
         {
-            string value = "**NonSup Channels:**\n\n";
+            string value = "**Kanały bez nadzoru:**\n\n";
             if (config.ChannelsWithoutSupervision?.Count > 0)
             {
                 foreach (var channel in config.ChannelsWithoutSupervision)
@@ -291,7 +291,6 @@ namespace Sanakan.Services
         {
             switch (type)
             {
-                //TODO: case ConfigType.RichMessages:
                 case ConfigType.NonExpChannels:
                     return GetNonExpChannelsConfig(config, context);
 

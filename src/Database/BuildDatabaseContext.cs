@@ -48,7 +48,7 @@ namespace Sanakan.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            QueryCacheManager.DefaultMemoryCacheEntryOptions = new MemoryCacheEntryOptions() { SlidingExpiration = TimeSpan.FromHours(4) };
+            QueryCacheManager.DefaultMemoryCacheEntryOptions = new MemoryCacheEntryOptions() { SlidingExpiration = TimeSpan.FromHours(2) };
             optionsBuilder.UseMySql(_config.Get().ConnectionString);
         }
 

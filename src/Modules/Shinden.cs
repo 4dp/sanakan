@@ -160,7 +160,7 @@ namespace Sanakan.Modules
 
                 await _dbUserContext.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"users" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
 
                 await ReplyAsync("", embed: "Konta zostały połączone.".ToEmbedMessage(EMType.Success).Build());
                 return;
