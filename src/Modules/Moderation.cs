@@ -72,6 +72,8 @@ namespace Sanakan.Modules
         [Remarks("karna"), RequireAdminRole]
         public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
+            if (duration < 1) return;
+
             var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             if (config == null)
             {
@@ -107,6 +109,8 @@ namespace Sanakan.Modules
         [Remarks("karna"), RequireAdminRole]
         public async Task MuteModUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
+            if (duration < 1) return;
+
             var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             if (config == null)
             {
@@ -1010,6 +1014,106 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
 
             await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał bez nadzoru.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("todo")]
+        [Summary("dodaje wiadomość do todo")]
+        [Remarks("2342123444212"), RequireAdminOrModRole]
+        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId)
+        {
+            var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var todoChannel = Context.Guild.GetTextChannel(config.ToDoChannel);
+            if (todoChannel == null)
+            {
+                await ReplyAsync("", embed: "Kanał todo nie jest ustawiony.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var message = await Context.Channel.GetMessageAsync(messageId);
+            if (message == null)
+            {
+                await ReplyAsync("", embed: "Wiadomość nie isnieje!\nPamiętaj że polecenie musi zostać użyte w tym samym kanale gdzie znajduje się wiadomość!".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            await todoChannel.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
+        }
+
+        [Command("raport")]
+        [Summary("rozwiązuje raport")]
+        [Remarks("2342123444212 4 kara dla Ciebie"), RequireAdminRole]
+        public async Task ResolveReportAsync([Summary("id raportu")]ulong rId, [Summary("długość wyciszenia w h")]long duration = -1, [Summary("powód")][Remainder]string reason = "z raportu")
+        {
+            var config = await _dbConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+            var raport = config.Raports.FirstOrDefault(x => x.Message == rId);
+            if (raport == null)
+            {
+                await ReplyAsync("", embed: $"Taki raport nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+            var reportChannel = Context.Guild.GetTextChannel(config.RaportChannel);
+            var userRole = Context.Guild.GetRole(config.UserRole);
+            var muteRole = Context.Guild.GetRole(config.MuteRole);
+
+            if (muteRole == null)
+            {
+                await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (reportChannel == null)
+            {
+                await ReplyAsync("", embed: "Kanał raportów nie jest ustawiony.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+            
+            var reportMsg = await reportChannel.GetMessageAsync(raport.Message);
+            if (duration == -1)
+            {
+                if (reportMsg != null)
+                    await reportMsg.DeleteAsync();
+
+                config.Raports.Remove(raport);
+                await _dbConfigContext.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Odrzucono zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
+                return;
+            }
+            else if (duration < 1) return;
+
+            if (reportMsg != null)
+                await reportMsg.DeleteAsync();
+
+            config.Raports.Remove(raport);
+            await _dbConfigContext.SaveChangesAsync();
+
+            var user = Context.Guild.GetUser(raport.User);
+            if (user == null)
+            {
+                await ReplyAsync("", embed: $"Użytkownika nie ma serwerze.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (user.Roles.Contains(muteRole))
+            {
+                await ReplyAsync("", embed: $"{user.Mention} już jest wyciszony.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var usr = Context.User as SocketGuildUser;
+            var info = await _moderation.MuteUserAysnc(user, muteRole, null, userRole, _dbManagmentContext, duration, reason);
+            await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
+
+            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]

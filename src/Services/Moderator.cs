@@ -402,6 +402,31 @@ namespace Sanakan.Services
             }.Build();
         }
 
+        public Embed BuildTodo(IMessage message, SocketGuildUser who)
+        {
+            string image = "";
+            if (message.Attachments.Count > 0)
+            {
+                var first = message.Attachments.First();
+
+                if (first.Url.IsURLToImage())
+                    image = first.Url;
+            }
+
+            return new EmbedBuilder
+            {
+                Author = new EmbedAuthorBuilder().WithUser(message.Author),
+                Description = message.Content.TrimToLength(1800),
+                Color = EMType.Bot.Color(),
+                ImageUrl = image,
+                Footer = new EmbedFooterBuilder
+                {
+                    IconUrl = who.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg",
+                    Text = $"Przez: {who.Nickname ?? who.Username}",
+                },
+            }.Build();
+        }
+
         public async Task UnmuteUserAsync(SocketGuildUser user, SocketRole muteRole, SocketRole muteModRole, Database.ManagmentContext db)
         {
             var penalty = await db.Penalties.Include(x => x.Roles).FirstOrDefaultAsync(x => x.User == user.Id 

@@ -205,43 +205,43 @@ namespace Sanakan.Services
 
             return new List<EmbedFieldBuilder>
             {
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Id",
                     Value = user.Id,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Pseudo",
                     Value = user.Nickname ?? "Brak",
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Status",
                     Value = user.Status.ToString(),
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Bot",
                     Value = user.IsBot ? "Tak" : "Nie",
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Utworzono",
                     Value = user.CreatedAt.DateTime.ToString(),
                     IsInline = false
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Dołączono",
                     Value = user.JoinedAt.ToString().Split('+')[0],
                     IsInline = false
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = $"Role[{user.Roles.Count - 1}]",
                     Value = roles,
@@ -274,45 +274,45 @@ namespace Sanakan.Services
                     roles += item.Mention + " ";
             }
 
-            return new List<EmbedFieldBuilder>()
+            return new List<EmbedFieldBuilder>
             {
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Id",
                     Value = guild.Id,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Właściciel",
                     Value = guild.Owner.Mention,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Utworzono",
                     Value = guild.CreatedAt.DateTime.ToString(),
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Liczba użytkowników",
                     Value = guild.Users.Count,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Kanały tekstowe",
                     Value = guild.TextChannels.Count,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = "Kanały głosowe",
                     Value = guild.VoiceChannels.Count,
                     IsInline = true
                 },
-                new EmbedFieldBuilder()
+                new EmbedFieldBuilder
                 {
                     Name = $"Role[{guild.Roles.Count}]",
                     Value = roles.TrimToLength(EmbedFieldBuilder.MaxFieldValueLength),
