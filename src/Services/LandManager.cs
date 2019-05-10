@@ -1,15 +1,11 @@
+#pragma warning disable 1591
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Database.Models.Configuration;
 using Sanakan.Extensions;
-using Sanakan.Services.Session;
-using Sanakan.Services.Session.Models;
-using Shinden;
 
 namespace Sanakan.Services
 {

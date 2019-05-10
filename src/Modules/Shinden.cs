@@ -15,7 +15,7 @@ using Z.EntityFramework.Plus;
 
 namespace Sanakan.Modules
 {
-    [Name("Shinden"), RequireCommandChannel, RequireUserRole]
+    [Name("Shinden"), RequireUserRole]
     public class Shinden : SanakanModuleBase<SocketCommandContext>
     {
         private ShindenClient _shclient;
@@ -34,7 +34,7 @@ namespace Sanakan.Modules
         [Command("odcinki", RunMode = RunMode.Async)]
         [Alias("episodes")]
         [Summary("wyświetla nowo dodane epizody")]
-        [Remarks("")]
+        [Remarks(""), RequireCommandChannel]
         public async Task ShowNewEpisodesAsync()
         {
             var response = await _shclient.GetNewEpisodesAsync();

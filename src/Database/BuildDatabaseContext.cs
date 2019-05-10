@@ -41,6 +41,7 @@ namespace Sanakan.Database
         public DbSet<WithoutSupervisionChannel> WithoutSupervisionChannels { get; set; }
         public DbSet<MyLand> MyLands { get; set; }
         public DbSet<Waifu> Waifus { get; set; }
+        public DbSet<Raport> Raports { get; set; }
         public DbSet<WaifuCommandChannel> WaifuCommandChannels { get; set; }
         public DbSet<WaifuFightChannel> WaifuFightChannels { get; set; }
         public DbSet<PenaltyInfo> Penalties { get; set; }
@@ -166,6 +167,14 @@ namespace Sanakan.Database
                     .WithOne(w => w.Waifu);
                 entity.HasOne(e => e.GuildOptions)
                     .WithOne(g => g.WaifuConfig);
+            });
+
+            modelBuilder.Entity<Raport>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GuildOptions)
+                    .WithMany(g => g.Raports);
             });
 
             modelBuilder.Entity<SelfRole>(entity =>

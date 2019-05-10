@@ -31,6 +31,7 @@ namespace Sanakan.Database.Models.Configuration
         public virtual ICollection<ModeratorRoles> ModeratorRoles { get; set; }
         public virtual ICollection<LevelRole> RolesPerLevel { get; set; }
         public virtual ICollection<SelfRole> SelfRoles { get; set; }
+        public virtual ICollection<Raport> Raports { get; set; }
         public virtual ICollection<MyLand> Lands { get; set; }
     }
 }

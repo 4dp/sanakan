@@ -8,6 +8,7 @@ using Sanakan.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sanakan.Services
 {
@@ -318,6 +319,72 @@ namespace Sanakan.Services
                     IsInline = false
                 }
             };
+        }
+
+        public async Task<IMessage> FindMessageInGuildAsync(SocketGuild guild, ulong id)
+        {
+            IMessage msg = null;
+            foreach (ITextChannel channel in guild.Channels)
+                if (channel != null)
+                {
+                    msg = await channel.GetMessageAsync(id);
+                    if (msg != null) 
+                        break;
+                }
+
+            return msg;
+        }
+
+        public Embed BuildRaportInfo(IMessage message, string reportAuthor, string reason, ulong reportId)
+        {
+            string attach = "brak";
+            if (message.Attachments.Count > 0)
+            {
+                attach = "";
+                foreach (var att in message.Attachments)
+                    attach += $"{att.Url}\n";
+            }
+
+            return new EmbedBuilder
+            {
+                Footer = new EmbedFooterBuilder().WithText($"Zgłasza: {reportAuthor}".TrimToLength(EmbedFooterBuilder.MaxFooterTextLength)),
+                Author = new EmbedAuthorBuilder().WithUser(message.Author),
+                Description = message.Content.TrimToLength(1500),
+                Color = EMType.Error.Color(),
+                Fields = new List<EmbedFieldBuilder>
+                {
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Kanał:",
+                        Value = message.Channel.Name,
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Napisano:",
+                        Value = $"{message.GetLocalCreatedAtShortDateTime()}"
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true,
+                        Name = "Id zgloszenia:",
+                        Value = reportId
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = false,
+                        Name = "Powód:",
+                        Value = reason.TrimToLength(EmbedFieldBuilder.MaxFieldValueLength)
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = false,
+                        Name = "Załączniki:",
+                        Value = attach.TrimToLength(EmbedFieldBuilder.MaxFieldValueLength)
+                    }
+                }
+            }.Build();
         }
     }
 }

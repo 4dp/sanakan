@@ -12,20 +12,22 @@ using System.Threading.Tasks;
 
 namespace Sanakan.Modules
 {
-    [Name("Ogólne"), RequireCommandChannel]
+    [Name("Ogólne")]
     public class Helper : SanakanModuleBase<SocketCommandContext>
     {
+        private Database.GuildConfigContext _dbGuildConfigContext;
         private Services.Helper _helper;
 
-        public Helper(Services.Helper helper)
+        public Helper(Services.Helper helper, Database.GuildConfigContext dbGuildConfigContext)
         {
+            _dbGuildConfigContext = dbGuildConfigContext;
             _helper = helper;
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("h", "help")]
         [Summary("wyświetla listę poleceń")]
-        [Remarks("odcinki")]
+        [Remarks("odcinki"), RequireCommandChannel]
         public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)
@@ -48,7 +50,7 @@ namespace Sanakan.Modules
         [Command("ktoto", RunMode = RunMode.Async)]
         [Alias("whois")]
         [Summary("wyświetla informacje o użytkowniku")]
-        [Remarks("Dzida")]
+        [Remarks("Dzida"), RequireCommandChannel]
         public async Task GiveUserInfoAsync([Summary("nazwa użytkownika(opcjonalne)")]SocketUser user = null)
         {
             var usr = (user ?? Context.User) as SocketGuildUser;
@@ -63,7 +65,7 @@ namespace Sanakan.Modules
 
         [Command("ping", RunMode = RunMode.Async)]
         [Summary("sprawdza opóźnienie między botem a serwerem")]
-        [Remarks("")]
+        [Remarks(""), RequireCommandChannel]
         public async Task GivePingAsync()
         {
             int latency = Context.Client.Latency;
@@ -78,7 +80,7 @@ namespace Sanakan.Modules
         [Command("serwerinfo", RunMode = RunMode.Async)]
         [Alias("serverinfo", "sinfo")]
         [Summary("wyświetla informacje o serwerze")]
-        [Remarks("")]
+        [Remarks(""), RequireCommandChannel]
         public async Task GiveServerInfoAsync()
         {
             if (Context.Guild == null)
@@ -93,7 +95,7 @@ namespace Sanakan.Modules
         [Command("awatar", RunMode = RunMode.Async)]
         [Alias("avatar", "pfp")]
         [Summary("wyświetla awatar użytkownika")]
-        [Remarks("Dzida")]
+        [Remarks("Dzida"), RequireCommandChannel]
         public async Task ShowUserAvatarAsync([Summary("nazwa użytkownika(opcjonalne)")]SocketUser user = null)
         {
             var usr = (user ?? Context.User);
@@ -109,7 +111,7 @@ namespace Sanakan.Modules
 
         [Command("info", RunMode = RunMode.Async)]
         [Summary("wyświetla informacje o bocie")]
-        [Remarks("")]
+        [Remarks(""), RequireCommandChannel]
         public async Task GiveBotInfoAsync()
         {
             var proc = System.Diagnostics.Process.GetCurrentProcess();
@@ -119,6 +121,59 @@ namespace Sanakan.Modules
                 + $"**Wątki**: `{proc.Threads.Count}` / **RAM**: `{proc.WorkingSet64 / 1048576} MiB`";
 
             await ReplyAsync(info);
+        }
+
+        [Command("zgłoś", RunMode = RunMode.Async)]
+        [Alias("raport", "zgłos", "zglos")]
+        [Summary("zgłasza wiadomośc użytkownika")]
+        [Remarks("63312335634561 Tak nie wolno!"), RequireUserRole]
+        public async Task ReportUserAsync([Summary("id wiadomości")]ulong messageId, [Summary("powód")][Remainder]string reason)
+        {
+            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie jest jeszcze skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var raportCh = Context.Guild.GetTextChannel(config.RaportChannel);
+            if (raportCh == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie ma skonfigurowanych raportów.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var repMsg = await Context.Channel.GetMessageAsync(messageId);
+            if (repMsg == null) repMsg = await _helper.FindMessageInGuildAsync(Context.Guild, messageId);
+
+            if (repMsg == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono wiadomości.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (repMsg.Author.IsBot || repMsg.Author.IsWebhook)
+            {
+                await ReplyAsync("", embed: "Raportować bota? Bezsensu.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if ((DateTime.Now - repMsg.CreatedAt.DateTime.ToLocalTime()).TotalHours > 3)
+            {
+                await ReplyAsync("", embed: "Można raportować tylko wiadomośći, które nie są starsze jak 3h.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            await Context.Message.DeleteAsync();
+            await ReplyAsync("", embed: "Wysłano zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
+
+            string userName = $"{Context.User.Username}({Context.User.Id})";
+            var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
+            await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
+            
+            var rConfig = await _dbGuildConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+            rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
+            await _dbGuildConfigContext.SaveChangesAsync();
         }
     }
 }
