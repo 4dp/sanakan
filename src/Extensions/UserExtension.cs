@@ -1,4 +1,5 @@
 ﻿using Sanakan.Database.Models;
+using Sanakan.Services;
 using System;
 
 namespace Sanakan.Extensions
@@ -46,6 +47,37 @@ namespace Sanakan.Extensions
                     Multiplier = SlotMachineBeatMultiplier.x1,
                 }
             };
+        }
+
+        public static string GetViewValueForTop(this User u, TopType type)
+        {
+            switch (type)
+            {
+                default:
+                case TopType.Level:
+                    return $"{u.Level} **LVL** ({u.ExpCnt} **EXP**)";
+
+                case TopType.ScCnt:
+                    return $"{u.ScCnt} **SC**";
+
+                case TopType.TcCnt:
+                    return $"{u.TcCnt} **TC**";
+
+                case TopType.Posts:
+                    return $"{u.MessagesCnt}";
+
+                case TopType.PostsMonthly:
+                    return $"{u.MessagesCntAtDate - u.MessagesCnt}";
+
+                case TopType.PostsMonthlyCharacter:
+                    return $"{u.CharacterCntFromDate / (u.MessagesCntAtDate - u.MessagesCnt)} znaki";
+
+                case TopType.Commands:
+                    return $"{u.CommandsCnt}";
+
+                case TopType.Cards:
+                    return $"{u.GameDeck.Cards.Count}";
+            }
         }
     }
 }

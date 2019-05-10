@@ -39,6 +39,7 @@ namespace Sanakan.Services.Commands
             _provider = provider;
 
             _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
+            _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
 
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));

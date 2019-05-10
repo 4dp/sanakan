@@ -131,6 +131,7 @@ namespace Sanakan
                 .AddSingleton(_helper)
                 .AddSingleton(_mod)
                 .AddSingleton(_exp)
+                .AddSingleton<Services.Profile>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
                 .AddDbContext<Database.UserContext>()

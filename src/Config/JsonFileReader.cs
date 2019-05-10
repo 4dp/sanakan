@@ -41,7 +41,7 @@ namespace Sanakan.Config
             {
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    new JsonSerializer().Serialize(writer, path);
+                    new JsonSerializer().Serialize(writer, obj);
                 }
             }
         }
