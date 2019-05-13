@@ -84,7 +84,7 @@ namespace Sanakan.Modules
                 Title = $"Topka {type.Name()}"
             };
 
-            var msg = await ReplyAsync("", embed: session.BuildPage(0)); ;
+            var msg = await ReplyAsync("", embed: session.BuildPage(0));
             await msg.AddReactionsAsync( new [] { new Emoji("⬅"), new Emoji("➡") });
 
             session.Message = msg;

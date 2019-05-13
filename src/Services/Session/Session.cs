@@ -16,7 +16,7 @@ namespace Sanakan.Services.Session
         protected List<IUser> _owners = new List<IUser>();
 
         private Func<ISession, Task> OnSyncEnd { get; set; }
-        protected Stopwatch _timer { get; set; }
+        private Stopwatch _timer { get; set; }
         private bool _added { get; set; }
 
         public Session(IUser owner)
@@ -41,6 +41,12 @@ namespace Sanakan.Services.Session
         public Func<Task> OnDispose { get; set; }
         public Func<SessionContext, Session, Task<bool>> OnExecute { get; set; }
         public void AddParticipant(IUser participant) => _owners.Add(participant);
+
+        public void RestartTimer()
+        {
+            if (_added && TimeoutMs > 0)
+                _timer = Stopwatch.StartNew();
+        }
 
         // ISession
         public string GetId() => Id;
@@ -82,7 +88,7 @@ namespace Sanakan.Services.Session
 
         public IExecutable GetExecutable(SessionContext context)
         {
-            var task = new Task<bool>(() => 
+            return new Executable(new Task<bool>(() => 
             {
                 if (OnExecute == null)
                     return true;
@@ -96,10 +102,9 @@ namespace Sanakan.Services.Session
                        await OnSyncEnd(this);
                    });
                 }
+                
                 return res;
-            });
-
-            return new Executable(task);
+            }));
         }
     }
 }

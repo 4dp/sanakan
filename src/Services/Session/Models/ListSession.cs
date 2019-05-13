@@ -24,7 +24,7 @@ namespace Sanakan.Services.Session.Models
         {
             Event = ExecuteOn.AllReactions;
             RunMode = RunMode.Async;
-            TimeoutMs = 120000;
+            TimeoutMs = 60000;
             Bot = bot;
 
             Embed = null;
@@ -69,11 +69,15 @@ namespace Sanakan.Services.Session.Models
                 {
                     if (--CurrentPage < 0) CurrentPage = MaxPageReal();
                     await msg.ModifyAsync(x => x.Embed = BuildPage(CurrentPage));
+
+                    RestartTimer();
                 }
                 else if (reaction.Emote.Equals(RightEmote))
                 {
                     if (++CurrentPage > MaxPageReal()) CurrentPage = 0;
                     await msg.ModifyAsync(x => x.Embed = BuildPage(CurrentPage));
+
+                    RestartTimer();
                 }
 
                 try
