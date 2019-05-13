@@ -26,8 +26,8 @@ namespace Sanakan.Extensions
                 CharacterCntFromDate = 0,
                 ProfileType = ProfileType.Stats,
                 StatsReplacementProfileUri = "none",
-                BackgroundProfileUri = $"defBg.png",
                 GameDeck = new GameDeck { Waifu = 0 },
+                BackgroundProfileUri = $"./Pictures/defBg.png",
                 MeasureDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
                 Stats = new UserStats
                 {
