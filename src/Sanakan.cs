@@ -25,6 +25,7 @@ namespace Sanakan
         private CommandHandler _handler;
         private ExperienceManager _exp;
         private Supervisor _supervisor;
+        private ImageProcessing _img;
         private DeletedLog _deleted;
         private Daemonizer _daemon;
         private Greeting _greeting;
@@ -80,15 +81,16 @@ namespace Sanakan
                 return Task.CompletedTask;
             };
 
+            _img = new ImageProcessing();
             _helper = new Helper(_config);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
             _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
-            _exp = new ExperienceManager(_client, _executor, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
+            _exp = new ExperienceManager(_client, _executor, _config, _img);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
 
             var tmpCnf = _config.Get();
@@ -131,6 +133,7 @@ namespace Sanakan
                 .AddSingleton(_helper)
                 .AddSingleton(_mod)
                 .AddSingleton(_exp)
+                .AddSingleton(_img)
                 .AddSingleton<Services.Profile>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()

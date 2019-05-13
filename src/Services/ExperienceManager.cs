@@ -23,14 +23,16 @@ namespace Sanakan.Services
         private Dictionary<ulong, ulong> _characters;
 
         private DiscordSocketClient _client;
+        private ImageProcessing _img;
         private IExecutor _executor;
         private IConfig _config;
 
-        public ExperienceManager(DiscordSocketClient client, IExecutor executor, IConfig config)
+        public ExperienceManager(DiscordSocketClient client, IExecutor executor, IConfig config, ImageProcessing img)
         {
             _executor = executor;
             _client = client;
             _config = config;
+            _img = img;
 
             _exp = new Dictionary<ulong, double>();
             _saved = new Dictionary<ulong, DateTime>();
@@ -48,7 +50,14 @@ namespace Sanakan.Services
 
         public async Task NotifyAboutLevelAsync(SocketGuildUser user, ISocketMessageChannel channel, long level)
         {
-            await channel.SendMessageAsync("", embed: $"{user.Nickname ?? user.Username} awansował na {level} poziom!".ToEmbedMessage(EMType.Bot).Build());
+            using (var badge = await _img.GetLevelUpBadgeAsync(user.Nickname ?? user.Username, 
+                level, user.GetAvatarUrl(), user.Roles.OrderByDescending(x => x.Position).First().Color))
+            {
+                using (var badgeStream = badge.ToJpgStream())
+                {
+                    await channel.SendFileAsync(badgeStream, $"{user.Id}.jpg");
+                }
+            }
         }
 
         private async Task HandleMessageAsync(SocketMessage message)

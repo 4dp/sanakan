@@ -30,6 +30,9 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
     <PackageReference Include="Shinden.NET" Version="0.3.6-beta" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="1.8.27" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0006" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0006" />
+    <PackageReference Include="SixLabors.ImageSharp.Web" Version="1.0.0-beta0007" />
   </ItemGroup>
 
 </Project>
