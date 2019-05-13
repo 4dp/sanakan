@@ -42,7 +42,9 @@ namespace Sanakan.Services.Commands
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
 
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));
+            _helper.PrivateModulesInfo.Add("Debug", await _cmd.AddModuleAsync<Modules.Debug>(_provider));
 
             _client.MessageReceived += HandleCommandAsync;
         }

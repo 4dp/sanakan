@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable 1591
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
@@ -84,7 +86,7 @@ namespace Sanakan.Services.Session.Models
                 {
                     await msg.RemoveReactionAsync(reaction.Emote, GetOwner());
                 }
-                catch (Exception _) { }
+                catch (Exception) { }
             }
 
             return false;
@@ -100,7 +102,7 @@ namespace Sanakan.Services.Session.Models
                     {
                         await msg.RemoveAllReactionsAsync();
                     }
-                    catch (Exception _)
+                    catch (Exception)
                     {
                         await msg.RemoveReactionsAsync(Bot, new IEmote[] { LeftEmote, RightEmote });
                     }
