@@ -1,4 +1,6 @@
-﻿namespace Sanakan.Database.Models.Configuration
+﻿#pragma warning disable 1591
+
+namespace Sanakan.Database.Models.Configuration
 {
     public class SelfRole
     {

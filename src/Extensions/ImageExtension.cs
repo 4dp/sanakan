@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿#pragma warning disable 1591
+
+using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;

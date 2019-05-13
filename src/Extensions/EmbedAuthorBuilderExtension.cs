@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿#pragma warning disable 1591
+
+using Discord;
 using Discord.WebSocket;
 
 namespace Sanakan.Extensions

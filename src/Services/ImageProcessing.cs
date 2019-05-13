@@ -1,8 +1,10 @@
 ﻿#pragma warning disable 1591
 
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Shinden.Models;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -32,6 +34,97 @@ namespace Sanakan.Services
                     return await res.Content.ReadAsStreamAsync();
             }
             return null;
+        }
+
+        private Font GetFontSize(FontFamily fontFamily, float size, string text, float maxWidth)
+        {
+            var font = new Font(fontFamily, size);
+            var measured = TextMeasurer.Measure(text, new RendererOptions(font));
+
+            while (measured.Width > maxWidth)
+            {
+                if (--size < 1) break;
+                font = new Font(fontFamily, size);
+                measured = TextMeasurer.Measure(text, new RendererOptions(font));
+            }
+
+            return font;
+        }
+
+        private async Task<Image<Rgba32>> GetSiteStatisticUserBadge(string avatarUrl, string name, string color)
+        {
+            var font = GetFontSize(_latoBold, 32, name, 360);
+
+            var badge = new Image<Rgba32>(450, 65);
+            badge.Mutate(x => x.DrawText(name, font, Rgba32.FromHex("#A4A4A4"), new Point(72, 6 + (int)((58 - font.Size) / 2))));
+
+            using (var border = new Image<Rgba32>(3, 57))
+            {
+                border.Mutate(x => x.BackgroundColor(Rgba32.FromHex(color)));
+                badge.Mutate(x => x.DrawImage(border,  new Point(63, 5), 1));
+            }
+
+            using (var stream = await GetImageFromUrlAsync(avatarUrl))
+            {
+                if (stream == null)
+                    return badge;
+
+                using (var avatar = Image.Load(stream))
+                {
+                    avatar.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Crop,
+                        Size = new Size(57, 57)
+                    }));
+                    badge.Mutate(x => x.DrawImage(avatar, new Point(6, 5), 1));
+                }
+            }
+
+            return badge;
+        }
+
+        // private Image<Rgba32> GetStats(ISeriesStatus status, string path)
+        // {
+
+        // }
+
+        public async Task<Image<Rgba32>> GetSiteStatisticAsync(IUserInfo shindenInfo, Discord.Color color, List<ILastReaded> lastRead = null, List<ILastWatched> lastWatch = null)
+        {
+            var baseImg = new Image<Rgba32>(500, 320);
+            baseImg.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
+
+            using (var template = Image.Load("./Pictures/siteStatsBody.png"))
+            {
+                baseImg.Mutate(x => x.DrawImage(template, new Point(0, 0), 1));
+            }
+
+            using (var avatar = await GetSiteStatisticUserBadge(shindenInfo.AvatarUrl, shindenInfo.Name, color.RawValue.ToString("X")))
+            {
+                baseImg.Mutate(x => x.DrawImage(avatar, new Point(0, 0), 1));
+            }
+
+            // using (var image = new Image<Rgba32>(325, 248))
+            // {
+            //     if (shindenInfo?.ListStats?.AnimeStatus != null)
+            //     {
+            //         using (var stats = GetStats(shindenInfo?.ListStats?.AnimeStatus,
+            //             "./Pictures/statsAnime.png", shindenInfo.GetMoreSeriesStats(false)))
+            //         {
+            //             image.Mutate(x => x.DrawImage(stats, new Point(0, 0), 1));
+            //         }
+            //     }
+            //     if (shindenInfo?.ListStats?.MangaStatus != null)
+            //     {
+            //         using (var stats = GetStats(shindenInfo?.ListStats?.MangaStatus,
+            //             "./Pictures/statsManga.png", shindenInfo.GetMoreSeriesStats(true)))
+            //         {
+            //             image.Mutate(x => x.DrawImage(stats, new Point(0, 128), 1));
+            //         }
+            //     }
+            //     baseImg.Mutate(x => x.DrawImage(image, new Point(5, 71), 1));
+            // }
+
+            return baseImg;
         }
 
         public async Task<Image<Rgba32>> GetLevelUpBadgeAsync(string name, long ulvl, string avatarUrl, Discord.Color color)
@@ -65,9 +158,11 @@ namespace Sanakan.Services
                 colorRec.Mutate(x => x.BackgroundColor(Rgba32.FromHex(nickNameColor)));
                 baseImg.Mutate(x => x.DrawImage(colorRec, new Point(9, 9), 1));
 
-                var stream = await GetImageFromUrlAsync(avatarUrl);
-                if (stream != null)
+                using (var stream = await GetImageFromUrlAsync(avatarUrl))
                 {
+                    if (stream == null)
+                        return baseImg;
+
                     using (var avatar = Image.Load(stream))
                     {
                         avatar.Mutate(x => x.Resize(new ResizeOptions
@@ -75,10 +170,8 @@ namespace Sanakan.Services
                             Mode = ResizeMode.Crop,
                             Size = new Size(80, 80)
                         }));
-
                         baseImg.Mutate(x => x.DrawImage(avatar, new Point(10, 10), 1));
                     }
-                    stream.Dispose();
                 }
             }
 

@@ -116,6 +116,34 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("strona", RunMode = RunMode.Async)]
+        [Alias("ile", "otaku", "site", "mangozjeb")]
+        [Summary("wyświetla statystyki użytkownika z strony")]
+        [Remarks("karna")]
+        public async Task ShowSiteStatisticAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser user = null)
+        {
+            var usr = user ?? Context.User as SocketGuildUser;
+            if (usr == null) return;
+
+            var botUser = await _dbUserContext.GetCachedFullUserAsync(usr.Id);
+            if (botUser?.Shinden == 0)
+            {
+                await ReplyAsync("", embed: "Ta osoba nie połączyła konta bota z kontem na stronie.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var stream = await _shinden.GetSiteStatisticAsync(botUser.Shinden, usr))
+            {
+                if (stream == null)
+                {
+                    await ReplyAsync("", embed: $"Brak połączenia z Shindenem!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+            }
+        }
+
         [Command("połącz")]
         [Alias("connect", "polacz", "połacz", "polącz")]
         [Summary("łączy funkcje bota, z kontem na stronie")]

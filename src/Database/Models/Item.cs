@@ -1,4 +1,6 @@
-﻿namespace Sanakan.Database.Models
+﻿#pragma warning disable 1591
+
+namespace Sanakan.Database.Models
 {
     public enum ItemType
     {

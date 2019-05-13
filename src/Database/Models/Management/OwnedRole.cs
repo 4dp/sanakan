@@ -1,4 +1,6 @@
-﻿namespace Sanakan.Database.Models.Management
+﻿#pragma warning disable 1591
+
+namespace Sanakan.Database.Models.Management
 {
     public class OwnedRole
     {

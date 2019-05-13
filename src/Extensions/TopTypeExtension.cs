@@ -1,4 +1,6 @@
-﻿using Sanakan.Services;
+﻿#pragma warning disable 1591
+
+using Sanakan.Services;
 
 namespace Sanakan.Extensions
 {

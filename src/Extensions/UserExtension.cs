@@ -1,4 +1,6 @@
-﻿using Sanakan.Database.Models;
+﻿#pragma warning disable 1591
+
+using Sanakan.Database.Models;
 using Sanakan.Services;
 using System;
 

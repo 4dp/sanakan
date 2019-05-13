@@ -1,4 +1,6 @@
-﻿namespace Sanakan.Extensions
+﻿#pragma warning disable 1591
+
+namespace Sanakan.Extensions
 {
     public static class DateTimeExtension
     {

@@ -1,12 +1,17 @@
+#pragma warning disable 1591
+
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Extensions;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
 using Shinden;
+using Shinden.Models;
 
 namespace Sanakan.Services
 {
@@ -19,11 +24,13 @@ namespace Sanakan.Services
     {
         private ShindenClient _shClient;
         private SessionManager _session;
+        private ImageProcessing _img;
 
-        public Shinden(ShindenClient client, SessionManager session)
+        public Shinden(ShindenClient client, SessionManager session, ImageProcessing img)
         {
             _shClient = client;
             _session = session;
+            _img = img;
         }
 
         public UrlParsingError ParseUrlToShindenId(string url, out ulong shindenId)
@@ -124,6 +131,23 @@ namespace Sanakan.Services
 
                 default:
                     return $"Brak połączenia z Shindenem! ({code})";
+            }
+        }
+
+        public async Task<Stream> GetSiteStatisticAsync(ulong shindenId, SocketGuildUser user)
+        {
+            var response = await _shClient.User.GetAsync(shindenId);
+            if (!response.IsSuccessStatusCode()) return null;
+
+            var resLR = await _shClient.User.GetLastReadedAsync(shindenId);
+            var resLW = await _shClient.User.GetLastWatchedAsync(shindenId);
+
+            using (var image = await _img.GetSiteStatisticAsync(response.Body,
+                user.Roles.OrderByDescending(x => x.Position).First().Color,
+                resLR.IsSuccessStatusCode() ? resLR.Body : null,
+                resLW.IsSuccessStatusCode() ? resLW.Body : null))
+            {
+                return image.ToPngStream();
             }
         }
     }
