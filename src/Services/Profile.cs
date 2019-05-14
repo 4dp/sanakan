@@ -3,8 +3,11 @@
 using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
+using Shinden;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sanakan.Services
 {
@@ -15,6 +18,15 @@ namespace Sanakan.Services
 
     public class Profile
     {
+        private ShindenClient _shClient;
+        private ImageProcessing _img;
+
+        public Profile(ShindenClient client, ImageProcessing img)
+        {
+            _shClient = client;
+            _img = img;
+        }
+
         public List<User> GetTopUsers(List<User> list, TopType type)
             => GetRangeMax(OrderUsersByTop(list, type), 50);
 
@@ -65,6 +77,17 @@ namespace Sanakan.Services
             }
 
             return view;
+        }
+
+        public async Task<Stream> GetProfileImageAsync(SocketGuildUser user, Database.Models.User botUser, long topPosition)
+        {
+            var response = await _shClient.User.GetAsync(botUser.Shinden);
+
+            using (var image = await _img.GetUserProfileAsync(response.Body, botUser, user.GetAvatarUrl().Split("?")[0],
+                topPosition, user.Nickname ?? user.Username, user.Roles.OrderByDescending(x => x.Position).First().Color))
+            {
+                return image.ToPngStream();
+            }
         }
     }
 }

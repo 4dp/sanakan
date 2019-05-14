@@ -2,6 +2,7 @@
 
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
@@ -89,6 +90,29 @@ namespace Sanakan.Modules
 
             session.Message = msg;
             await _session.TryAddSession(session);
+        }
+
+        [Command("profil", RunMode = RunMode.Async)]
+        [Alias("profile")]
+        [Summary("wyświetla profil użytkownika")]
+        [Remarks("karna")]
+        public async Task ShowUserProfileAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser user = null)
+        {
+            var usr = user ?? Context.User as SocketGuildUser;
+            if (usr == null) return;
+
+            var allUsers = await _dbUserContext.GetCachedAllUsersAsync();
+            var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
+            if (botUser == null)
+            {
+                await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var stream = await _profile.GetProfileImageAsync(usr, botUser, allUsers.OrderByDescending(x => x.ExpCnt).ToList().IndexOf(botUser) + 1))
+            {
+                await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+            }
         }
     }
 }

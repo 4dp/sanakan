@@ -44,9 +44,8 @@ namespace Sanakan.Services
 #endif
         }
 
-        public long CalculateExpForLevel(long level) => (level <= 0) ? 0 : Convert.ToInt64(Math.Floor(Math.Pow(level / LM, 2)) + 1);
-        
-        public long CalculateLevel(long exp) => Convert.ToInt64(Math.Floor(LM * Math.Sqrt(exp)));
+        public static long CalculateExpForLevel(long level) => (level <= 0) ? 0 : Convert.ToInt64(Math.Floor(Math.Pow(level / LM, 2)) + 1);
+        public static long CalculateLevel(long exp) => Convert.ToInt64(Math.Floor(LM * Math.Sqrt(exp)));
 
         public async Task NotifyAboutLevelAsync(SocketGuildUser user, ISocketMessageChannel channel, long level)
         {
