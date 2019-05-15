@@ -39,6 +39,7 @@ namespace Sanakan.Services.Commands
             _provider = provider;
 
             _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
+            _cmd.AddTypeReader<CoinSide>(new TypeReaders.CoinSideTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
 
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);

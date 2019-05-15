@@ -156,7 +156,7 @@ namespace Sanakan.Services
 
             string expText = $"EXP: {botUser.ExpCnt} / {lvlExp}";
             var mExp = TextMeasurer.Measure(expText, new RendererOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText(expText, rangFont, Rgba32.FromHex("#ffffff"), new Point(135 + (int)(305 - mExp.Width) / 2, 204)));
+            profilePic.Mutate(x => x.DrawText(expText, rangFont, Rgba32.FromHex("#ffffff"), new Point(135 + ((int)(305 - mExp.Width) / 2), 204)));
 
             using (var inside = GetProfileInside(shindenUser, botUser))
             {

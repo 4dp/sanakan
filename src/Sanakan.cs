@@ -134,6 +134,7 @@ namespace Sanakan
                 .AddSingleton(_mod)
                 .AddSingleton(_exp)
                 .AddSingleton(_img)
+                .AddSingleton<Services.Fun>()
                 .AddSingleton<Services.Profile>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
