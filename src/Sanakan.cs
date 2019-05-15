@@ -29,6 +29,7 @@ namespace Sanakan
         private DeletedLog _deleted;
         private Daemonizer _daemon;
         private Greeting _greeting;
+        private Profile _profile;
         private IConfig _config;
         private ILogger _logger;
         private Moderator _mod;
@@ -92,6 +93,7 @@ namespace Sanakan
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _exp = new ExperienceManager(_client, _executor, _config, _img);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
+            _profile = new Profile(_client, _shindenClient, _img, _logger, _config);
 
             var tmpCnf = _config.Get();
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
@@ -127,6 +129,7 @@ namespace Sanakan
                 .AddSingleton(_shindenClient)
                 .AddSingleton(_executor)
                 .AddSingleton(_sessions)
+                .AddSingleton(_profile)
                 .AddSingleton(_config)
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
@@ -135,7 +138,6 @@ namespace Sanakan
                 .AddSingleton(_exp)
                 .AddSingleton(_img)
                 .AddSingleton<Services.Fun>()
-                .AddSingleton<Services.Profile>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
                 .AddDbContext<Database.UserContext>()

@@ -1,15 +1,20 @@
 ﻿#pragma warning disable 1591
 
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Shinden;
+using Shinden.Logger;
 using SixLabors.Primitives;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Services
 {
@@ -20,13 +25,70 @@ namespace Sanakan.Services
 
     public class Profile
     {
+        private DiscordSocketClient _client;
         private ShindenClient _shClient;
         private ImageProcessing _img;
+        private ILogger _logger;
+        private IConfig _config;
+        private Timer _timer;
 
-        public Profile(ShindenClient client, ImageProcessing img)
+        public Profile(DiscordSocketClient client, ShindenClient shClient, ImageProcessing img, ILogger logger, IConfig config)
         {
-            _shClient = client;
+            _shClient = shClient;
+            _client = client;
+            _logger = logger;
+            _config = config;
             _img = img;
+
+            _timer = new Timer(async _ =>
+            {
+                try
+                {
+                    using (var db = new Database.UserContext(_config))
+                    {
+                        await CyclicCheckAsync(db);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"in profile check: {ex}");
+                }
+            },
+            null,
+            TimeSpan.FromMinutes(1),
+            TimeSpan.FromMinutes(1));
+        }
+
+        private async Task CyclicCheckAsync(Database.UserContext context)
+        {
+            var subs = context.TimeStatuses.Include(x => x.Guild).FromCache(new[] { "users" }).Where(x => x.Type.IsSubType());
+            foreach (var sub in subs)
+            {
+                if (sub.IsActive())
+                    continue;
+
+                var guild = _client.GetGuild(sub.GuildId);
+                switch (sub.Type)
+                {
+                    case StatusType.Globals:
+                        await RemoveRoleAsync(guild, sub?.Guild?.GlobalEmotesRole ?? 0, sub.UserId);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private async Task RemoveRoleAsync(SocketGuild guild, ulong roleId, ulong userId)
+        {
+            var role = guild.GetRole(roleId);
+            if (role == null) return;
+
+            var user = guild.GetUser(userId);
+            if (user == null) return;
+
+            await user.RemoveRoleAsync(role);
         }
 
         public List<User> GetTopUsers(List<User> list, TopType type)

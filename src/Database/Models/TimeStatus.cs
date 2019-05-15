@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Sanakan.Database.Models.Configuration;
 using System;
 
 namespace Sanakan.Database.Models
@@ -17,5 +18,8 @@ namespace Sanakan.Database.Models
 
         public ulong UserId { get; set; }
         public virtual User User { get; set; }
+
+        public ulong GuildId { get; set; }
+        public virtual GuildOptions Guild { get; set; }
     }
 }

@@ -130,9 +130,6 @@ namespace Sanakan.Modules
                 return;
             }
 
-            botuser.ScCnt -= 3000;
-            botuser.ProfileType = type;
-
             switch (type)
             {
                 case ProfileType.Img:
@@ -148,6 +145,9 @@ namespace Sanakan.Modules
                 default:
                     break;
             }
+
+            botuser.ScCnt -= 3000;
+            botuser.ProfileType = type;
 
             await _dbUserContext.SaveChangesAsync();
 
@@ -169,8 +169,6 @@ namespace Sanakan.Modules
                 return;
             }
 
-            botuser.ScCnt -= 5000;
-
             if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/BG{botuser.Id}.png", 450, 150, true))
             {
                 botuser.BackgroundProfileUri = $"./GOut/Saved/BG{botuser.Id}.png";
@@ -180,6 +178,8 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
+
+            botuser.ScCnt -= 5000;
 
             await _dbUserContext.SaveChangesAsync();
 
