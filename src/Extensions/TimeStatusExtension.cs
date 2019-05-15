@@ -35,6 +35,12 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static double RemainingMinutes(this TimeStatus status)
+            => (status.EndsAt - DateTime.Now).TotalMinutes;
+
+        public static double RemainingSeconds(this TimeStatus status)
+            => (status.EndsAt - DateTime.Now).TotalSeconds;
+
         public static bool IsSet(this TimeStatus status)
             => status.EndsAt !=  DateTime.MinValue;
 
