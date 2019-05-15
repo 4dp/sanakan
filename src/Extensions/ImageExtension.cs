@@ -34,7 +34,7 @@ namespace Sanakan.Extensions
             return stream;
         }
 
-        public static string Save<T>(this Image<T> img, string path) where T : struct, IPixel<T>
+        public static string SaveToPath<T>(this Image<T> img, string path) where T : struct, IPixel<T>
         {
             var extension = path.Split(".").Last().ToLower();
             var encoder = (extension == "png") ? _pngEncoder : _jpgEncoder;

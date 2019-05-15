@@ -4,6 +4,8 @@ using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Shinden;
+using SixLabors.Primitives;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -88,6 +90,26 @@ namespace Sanakan.Services
             {
                 return image.ToPngStream();
             }
+        }
+
+        public async Task<bool> SaveProfileImageAsync(string imgUrl, string path, int width = 0, int height = 0, bool streach = false)
+        {
+            if (imgUrl == null)
+                return false;
+
+            if (!imgUrl.IsURLToImage())
+                return false;
+
+            try
+            {
+                await _img.SaveImageFromUrlAsync(imgUrl, path, new Size(width, height), streach);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

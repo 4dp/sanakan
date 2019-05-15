@@ -11,7 +11,6 @@ using Sanakan.Extensions;
 using Shinden.Models;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
@@ -27,6 +26,7 @@ namespace Sanakan.Services
         public ImageProcessing()
         {
             if (!Directory.Exists("GOut")) Directory.CreateDirectory("GOut");
+            if (!Directory.Exists("GOut/Saved")) Directory.CreateDirectory("GOut/Saved");
         }
 
         private async Task<Stream> GetImageFromUrlAsync(string url, bool fixExt = false)
@@ -75,6 +75,49 @@ namespace Sanakan.Services
             }
 
             return font;
+        }
+
+        private void CheckProfileImageSize(Image<Rgba32> image, Size size, bool strech)
+        {
+            if (image.Width > size.Width || image.Height > size.Height)
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = size
+                }));
+
+                return;
+            }
+
+            if (!strech)
+                return;
+
+            if (image.Width < size.Width || image.Height < size.Height)
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Stretch,
+                    Size = size
+                }));
+            }
+        }
+
+        public async Task SaveImageFromUrlAsync(string url, string path)
+            => await SaveImageFromUrlAsync(url, path, Size.Empty);
+
+        public async Task SaveImageFromUrlAsync(string url, string path, Size size, bool strech = false)
+        {
+            using (var stream = await GetImageFromUrlAsync(url, true))
+            {
+                using (var image = Image.Load(stream))
+                {
+                    if (size.Height > 0 || size.Width > 0)
+                        CheckProfileImageSize(image, size, strech);
+
+                    image.SaveToPath(path);
+                }
+            }
         }
 
         public async Task<Image<Rgba32>> GetUserProfileAsync(IUserInfo shindenUser, User botUser, string avatarUrl, long topPos, string nickname, Discord.Color color)

@@ -27,7 +27,7 @@ namespace Sanakan.Services
                 scale = BitConverter.ToUInt32(bytes, 0);
             }
 
-            return (int)(min + (max - min) * (scale / (double)uint.MaxValue));
+            return (int)(min + ((max - min) * (scale / (double)uint.MaxValue)));
         }
 
         public CoinSide RandomizeSide()
