@@ -567,5 +567,66 @@ namespace Sanakan.Services
 
             return baseImg;
         }
+
+        public Image<Rgba32> GetFColorsView(SCurrency currency)
+        {
+            var message = new Font(_latoRegular, 16);
+            var firstColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
+            var secondColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
+
+            var arrayOfColours = Enum.GetValues(typeof(FColor));
+            var inFirstColumn = arrayOfColours.Length / 2;
+
+            for (int i = 0; i < arrayOfColours.Length; i++)
+            {
+                var val = (uint)arrayOfColours.GetValue(i);
+
+                var thisColor = (FColor)val;
+                if (thisColor == FColor.None) continue;
+
+                var name = $"{thisColor.ToString()} ({thisColor.Price(currency)} {currency.ToString().ToUpper()})";
+                var nLen = TextMeasurer.Measure(name, new RendererOptions(message));
+
+                if (i < inFirstColumn + 1)
+                {
+                    if (firstColumnMaxLength.Width <  nLen.Width) 
+                        firstColumnMaxLength = nLen;
+                }
+                else
+                {
+                    if (secondColumnMaxLength.Width <  nLen.Width) 
+                        secondColumnMaxLength = nLen;
+                }
+            }
+
+            int posY = 5;
+            int posX = 0;
+            int realWidth = (int)(firstColumnMaxLength.Width + secondColumnMaxLength.Width + 20);
+            int realHeight = (int)(firstColumnMaxLength.Height + 1) * (inFirstColumn + 2);
+
+            var imgBase = new Image<Rgba32>(realWidth, realHeight);
+            imgBase.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
+            imgBase.Mutate(x => x.DrawText("Lista:", message, Rgba32.FromHex("#000000"), new Point(0, 0)));
+
+            for (int i = 0; i < arrayOfColours.Length; i++)
+            {
+                if (inFirstColumn + 1 == i)
+                {
+                    posY = 5;
+                    posX = (int)firstColumnMaxLength.Width + 10;
+                }
+
+                var val = (uint)arrayOfColours.GetValue(i);
+
+                var thisColor = (FColor)val;
+                if (thisColor == FColor.None) continue;
+
+                posY += (int)firstColumnMaxLength.Height + 2;
+                var tname = $"{thisColor.ToString()} ({thisColor.Price(currency)} {currency.ToString().ToUpper()})";
+                imgBase.Mutate(x => x.DrawText(tname, message, Rgba32.FromHex(val.ToString("X")), new Point(posX, posY)));
+            }
+
+            return imgBase;
+        }
     }
 }

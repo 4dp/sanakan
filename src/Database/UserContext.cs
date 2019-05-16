@@ -3,6 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
+using Sanakan.Database.Models.Configuration;
 
 namespace Sanakan.Database
 {
@@ -27,6 +28,8 @@ namespace Sanakan.Database
         public DbSet<CardArenaStats> CardArenaStats { get; set; }
         public DbSet<BoosterPackCharacter> BoosterPackCharacters { get; set; }
         public DbSet<RarityExcluded> RaritysExcludedFromPacks { get; set; }
+
+        public DbSet<GuildOptions> Guilds { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

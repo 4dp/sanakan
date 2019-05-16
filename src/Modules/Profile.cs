@@ -6,9 +6,11 @@ using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
+using Sanakan.Services;
 using Sanakan.Services.Commands;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
@@ -18,15 +20,17 @@ namespace Sanakan.Modules
     [Name("Profil"), RequireUserRole]
     public class Profile : SanakanModuleBase<SocketCommandContext>
     {
+        private Database.GuildConfigContext _dbGuildConfigContext;
         private Database.UserContext _dbUserContext;
         private Services.Profile _profile;
         private SessionManager _session;
 
-        public Profile(Database.UserContext userContext, Services.Profile prof, SessionManager session)
+        public Profile(Database.UserContext userContext, Database.GuildConfigContext dbGuildConfigContext, Services.Profile prof, SessionManager session)
         {
             _profile = prof;
             _session = session;
             _dbUserContext = userContext;
+            _dbGuildConfigContext = dbGuildConfigContext;
         }
 
         [Command("portfel", RunMode = RunMode.Async)]
@@ -186,6 +190,123 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
             await ReplyAsync("", embed: $"Zmieniono tło profilu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("globalki")]
+        [Alias("global")]
+        [Summary("nadaje na miesiąc rangę od globalnych emotek (4000 TC)")]
+        [Remarks(""), RequireCommandChannel]
+        public async Task AddGlobalEmotesAsync()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
+            if (botuser.TcCnt < 4000)
+            {
+                await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            var gRole = Context.Guild.GetRole(gConfig.GlobalEmotesRole);
+            if (gRole == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie ma ustawionej roli globalnych emotek.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.GuildId == Context.Guild.Id);
+            if (global == null)
+            {
+                global = new Database.Models.TimeStatus
+                {
+                    Type = Database.Models.StatusType.Globals,
+                    GuildId = Context.Guild.Id,
+                    EndsAt = DateTime.Now
+                };
+                botuser.TimeStatuses.Add(global);
+            }
+            
+            if (!user.Roles.Contains(gRole))
+                await user.AddRoleAsync(gRole);
+
+            global.EndsAt = global.EndsAt.AddMonths(1);
+            botuser.TcCnt -= 4000;
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{user.Mention} wykupił miesiąc globalnych emotek!".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("kolor")]
+        [Alias("color", "colour")]
+        [Summary("zmienia kolor użytkownika (koszt TC na liście/30000 SC)")]
+        [Remarks("pink"), RequireCommandChannel]
+        public async Task ToggleColorRoleAsync([Summary("kolor z listy(brak - lista)")]FColor color = FColor.None, [Summary("waluta(SC/TC)")]SCurrency currency = SCurrency.Tc)
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            if (color == FColor.None)
+            {
+                using (var img = _profile.GetColorList(currency))
+                {
+                    await Context.Channel.SendFileAsync(img, "list.png");
+                    return;
+                }
+            }
+
+            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
+            var points = currency == SCurrency.Tc ? botuser.TcCnt : botuser.ScCnt;
+            if (points < color.Price(currency))
+            {
+                await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby {currency.ToString().ToUpper()}!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.GuildId == Context.Guild.Id);
+            if (colort == null)
+            {
+                colort = new Database.Models.TimeStatus
+                {
+                    Type = Database.Models.StatusType.Color,
+                    GuildId = Context.Guild.Id,
+                    EndsAt = DateTime.Now
+                };
+                botuser.TimeStatuses.Add(colort);
+            }
+
+            await _profile.RomoveUserColorAsync(user);
+
+            if (color == FColor.CleanColor)
+            {
+                colort.EndsAt = DateTime.Now;
+            }
+            else
+            {
+                var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
+                {
+                    await ReplyAsync("", embed: $"Coś poszło nie tak!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                colort.EndsAt = colort.EndsAt.AddMonths(1);
+
+                if (currency == SCurrency.Tc)
+                    botuser.TcCnt -= color.Price(currency);
+                else
+                    botuser.ScCnt -= color.Price(currency);
+            }
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{user.Mention} wykupił kolor!".ToEmbedMessage(EMType.Success).Build());
         }
     }
 }

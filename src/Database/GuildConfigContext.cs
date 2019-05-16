@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
+using Sanakan.Database.Models;
 using Sanakan.Database.Models.Configuration;
 
 namespace Sanakan.Database
@@ -27,6 +28,8 @@ namespace Sanakan.Database
         public DbSet<Raport> Raports { get; set; }
         public DbSet<WaifuCommandChannel> WaifuCommandChannels { get; set; }
         public DbSet<WaifuFightChannel> WaifuFightChannels { get; set; }
+
+        public DbSet<TimeStatus> TimeStatuses { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
