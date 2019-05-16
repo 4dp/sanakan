@@ -74,6 +74,28 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"{Context.User.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("kill", RunMode = RunMode.Async)]
+        [Summary("wyłącza bota")]
+        [Remarks("")]
+        public async Task TurnOffAsync()
+        {
+            await ReplyAsync("", embed: "To dobry czas by umrzeć.".ToEmbedMessage(EMType.Bot).Build());
+            await Context.Client.LogoutAsync();
+            await Task.Delay(1500);
+            Environment.Exit(0);
+        }
+
+        [Command("update", RunMode = RunMode.Async)]
+        [Summary("wyłącza bota z kodem 255")]
+        [Remarks("")]
+        public async Task TurnOffWithUpdateAsync()
+        {
+            await ReplyAsync("", embed: "To już czas?".ToEmbedMessage(EMType.Bot).Build());
+            await Context.Client.LogoutAsync();
+            await Task.Delay(1500);
+            Environment.Exit(255);
+        }
+
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("help", "h")]
         [Summary("wypisuje polecenia")]

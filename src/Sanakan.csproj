@@ -13,12 +13,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp2.0\Sanakan.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netcoreapp2.1\Sanakan.xml</DocumentationFile>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netcoreapp2.0\Sanakan.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\netcoreapp2.1\Sanakan.xml</DocumentationFile>
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
 
