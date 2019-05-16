@@ -1,6 +1,8 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using Discord.WebSocket;
 using Sanakan.Database.Models;
@@ -53,6 +55,14 @@ namespace Sanakan.Services
             }
 
             return (int)(min + ((max - min) * (scale / (double)uint.MaxValue)));
+        }
+
+        public static bool TakeATry(int chance) => (GetRandomValue(chance*100) % chance) == 1;
+
+        public static T GetOneRandomFrom<T>(IEnumerable<T> enumerable)
+        {
+            var arr = enumerable.ToArray();
+            return arr[GetRandomValue(arr.Length)];
         }
 
         public CoinSide RandomizeSide()
