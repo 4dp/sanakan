@@ -28,6 +28,8 @@ namespace Sanakan.Database
         public DbSet<CardArenaStats> CardArenaStats { get; set; }
         public DbSet<BoosterPackCharacter> BoosterPackCharacters { get; set; }
         public DbSet<RarityExcluded> RaritysExcludedFromPacks { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<Answer> Answers { get; set; }
 
         public DbSet<GuildOptions> Guilds { get; set; }
 

@@ -12,6 +12,9 @@ namespace Sanakan.Database.Models
         public long Head { get; set; }
         public long Hit { get; set; }
         public long Misd { get; set; }
+        public long RightAnswers { get; set; }
+        public long TotalAnswers { get; set; }
+        public long TurnamentsWon { get; set; }
 
         public ulong UserId { get; set; }
         public virtual User User { get; set; }

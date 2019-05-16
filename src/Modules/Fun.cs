@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Discord;
 using Discord.Commands;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -198,6 +199,30 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
             await ReplyAsync("", embed: $"{_fun.GetSlotMachineResult(machine.Draw(), Context.User, botuser, win)}".ToEmbedMessage(EMType.Bot).Build());
+        }
+
+        [Command("zagadka", RunMode = RunMode.Async)]
+        [Alias("riddle")]
+        [Summary("wypisuje losową zagadkę i podaje odpowiedź po 15 sekundach")]
+        [Remarks(""), RequireCommandChannel]
+        public async Task ShowRiddleAsync()
+        {
+            var riddles = await _dbUserContext.GetCachedAllQuestionsAsync();
+            riddles = riddles.Shuffle().ToList();
+            var riddle = riddles.FirstOrDefault();
+
+            var msg = await ReplyAsync(riddle.Get());
+            await msg.AddReactionsAsync(riddle.GetEmotes());
+
+            await Task.Delay(15000);
+
+            var react = await msg.GetReactionUsersAsync(riddle.GetRightEmote(), 100).FlattenAsync();
+            await msg.RemoveAllReactionsAsync();
+
+            if (react.Any(x => x.Id == Context.User.Id))
+                await ReplyAsync("", false, $"{Context.User.Mention} zgadłeś!".ToEmbedMessage(EMType.Success).Build());
+            else
+                await ReplyAsync("", false, $"{Context.User.Mention} pudło!".ToEmbedMessage(EMType.Error).Build());
         }
     }
 }
