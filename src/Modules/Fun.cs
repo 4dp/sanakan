@@ -3,7 +3,9 @@
 using Discord.Commands;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
+using Sanakan.Services;
 using Sanakan.Services.Commands;
+using Sanakan.Services.SlotMachine;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -139,6 +141,63 @@ namespace Sanakan.Modules
 
             await ReplyAsync("", embed: embed.Build());
             await Context.Channel.SendFileAsync($"./Pictures/coin{(int)thrown}.png");
+        }
+
+        [Command("ustaw automat")]
+        [Alias("set slot")]
+        [Summary("ustawia automat")]
+        [Remarks("info"), RequireCommandChannel]
+        public async Task SlotMachineSettingsAsync([Summary("typ nastaw(info - wyświetla informacje)")]SlotMachineSetting setting = SlotMachineSetting.Info, [Summary("wartość nastawy")]string value = "info")
+        {
+            if (setting == SlotMachineSetting.Info)
+            {
+                await ReplyAsync("", false, $"{_fun.GetSlotMachineInfo()}".ToEmbedMessage(EMType.Info).Build());
+                return;
+            }
+
+            var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            if (!botuser.ApplySlotMachineSetting(setting, value))
+            {
+                await ReplyAsync("", embed: $"Podano niewłaściwą wartość parametru!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} zmienił nastawy automatu.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("automat")]
+        [Alias("slot", "slot machine")]
+        [Summary("grasz na jednorękim bandycie")]
+        [Remarks("info"), RequireCommandChannel]
+        public async Task PlayOnSlotMachineAsync([Summary("typ(info - wyświetla informacje)")]string type = "game")
+        {
+            if (type != "game")
+            {
+                await ReplyAsync("", false, $"{_fun.GetSlotMachineGameInfo()}".ToEmbedMessage(EMType.Info).Build());
+                return;
+            }
+
+            var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var machine = new SlotMachine(botuser);
+
+            if (botuser.ScCnt < machine.ToPay())
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} brakuje Ci SC, aby za tyle zagrać.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var win = machine.Play(new SlotEqualRandom());
+            botuser.ScCnt += win;
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{_fun.GetSlotMachineResult(machine.Draw(), Context.User, botuser, win)}".ToEmbedMessage(EMType.Bot).Build());
         }
     }
 }
