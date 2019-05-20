@@ -636,7 +636,7 @@ namespace Sanakan.Services
         {
             var characterImg = Image.Load($"./Pictures/PW/empty.png");
 
-            using (var stream = await GetImageFromUrlAsync(character.PictureUrl))
+            using (var stream = await GetImageFromUrlAsync(character.PictureUrl, true))
             {
                 if (stream == null)
                     return characterImg;

@@ -16,6 +16,11 @@ namespace Sanakan.Database.Models
         public long TotalAnswers { get; set; }
         public long TurnamentsWon { get; set; }
 
+        public long UpgaredCards { get; set; }
+        public long SacraficeCards { get; set; }
+        public long WastedTcOnCookies { get; set; }
+        public long WastedTcOnCards { get; set; }
+
         public ulong UserId { get; set; }
         public virtual User User { get; set; }
     }

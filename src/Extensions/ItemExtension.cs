@@ -113,6 +113,20 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static CardSource GetSource(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.RandomBoosterPackSingleE:
+                case ItemType.RandomNormalBoosterPackB:
+                case ItemType.RandomTitleBoosterPackSingleE:
+                    return CardSource.Shop;
+
+                default:
+                    return CardSource.Other;
+            }
+        }
+
         public static List<RarityExcluded> RarityExcluded(this ItemType type)
         {
             var ex = new List<RarityExcluded>();
@@ -160,6 +174,7 @@ namespace Sanakan.Extensions
                 Name = type.Name(),
                 CardCnt = type.Count(),
                 MinRarity = type.MinRarity(),                
+                CardSourceFromPack = type.GetSource(),
                 IsCardFromPackTradable = type.IsTradable(),
                 RarityExcludedFromPack = type.RarityExcluded(),
             };

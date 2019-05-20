@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using System;
+
 namespace Sanakan.Database.Models
 {
     public enum Rarity
@@ -12,6 +14,11 @@ namespace Sanakan.Database.Models
         Tsundere, Kamidere, Deredere, Yandere, Dandere, Kuudere, Mayadere, Bodere
     }
 
+    public enum CardSource
+    {
+        Activity, Safari, Shop, GodIntervention, Other
+    }
+
     public class Card
     {
         public ulong Id { get; set; }
@@ -22,11 +29,14 @@ namespace Sanakan.Database.Models
         public double Affection { get; set; }
         public int UpgradesCnt { get; set; }
         public Rarity Rarity { get; set; }
+        public Rarity RarityOnStart { get; set; }
         public Dere Dere { get; set; }
         public int Defence { get; set; }
         public int Attack { get; set; }
         public string Name { get; set; }
         public ulong Character { get; set; }
+        public DateTime CreationDate { get; set; }
+        public CardSource Source { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

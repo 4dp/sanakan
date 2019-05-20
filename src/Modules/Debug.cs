@@ -59,6 +59,7 @@ namespace Sanakan.Modules
             var character = (id == 0) ? await Waifu.GetRandomCharacterAsync(_shClient) : (await _shClient.GetCharacterInfoAsync(id)).Body;
             var card = (rarity == Rarity.E) ? Waifu.GenerateNewCard(character) : Waifu.GenerateNewCard(character, rarity);
 
+            card.Source = CardSource.GodIntervention;
             var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
             botuser.GameDeck.Cards.Add(card);
 

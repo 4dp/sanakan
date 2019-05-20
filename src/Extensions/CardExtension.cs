@@ -11,7 +11,7 @@ namespace Sanakan.Extensions
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
-            string name = nameAsUrl ? $"[{card.Name}]({Shinden.API.Url.GetCharacterURL(card.Id)})" : card.Name; 
+            string name = nameAsUrl ? $"[{card.Name}]({Shinden.API.Url.GetCharacterURL(card.Character)})" : card.Name; 
             
             return $"{idStr} {name} **{card.Rarity}** 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
         }

@@ -274,10 +274,13 @@ namespace Sanakan.Services.PocketWaifu
             {
                 Defence = RandomizeDefence(rarity),
                 Attack = RandomizeAttack(rarity),
+                CreationDate = DateTime.Now,
                 Character = characterId,
                 Dere = RandomizeDere(),
+                RarityOnStart = rarity,
                 IsTradable = true,
                 Rarity = rarity,
+                UpgradesCnt = 2,
                 Name = name,
             };
         }
@@ -308,10 +311,13 @@ namespace Sanakan.Services.PocketWaifu
             {
                 Defence = RandomizeDefence(rarity),
                 Attack = RandomizeAttack(rarity),
+                CreationDate = DateTime.Now,
                 Name = character.ToString(),
                 Character = character.Id,
                 Dere = RandomizeDere(),
+                RarityOnStart = rarity,
                 IsTradable = true,
+                UpgradesCnt = 2,
                 Rarity = rarity,
             };
         }
@@ -366,7 +372,7 @@ namespace Sanakan.Services.PocketWaifu
             return nDef;
         }
 
-        public static Embed GetActiveList(List<Card> list)
+        public static Embed GetActiveList(IEnumerable<Card> list)
         {
             var embed = new EmbedBuilder()
             {

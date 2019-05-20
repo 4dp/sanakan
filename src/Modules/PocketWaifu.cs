@@ -38,7 +38,191 @@ namespace Sanakan.Modules
             _dbUserContext = userContext;
             _dbGuildConfigContext = dbGuildConfigContext;
         }
-        
+
+        [Command("ulepsz")]
+        [Alias("upgrade")]
+        [Summary("ulepsza kartę na lepszą jakość (min. 30 exp)")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task UpgradeCardAsync([Summary("WID")]ulong id)
+        {
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+
+            if (card == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (card.Rarity == Rarity.SS)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma już najwyższy poziom.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (card.UpgradesCnt < 1)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie ma już dostępnych ulepszeń.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (card.ExpCnt < 30)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            ++bUser.Stats.UpgaredCards;
+
+            card.Defence = Waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
+            card.Attack = Waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
+            card.Rarity = --card.Rarity;
+            card.UpgradesCnt -= 1;
+            card.Affection += 1;
+            card.ExpCnt = 0;
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę do: {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("poświęć")]
+        [Alias("kill", "sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
+        [Summary("dodaje exp do karty, poświęcając inną")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task SacraficeCardAsync([Summary("WID(do poświęcenia)")]ulong idToSac, [Summary("WID(do ulepszenia)")]ulong idToUp)
+        {
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToSac);
+            var cardToUp = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToUp);
+
+            if (cardToSac == null || cardToUp == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            ++bUser.Stats.SacraficeCards;
+
+            var exp = Waifu.GetExpToUpgrade(cardToUp, cardToSac);
+            cardToUp.Affection += 0.01;
+            cardToUp.ExpCnt += exp;
+
+            bUser.GameDeck.Cards.Remove(cardToSac);
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {exp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("klatka")]
+        [Alias("cage")]
+        [Summary("otwiera klatkę z kartami")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task OpenCageAsync()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
+            var cardsInCage = bUser.GameDeck.Cards.Where(x => x.InCage);
+
+            var cntIn = cardsInCage.Count();
+            if (cntIn < 1)
+            {
+                await ReplyAsync("", embed: $"{user.Mention} nie posiadasz kart w klatce.".ToEmbedMessage(EMType.Info).Build());
+                return;
+            }
+
+            foreach (var card in cardsInCage)
+            {
+                card.InCage = false;
+                var response = await _shclient.GetCharacterInfoAsync(card.Id);
+                if (response.IsSuccessStatusCode())
+                {
+                    if (response.Body?.Points != null)
+                    {
+                        if (response.Body.Points.Any(x => x.Name.Equals(user.Nickname ?? user.Username)))
+                            card.Affection += 0.8;
+                    }
+                }
+            }
+            
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+
+            await ReplyAsync("", embed: $"{user.Mention} wyciągnął {cntIn} kart z klatki.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("talia")]
+        [Alias("deck", "aktywne")]
+        [Summary("wyświetla aktywne karty/ustawia karte jako aktywną")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task ChangeDeckCardStatusAsync([Summary("WID(opcjonalne)")]ulong wid = 0)
+        {
+            var botUser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
+            var active = botUser.GameDeck.Cards.Where(x => x.Active);
+
+            if (wid == 0)
+            {
+                if (active.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aktywnych kart.".ToEmbedMessage(EMType.Info).Build());
+                    return;
+                }
+
+                try
+                {
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    if (dm != null)
+                    {
+                        await dm.SendMessageAsync("", embed: Waifu.GetActiveList(active));
+                        await dm.CloseAsync();
+                    }
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
+                }
+
+                return;
+            }
+
+            if (active.Count() >= 3 && !active.Any(x => x.Id == wid))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} możesz mieć tylko trzy aktywne karty.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+
+            if (thisCard == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (thisCard.InCage)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się w klatce.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            thisCard.Active = !thisCard.Active;
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+
+            string message = thisCard.Active ? "aktywował: " : "dezaktywował: ";
+            await ReplyAsync("", embed: $"{Context.User.Mention} {message}{thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("kto", RunMode = RunMode.Async)]
         [Alias("who")]
         [Summary("pozwala wyszukac użytkowników posiadających karte danej postaci")]
@@ -137,6 +321,7 @@ namespace Sanakan.Modules
 
             var embed = new EmbedBuilder()
             {
+                Color = EMType.Bot.Color(),
                 Author = new EmbedAuthorBuilder().WithUser(user),
                 Description = $"**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                             + $"**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
