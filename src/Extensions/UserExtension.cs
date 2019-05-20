@@ -13,7 +13,7 @@ namespace Sanakan.Extensions
 
         public static User Default(this User u, ulong id)
         {
-            return new User
+            var user = new User
             {
                 Id = id,
                 Level = 1,
@@ -49,6 +49,16 @@ namespace Sanakan.Extensions
                     Multiplier = SlotMachineBeatMultiplier.x1,
                 }
             };
+
+            user.GameDeck.BoosterPacks.Add(new BoosterPack
+            {
+                CardCnt = 3,
+                MinRarity = Rarity.C,
+                Name = "Startowy pakiet",
+                IsCardFromPackTradable = true
+            });
+
+            return user;
         }
 
         public static string GetViewValueForTop(this User u, TopType type)

@@ -31,6 +31,13 @@ namespace Sanakan.Services.PocketWaifu
     {
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
 
+        private ImageProcessing _img;
+
+        public Waifu(ImageProcessing img)
+        {
+            _img = img;
+        }
+
         public static Rarity RandomizeRarity()
         {
             var num = Fun.GetRandomValue(1000);
@@ -309,9 +316,9 @@ namespace Sanakan.Services.PocketWaifu
         private static int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
         {
             var m = (double)(nMax - nMin)/(double)(oMax - oMin);
-            var c = oMin*m-nMin;
+            var c = (oMin * m) - nMin;
 
-            return (int)(m*value-c);
+            return (int)((m * value) - c);
         }
 
         public static int GetAttactAfterLevelUp(Rarity oldRarity, int oldAtk)
@@ -370,7 +377,7 @@ namespace Sanakan.Services.PocketWaifu
             return embed.Build();
         }
 
-        public static async Task<ICharacterInfo> GetRandomCharacter(ShindenClient shinden)
+        public static async Task<ICharacterInfo> GetRandomCharacterAsync(ShindenClient shinden)
         {
             int check = 2;
             if (CharId.IsNeedForUpdate())
@@ -393,6 +400,21 @@ namespace Sanakan.Services.PocketWaifu
                     return null;
             }
             return response.Body;
+        }
+
+        public async Task<string> GetWaifuProfileImageAsync(Card card, ICharacterInfo character, ITextChannel trashCh)
+        {
+            using (var cardImage = await _img.GetWaifuCardNoStatsAsync(character, card))
+            {
+                cardImage.SaveToPath($"./GOut/Profile/P{card.Id}.png");
+
+                using (var stream = cardImage.ToPngStream())
+                {
+                    var fs = await trashCh.SendFileAsync(stream, $"P{card.Id}.png");
+                    var im = fs.Attachments.FirstOrDefault();
+                    return im.Url;
+                }
+            }
         }
     }
 }

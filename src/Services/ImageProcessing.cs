@@ -27,6 +27,9 @@ namespace Sanakan.Services
         {
             if (!Directory.Exists("GOut")) Directory.CreateDirectory("GOut");
             if (!Directory.Exists("GOut/Saved")) Directory.CreateDirectory("GOut/Saved");
+            if (!Directory.Exists("GOut/Cards")) Directory.CreateDirectory("GOut/Cards");
+            if (!Directory.Exists("GOut/Profile")) Directory.CreateDirectory("GOut/Profile");
+            if (!Directory.Exists("GOut/Cards/Small")) Directory.CreateDirectory("GOut/Cards/Small");
         }
 
         private async Task<Stream> GetImageFromUrlAsync(string url, bool fixExt = false)
@@ -627,6 +630,97 @@ namespace Sanakan.Services
             }
 
             return imgBase;
+        }
+
+        private async Task<Image<Rgba32>> GetCharacterPictureAsync(ICharacterInfo character)
+        {
+            var characterImg = Image.Load($"./Pictures/PW/empty.png");
+
+            using (var stream = await GetImageFromUrlAsync(character.PictureUrl))
+            {
+                if (stream == null)
+                    return characterImg;
+
+                using (var image = Image.Load(stream))
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(characterImg.Width, 0)
+                    }));
+
+                    int startY = 0;
+                    if (characterImg.Height > image.Height)
+                        startY = characterImg.Height / 2 - image.Height / 2;
+
+                    characterImg.Mutate(x => x.DrawImage(image, new Point(0, startY), 1));
+                }
+            }
+            
+            return characterImg;
+        }
+
+        private Image<Rgba32> GenerateBorder(Card card)
+        {
+            var img = Image.Load($"./Pictures/PW/{card.Rarity}.png");
+
+            using (var dere = Image.Load($"./Pictures/PW/{card.Dere}.png"))
+            {
+                img.Mutate(x => x.DrawImage(dere, new Point(0, 0), 1));
+            }
+
+            return img;
+        }
+
+        private void ApplyStats(Image<Rgba32> image, Card card)
+        {
+            using (var shield = Image.Load($"./Pictures/PW/shield.png"))
+            {
+                image.Mutate(x => x.DrawImage(shield, new Point(0, 0), 1));
+            }
+
+            using (var fire = Image.Load($"./Pictures/PW/fire.png"))
+            {
+                image.Mutate(x => x.DrawImage(fire, new Point(0, 0), 1));
+            }
+
+            int startXDef = 390;
+            if (card.Defence < 10) startXDef += 15;
+            if (card.Defence > 99) startXDef -= 15;
+
+            int startXAtk = 390;
+            if (card.Attack < 10) startXAtk += 15;
+            if (card.Attack > 99) startXAtk -= 15;
+
+            var numFont = new Font(_latoBold, 54);
+            image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 300)));
+            image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 420)));
+        }
+
+        public async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(ICharacterInfo character, Card card)
+        {
+            var image = new Image<Rgba32>(475, 667);
+
+            using (var chara = await GetCharacterPictureAsync(character))
+            {
+                image.Mutate(x => x.DrawImage(chara,new Point(13, 13), 1));
+            }
+
+            using (var bord = GenerateBorder(card))
+            {
+                image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
+            }
+
+            return image;
+        }
+
+        public async Task<Image<Rgba32>> GetWaifuCardAsync(ICharacterInfo character, Card card)
+        {
+            var image = await GetWaifuCardNoStatsAsync(character, card);
+
+            ApplyStats(image, card);
+
+            return image;
         }
     }
 }
