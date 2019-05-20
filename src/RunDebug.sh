@@ -1,5 +1,5 @@
 #!/bin/bash
-let rval=1
+rval=1
 while ((rval == 1)); do
     dotnet ./bin/Debug/netcoreapp2.1/Sanakan.dll
     rval=$?

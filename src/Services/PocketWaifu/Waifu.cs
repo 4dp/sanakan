@@ -1,9 +1,14 @@
 #pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
+using Shinden;
+using Shinden.Models;
 
 namespace Sanakan.Services.PocketWaifu
 {
@@ -24,6 +29,8 @@ namespace Sanakan.Services.PocketWaifu
 
     public class Waifu
     {
+        private static CharacterIdUpdate CharId = new CharacterIdUpdate();
+
         public static Rarity RandomizeRarity()
         {
             var num = Fun.GetRandomValue(1000);
@@ -132,35 +139,40 @@ namespace Sanakan.Services.PocketWaifu
             
             // kamidere && deredere
             if (winner == FightWinner.Draw)
-            {
-                if (card1.Card.Dere == Dere.Kamidere)
-                {
-                    if (card2.Card.Dere == Dere.Kamidere)
-                        return FightWinner.Draw;
-
-                    return FightWinner.Card1;
-                }
-
-                if (card2.Card.Dere == Dere.Kamidere)
-                {
-                    return FightWinner.Card2;
-                }
-
-                bool card1Lose = false;
-                bool card2Lose = false;
-
-                if (card1.Card.Dere == Dere.Deredere)
-                    card1Lose = Fun.TakeATry(2);
-
-                if (card2.Card.Dere == Dere.Deredere)
-                    card2Lose = Fun.TakeATry(2);
-
-                if (card1Lose && card2Lose) return FightWinner.Draw;
-                if (card1Lose) return FightWinner.Card2;
-                if (card2Lose) return FightWinner.Card1;
-            }
+                return CheckKamidereAndDeredere(card1, card2);
 
             return winner;
+        }
+
+        private static FightWinner CheckKamidereAndDeredere(CardInfo card1, CardInfo card2)
+        {
+            if (card1.Card.Dere == Dere.Kamidere)
+            {
+                if (card2.Card.Dere == Dere.Kamidere)
+                    return FightWinner.Draw;
+
+                return FightWinner.Card1;
+            }
+
+            if (card2.Card.Dere == Dere.Kamidere)
+            {
+                return FightWinner.Card2;
+            }
+
+            bool card1Lose = false;
+            bool card2Lose = false;
+
+            if (card1.Card.Dere == Dere.Deredere)
+                card1Lose = Fun.TakeATry(2);
+
+            if (card2.Card.Dere == Dere.Deredere)
+                card2Lose = Fun.TakeATry(2);
+
+            if (card1Lose && card2Lose) return FightWinner.Draw;
+            if (card1Lose) return FightWinner.Card2;
+            if (card2Lose) return FightWinner.Card1;
+
+            return FightWinner.Draw;
         }
 
         public static double GetFA(CardInfo target, CardInfo enemy, out FAEvent evt, BodereBonus bodere)
@@ -244,6 +256,143 @@ namespace Sanakan.Services.PocketWaifu
                     break;
                 }
             }
+        }
+
+        public static Card GenerateNewCard(ulong characterId, string name) => GenerateNewCard(characterId, name, RandomizeRarity());
+
+        public static Card GenerateNewCard(ulong characterId, string name, Rarity rarity)
+        {
+            return new Card
+            {
+                Defence = RandomizeDefence(rarity),
+                Attack = RandomizeAttack(rarity),
+                Character = characterId,
+                Dere = RandomizeDere(),
+                Rarity = rarity,
+                Name = name,
+            };
+        }
+
+        public static int RandomizeAttack(Rarity rarity)
+            => Fun.GetRandomValue(rarity.GetAttackMin(), rarity.GetAttackMax() + 1);
+
+        public static int RandomizeDefence(Rarity rarity)
+            => Fun.GetRandomValue(rarity.GetDefenceMin(), rarity.GetDefenceMax() + 1);
+
+        public static Dere RandomizeDere()
+        {
+            var allDere = Enum.GetValues(typeof(Dere)).Cast<Dere>();
+            return Fun.GetOneRandomFrom(allDere);
+        }
+
+        public static Card GenerateNewCard(ICharacterInfo character)
+            => GenerateNewCard(character.Id, character.ToString());
+
+        public static Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
+            => GenerateNewCard(character.Id, character.ToString(), rarity);
+
+        public static Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
+        {
+            var rarity = RandomizeRarity(rarityExcluded);
+
+            return new Card
+            {
+                Defence = RandomizeDefence(rarity),
+                Attack = RandomizeAttack(rarity),
+                Name = character.ToString(),
+                Character = character.Id,
+                Dere = RandomizeDere(),
+                Rarity = rarity,
+            };
+        }
+
+        private static int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
+        {
+            var m = (double)(nMax - nMin)/(double)(oMax - oMin);
+            var c = oMin*m-nMin;
+
+            return (int)(m*value-c);
+        }
+
+        public static int GetAttactAfterLevelUp(Rarity oldRarity, int oldAtk)
+        {
+            var newRarity = oldRarity - 1;
+            var newMax = newRarity.GetAttackMax();
+            var newMin = newRarity.GetAttackMin();
+            var range = newMax - newMin;
+
+            var oldMax = oldRarity.GetAttackMax();
+            var oldMin = oldRarity.GetAttackMin();
+
+            var relNew = ScaleNumber(oldMin, oldMax, newMin, newMax, oldAtk);
+            var relMin = relNew - (range * 6 / 100);
+            var relMax = relNew + (range * 8 / 100);
+
+            var nAtk = Fun.GetRandomValue(relMin, relMax + 1);
+            if (nAtk > newMax) nAtk = newMax;
+            if (nAtk < newMin) nAtk = newMin;
+
+            return nAtk;
+        }
+
+        public static int GetDefenceAfterLevelUp(Rarity oldRarity, int oldDef)
+        {
+            var newRarity = oldRarity - 1;
+            var newMax = newRarity.GetDefenceMax();
+            var newMin = newRarity.GetDefenceMin();
+            var range = newMax - newMin;
+
+            var oldMax = oldRarity.GetDefenceMax();
+            var oldMin = oldRarity.GetDefenceMin();
+
+            var relNew = ScaleNumber(oldMin, oldMax, newMin, newMax, oldDef);
+            var relMin = relNew - (range * 6 / 100);
+            var relMax = relNew + (range * 8 / 100);
+
+            var nDef = Fun.GetRandomValue(relMin, relMax + 1);
+            if (nDef > newMax) nDef = newMax;
+            if (nDef < newMin) nDef = newMin;
+
+            return nDef;
+        }
+
+        public static Embed GetActiveList(List<Card> list)
+        {
+            var embed = new EmbedBuilder()
+            {
+                Color = EMType.Info.Color(),
+                Description = "**Twoje aktywne karty to**:\n\n",
+            };
+
+            foreach(var card in list) 
+                embed.Description += card.GetString(false, false, true) + "\n";
+            
+            return embed.Build();
+        }
+
+        public static async Task<ICharacterInfo> GetRandomCharacter(ShindenClient shinden)
+        {
+            int check = 2;
+            if (CharId.IsNeedForUpdate())
+            {
+                var characters = await shinden.Ex.GetAllCharactersFromAnimeAsync();
+                if (!characters.IsSuccessStatusCode()) return null;
+
+                CharId.Update(characters.Body);
+            }
+
+            ulong id = Fun.GetOneRandomFrom(CharId.Ids);
+            var response = await shinden.GetCharacterInfoAsync(id);
+
+            while (!response.IsSuccessStatusCode())
+            {
+                id = Fun.GetOneRandomFrom(CharId.Ids);
+                response = await shinden.GetCharacterInfoAsync(id);
+
+                if (check-- == 0) 
+                    return null;
+            }
+            return response.Body;
         }
     }
 }
