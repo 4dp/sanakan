@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -38,6 +39,71 @@ namespace Sanakan.Modules
             _dbGuildConfigContext = dbGuildConfigContext;
         }
         
+        [Command("kto", RunMode = RunMode.Async)]
+        [Alias("who")]
+        [Summary("pozwala wyszukac użytkowników posiadających karte danej postaci")]
+        [Remarks("51"), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsAsync([Summary("id postaci na shinden")]ulong id)
+        {
+            var response = await _shclient.GetCharacterInfoAsync(id);
+            if (!response.IsSuccessStatusCode())
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono postaci na shindenie!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+            
+            var cards = await _dbUserContext.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).FromCacheAsync( new[] {"users"});
+
+            if (cards.Count() < 1)
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono kart {response.Body}.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Guild));
+        }
+
+        [Command("waifu")]
+        [Alias("husbando")]
+        [Summary("pozwala ustawić sobie ulubioną postać na profilu(musisz posiadać jej karte)")]
+        [Remarks("451"), RequireWaifuCommandChannel]
+        public async Task SetProfileWaifuAsync([Summary("WID")]ulong wid)
+        {
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            if (wid == 0)
+            {
+                if (bUser.GameDeck.Waifu != 0)
+                {
+                    bUser.GameDeck.Waifu = 0;
+                    await _dbUserContext.SaveChangesAsync();
+                }
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zresetował ulubioną karte.".ToEmbedMessage(EMType.Success).Build());
+                return;
+            }
+
+            var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid && !x.InCage);
+            if (thisCard == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty lub znajduje się ona w klatce!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var prev = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
+            if (prev != null)
+            {
+                var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Id == prev.Id);
+                foreach (var card in allPrevWaifus) card.Affection -= 1;
+            }
+
+            bUser.GameDeck.Waifu = thisCard.Character;
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} ustawił {thisCard.Name} jako ulubioną postać.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("karcianka", RunMode = RunMode.Async)]
         [Alias("cpf")]
         [Summary("wyświetla profil PocketWaifu")]
@@ -81,10 +147,10 @@ namespace Sanakan.Modules
 
             if (bUser.GameDeck?.Waifu != 0)
             {
-                var tChar = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == bUser.GameDeck.Waifu);
+                var tChar = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
                 if (tChar != null)
                 {
-                    var response = await _shclient.GetCharacterInfoAsync(tChar.Id);
+                    var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
                     if (response.IsSuccessStatusCode())
                     {
                         var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);

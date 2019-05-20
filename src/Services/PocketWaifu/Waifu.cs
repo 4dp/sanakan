@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Shinden;
@@ -275,6 +276,7 @@ namespace Sanakan.Services.PocketWaifu
                 Attack = RandomizeAttack(rarity),
                 Character = characterId,
                 Dere = RandomizeDere(),
+                IsTradable = true,
                 Rarity = rarity,
                 Name = name,
             };
@@ -309,6 +311,7 @@ namespace Sanakan.Services.PocketWaifu
                 Name = character.ToString(),
                 Character = character.Id,
                 Dere = RandomizeDere(),
+                IsTradable = true,
                 Rarity = rarity,
             };
         }
@@ -415,6 +418,22 @@ namespace Sanakan.Services.PocketWaifu
                     return im.Url;
                 }
             }
+        }
+
+        public Embed GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, SocketGuild guild)
+        {
+            string contentString = "";
+            foreach (var card in cards)
+            {
+                var thU = guild.GetUser(card.GameDeck.UserId);
+                if (thU != null) contentString += $"{thU.Mention} **[{card.Id}]**\n";
+            }
+
+            return new EmbedBuilder()
+            {
+                Color = EMType.Info.Color(),
+                Description = $"{title}\n\n{contentString.TrimToLength(1850)}"
+            }.Build();
         }
     }
 }

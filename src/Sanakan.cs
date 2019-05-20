@@ -140,6 +140,7 @@ namespace Sanakan
                 .AddSingleton<Services.Fun>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
+                .AddSingleton<Services.PocketWaifu.Waifu>()
                 .AddDbContext<Database.UserContext>()
                 .AddDbContext<Database.ManagmentContext>()
                 .AddDbContext<Database.GuildConfigContext>()

@@ -651,7 +651,7 @@ namespace Sanakan.Services
 
                     int startY = 0;
                     if (characterImg.Height > image.Height)
-                        startY = characterImg.Height / 2 - image.Height / 2;
+                        startY = (characterImg.Height / 2) - (image.Height / 2);
 
                     characterImg.Mutate(x => x.DrawImage(image, new Point(0, startY), 1));
                 }

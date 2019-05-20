@@ -3,6 +3,7 @@
 using Sanakan.Database.Models;
 using Sanakan.Services;
 using System;
+using System.Collections.Generic;
 
 namespace Sanakan.Extensions
 {
@@ -28,7 +29,12 @@ namespace Sanakan.Extensions
                 CharacterCntFromDate = 0,
                 ProfileType = ProfileType.Stats,
                 StatsReplacementProfileUri = "none",
-                GameDeck = new GameDeck { Waifu = 0 },
+                GameDeck = new GameDeck 
+                { 
+                    Waifu = 0,
+                    Cards = new List<Card>(),
+                    BoosterPacks = new List<BoosterPack>(),
+                },
                 BackgroundProfileUri = $"./Pictures/defBg.png",
                 MeasureDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
                 Stats = new UserStats

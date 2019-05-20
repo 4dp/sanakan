@@ -2,9 +2,13 @@
 
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
+using Sanakan.Services.PocketWaifu;
+using Shinden;
+using Shinden.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,12 +20,14 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
+        private ShindenClient _shClient;
         private Services.ImageProcessing _img;
         private Database.UserContext _dbUserContext;
 
-        public Debug(Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img)
         {
             _dbUserContext = userContext;
+            _shClient = shClient;
             _helper = helper;
             _img = img;
         }
@@ -42,6 +48,25 @@ namespace Sanakan.Modules
                     await Context.Channel.SendFileAsync(badgeStream, $"{usr.Id}.png");
                 }
             }
+        }
+
+        [Command("gcard")]
+        [Summary("generuje kartę i dodaje ją użytkownikowi")]
+        [Remarks("Sniku 54861")]
+        public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
+            [Summary("jakość karty(nie podanie - losowo)")] Rarity rarity = Rarity.E)
+        {
+            var character = (id == 0) ? await Waifu.GetRandomCharacterAsync(_shClient) : (await _shClient.GetCharacterInfoAsync(id)).Body;
+            var card = (rarity == Rarity.E) ? Waifu.GenerateNewCard(character) : Waifu.GenerateNewCard(character, rarity);
+
+            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
+            botuser.GameDeck.Cards.Add(card);
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} otrzymał {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("sc")]
