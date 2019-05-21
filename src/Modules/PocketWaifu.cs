@@ -39,6 +39,92 @@ namespace Sanakan.Modules
             _dbGuildConfigContext = dbGuildConfigContext;
         }
 
+        [Command("przedmioty", RunMode = RunMode.Async)]
+        [Alias("items")]
+        [Summary("wypisuje posiadane przedmioty(informacje o przedmiocie gdy podany jego numer)")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task ShowItemsAsync([Summary("nr przedmiotu")]int numberOfItem = 0)
+        {
+            var bUser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
+            if (bUser.GameDeck.Items.Count < 1)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych przemiotów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (numberOfItem <= 0)
+            {
+                await ReplyAsync("", embed: _waifu.GetItemList(Context.User, bUser.GameDeck.Items.ToList()));
+                return;
+            }
+
+            if (bUser.GameDeck.Items.Count < numberOfItem)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aż tylu przedmiotów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var item = bUser.GameDeck.Items.ToArray()[numberOfItem - 1];
+            var embed = new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Author = new EmbedAuthorBuilder().WithUser(Context.User),
+                Description = $"**{item.Name}**\n_{item.Type.Desc()}_\n\nLiczba: **{item.Count}**".TrimToLength(1900)
+            };
+
+            await ReplyAsync("", embed: embed.Build());
+        }
+
+        [Command("pakiet")]
+        [Alias("pakiet kart", "booster", "booster pack", "pack")]
+        [Summary("wypisuje dostępne pakiety/otwiera pakiet")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task UpgradeCardAsync([Summary("nr pakietu kart")]int numberOfPack = 0)
+        {
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+
+            if (bUser.GameDeck.BoosterPacks.Count < 1)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych pakietów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (numberOfPack == 0)
+            {
+                await ReplyAsync("", embed: _waifu.GetBoosterPackList(Context.User, bUser.GameDeck.BoosterPacks.ToList()));
+                return;
+            }
+
+            if (bUser.GameDeck.BoosterPacks.Count < numberOfPack || numberOfPack <= 0)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aż tylu pakietów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var pack = bUser.GameDeck.BoosterPacks.ToArray()[numberOfPack - 1];
+            var cards = await _waifu.OpenBoosterPackAsync(pack);
+            if (cards.Count < pack.CardCnt)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            bUser.GameDeck.BoosterPacks.Remove(pack);
+            
+            foreach (var card in cards)
+                bUser.GameDeck.Cards.Add(card);
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+            string openString = "";
+            foreach (var card in cards)
+                openString += $"{card.GetString(false, false, true)}\n";
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} z pakietu **{pack.Name}** wypadło:\n\n{openString.TrimToLength(1900)}".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("ulepsz")]
         [Alias("upgrade")]
         [Summary("ulepsza kartę na lepszą jakość (min. 30 exp)")]

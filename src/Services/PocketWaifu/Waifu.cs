@@ -33,10 +33,12 @@ namespace Sanakan.Services.PocketWaifu
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
 
         private ImageProcessing _img;
+        private ShindenClient _shClient;
 
-        public Waifu(ImageProcessing img)
+        public Waifu(ImageProcessing img, ShindenClient client)
         {
             _img = img;
+            _shClient = client;
         }
 
         public static Rarity RandomizeRarity()
@@ -440,6 +442,85 @@ namespace Sanakan.Services.PocketWaifu
                 Color = EMType.Info.Color(),
                 Description = $"{title}\n\n{contentString.TrimToLength(1850)}"
             }.Build();
+        }
+
+        public Embed GetBoosterPackList(SocketUser user, IList<BoosterPack> packs)
+        {
+            string packString = "";
+            for (int i = 0; i < packs.Count(); i++)
+                packString += $"**[{i + 1}]** {packs[i].Name}\n";
+
+            return new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Description = $"{user.Mention} twoje pakiety:\n\n{packString.TrimToLength(1900)}"
+            }.Build();
+        }
+
+        public Embed GetItemList(SocketUser user, List<Item> items)
+        {
+            string packString = "";
+            for (int i = 0; i < items.Count(); i++)
+                packString += $"**[{i + 1}]** {items[i].Name} x{items[i].Count}\n";
+
+            return new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Description = $"{user.Mention} twoje przedmioty:\n\n{packString.TrimToLength(1900)}"
+            }.Build();
+        }
+
+        public async Task<List<Card>> OpenBoosterPackAsync(BoosterPack pack)
+        {
+            var cardsFromPack = new List<Card>();
+
+            for (int i = 0; i < pack.CardCnt; i++)
+            {
+                ICharacterInfo chara = null;
+                if (pack.Characters.Count > 0)
+                {
+                    var id = pack.Characters.First();
+                    if (pack.Characters.Count > 1) 
+                        id = Fun.GetOneRandomFrom(pack.Characters);
+
+                    var res = await _shClient.GetCharacterInfoAsync(id.Character);
+                    if (res.IsSuccessStatusCode()) chara = res.Body;
+                }
+                else if (pack.Title != 0)
+                {
+                    var res = await _shClient.Title.GetCharactersAsync(pack.Title);
+                    if (res.IsSuccessStatusCode())
+                    {
+                        if (res.Body.Count > 0)
+                        {
+                            var id = Fun.GetOneRandomFrom(res.Body).CharacterId;
+                            if (id.HasValue)
+                            {
+                                var response = await _shClient.GetCharacterInfoAsync(id.Value);
+                                if (response.IsSuccessStatusCode()) chara = response.Body;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    chara = await GetRandomCharacterAsync(_shClient);
+                }
+
+                if (chara != null)
+                {
+                    var newCard = GenerateNewCard(chara, pack.RarityExcludedFromPack.Select(x => x.Rarity).ToList());
+                    if (pack.MinRarity != Rarity.E && i == pack.CardCnt - 1)
+                        newCard = GenerateNewCard(chara, pack.MinRarity);
+                    
+                    newCard.IsTradable = pack.IsCardFromPackTradable;
+                    newCard.Source = pack.CardSourceFromPack;
+                    
+                    cardsFromPack.Add(newCard);
+                }
+            }
+
+            return cardsFromPack;
         }
     }
 }
