@@ -89,7 +89,7 @@ namespace Sanakan.Modules
             }
 
             SocketUser user = Context.Guild.GetUser(card.GameDeck.UserId);
-            if (null == user) user = Context.Client.GetUser(card.GameDeck.UserId);
+            if (user == null) user = Context.Client.GetUser(card.GameDeck.UserId);
 
             var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             var trashChannel = Context.Guild.GetTextChannel(gConfig.WaifuConfig.TrashCommandsChannel);
@@ -204,7 +204,6 @@ namespace Sanakan.Modules
                 default:
                     await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie powinno tutaj być!".ToEmbedMessage(EMType.Error).Build());
                     return;
-                
             }
 
             if (card.Character == bUser.GameDeck.Waifu)
@@ -369,9 +368,9 @@ namespace Sanakan.Modules
 
         [Command("klatka")]
         [Alias("cage")]
-        [Summary("otwiera klatkę z kartami")]
+        [Summary("otwiera klatkę z kartami(sprecyzowanie wid wyciąga tylko jedną kartę)")]
         [Remarks(""), RequireWaifuCommandChannel]
-        public async Task OpenCageAsync()
+        public async Task OpenCageAsync([Summary("WID(opcjonalne)")]ulong wid = 0)
         {
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
@@ -386,17 +385,44 @@ namespace Sanakan.Modules
                 return;
             }
 
-            foreach (var card in cardsInCage)
+            if (wid == 0)
             {
-                card.InCage = false;
-                var response = await _shclient.GetCharacterInfoAsync(card.Id);
-                if (response.IsSuccessStatusCode())
+                foreach (var card in cardsInCage)
                 {
-                    if (response.Body?.Points != null)
+                    card.InCage = false;
+                    var response = await _shclient.GetCharacterInfoAsync(card.Id);
+                    if (response.IsSuccessStatusCode())
                     {
-                        if (response.Body.Points.Any(x => x.Name.Equals(user.Nickname ?? user.Username)))
-                            card.Affection += 0.8;
+                        if (response.Body?.Points != null)
+                        {
+                            if (response.Body.Points.Any(x => x.Name.Equals(user.Nickname ?? user.Username)))
+                                card.Affection += 0.8;
+                        }
                     }
+
+                    var span = DateTime.Now - card.CreationDate;
+                    if (span.TotalDays > 5) card.Affection -= (int)span.TotalDays * 0.1;
+                }
+            }
+            else
+            {
+                var thisCard = cardsInCage.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} taka karta nie znajduje się w twojej klatce.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                thisCard.InCage = false;
+                cntIn = 1;
+
+                var span = DateTime.Now - thisCard.CreationDate;
+                if (span.TotalDays > 5) thisCard.Affection -= (int)span.TotalDays * 0.1;
+
+                foreach (var card in cardsInCage)
+                {
+                    if (card.Id != thisCard.Id)
+                        card.Affection -= 0.3;
                 }
             }
             

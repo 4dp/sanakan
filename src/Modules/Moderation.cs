@@ -33,7 +33,7 @@ namespace Sanakan.Modules
 
         [Command("kasuj", RunMode = RunMode.Async)]
         [Alias("prune")]
-        [Summary("usuwa x ostatnich wiadomośći")]
+        [Summary("usuwa x ostatnich wiadomości")]
         [Remarks("12"), RequireAdminRole]
         public async Task DeleteMesegesAsync([Summary("liczba wiadomości")]int count)
         {
