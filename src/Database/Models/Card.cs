@@ -37,6 +37,7 @@ namespace Sanakan.Database.Models
         public ulong Character { get; set; }
         public DateTime CreationDate { get; set; }
         public CardSource Source { get; set; }
+        public string Title { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

@@ -11,20 +11,23 @@ namespace Sanakan.Extensions
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
-            string name = nameAsUrl ? $"[{card.Name}]({Shinden.API.Url.GetCharacterURL(card.Character)})" : card.Name; 
+            string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name; 
             
             return $"{idStr} {name} **{card.Rarity}** 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
         }
 
-        public static string GetDesc(this Card card, string title = "")
+        public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
+
+        public static string GetDesc(this Card card)
         {
-            return $"*{title}*\n\n"
+            return $"*{card.Title ?? "????"}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
                 + $"**Aktywna:** {card.Active.GetYesNo()}\n"
+                + $"**W klatce:** {card.InCage.GetYesNo()}\n"
                 + $"**Możliwość wymiany:** {card.IsTradable.GetYesNo()}\n\n"
-                + $"**Arena:** **W**: {card?.ArenaStats?.Wins} **L**: {card?.ArenaStats?.Loses} **D**: {card?.ArenaStats?.Draws}\n\n"
+                + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
                 + $"**WID:** {card.Id}\n\n";
         }
 

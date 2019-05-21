@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -268,25 +269,6 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public static Card GenerateNewCard(ulong characterId, string name) => GenerateNewCard(characterId, name, RandomizeRarity());
-
-        public static Card GenerateNewCard(ulong characterId, string name, Rarity rarity)
-        {
-            return new Card
-            {
-                Defence = RandomizeDefence(rarity),
-                Attack = RandomizeAttack(rarity),
-                CreationDate = DateTime.Now,
-                Character = characterId,
-                Dere = RandomizeDere(),
-                RarityOnStart = rarity,
-                IsTradable = true,
-                Rarity = rarity,
-                UpgradesCnt = 2,
-                Name = name,
-            };
-        }
-
         public static int RandomizeAttack(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetAttackMin(), rarity.GetAttackMax() + 1);
 
@@ -299,19 +281,13 @@ namespace Sanakan.Services.PocketWaifu
             return Fun.GetOneRandomFrom(allDere);
         }
 
-        public static Card GenerateNewCard(ICharacterInfo character)
-            => GenerateNewCard(character.Id, character.ToString());
-
         public static Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
-            => GenerateNewCard(character.Id, character.ToString(), rarity);
-
-        public static Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
         {
-            var rarity = RandomizeRarity(rarityExcluded);
-
             return new Card
             {
+                Title = character?.Relations?.OrderBy(x => x.Id)?.FirstOrDefault()?.Title ?? "????",
                 Defence = RandomizeDefence(rarity),
+                ArenaStats = new CardArenaStats(),
                 Attack = RandomizeAttack(rarity),
                 CreationDate = DateTime.Now,
                 Name = character.ToString(),
@@ -323,6 +299,12 @@ namespace Sanakan.Services.PocketWaifu
                 Rarity = rarity,
             };
         }
+
+        public static Card GenerateNewCard(ICharacterInfo character)
+            => GenerateNewCard(character, RandomizeRarity());
+
+        public static Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
+            => GenerateNewCard(character, RandomizeRarity(rarityExcluded));
 
         private static int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
         {
@@ -521,6 +503,68 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             return cardsFromPack;
+        }
+
+        public async Task<string> GenerateAndSaveCardAsync(Card card, bool small = false)
+        {
+            var response = await _shClient.GetCharacterInfoAsync(card.Character);
+            if (response.Code == System.Net.HttpStatusCode.NotFound) throw new Exception("Character don't exist!");
+            if (!response.IsSuccessStatusCode()) throw new Exception("Shinden not responding!");
+
+            string imageLocation = $"./GOut/Cards/{card.Id}.png";
+            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+
+            using (var image = await _img.GetWaifuCardAsync(response.Body, card))
+            {
+                image.SaveToPath(imageLocation);
+                image.SaveToPath(sImageLocation, 133, 0);
+            }
+
+            return small ? sImageLocation : imageLocation;
+        }
+
+        public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
+        {
+            string imageUrl = null;
+            string imageLocation = $"./GOut/Cards/{card.Id}.png";
+            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+
+            if (!File.Exists(imageLocation) || !File.Exists(sImageLocation))
+            {
+                imageUrl = await GenerateAndSaveCardAsync(card);
+            }
+            else
+            {
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 12)
+                    imageUrl = await GenerateAndSaveCardAsync(card);
+                else 
+                    imageUrl = imageLocation;
+            }
+
+            if (imageUrl != null)
+            {
+                var msg = await trashChannel.SendFileAsync(imageUrl);
+                imageUrl = msg.Attachments.First().Url;
+            }
+
+            string imgUrls = $"[_obrazek_]({imageUrl})\n[_możesz zmienić obrazek tutaj_]({card.GetCharacterUrl()}/edit_crossroad)";
+            string ownerString = ((owner as SocketGuildUser)?.Nickname ?? owner?.Username) ?? "????";
+
+            return new EmbedBuilder
+            {
+                ImageUrl = imageUrl,
+                Color = EMType.Info.Color(),
+                Author = new EmbedAuthorBuilder
+                {
+                    Name = card.Name,
+                    Url = card.GetCharacterUrl()
+                },
+                Footer = new EmbedFooterBuilder
+                {
+                    Text = $"Należy do: {ownerString}"
+                },
+                Description = $"{card.GetDesc()}{imgUrls}".TrimToLength(1800)
+            }.Build();
         }
     }
 }

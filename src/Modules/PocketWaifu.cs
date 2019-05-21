@@ -75,6 +75,168 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: embed.Build());
         }
 
+        [Command("karta", RunMode = RunMode.Async)]
+        [Alias("card")]
+        [Summary("pozwala wyświetlić kartę")]
+        [Remarks("685"), RequireWaifuCommandChannel]
+        public async Task ShowCardAsync([Summary("WID")]ulong wid)
+        {
+            var card  = (await _dbUserContext.Cards.Include(x => x.GameDeck).FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+            if (card == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            SocketUser user = Context.Guild.GetUser(card.GameDeck.UserId);
+            if (null == user) user = Context.Client.GetUser(card.GameDeck.UserId);
+
+            var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            var trashChannel = Context.Guild.GetTextChannel(gConfig.WaifuConfig.TrashCommandsChannel);
+
+            await ReplyAsync("", embed: await _waifu.BuildCardViewAsync(card, trashChannel, user));
+        }
+
+        [Command("użyj")]
+        [Alias("uzyj", "use")]
+        [Summary("używa przedmiot na karcie")]
+        [Remarks("1 4212 2"), RequireWaifuCommandChannel]
+        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów")]int itemCnt = 1)
+        {
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+
+            if (bUser.GameDeck.Items.Count < 1)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych pakietów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (itemNumber <= 0 || itemNumber > bUser.GameDeck.Items.Count)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aż tylu przedmiotów.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var item = bUser.GameDeck.Items.ToArray()[itemNumber - 1];
+            if (item.Count < itemCnt)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz tylu sztuk tego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            switch (item.Type)
+            {
+                case ItemType.AffectionRecoveryBig:
+                case ItemType.AffectionRecoverySmall:
+                case ItemType.AffectionRecoveryNormal:
+                    break;
+
+                default:
+                    if (itemCnt != 1)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} możesz użyć tylko jeden przedmiot tego typu na raz!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    break;
+            }
+
+            var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+            if (card == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            double affectionInc = 0;
+            string cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
+            var embed = new EmbedBuilder
+            {
+                Color = EMType.Bot.Color(),
+                Author = new EmbedAuthorBuilder().WithUser(Context.User),
+                Description = $"Użyto _{item.Name}_ {cnt} na {card.GetString(false, false, true)}\n\n"
+            };
+
+            switch (item.Type)
+            {
+                case ItemType.AffectionRecoveryBig:
+                    affectionInc = 1 * itemCnt;
+                    embed.Description += "Znacznie powiekszyła się relacja z kartą!";
+                    break;
+
+                case ItemType.AffectionRecoveryNormal:
+                    affectionInc = 0.1 * itemCnt;
+                    embed.Description += "Powiekszyła się relacja z kartą!";
+                    break;
+
+                case ItemType.AffectionRecoverySmall:
+                    affectionInc = 0.025 * itemCnt;
+                    embed.Description += "Powiekszyła się trochę relacja z kartą!";
+                    break;
+
+                case ItemType.IncreaseUpgradeCnt:
+                    if (card.GetAffectionString() != "Miłość")
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} karta musi mieć najwyższy poziom relacji.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (card.Rarity == Rarity.SS)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} karty SS nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    affectionInc = 0.7;
+                    embed.Description += $"Zwiększono liczbę ulepszeń do {++card.UpgradesCnt}!";
+                    break;
+
+                case ItemType.DereReRoll:
+                    affectionInc = 0.1;
+                    card.Dere = Waifu.RandomizeDere();
+                    embed.Description += $"Nowy charakter to: {card.Dere}!";
+                    break;
+
+                case ItemType.CardParamsReRoll:
+                    affectionInc = 0.2;
+                    card.Attack = Waifu.RandomizeAttack(card.Rarity);
+                    card.Defence = Waifu.RandomizeDefence(card.Rarity);
+                    embed.Description += $"Nowa moc karty to:    🔥{card.Attack} 🛡{card.Defence}!";
+                    break;
+
+                default:
+                    await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie powinno tutaj być!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                
+            }
+
+            if (card.Character == bUser.GameDeck.Waifu)
+                affectionInc *= 1.5;
+
+            var response = await _shclient.GetCharacterInfoAsync(card.Character);
+            if (response.IsSuccessStatusCode())
+            {
+                if (response.Body?.Points != null)
+                {
+                    var ordered = response.Body.Points.OrderByDescending(x => x.Points);
+                    if (ordered.Any(x => x.Name == embed.Author.Name))
+                        affectionInc += 1.2;
+                }
+            }
+
+            if (card.Dere == Dere.Tsundere)
+                affectionInc *= 2;
+
+            item.Count -= itemCnt;
+            card.Affection += affectionInc;
+
+            if (item.Count <= 0)
+                bUser.GameDeck.Items.Remove(item);
+            
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+            await ReplyAsync("", embed: embed.Build());
+        }
+
         [Command("pakiet")]
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiet")]

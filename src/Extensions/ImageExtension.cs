@@ -42,6 +42,15 @@ namespace Sanakan.Extensions
             return path;
         }
 
+        public static string SaveToPath<T>(this Image<T> img, string path, int width, int height) where T : struct, IPixel<T>
+        {
+            var extension = path.Split(".").Last().ToLower();
+            var encoder = (extension == "png") ? _pngEncoder : _jpgEncoder;
+            img.Mutate(x => x.Resize(new Size(width, height)));
+            img.Save(path, encoder);
+            return path;
+        }
+
         public static void Round(this IImageProcessingContext<Rgba32> img, float radius)
         {
             var size = img.GetCurrentSize();
