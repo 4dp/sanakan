@@ -9,6 +9,7 @@ using Discord;
 using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
+using Sanakan.Services.PocketWaifu.Fight;
 using Shinden;
 using Shinden.Models;
 
@@ -354,6 +355,28 @@ namespace Sanakan.Services.PocketWaifu
             if (nDef < newMin) nDef = newMin;
 
             return nDef;
+        }
+
+        private int GetDmgDeal(CardInfo c1, CardInfo c2)
+        {
+            var bonus = BodereBonus.None;
+            if (c1.Info.Gender != Sex.NotSpecified && c2.Info.Gender != Sex.NotSpecified)
+            {
+                if (c1.Info.Gender != c2.Info.Gender) bonus = BodereBonus.Plus;
+                else bonus = BodereBonus.Minus;
+            }
+
+            var dmg = GetFA(c1, c2, out _, bonus);
+            if (dmg < 1) dmg = 1;
+
+            return (int)dmg;
+        }
+
+        public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players)
+        {
+            //TODO: fight
+            await Task.CompletedTask;
+            return new FightHistory(players.First());
         }
 
         public Embed GetActiveList(IEnumerable<Card> list)

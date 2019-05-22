@@ -693,8 +693,8 @@ namespace Sanakan.Services
             if (card.Attack > 99) startXAtk -= 15;
 
             var numFont = new Font(_latoBold, 54);
-            image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 300)));
-            image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 420)));
+            image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 320)));
+            image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 440)));
 
             if (applyNegativeStats)
             {

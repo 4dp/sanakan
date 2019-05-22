@@ -4,10 +4,10 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
-using Sanakan.Services;
 using Sanakan.Services.Commands;
 using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
@@ -27,12 +27,14 @@ namespace Sanakan.Modules
         private Database.UserContext _dbUserContext;
         private Sden.ShindenClient _shclient;
         private SessionManager _session;
+        private IConfig _config;
         private Waifu _waifu;
 
-        public PocketWaifu(Waifu waifu, Sden.ShindenClient client, Database.UserContext userContext, 
-            Database.GuildConfigContext dbGuildConfigContext, SessionManager session)
+        public PocketWaifu(Waifu waifu, Sden.ShindenClient client, Database.UserContext userContext,
+            Database.GuildConfigContext dbGuildConfigContext, SessionManager session, IConfig config)
         {
             _waifu = waifu;
+            _config = config;
             _shclient = client;
             _session = session;
             _dbUserContext = userContext;
@@ -55,6 +57,7 @@ namespace Sanakan.Modules
                 return;
             }
 
+            session.Enumerable = false;
             session.ListItems = user.GameDeck.Cards.OrderBy(x => x.Rarity).ToList();
             session.Embed = new EmbedBuilder
             {
@@ -319,12 +322,12 @@ namespace Sanakan.Modules
                 case ItemType.IncreaseUpgradeCnt:
                     if (card.GetAffectionString() != "Miłość")
                     {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} karta musi mieć najwyższy poziom relacji.".ToEmbedMessage(EMType.Error).Build());
+                        await ReplyAsync("", embed: $"{Context.User.Mention} karta musi mieć poziom relacji: *Miłość*.".ToEmbedMessage(EMType.Error).Build());
                         return;
                     }
-                    if (card.Rarity == Rarity.SS)
+                    if (card.Rarity == Rarity.SSS)
                     {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} karty SS nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
+                        await ReplyAsync("", embed: $"{Context.User.Mention} karty **SSS** nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
                         return;
                     }
                     affectionInc = 0.7;
@@ -341,7 +344,7 @@ namespace Sanakan.Modules
                     affectionInc = 0.2;
                     card.Attack = _waifu.RandomizeAttack(card.Rarity);
                     card.Defence = _waifu.RandomizeDefence(card.Rarity);
-                    embed.Description += $"Nowa moc karty to:    🔥{card.Attack} 🛡{card.Defence}!";
+                    embed.Description += $"Nowa moc karty to: 🔥{card.Attack} 🛡{card.Defence}!";
                     break;
 
                 default:
@@ -444,7 +447,7 @@ namespace Sanakan.Modules
                 return;
             }
 
-            if (card.Rarity == Rarity.SS)
+            if (card.Rarity == Rarity.SSS)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma już najwyższy poziom.".ToEmbedMessage(EMType.Bot).Build());
                 return;
@@ -456,9 +459,21 @@ namespace Sanakan.Modules
                 return;
             }
 
-            if (card.ExpCnt < 30)
+            if (card.ExpCnt < card.ExpToUpgrade())
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (card.UpgradesCnt < 10 && card.Rarity == Rarity.SS)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt małą ilość ulepszeń.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            if (card.GetAffectionString() != "Obsesyjna miłość" && card.Rarity == Rarity.SS)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt małą relacje aby ją ulepszyć.".ToEmbedMessage(EMType.Bot).Build());
                 return;
             }
 
@@ -466,8 +481,8 @@ namespace Sanakan.Modules
 
             card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
             card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
+            card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 10 : 1);
             card.Rarity = --card.Rarity;
-            card.UpgradesCnt -= 1;
             card.Affection += 1;
             card.ExpCnt = 0;
 
@@ -663,6 +678,71 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Guild));
         }
 
+        [Command("pojedynek")]
+        [Alias("duel")]
+        [Summary("stajesz do walki na przeciw innemu graczowi")]
+        [Remarks("Karna"), RequireWaifuCommandChannel]
+        public async Task MakeADuelAsync([Summary("użytkownik")]SocketGuildUser user2)
+        {
+            var user1 = Context.User as SocketGuildUser;
+            if (user1 == null) return;
+
+            if (user1.Id == user2.Id)
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} walka na siebie samego?".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var session = new AcceptSession(user2, Context.Client.CurrentUser);
+            session.AddParticipant(user1);
+
+            if (_session.SessionExist(session))
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} Ty lub twój partner znajdujecie się obecnie w trakcie walki.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var duser1 = await _dbUserContext.GetCachedFullUserAsync(user1.Id);
+            var duser2 = await _dbUserContext.GetCachedFullUserAsync(user2.Id);
+
+            var acrive1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
+            if (acrive1.Count < 1)
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var acrive2 = duser2?.GameDeck?.Cards?.Where(x => x.Active).ToList();
+            if (acrive2.Count < 1)
+            {
+                await ReplyAsync("", embed: $"{user2.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            string Name = $"⚔ Pojedynek:\n\n{user1.Mention} wyzywa {user2.Mention}\n\n";
+            var msg = await ReplyAsync("", embed: $"{Name}{user2.Mention} przyjmujesz to wyzwanie?".ToEmbedMessage(EMType.Error).Build());
+            await msg.AddReactionsAsync(new[] { new Emoji("✅"), new Emoji("❎") });
+
+            session.Message = msg;
+            session.Actions = new AcceptDuel(_waifu, _config)
+            {
+                Message = msg,
+                DuelName = Name,
+                P1 = new PlayerInfo
+                {
+                    User = user1,
+                    ActiveCards = acrive1
+                },
+                P2 = new PlayerInfo
+                {
+                    User = user2,
+                    ActiveCards = acrive2
+                }
+            };
+
+            await _session.TryAddSession(session);
+        }
+
         [Command("waifu")]
         [Alias("husbando")]
         [Summary("pozwala ustawić sobie ulubioną postać na profilu(musisz posiadać jej karte)")]
@@ -728,12 +808,11 @@ namespace Sanakan.Modules
             var dCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.D);
             var eCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.E);
 
-            var a1vs1 = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.vs1);
-            var a1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.vs3);
-            
-            var w1vs1 = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.vs1);
-            var d1vs1 = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Draw && x.Type == FightType.vs1);
-            var w1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.vs3);
+            var a1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.Versus);
+            var w1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.Versus);
+
+            var abr = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.BattleRoyale);
+            var wbr = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.BattleRoyale);
 
             var embed = new EmbedBuilder()
             {
@@ -741,9 +820,8 @@ namespace Sanakan.Modules
                 Author = new EmbedAuthorBuilder().WithUser(user),
                 Description = $"**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                             + $"**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
-                            + $"**1vs1** Rozegrane: {a1vs1} Wygrane: {w1vs1} Remis: {d1vs1}\n"
-                            + $"**1vs1 AC** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
-                            + $"**GMwK** Rozegrane: 0 Wygrane: 0"
+                            + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
+                            + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"
             };
 
             if (bUser.GameDeck?.Waifu != 0)

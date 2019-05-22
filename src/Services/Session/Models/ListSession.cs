@@ -11,6 +11,7 @@ namespace Sanakan.Services.Session.Models
 {
     public class ListSession<T> : Session
     {
+        public bool Enumerable { get; set; }
         public IMessage Message { get; set; }
         public int ItemsPerPage { get; set; }
         public List<T> ListItems { get; set; }
@@ -26,6 +27,7 @@ namespace Sanakan.Services.Session.Models
         {
             Event = ExecuteOn.AllReactions;
             RunMode = RunMode.Async;
+            Enumerable = true;
             TimeoutMs = 60000;
             Bot = bot;
 
@@ -50,7 +52,10 @@ namespace Sanakan.Services.Session.Models
 
             string pageString = "";
             for (int i = 0; i < itemsOnPage.Count; i++)
-                pageString += $"**{(i + 1) + (page * ItemsPerPage)}**: {itemsOnPage[i].ToString()}\n";
+            {
+                string enumerable = Enumerable ? $"**{(i + 1) + (page * ItemsPerPage)}**: " : "";
+                pageString += $"{enumerable}{itemsOnPage[i].ToString()}\n";
+            }
 
             Embed.Description = pageString.TrimToLength(1800);
 
@@ -63,6 +68,9 @@ namespace Sanakan.Services.Session.Models
 
         private async Task<bool> ExecuteAction(SessionContext context, Session session)
         {
+            if (context.Message.Id != Message.Id)
+                return false;
+
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
             {
                 var reaction = context.ReactionAdded ?? context.ReactionRemoved;

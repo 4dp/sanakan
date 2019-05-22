@@ -8,7 +8,7 @@ namespace Sanakan.Database.Models
 {
     public enum Rarity
     {
-        SS, S, A, B, C, D, E
+        SSS, SS, S, A, B, C, D, E
     }
 
     public enum Dere
@@ -35,6 +35,7 @@ namespace Sanakan.Database.Models
         public Dere Dere { get; set; }
         public int Defence { get; set; }
         public int Attack { get; set; }
+        public int Health { get; set; }
         public string Name { get; set; }
         public ulong Character { get; set; }
         public DateTime CreationDate { get; set; }

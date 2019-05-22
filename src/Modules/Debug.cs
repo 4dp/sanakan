@@ -69,7 +69,7 @@ namespace Sanakan.Modules
 
             QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{Context.User.Mention} otrzymał {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"{user.Mention} otrzymał {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("sc")]
@@ -84,7 +84,7 @@ namespace Sanakan.Modules
 
             QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{Context.User.Mention} ma teraz {botuser.ScCnt} SC".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ScCnt} SC".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("tc")]
@@ -99,7 +99,7 @@ namespace Sanakan.Modules
 
             QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{Context.User.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("kill", RunMode = RunMode.Async)]
