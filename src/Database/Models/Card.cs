@@ -1,6 +1,8 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Linq;
+using Sanakan.Extensions;
 
 namespace Sanakan.Database.Models
 {
@@ -43,5 +45,18 @@ namespace Sanakan.Database.Models
 
         public ulong GameDeckId { get; set; }
         public virtual GameDeck GameDeck { get; set; }
+
+        public override string ToString()
+        {
+            var marks = new[] 
+            { 
+                InCage ? "[C]" : "", 
+                Active ? "[A]" : "",
+                this.IsUnusable() ? "[N]" : ""
+            };
+            
+            string mark = marks.Any(x => x != "") ? $"**{string.Join("", marks)}** " : "";
+            return $"{mark}{this.GetString(false, false, true)}";
+        }
     }
 }

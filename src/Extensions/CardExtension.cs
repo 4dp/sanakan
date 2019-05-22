@@ -33,6 +33,8 @@ namespace Sanakan.Extensions
 
         public static string GetYesNo(this bool b) => b ? "Tak" : "Nie";
 
+        public static bool IsUnusable(this Card card) => card.GetAffectionString() == "Nienawiść";
+
         public static string GetAffectionString(this Card card)
         {
             if (card.Affection <= -5) return "Nienawiść";

@@ -48,10 +48,9 @@ namespace Sanakan.Services.Session.Models
             Embed.Footer = new EmbedFooterBuilder().WithText($"{CurrentPage + 1} z {MaxPage()}");
             var itemsOnPage = ListItems.GetRange(firstItem, toMuch ? (ListItems.Count - firstItem) : ItemsPerPage);
 
-            int index = 1;
             string pageString = "";
-            foreach (var itm in itemsOnPage)
-                pageString += $"**{index + (page * ItemsPerPage)}**: {itm.ToString()}\n";
+            for (int i = 0; i < itemsOnPage.Count; i++)
+                pageString += $"**{(i + 1) + (page * ItemsPerPage)}**: {itemsOnPage[i].ToString()}\n";
 
             Embed.Description = pageString.TrimToLength(1800);
 

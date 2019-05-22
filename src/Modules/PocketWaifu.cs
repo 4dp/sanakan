@@ -39,6 +39,46 @@ namespace Sanakan.Modules
             _dbGuildConfigContext = dbGuildConfigContext;
         }
 
+        [Command("harem", RunMode = RunMode.Async)]
+        [Alias("cards", "karty")]
+        [Summary("wyświetla wszystkie posaidane karty")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task ShowCardsAsync()
+        {
+            var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
+            await _session.KillSessionIfExistAsync(session);
+
+            var user = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
+            if (user?.GameDeck?.Cards?.Count() < 1)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            session.ListItems = user.GameDeck.Cards.OrderBy(x => x.Rarity).ToList();
+            session.Embed = new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Title = "Harem"
+            };
+
+            try
+            {
+                var dm = await Context.User.GetOrCreateDMChannelAsync();
+                var msg = await dm.SendMessageAsync("", embed: session.BuildPage(0));
+                await msg.AddReactionsAsync( new [] { new Emoji("⬅"), new Emoji("➡") });
+
+                session.Message = msg;
+                await _session.TryAddSession(session);
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+            }
+            catch (Exception)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
+            }
+        }
+
         [Command("przedmioty", RunMode = RunMode.Async)]
         [Alias("items")]
         [Summary("wypisuje posiadane przedmioty(informacje o przedmiocie gdy podany jego numer)")]
@@ -556,11 +596,10 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    if (dm != null)
-                    {
-                        await dm.SendMessageAsync("", embed: _waifu.GetActiveList(active));
-                        await dm.CloseAsync();
-                    }
+                    await dm.SendMessageAsync("", embed: _waifu.GetActiveList(active));
+                    await dm.CloseAsync();
+
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
                 }
                 catch (Exception)
                 {
