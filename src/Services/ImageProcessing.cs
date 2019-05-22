@@ -672,7 +672,7 @@ namespace Sanakan.Services
             return img;
         }
 
-        private void ApplyStats(Image<Rgba32> image, Card card)
+        private void ApplyStats(Image<Rgba32> image, Card card, bool applyNegativeStats = false)
         {
             using (var shield = Image.Load($"./Pictures/PW/shield.png"))
             {
@@ -695,6 +695,14 @@ namespace Sanakan.Services
             var numFont = new Font(_latoBold, 54);
             image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 300)));
             image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 420)));
+
+            if (applyNegativeStats)
+            {
+                using (var neg = Image.Load($"./Pictures/PW/neg.png"))
+                {
+                    image.Mutate(x => x.DrawImage(neg, new Point(0, 0), 1));
+                }
+            }
         }
 
         public async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(ICharacterInfo character, Card card)
@@ -718,7 +726,7 @@ namespace Sanakan.Services
         {
             var image = await GetWaifuCardNoStatsAsync(character, card);
 
-            ApplyStats(image, card);
+            ApplyStats(image, card, !character.HasImage);
 
             return image;
         }

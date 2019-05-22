@@ -42,7 +42,7 @@ namespace Sanakan.Services.PocketWaifu
             _shClient = client;
         }
 
-        public static Rarity RandomizeRarity()
+        public Rarity RandomizeRarity()
         {
             var num = Fun.GetRandomValue(1000);
             if (num < 5)   return Rarity.SS;
@@ -54,7 +54,7 @@ namespace Sanakan.Services.PocketWaifu
             return Rarity.E;
         }
 
-        public static Rarity RandomizeRarity(List<Rarity> rarityExcluded)
+        public Rarity RandomizeRarity(List<Rarity> rarityExcluded)
         {
             if (rarityExcluded == null) return RandomizeRarity();
             if (rarityExcluded.Count < 1) return RandomizeRarity();
@@ -82,7 +82,7 @@ namespace Sanakan.Services.PocketWaifu
             return list.Last().Rarity;
         }
 
-        public static ItemType RandomizeItemFromFight()
+        public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
             if (num < 2) return ItemType.IncreaseUpgradeCnt;
@@ -93,7 +93,7 @@ namespace Sanakan.Services.PocketWaifu
             return ItemType.AffectionRecoverySmall;
         }
 
-        public static ItemWithCost[] GetItemsWithCost()
+        public ItemWithCost[] GetItemsWithCost()
         {
             return new ItemWithCost[]
             {
@@ -109,7 +109,7 @@ namespace Sanakan.Services.PocketWaifu
             };
         }
 
-        public static double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
+        public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
             double rExp = 30f / (wild ? 100f : 30f);
             if (toUp.Id == toSac.Id) rExp = 30f / 5f;
@@ -131,7 +131,7 @@ namespace Sanakan.Services.PocketWaifu
             return rExp;
         }
 
-        public static FightWinner GetFightWinner(CardInfo card1, CardInfo card2, BodereBonus diffInSex)
+        public FightWinner GetFightWinner(CardInfo card1, CardInfo card2, BodereBonus diffInSex)
         {
             var FAcard1 = GetFA(card1, card2, out var evt1, diffInSex);
             var FAcard2 = GetFA(card2, card1, out var evt2, diffInSex);
@@ -155,7 +155,7 @@ namespace Sanakan.Services.PocketWaifu
             return winner;
         }
 
-        private static FightWinner CheckKamidereAndDeredere(CardInfo card1, CardInfo card2)
+        private FightWinner CheckKamidereAndDeredere(CardInfo card1, CardInfo card2)
         {
             if (card1.Card.Dere == Dere.Kamidere)
             {
@@ -186,7 +186,7 @@ namespace Sanakan.Services.PocketWaifu
             return FightWinner.Draw;
         }
 
-        public static double GetFA(CardInfo target, CardInfo enemy, out FAEvent evt, BodereBonus bodere)
+        public double GetFA(CardInfo target, CardInfo enemy, out FAEvent evt, BodereBonus bodere)
         {
             evt = FAEvent.None;
 
@@ -220,7 +220,7 @@ namespace Sanakan.Services.PocketWaifu
             return atk1 * (100 - def2) / 100;
         }
 
-        private static void TryApplyDereBonus(Dere dere, ref double atk, ref double def, BodereBonus bodere)
+        private void TryApplyDereBonus(Dere dere, ref double atk, ref double def, BodereBonus bodere)
         {
             if (dere == Dere.Bodere)
             {
@@ -269,19 +269,19 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public static int RandomizeAttack(Rarity rarity)
+        public int RandomizeAttack(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetAttackMin(), rarity.GetAttackMax() + 1);
 
-        public static int RandomizeDefence(Rarity rarity)
+        public int RandomizeDefence(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetDefenceMin(), rarity.GetDefenceMax() + 1);
 
-        public static Dere RandomizeDere()
+        public Dere RandomizeDere()
         {
             var allDere = Enum.GetValues(typeof(Dere)).Cast<Dere>();
             return Fun.GetOneRandomFrom(allDere);
         }
 
-        public static Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
+        public Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
         {
             return new Card
             {
@@ -300,21 +300,21 @@ namespace Sanakan.Services.PocketWaifu
             };
         }
 
-        public static Card GenerateNewCard(ICharacterInfo character)
+        public Card GenerateNewCard(ICharacterInfo character)
             => GenerateNewCard(character, RandomizeRarity());
 
-        public static Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
+        public Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
             => GenerateNewCard(character, RandomizeRarity(rarityExcluded));
 
-        private static int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
+        private int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
         {
             var m = (double)(nMax - nMin)/(double)(oMax - oMin);
             var c = (oMin * m) - nMin;
-
+            
             return (int)((m * value) - c);
         }
 
-        public static int GetAttactAfterLevelUp(Rarity oldRarity, int oldAtk)
+        public int GetAttactAfterLevelUp(Rarity oldRarity, int oldAtk)
         {
             var newRarity = oldRarity - 1;
             var newMax = newRarity.GetAttackMax();
@@ -335,7 +335,7 @@ namespace Sanakan.Services.PocketWaifu
             return nAtk;
         }
 
-        public static int GetDefenceAfterLevelUp(Rarity oldRarity, int oldDef)
+        public int GetDefenceAfterLevelUp(Rarity oldRarity, int oldDef)
         {
             var newRarity = oldRarity - 1;
             var newMax = newRarity.GetDefenceMax();
@@ -356,7 +356,7 @@ namespace Sanakan.Services.PocketWaifu
             return nDef;
         }
 
-        public static Embed GetActiveList(IEnumerable<Card> list)
+        public Embed GetActiveList(IEnumerable<Card> list)
         {
             var embed = new EmbedBuilder()
             {
@@ -370,7 +370,7 @@ namespace Sanakan.Services.PocketWaifu
             return embed.Build();
         }
 
-        public static async Task<ICharacterInfo> GetRandomCharacterAsync(ShindenClient shinden)
+        public async Task<ICharacterInfo> GetRandomCharacterAsync(ShindenClient shinden)
         {
             int check = 2;
             if (CharId.IsNeedForUpdate())

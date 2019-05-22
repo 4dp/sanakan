@@ -190,14 +190,14 @@ namespace Sanakan.Modules
 
                 case ItemType.DereReRoll:
                     affectionInc = 0.1;
-                    card.Dere = Waifu.RandomizeDere();
+                    card.Dere = _waifu.RandomizeDere();
                     embed.Description += $"Nowy charakter to: {card.Dere}!";
                     break;
 
                 case ItemType.CardParamsReRoll:
                     affectionInc = 0.2;
-                    card.Attack = Waifu.RandomizeAttack(card.Rarity);
-                    card.Defence = Waifu.RandomizeDefence(card.Rarity);
+                    card.Attack = _waifu.RandomizeAttack(card.Rarity);
+                    card.Defence = _waifu.RandomizeDefence(card.Rarity);
                     embed.Description += $"Nowa moc karty to:    🔥{card.Attack} 🛡{card.Defence}!";
                     break;
 
@@ -321,8 +321,8 @@ namespace Sanakan.Modules
 
             ++bUser.Stats.UpgaredCards;
 
-            card.Defence = Waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
-            card.Attack = Waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
+            card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
+            card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
             card.Rarity = --card.Rarity;
             card.UpgradesCnt -= 1;
             card.Affection += 1;
@@ -353,7 +353,7 @@ namespace Sanakan.Modules
 
             ++bUser.Stats.SacraficeCards;
 
-            var exp = Waifu.GetExpToUpgrade(cardToUp, cardToSac);
+            var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
             cardToUp.Affection += 0.01;
             cardToUp.ExpCnt += exp;
 
@@ -455,7 +455,7 @@ namespace Sanakan.Modules
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
                     if (dm != null)
                     {
-                        await dm.SendMessageAsync("", embed: Waifu.GetActiveList(active));
+                        await dm.SendMessageAsync("", embed: _waifu.GetActiveList(active));
                         await dm.CloseAsync();
                     }
                 }

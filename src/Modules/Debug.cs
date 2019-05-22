@@ -19,16 +19,18 @@ namespace Sanakan.Modules
     [Name("Debug"), Group("dev"), DontAutoLoad, RequireDev]
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
+        private Waifu _waifu;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
         private Database.UserContext _dbUserContext;
 
-        public Debug(ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(Waifu waifu, ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img)
         {
             _dbUserContext = userContext;
             _shClient = shClient;
             _helper = helper;
+            _waifu = waifu;
             _img = img;
         }
 
@@ -56,8 +58,8 @@ namespace Sanakan.Modules
         public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
             [Summary("jakość karty(nie podanie - losowo)")] Rarity rarity = Rarity.E)
         {
-            var character = (id == 0) ? await Waifu.GetRandomCharacterAsync(_shClient) : (await _shClient.GetCharacterInfoAsync(id)).Body;
-            var card = (rarity == Rarity.E) ? Waifu.GenerateNewCard(character) : Waifu.GenerateNewCard(character, rarity);
+            var character = (id == 0) ? await _waifu.GetRandomCharacterAsync(_shClient) : (await _shClient.GetCharacterInfoAsync(id)).Body;
+            var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(character) : _waifu.GenerateNewCard(character, rarity);
 
             card.Source = CardSource.GodIntervention;
             var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
