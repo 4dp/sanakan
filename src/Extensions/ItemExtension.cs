@@ -151,16 +151,13 @@ namespace Sanakan.Extensions
             return ex;
         }
 
-        public static Item ToItem(this ItemType type)
+        public static Item ToItem(this ItemType type, long count = 1)
         {
-            if (type.IsBoosterPack())
-                return null;
-                
             return new Item
             {
                 Name = type.Name(),
+                Count = count,
                 Type = type,
-                Count = 1,
             };
         }
 

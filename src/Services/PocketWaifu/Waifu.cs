@@ -566,5 +566,27 @@ namespace Sanakan.Services.PocketWaifu
                 Description = $"{card.GetDesc()}{imgUrls}".TrimToLength(1800)
             }.Build();
         }
+
+        public Embed GetShopView(ItemWithCost[] items)
+        {
+            string embedString = "";
+            for (int i = 0; i < items.Length; i++) 
+                embedString+= $"**[{i + 1}]** _{items[i].Item.Name}_ - {items[i].Cost} TC\n";
+
+            return new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Description = $"**Sklepik:**\n\n{embedString}".TrimToLength(2000)
+            }.Build();
+        }
+
+        public Embed GetItemShopInfo(ItemWithCost item)
+        {
+            return new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Description =$"**{item.Item.Name}**\n_{item.Item.Type.Desc()}_",
+            }.Build();
+        }
     }
 }

@@ -97,6 +97,109 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: await _waifu.BuildCardViewAsync(card, trashChannel, user));
         }
 
+        [Command("sklepik")]
+        [Alias("shop", "p2w")]
+        [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
+        [Remarks("1 info"), RequireWaifuCommandChannel]
+        public async Task BuyItemAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4(jako liczba przedmiotów do zakupu/lub id)")]string info = "0")
+        {
+            var itemsToBuy = _waifu.GetItemsWithCost();
+            if (itemNumber <= 0)
+            {
+                await ReplyAsync("", embed: _waifu.GetShopView(itemsToBuy));
+                return;
+            }
+
+            if (itemNumber > itemsToBuy.Length)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} w sklepiku nie ma takiego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var thisItem = itemsToBuy[--itemNumber];
+            if (info == "info")
+            {
+                await ReplyAsync("", embed: _waifu.GetItemShopInfo(thisItem));
+                return;
+            }
+
+            int itemCount = 0;
+            if (!int.TryParse(info, out itemCount))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} liczbe poproszę, a nie jakieś bohomazy.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            ulong boosterPackTitleId = 0;
+            string boosterPackTitleName = "";
+
+            switch (thisItem.Item.Type)
+            {
+                case ItemType.RandomTitleBoosterPackSingleE:
+                    if (itemCount < 0) itemCount = 0;
+                    var response = await _shclient.Title.GetInfoAsync((ulong)itemCount);
+                    if (!response.IsSuccessStatusCode())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    boosterPackTitleName = $" ({response.Body.Title})";
+                    boosterPackTitleId = response.Body.Id;
+                    itemCount = 1;
+                    break;
+
+                default:
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+            }
+
+            var realCost = itemCount * thisItem.Cost;
+            string count = (itemCount > 1) ? $" x{itemCount}" : "";
+
+            var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            if (bUser.TcCnt < realCost)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (thisItem.Item.Type.IsBoosterPack())
+            {
+                for (int i = 0; i < itemCount; i++)
+                {
+                    var booster = thisItem.Item.Type.ToBoosterPack();
+                    if (boosterPackTitleId != 0)
+                    {
+                        booster.Title = boosterPackTitleId;
+                        booster.Name += boosterPackTitleName;
+                    }
+                    if (booster != null) bUser.GameDeck.BoosterPacks.Add(booster);
+                }
+
+                bUser.Stats.WastedTcOnCards += realCost;
+            }
+            else
+            {
+                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type);
+                if (inUserItem == null)
+                {
+                    inUserItem = thisItem.Item.Type.ToItem(itemCount);
+                    bUser.GameDeck.Items.Add(inUserItem);
+                }
+                else inUserItem.Count += itemCount;
+
+                bUser.Stats.WastedTcOnCookies += realCost;
+            }
+
+            bUser.TcCnt -= realCost;
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+            await ReplyAsync("", embed: $"{Context.User.Mention} zakupił: _{thisItem.Item.Name}{boosterPackTitleName}{count}_.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("użyj")]
         [Alias("uzyj", "use")]
         [Summary("używa przedmiot na karcie")]
