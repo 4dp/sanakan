@@ -42,8 +42,8 @@ namespace Sanakan.Services.Session.Models
                     deathLog += $"**Runda {roundCnt}**:\n";
                     foreach (var d in de)
                     {
-                        var thisCard = P1.ActiveCards.FirstOrDefault(x => x.Id == d.CardId);
-                        if (thisCard == null) thisCard = P2.ActiveCards.FirstOrDefault(x => x.Id == d.CardId);
+                        var thisCard = P1.Cards.FirstOrDefault(x => x.Id == d.CardId);
+                        if (thisCard == null) thisCard = P2.Cards.FirstOrDefault(x => x.Id == d.CardId);
                         deathLog += $"❌ {thisCard.GetString(true, false, true)}\n";
                     }
                     deathLog += "\n";

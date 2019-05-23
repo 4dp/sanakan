@@ -16,9 +16,10 @@ namespace Sanakan.Services.Session.Models
         private readonly Emoji AcceptEmote = new Emoji("✅");
         private readonly Emoji DeclineEmote = new Emoji("❎");
 
-        public AcceptSession(IUser owner, IUser bot) : base(owner)
+        public AcceptSession(IUser owner, IUser challenger, IUser bot) : base(owner)
         {
             Event = ExecuteOn.AllReactions;
+            AddParticipant(challenger);
             RunMode = RunMode.Sync;
             TimeoutMs = 120000;
             Bot = bot;
@@ -32,6 +33,9 @@ namespace Sanakan.Services.Session.Models
 
         private async Task<bool> ExecuteAction(SessionContext context, Session session)
         {
+            if (Message == null || Actions == null)
+                return true;
+
             if (context.Message.Id != Message.Id)
                 return false;
 

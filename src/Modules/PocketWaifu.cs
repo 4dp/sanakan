@@ -13,6 +13,7 @@ using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
@@ -678,10 +679,69 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Guild));
         }
 
+        [Command("wymiana")]
+        [Alias("exchange")]
+        [Summary("propozycja wymiany z użytkownikiem")]
+        [Remarks("Karna"), RequireWaifuCommandChannel]
+        public async Task ExchangeCardsAsync([Summary("użytkownik")]SocketGuildUser user2)
+        {
+            var user1 = Context.User as SocketGuildUser;
+            if (user1 == null) return;
+
+            if (user1.Id == user2.Id)
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} wymiana z samym sobą?".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var session = new ExchangeSession(user1, user2, _config);
+            if (_session.SessionExist(session))
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} Ty lub twój partner znajdujecie się obecnie w trakcie wymiany.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var duser1 = await _dbUserContext.GetCachedFullUserAsync(user1.Id);
+            var duser2 = await _dbUserContext.GetCachedFullUserAsync(user2.Id);
+            if (duser1 == null || duser2 == null)
+            {
+                await ReplyAsync("", embed: "Jeden z graczy nie posiada profilu!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            session.P1 = new PlayerInfo
+            {
+                User = user1,
+                Dbuser = duser1,
+                Accepted = false,
+                CustomString = "",
+                Cards = new List<Card>()
+            };
+
+            session.P2 = new PlayerInfo
+            {
+                User = user2,
+                Dbuser = duser2,
+                Accepted = false,
+                CustomString = "",
+                Cards = new List<Card>()
+            };
+
+            session.Name = "🔄 **Wymiana:**";
+            session.Tips = $"Polecenia: `dodaj [WID]`, `usuń [WID]`.\n\n\u0031\u20E3 "
+                + $"- zakończenie dodawania {user1.Mention}\n\u0032\u20E3 - zakończenie dodawania {user2.Mention}";
+
+            var msg = await ReplyAsync("", embed: session.BuildEmbed());
+            await msg.AddReactionsAsync(new [] { new Emoji("\u0031\u20E3"), new Emoji("\u0032\u20E3") });
+            session.Message = msg;
+
+            await _session.TryAddSession(session);
+        }
+
         [Command("pojedynek")]
         [Alias("duel")]
         [Summary("stajesz do walki na przeciw innemu graczowi")]
-        [Remarks("Karna"), RequireWaifuCommandChannel]
+        [Remarks("Karna"), RequireWaifuFightChannel]
         public async Task MakeADuelAsync([Summary("użytkownik")]SocketGuildUser user2)
         {
             var user1 = Context.User as SocketGuildUser;
@@ -693,9 +753,7 @@ namespace Sanakan.Modules
                 return;
             }
 
-            var session = new AcceptSession(user2, Context.Client.CurrentUser);
-            session.AddParticipant(user1);
-
+            var session = new AcceptSession(user2, user1, Context.Client.CurrentUser);
             if (_session.SessionExist(session))
             {
                 await ReplyAsync("", embed: $"{user1.Mention} Ty lub twój partner znajdujecie się obecnie w trakcie walki.".ToEmbedMessage(EMType.Error).Build());
@@ -731,12 +789,12 @@ namespace Sanakan.Modules
                 P1 = new PlayerInfo
                 {
                     User = user1,
-                    ActiveCards = acrive1
+                    Cards = acrive1
                 },
                 P2 = new PlayerInfo
                 {
                     User = user2,
-                    ActiveCards = acrive2
+                    Cards = acrive2
                 }
             };
 

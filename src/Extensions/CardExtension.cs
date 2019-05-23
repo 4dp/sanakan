@@ -59,7 +59,6 @@ namespace Sanakan.Extensions
 
                 default: return 30;
             }
-
         }
 
         public static int GetAttackMin(this Rarity rarity)
