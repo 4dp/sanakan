@@ -54,7 +54,7 @@ namespace Sanakan.Extensions
         {
             switch (card.Rarity)
             {
-                case Rarity.SSS: return 1000;
+                case Rarity.SSS: return 10000;
                 case Rarity.SS:  return 100;
 
                 default: return 30;
@@ -93,6 +93,28 @@ namespace Sanakan.Extensions
                 case Rarity.E:
                 default: return 1;
             }
+        }
+
+        public static int GetHealthMin(this Rarity rarity)
+        {
+            switch (rarity)
+            {
+                case Rarity.SSS: return 100;
+                case Rarity.SS:  return 90;
+                case Rarity.S:   return 80;
+                case Rarity.A:   return 70;
+                case Rarity.B:   return 60;
+                case Rarity.C:   return 50;
+                case Rarity.D:   return 40;
+
+                case Rarity.E:
+                default: return 30;
+            }
+        }
+
+        public static int GetHealthMax(this Card card)
+        {
+            return 300 - (card.Attack + card.Defence);
         }
 
         public static int GetAttackMax(this Rarity rarity)

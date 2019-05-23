@@ -132,8 +132,16 @@ namespace Sanakan.Services.PocketWaifu
             return rExp;
         }
 
-        public FightWinner GetFightWinner(CardInfo card1, CardInfo card2, BodereBonus diffInSex)
+        public FightWinner GetFightWinner(CardInfo card1, CardInfo card2)
         {
+            var diffInSex = BodereBonus.None;
+            if (card1.Info.Gender != Sex.NotSpecified && card2.Info.Gender != Sex.NotSpecified)
+            {
+                diffInSex = BodereBonus.Minus;
+                if (card1.Info.Gender != card2.Info.Gender)
+                    diffInSex = BodereBonus.Plus;
+            }
+
             var FAcard1 = GetFA(card1, card2, out var evt1, diffInSex);
             var FAcard2 = GetFA(card2, card1, out var evt2, diffInSex);
 
@@ -276,6 +284,9 @@ namespace Sanakan.Services.PocketWaifu
         public int RandomizeDefence(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetDefenceMin(), rarity.GetDefenceMax() + 1);
 
+        public int RandomizeHealth(Card card)
+            => Fun.GetRandomValue(card.Rarity.GetHealthMin(), card.GetHealthMax() + 1);
+
         public Dere RandomizeDere()
         {
             var allDere = Enum.GetValues(typeof(Dere)).Cast<Dere>();
@@ -284,7 +295,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
         {
-            return new Card
+            var card = new Card
             {
                 Title = character?.Relations?.OrderBy(x => x.Id)?.FirstOrDefault()?.Title ?? "????",
                 Defence = RandomizeDefence(rarity),
@@ -292,13 +303,17 @@ namespace Sanakan.Services.PocketWaifu
                 Attack = RandomizeAttack(rarity),
                 CreationDate = DateTime.Now,
                 Name = character.ToString(),
+                Source = CardSource.Other,
                 Character = character.Id,
                 Dere = RandomizeDere(),
                 RarityOnStart = rarity,
                 IsTradable = true,
                 UpgradesCnt = 2,
-                Rarity = rarity,
+                Rarity = rarity
             };
+
+            card.Health = RandomizeHealth(card);
+            return card;
         }
 
         public Card GenerateNewCard(ICharacterInfo character)
@@ -393,24 +408,24 @@ namespace Sanakan.Services.PocketWaifu
             return embed.Build();
         }
 
-        public async Task<ICharacterInfo> GetRandomCharacterAsync(ShindenClient shinden)
+        public async Task<ICharacterInfo> GetRandomCharacterAsync()
         {
             int check = 2;
             if (CharId.IsNeedForUpdate())
             {
-                var characters = await shinden.Ex.GetAllCharactersFromAnimeAsync();
+                var characters = await _shClient.Ex.GetAllCharactersFromAnimeAsync();
                 if (!characters.IsSuccessStatusCode()) return null;
 
                 CharId.Update(characters.Body);
             }
 
             ulong id = Fun.GetOneRandomFrom(CharId.Ids);
-            var response = await shinden.GetCharacterInfoAsync(id);
+            var response = await _shClient.GetCharacterInfoAsync(id);
 
             while (!response.IsSuccessStatusCode())
             {
                 id = Fun.GetOneRandomFrom(CharId.Ids);
-                response = await shinden.GetCharacterInfoAsync(id);
+                response = await _shClient.GetCharacterInfoAsync(id);
 
                 if (check-- == 0) 
                     return null;
@@ -509,7 +524,7 @@ namespace Sanakan.Services.PocketWaifu
                 }
                 else
                 {
-                    chara = await GetRandomCharacterAsync(_shClient);
+                    chara = await GetRandomCharacterAsync();
                 }
 
                 if (chara != null)
@@ -546,9 +561,62 @@ namespace Sanakan.Services.PocketWaifu
             return small ? sImageLocation : imageLocation;
         }
 
-        public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
+        private async Task<string> GetUrlIfExistForFight(CardInfo info)
         {
             string imageUrl = null;
+            string imageLocation = $"./GOut/Cards/{info.Card.Id}.png";
+            string sImageLocation = $"./GOut/Cards/Small/{info.Card.Id}.png";
+
+            if (!File.Exists(imageLocation) || !File.Exists(sImageLocation))
+            {
+                if (info.Card.Id != 0)
+                    imageUrl = await GenerateAndSaveCardAsync(info.Card);
+            }
+            else
+            {
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
+                    imageUrl = await GenerateAndSaveCardAsync(info.Card);
+            }
+
+            return imageUrl;
+        }
+
+        public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
+        {
+            string url = null;
+            string imageUrlWinner = await GetUrlIfExistForFight(info.Winner);
+            string imageUrlLooser = await GetUrlIfExistForFight(info.Loser);
+
+            DuelImage dImg = null;
+            var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");
+            try
+            {
+                var images = reader.Load<List<DuelImage>>();
+                dImg = Fun.GetOneRandomFrom(images);
+            }
+            catch (Exception) { }
+
+            using (var winner = await _img.GetWaifuCardAsync(imageUrlWinner, info.Winner.Info, info.Winner.Card))
+            {
+                using (var looser = await _img.GetWaifuCardAsync(imageUrlLooser, info.Loser.Info, info.Loser.Card))
+                {
+                    using (var img = _img.GetDuelCardImage(info, dImg, winner, looser))
+                    {
+                        using (var stream = img.ToPngStream())
+                        {
+                            var msg = await trashChannel.SendFileAsync(stream, $"duel.png");
+                            url = msg.Attachments.First().Url;
+                        }
+                    }
+                }
+            }
+
+            return url;
+        }
+
+        public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
+        {
+            string imageUrl;
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
 
@@ -558,7 +626,7 @@ namespace Sanakan.Services.PocketWaifu
             }
             else
             {
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 12)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
                     imageUrl = await GenerateAndSaveCardAsync(card);
                 else 
                     imageUrl = imageLocation;

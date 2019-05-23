@@ -14,7 +14,9 @@ namespace Sanakan.Services.Session.Models
 
         private readonly IUser Bot;
         private readonly Emoji AcceptEmote = new Emoji("✅");
-        private readonly Emoji DeclineEmote = new Emoji("❎");
+        private readonly Emote DeclineEmote = Emote.Parse("<:redcross:581152766655856660>");
+
+        public IEmote[] StartReactions => new IEmote[] { AcceptEmote, DeclineEmote };
 
         public AcceptSession(IUser owner, IUser challenger, IUser bot) : base(owner)
         {
@@ -37,6 +39,9 @@ namespace Sanakan.Services.Session.Models
                 return true;
 
             if (context.Message.Id != Message.Id)
+                return false;
+
+            if (context.User.Id != GetOwner().Id)
                 return false;
 
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)

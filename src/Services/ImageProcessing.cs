@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
+using Sanakan.Services.PocketWaifu;
 using Shinden.Models;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -720,6 +721,52 @@ namespace Sanakan.Services
             }
 
             return image;
+        }
+
+        public Image<Rgba32> GetDuelCardImage(DuelInfo info, DuelImage image, Image<Rgba32> win, Image<Rgba32> los)
+        {
+            int Xiw = 76;
+            int Yt = 780;
+            int Yi = 131;
+            int Xil = 876;
+
+            if (info.Side == DuelInfo.WinnerSide.Right)
+            {
+                Xiw = 876;
+                Xil = 76;
+            }
+
+            var nameFont = new Font(_latoBold, 34);
+            var img = (image != null) ? Image.Load(image.Uri((int)info.Side)) : Image.Load((DuelImage.DefaultUri((int)info.Side)));
+
+            win.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(450, 0)
+            }));
+
+            los.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(450, 0)
+            }));
+
+            img.Mutate(x => x.DrawImage(win, new Point(Xiw, Yi), 1));
+            img.Mutate(x => x.DrawImage(los, new Point(Xil, Yi), 1));
+
+            var options = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Center, WrapTextWidth = win.Width };
+            img.Mutate(x => x.DrawText(options, info.Winner.Card.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xiw, Yt)));
+            img.Mutate(x => x.DrawText(options, info.Loser.Card.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xil, Yt)));
+
+            return img;
+        }
+
+        public async Task<Image<Rgba32>> GetWaifuCardAsync(string url, ICharacterInfo character, Card card)
+        {
+            if (url == null)
+                return await GetWaifuCardAsync(character, card);
+
+            return Image.Load(url);
         }
 
         public async Task<Image<Rgba32>> GetWaifuCardAsync(ICharacterInfo character, Card card)

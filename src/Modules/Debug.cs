@@ -58,7 +58,7 @@ namespace Sanakan.Modules
         public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
             [Summary("jakość karty(nie podanie - losowo)")] Rarity rarity = Rarity.E)
         {
-            var character = (id == 0) ? await _waifu.GetRandomCharacterAsync(_shClient) : (await _shClient.GetCharacterInfoAsync(id)).Body;
+            var character = (id == 0) ? await _waifu.GetRandomCharacterAsync() : (await _shClient.GetCharacterInfoAsync(id)).Body;
             var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(character) : _waifu.GenerateNewCard(character, rarity);
 
             card.Source = CardSource.GodIntervention;

@@ -30,7 +30,7 @@ namespace Sanakan.Services.Session.Models
         private IConfig _config;
 
         private readonly Emoji AcceptEmote = new Emoji("✅");
-        private readonly Emoji DeclineEmote = new Emoji("❎");
+        private readonly Emote DeclineEmote = Emote.Parse("<:redcross:581152766655856660>");
 
         private readonly Emoji InEmote = new Emoji("📥");
         private readonly Emoji ErrEmote = new Emoji("❌");
@@ -38,6 +38,8 @@ namespace Sanakan.Services.Session.Models
 
         private readonly Emoji OneEmote = new Emoji("\u0031\u20E3");
         private readonly Emoji TwoEmote = new Emoji("\u0032\u20E3");
+
+        public IEmote[] StartReactions => new IEmote[] { OneEmote, TwoEmote };
 
         public ExchangeSession(IUser owner, IUser exchanger, IConfig config) : base(owner)
         {
@@ -223,7 +225,7 @@ namespace Sanakan.Services.Session.Models
             if (P1.Accepted && P2.Accepted)
             {
                 State = ExchangeStatus.AcceptP1;
-                Tips = $"{P1.User.Mention} daj ✅ aby zaakceptować, lub ❎ aby odrzucić.";
+                Tips = $"{P1.User.Mention} daj {AcceptEmote} aby zaakceptować, lub {DeclineEmote} aby odrzucić.";
 
                 await msg.RemoveAllReactionsAsync();
                 await msg.ModifyAsync(x => x.Embed = BuildEmbed());
@@ -242,7 +244,7 @@ namespace Sanakan.Services.Session.Models
                     {
                         RestartTimer();
                         State = ExchangeStatus.AcceptP2;
-                        Tips = $"{P2.User.Mention} daj ✅ aby zaakceptować, lub ❎ aby odrzucić.";
+                        Tips = $"{P2.User.Mention} daj {AcceptEmote} aby zaakceptować, lub {DeclineEmote} aby odrzucić.";
                     }
                     else
                     {

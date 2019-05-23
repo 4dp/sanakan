@@ -732,10 +732,116 @@ namespace Sanakan.Modules
                 + $"- zakończenie dodawania {user1.Mention}\n\u0032\u20E3 - zakończenie dodawania {user2.Mention}";
 
             var msg = await ReplyAsync("", embed: session.BuildEmbed());
-            await msg.AddReactionsAsync(new [] { new Emoji("\u0031\u20E3"), new Emoji("\u0032\u20E3") });
+            await msg.AddReactionsAsync(session.StartReactions);
             session.Message = msg;
 
             await _session.TryAddSession(session);
+        }
+
+        [Command("arena")]
+        [Alias("wild")]
+        [Summary("walka z losowo wygenerowaną kartą")]
+        [Remarks("1"), RequireWaifuFightChannel]
+        public async Task FightInArenaAsync([Summary("nr aktywnej karty(1-3)")]int activeCard)
+        {
+            var botUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var active = botUser.GameDeck.Cards.Where(x => x.Active).ToList();
+            if (active.Count < activeCard || activeCard <= 0)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie masz tylu aktywnych kart!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var thisCard = active[--activeCard];
+            if (thisCard.IsUnusable())
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var enemyCharacter = await _waifu.GetRandomCharacterAsync();
+            var playerCharacter = (await _shclient.GetCharacterInfoAsync(thisCard.Character)).Body;
+            if (enemyCharacter == null || playerCharacter == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się pobrać informacji z shindena.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var enemyCard = _waifu.GenerateNewCard(enemyCharacter);
+            var embed = new EmbedBuilder
+            {
+                Color = EMType.Bot.Color(),
+                Author = new EmbedAuthorBuilder().WithUser(Context.User)
+            };
+
+            var p1 = new CardInfo
+            {
+                Card = thisCard,
+                Info = playerCharacter
+            };
+
+            var p2 = new CardInfo
+            {
+                Card = enemyCard,
+                Info = enemyCharacter
+            };
+
+            var result = _waifu.GetFightWinner(p1, p2);
+            thisCard.Affection -= playerCharacter.HasImage ? 0.05 : 0.2;
+            var dInfo = new DuelInfo();
+
+            switch (result)
+            {
+                case FightWinner.Card1:
+                    ++thisCard.ArenaStats.Wins;
+                    var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
+                    embed.Description = $"+{exp.ToString("F")} exp\n";
+                    thisCard.ExpCnt += exp;
+
+                    dInfo.Side = DuelInfo.WinnerSide.Left;
+                    dInfo.Winner = p1;
+                    dInfo.Loser = p2;
+
+                    if (Services.Fun.TakeATry(6))
+                    {
+                        var item = _waifu.RandomizeItemFromFight().ToItem();
+                        var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                        if (thisItem == null)
+                        {
+                            thisItem = item;
+                            botUser.GameDeck.Items.Add(thisItem);
+                        }
+                        else ++thisItem.Count;
+
+                        embed.Description += $"+{item.Name}";
+                    }
+                    break;
+
+                case FightWinner.Card2:
+                    thisCard.Affection -= playerCharacter.HasImage ? 0.1 : 0.5;
+                    ++thisCard.ArenaStats.Loses;
+
+                    dInfo.Side = DuelInfo.WinnerSide.Right;
+                    dInfo.Winner = p2;
+                    dInfo.Loser = p1;
+                    break;
+
+                default:
+                case FightWinner.Draw:
+                    ++thisCard.ArenaStats.Draws;
+
+                    dInfo.Side = DuelInfo.WinnerSide.Draw;
+                    dInfo.Winner = p1;
+                    dInfo.Loser = p2;
+                    break;
+            }
+
+            await _dbUserContext.SaveChangesAsync();
+
+            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
+
+            await ReplyAsync("", embed: embed.Build());
         }
 
         [Command("pojedynek")]
@@ -779,7 +885,7 @@ namespace Sanakan.Modules
 
             string Name = $"⚔ Pojedynek:\n\n{user1.Mention} wyzywa {user2.Mention}\n\n";
             var msg = await ReplyAsync("", embed: $"{Name}{user2.Mention} przyjmujesz to wyzwanie?".ToEmbedMessage(EMType.Error).Build());
-            await msg.AddReactionsAsync(new[] { new Emoji("✅"), new Emoji("❎") });
+            await msg.AddReactionsAsync(session.StartReactions);
 
             session.Message = msg;
             session.Actions = new AcceptDuel(_waifu, _config)
