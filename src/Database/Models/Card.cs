@@ -18,7 +18,7 @@ namespace Sanakan.Database.Models
 
     public enum CardSource
     {
-        Activity, Safari, Shop, GodIntervention, Other
+        Activity, Safari, Shop, GodIntervention, Api, Other
     }
 
     public class Card

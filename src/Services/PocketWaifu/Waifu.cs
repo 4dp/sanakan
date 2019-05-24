@@ -393,7 +393,10 @@ namespace Sanakan.Services.PocketWaifu
 
             foreach (var player in players)
                 foreach (var card in player.Cards)
+                {
+                    card.Health = card.GetHealthWithPenalty();
                     totalCards.Add(await card.GetCardInfoAsync(_shClient));
+                }
 
             totalCards = totalCards.Shuffle().ToList();
             var rounds = new List<RoundInfo>();

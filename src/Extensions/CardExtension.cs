@@ -15,7 +15,7 @@ namespace Sanakan.Extensions
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
             string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name; 
             
-            return $"{idStr} {name} **{card.Rarity}** 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
+            return $"{idStr} {name} **{card.Rarity}** ❤{card.Health} 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
         }
 
         public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
@@ -23,6 +23,7 @@ namespace Sanakan.Extensions
         public static string GetDesc(this Card card)
         {
             return $"*{card.Title ?? "????"}*\n\n"
+                + $"**Życie[P]:** {card.GetHealthWithPenalty()}\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
@@ -30,7 +31,31 @@ namespace Sanakan.Extensions
                 + $"**Aktywna:** {card.Active.GetYesNo()}\n"
                 + $"**Możliwość wymiany:** {card.IsTradable.GetYesNo()}\n\n"
                 + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
-                + $"**WID:** {card.Id}\n\n";
+                + $"**WID:** {card.Id}\n"
+                + $"**Pochodzenie:** {card.Source.GetString()}\n\n";
+        }
+
+        public static int GetHealthWithPenalty(this Card card)
+        {
+            var percent = card.Affection * 5d / 100d;
+            var newHealth = (int) (card.Health + (card.Health * percent));
+            return newHealth < 10 ? 10 : newHealth;
+        }
+
+        public static string GetString(this CardSource source)
+        {
+            switch (source)
+            {
+                case CardSource.Activity:        return "Aktywność";
+                case CardSource.Safari:          return "Safari";
+                case CardSource.Shop:            return "Sklepik";
+                case CardSource.GodIntervention: return "Czity";
+                case CardSource.Api:             return "Nieznane";
+
+                default:
+                case CardSource.Other: return "Inne";
+            }
+
         }
 
         public static string GetYesNo(this bool b) => b ? "Tak" : "Nie";
