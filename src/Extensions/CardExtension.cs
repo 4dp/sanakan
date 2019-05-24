@@ -1,6 +1,9 @@
 ﻿#pragma warning disable 1591
 
+using System;
+using System.Threading.Tasks;
 using Sanakan.Database.Models;
+using Sanakan.Services.PocketWaifu;
 
 namespace Sanakan.Extensions
 {
@@ -149,6 +152,19 @@ namespace Sanakan.Extensions
                 case Rarity.E:
                 default: return 38;
             }
+        }
+
+        public static async Task<CardInfo> GetCardInfoAsync(this Card card, Shinden.ShindenClient client)
+        {
+            var response = await client.GetCharacterInfoAsync(card.Character);
+            if (!response.IsSuccessStatusCode())
+                throw new Exception($"Couldn't get card info!");
+
+            return new CardInfo
+            {
+                Info = response.Body,
+                Card = card
+            };
         }
     }
 }

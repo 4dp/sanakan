@@ -869,15 +869,15 @@ namespace Sanakan.Modules
             var duser1 = await _dbUserContext.GetCachedFullUserAsync(user1.Id);
             var duser2 = await _dbUserContext.GetCachedFullUserAsync(user2.Id);
 
-            var acrive1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-            if (acrive1.Count < 1)
+            var active1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
+            if (active1.Count < 1)
             {
                 await ReplyAsync("", embed: $"{user1.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
-            var acrive2 = duser2?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-            if (acrive2.Count < 1)
+            var active2 = duser2?.GameDeck?.Cards?.Where(x => x.Active).ToList();
+            if (active2.Count < 1)
             {
                 await ReplyAsync("", embed: $"{user2.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
                 return;
@@ -895,12 +895,12 @@ namespace Sanakan.Modules
                 P1 = new PlayerInfo
                 {
                     User = user1,
-                    Cards = acrive1
+                    Cards = active1
                 },
                 P2 = new PlayerInfo
                 {
                     User = user2,
-                    Cards = acrive2
+                    Cards = active2
                 }
             };
 

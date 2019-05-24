@@ -387,11 +387,64 @@ namespace Sanakan.Services.PocketWaifu
             return (int)dmg;
         }
 
-        public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players)
+        public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)
         {
-            //TODO: fight
-            await Task.CompletedTask;
-            return new FightHistory(players.First());
+            var totalCards = new List<CardInfo>();
+
+            foreach (var player in players)
+                foreach (var card in player.Cards)
+                    totalCards.Add(await card.GetCardInfoAsync(_shClient));
+
+            totalCards = totalCards.Shuffle().ToList();
+            var rounds = new List<RoundInfo>();
+            bool fight = true;
+
+            while (fight)
+            {
+                var round = new RoundInfo();
+                foreach (var card in totalCards)
+                {
+                    var enemies = totalCards.Where(x => x.Card.Health > 0 && x.Card.GameDeckId != card.Card.GameDeckId);
+                    if (enemies.Count() > 0)
+                    {
+                        var target = Fun.GetOneRandomFrom(enemies);
+                        var dmg = GetDmgDeal(card, target);
+                        target.Card.Health -= dmg;
+
+                        var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Card.Id);
+                        if (hpSnap == null)
+                        {
+                            round.Cards.Add(new HpSnapshot
+                            {
+                                CardId = target.Card.Id,
+                                Hp = target.Card.Health
+                            });
+                        }
+                        else hpSnap.Hp = target.Card.Health;
+
+                        round.Fights.Add(new AttackInfo
+                        {
+                            Dmg = dmg,
+                            AtkCardId = card.Card.Id,
+                            DefCardId = target.Card.Id
+                        });
+                    }
+                }
+
+                rounds.Add(round);
+
+                if (oneCard)
+                    fight = totalCards.Count(x => x.Card.Health > 0) > 1;
+                else
+                {
+                    var alive = totalCards.Where(x => x.Card.Health > 0);
+                    fight = alive.Any(x => x.Card.GameDeckId != alive.First().Card.GameDeckId);
+                }
+            }
+
+            var winnerDeck = totalCards.Where(x => x.Card.Health > 0).First().Card.GameDeckId;
+            var winner = players.First(x => x.Cards.Any(c => c.GameDeckId == winnerDeck));
+            return new FightHistory(winner) { Rounds = rounds };
         }
 
         public Embed GetActiveList(IEnumerable<Card> list)
@@ -561,31 +614,31 @@ namespace Sanakan.Services.PocketWaifu
             return small ? sImageLocation : imageLocation;
         }
 
-        private async Task<string> GetUrlIfExistForFight(CardInfo info)
+        private async Task<string> GetCardUrlIfExist(Card card, bool defaultStr = false)
         {
             string imageUrl = null;
-            string imageLocation = $"./GOut/Cards/{info.Card.Id}.png";
-            string sImageLocation = $"./GOut/Cards/Small/{info.Card.Id}.png";
+            string imageLocation = $"./GOut/Cards/{card.Id}.png";
+            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
 
             if (!File.Exists(imageLocation) || !File.Exists(sImageLocation))
             {
-                if (info.Card.Id != 0)
-                    imageUrl = await GenerateAndSaveCardAsync(info.Card);
+                if (card.Id != 0)
+                    imageUrl = await GenerateAndSaveCardAsync(card);
             }
             else
             {
                 if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
-                    imageUrl = await GenerateAndSaveCardAsync(info.Card);
+                    imageUrl = await GenerateAndSaveCardAsync(card);
             }
 
-            return imageUrl;
+            return defaultStr ? (imageUrl ?? imageLocation) : imageUrl;
         }
 
         public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
         {
             string url = null;
-            string imageUrlWinner = await GetUrlIfExistForFight(info.Winner);
-            string imageUrlLooser = await GetUrlIfExistForFight(info.Loser);
+            string imageUrlWinner = await GetCardUrlIfExist(info.Winner.Card);
+            string imageUrlLooser = await GetCardUrlIfExist(info.Loser.Card);
 
             DuelImage dImg = null;
             var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");
@@ -616,22 +669,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
         {
-            string imageUrl;
-            string imageLocation = $"./GOut/Cards/{card.Id}.png";
-            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
-
-            if (!File.Exists(imageLocation) || !File.Exists(sImageLocation))
-            {
-                imageUrl = await GenerateAndSaveCardAsync(card);
-            }
-            else
-            {
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
-                    imageUrl = await GenerateAndSaveCardAsync(card);
-                else 
-                    imageUrl = imageLocation;
-            }
-
+            string imageUrl = await GetCardUrlIfExist(card, true);
             if (imageUrl != null)
             {
                 var msg = await trashChannel.SendFileAsync(imageUrl);
