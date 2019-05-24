@@ -23,7 +23,8 @@ namespace Sanakan.Extensions
             {
                 config = new GuildOptions
                 {
-                    Id = guildId
+                    Id = guildId,
+                    SafariLimit = 50
                 };
                 await context.Guilds.AddAsync(config);
             }

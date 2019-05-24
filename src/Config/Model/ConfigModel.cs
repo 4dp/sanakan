@@ -10,6 +10,7 @@ namespace Sanakan.Config.Model
         public string BotToken { get; set; }
         public bool Supervision { get; set; }
         public bool Demonization { get; set; }
+        public bool SafariEnabled { get; set; }
         public string ConnectionString { get; set; }
         public ConfigShinden Shinden { get; set; }
         public ConfigExp Exp { get; set; }

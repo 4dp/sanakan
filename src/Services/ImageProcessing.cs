@@ -761,6 +761,13 @@ namespace Sanakan.Services
             return img;
         }
 
+        public Image<Rgba32> GetCatchThatWaifuImage(Image<Rgba32> card, string pokeImg, int xPos, int yPos)
+        {
+            var image = Image.Load(pokeImg);
+            image.Mutate(x => x.DrawImage(card, new Point(xPos, yPos), 1));
+            return image;
+        }
+
         public async Task<Image<Rgba32>> GetWaifuCardAsync(string url, ICharacterInfo character, Card card)
         {
             if (url == null)

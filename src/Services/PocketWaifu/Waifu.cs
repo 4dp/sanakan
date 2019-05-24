@@ -614,7 +614,7 @@ namespace Sanakan.Services.PocketWaifu
             return small ? sImageLocation : imageLocation;
         }
 
-        private async Task<string> GetCardUrlIfExist(Card card, bool defaultStr = false)
+        private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false)
         {
             string imageUrl = null;
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
@@ -634,11 +634,52 @@ namespace Sanakan.Services.PocketWaifu
             return defaultStr ? (imageUrl ?? imageLocation) : imageUrl;
         }
 
+        public SafariImage GetRandomSarafiImage()
+        {
+            SafariImage dImg = null;
+            var reader = new Config.JsonFileReader($"./Pictures/Poke/List.json");
+            try
+            {
+                var images = reader.Load<List<SafariImage>>();
+                dImg = Fun.GetOneRandomFrom(images);
+            }
+            catch (Exception) { }
+
+            return dImg;
+        }
+
+        public async Task<string> GetSafariViewAsync(SafariImage info, ICharacterInfo character, Card card, ITextChannel trashChannel)
+        {
+            string uri = info != null ? info.Uri(SafariImage.Type.Truth) : SafariImage.DefaultUri(SafariImage.Type.Truth);
+            var cardUri = await GetCardUrlIfExistAsync(card);
+
+            using (var winner = await _img.GetWaifuCardAsync(cardUri, character, card))
+            {
+                int posX = info != null ? info.GetX() : SafariImage.DefaultX();
+                int posY = info != null ? info.GetX() : SafariImage.DefaultY();
+                using (var pokeImage = _img.GetCatchThatWaifuImage(winner, uri, posX, posY))
+                {
+                    using (var stream = pokeImage.ToJpgStream())
+                    {
+                        var msg = await trashChannel.SendFileAsync(stream, $"poke.jpg");
+                        return msg.Attachments.First().Url;
+                    }
+                }
+            }
+        }
+
+        public async Task<string> GetSafariViewAsync(SafariImage info, ITextChannel trashChannel)
+        {
+            string uri = info != null ? info.Uri(SafariImage.Type.Mystery) : SafariImage.DefaultUri(SafariImage.Type.Mystery);
+            var msg = await trashChannel.SendFileAsync(uri);
+            return msg.Attachments.First().Url;
+        }
+
         public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
         {
             string url = null;
-            string imageUrlWinner = await GetCardUrlIfExist(info.Winner.Card);
-            string imageUrlLooser = await GetCardUrlIfExist(info.Loser.Card);
+            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner.Card);
+            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser.Card);
 
             DuelImage dImg = null;
             var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");
@@ -669,7 +710,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
         {
-            string imageUrl = await GetCardUrlIfExist(card, true);
+            string imageUrl = await GetCardUrlIfExistAsync(card, true);
             if (imageUrl != null)
             {
                 var msg = await trashChannel.SendFileAsync(imageUrl);

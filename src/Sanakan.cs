@@ -7,6 +7,7 @@ using Sanakan.Config;
 using Sanakan.Services;
 using Sanakan.Services.Commands;
 using Sanakan.Services.Executor;
+using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
 using Sanakan.Services.Supervisor;
 using Shinden;
@@ -34,6 +35,8 @@ namespace Sanakan
         private ILogger _logger;
         private Moderator _mod;
         private Helper _helper;
+        private Waifu _waifu;
+        private Spawn _spawn;
 
         public static void Main() => new Sanakan().MainAsync().GetAwaiter().GetResult();
 
@@ -82,22 +85,24 @@ namespace Sanakan
                 return Task.CompletedTask;
             };
 
+            var tmpCnf = _config.Get();
+            _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
+                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
+
             _img = new ImageProcessing();
             _helper = new Helper(_config);
+            _waifu = new Waifu(_img, _shindenClient);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
             _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
+            _spawn = new Spawn(_client, _executor, _waifu, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _exp = new ExperienceManager(_client, _executor, _config, _img);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
             _profile = new Profile(_client, _shindenClient, _img, _logger, _config);
-
-            var tmpCnf = _config.Get();
-            _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
-                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
         }
 
         private void LoadConfig()
@@ -134,13 +139,14 @@ namespace Sanakan
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
+                .AddSingleton(_waifu)
+                .AddSingleton(_spawn)
                 .AddSingleton(_mod)
                 .AddSingleton(_exp)
                 .AddSingleton(_img)
                 .AddSingleton<Services.Fun>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
-                .AddSingleton<Services.PocketWaifu.Waifu>()
                 .AddDbContext<Database.UserContext>()
                 .AddDbContext<Database.ManagmentContext>()
                 .AddDbContext<Database.GuildConfigContext>()
