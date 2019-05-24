@@ -1,7 +1,9 @@
 ﻿#pragma warning disable 1591
 
 using Discord.Commands;
+using Sanakan.Config;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sanakan.Preconditions
@@ -10,7 +12,8 @@ namespace Sanakan.Preconditions
     {
         public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            if (context.User.Id == 303101521552211970u)
+            var config = (IConfig)services.GetService(typeof(IConfig));
+            if (config.Get().Dev.Any(x => x == context.User.Id))
                 return PreconditionResult.FromSuccess();
 
             await Task.CompletedTask;

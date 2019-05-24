@@ -682,7 +682,7 @@ namespace Sanakan.Modules
         [Command("wymiana")]
         [Alias("exchange")]
         [Summary("propozycja wymiany z użytkownikiem")]
-        [Remarks("Karna"), RequireWaifuCommandChannel]
+        [Remarks("Karna"), RequireWaifuMarketChannel]
         public async Task ExchangeCardsAsync([Summary("użytkownik")]SocketGuildUser user2)
         {
             var user1 = Context.User as SocketGuildUser;

@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using System.Collections.Generic;
+
 namespace Sanakan.Config.Model
 {
     public class ConfigModel
@@ -11,5 +13,6 @@ namespace Sanakan.Config.Model
         public string ConnectionString { get; set; }
         public ConfigShinden Shinden { get; set; }
         public ConfigExp Exp { get; set; }
+        public List<ulong> Dev { get; set; }
     }
 }
