@@ -20,6 +20,8 @@ using Sanakan.Services.Executor;
 using Discord.WebSocket;
 using Shinden;
 using Sanakan.Services.PocketWaifu;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace Sanakan.Api
 {
@@ -71,7 +73,8 @@ namespace Sanakan.Api
                     context.User.HasClaim(c => c.Type == "Player" && c.Value == "waifu_player")));
                 });
                 services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                    .AddJsonOptions(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+                    .AddJsonOptions(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
+                    .AddJsonOptions(o => o.SerializerSettings.Converters.Add(new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() }));
                 services.AddCors(options =>
                 {
                     options.AddPolicy("AllowEverything", builder =>
@@ -103,7 +106,6 @@ namespace Sanakan.Api
                     c.DescribeAllEnumsAsStrings();
                     c.CustomSchemaIds(x => x.FullName);
                 });
-
             }).ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
