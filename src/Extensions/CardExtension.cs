@@ -51,11 +51,11 @@ namespace Sanakan.Extensions
                 case CardSource.Shop:            return "Sklepik";
                 case CardSource.GodIntervention: return "Czity";
                 case CardSource.Api:             return "Nieznane";
+                case CardSource.Merge:           return "Stara baza";
 
                 default:
                 case CardSource.Other: return "Inne";
             }
-
         }
 
         public static string GetYesNo(this bool b) => b ? "Tak" : "Nie";

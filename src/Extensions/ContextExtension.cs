@@ -79,5 +79,10 @@ namespace Sanakan.Extensions
         {
             return (await context.Questions.Include(x => x.Answers).FromCacheAsync(new string[] { $"quiz" })).ToList();
         }
+
+        public static async Task<Question> GetCachedQuestionAsync(this Database.UserContext context, ulong id)
+        {
+            return (await context.Questions.Include(x => x.Answers).FromCacheAsync(new string[] { $"quiz" })).FirstOrDefault(x => x.Id == id);
+        }
     }
 }

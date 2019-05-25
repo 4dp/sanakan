@@ -3,6 +3,7 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Sanakan.Api;
 using Sanakan.Config;
 using Sanakan.Services;
 using Sanakan.Services.Commands;
@@ -52,7 +53,8 @@ namespace Sanakan
             await _client.SetGameAsync(tmpCnf.Prefix + "pomoc");
             await _client.StartAsync();
 
-            var services = BuildProvider();
+            var services = BuildServiceProvider();
+            BotWebHost.RunWebHost(_client, _shindenClient, _waifu, _config, _helper, _executor, _logger);
 
             _executor.Initialize(services);
             _sessions.Initialize(services);
@@ -128,7 +130,7 @@ namespace Sanakan
             };
         }
 
-        private IServiceProvider BuildProvider()
+        private IServiceProvider BuildServiceProvider()
         {
             return new ServiceCollection()
                 .AddSingleton(_shindenClient)
