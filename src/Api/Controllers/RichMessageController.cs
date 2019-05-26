@@ -119,6 +119,18 @@ namespace Sanakan.Api.Controllers
             var rmcs = config.RMConfig.Where(x => x.Type == message.MessageType);
             foreach (var rmc in rmcs)
             {
+                if (rmc.Type == Models.RichMessageType.UserNotify)
+                {
+                    var user = _client.GetUser(rmc.ChannelId);
+                    if (user != null) continue;
+                    
+                    var pwCh = await user.GetOrCreateDMChannelAsync();
+                    var pwm = await pwCh.SendMessageAsync("", embed: message.ToEmbed());
+
+                    msgList.Add(pwm.Id);
+                    continue;
+                }
+
                 var guild = _client.GetGuild(rmc.GuildId);
                 if (guild == null) continue;
 

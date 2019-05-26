@@ -25,9 +25,13 @@ namespace Sanakan.Api.Models
         /// </summary>
         NewEpisode,
         /// <summary>
+        /// Wiadomość użytkownika na PW
+        /// </summary>
+        UserNotify,
+        /// <summary>
         /// Wiadomość do kanału nowych epizodów
         /// </summary>
-        NewEpisodePL = 5,
+        NewEpisodePL,
         /// <summary>
         /// Wiadomość do kanału rekomendacji
         /// </summary>
