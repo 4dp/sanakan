@@ -33,6 +33,7 @@ namespace Sanakan.Extensions
                 {
                     Id = id,
                     Waifu = 0,
+                    Items = new List<Item>(),
                     Cards = new List<Card>(),
                     BoosterPacks = new List<BoosterPack>(),
                 },

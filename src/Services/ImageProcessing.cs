@@ -191,7 +191,7 @@ namespace Sanakan.Services
             if (expOnLvl < 0) expOnLvl = 0;
             if (lvlExp < 0) lvlExp = expOnLvl + 1;
 
-            int progressBarLength = (int)(305f * ((double)botUser.ExpCnt / (double)lvlExp));
+            int progressBarLength = (int)(305f * ((double)expOnLvl / (double)lvlExp));
             if (progressBarLength > 0)
             {
                 using (var progressBar = new Image<Rgba32>(progressBarLength, 19))
@@ -201,7 +201,7 @@ namespace Sanakan.Services
                 }
             }
 
-            string expText = $"EXP: {botUser.ExpCnt} / {lvlExp}";
+            string expText = $"EXP: {expOnLvl} / {lvlExp}";
             var mExp = TextMeasurer.Measure(expText, new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText(expText, rangFont, Rgba32.FromHex("#ffffff"), new Point(135 + ((int)(305 - mExp.Width) / 2), 204)));
 
