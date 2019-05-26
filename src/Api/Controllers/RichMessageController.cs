@@ -125,17 +125,24 @@ namespace Sanakan.Api.Controllers
                 var channel = guild.GetTextChannel(rmc.ChannelId);
                 if (channel == null) continue;
 
-                var msg = await channel.SendMessageAsync("", embed: message.ToEmbed());
+                string mentionContent = "";
+                if (mention.Value)
+                {
+                    var role = guild.GetRole(rmc.RoleId);
+                    if (role != null) mentionContent = role.Mention;
+                }
+
+                var msg = await channel.SendMessageAsync(mentionContent, embed: message.ToEmbed());
                 if (msg != null) msgList.Add(msg.Id);
             }
 
             if (msgList.Count() > 1)
             {
-                await "Message probably sended!".ToResponseRich(msgList).ExecuteResultAsync(ControllerContext);
+                await "Message sended!".ToResponseRich(msgList).ExecuteResultAsync(ControllerContext);
                 return;
             }
 
-            await "Message probably sended!".ToResponseRich(msgList.First()).ExecuteResultAsync(ControllerContext);
+            await "Message sended!".ToResponseRich(msgList.First()).ExecuteResultAsync(ControllerContext);
         }
 
         /// <summary>

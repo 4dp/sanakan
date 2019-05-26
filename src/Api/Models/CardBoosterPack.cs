@@ -71,7 +71,6 @@ namespace Sanakan.Api.Models
                 case CardsPoolType.Random:
                     pack.Title = 0;
                 break;
-
             }
 
             return pack;

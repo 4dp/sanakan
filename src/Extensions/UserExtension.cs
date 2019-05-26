@@ -30,7 +30,8 @@ namespace Sanakan.Extensions
                 ProfileType = ProfileType.Stats,
                 StatsReplacementProfileUri = "none",
                 GameDeck = new GameDeck 
-                { 
+                {
+                    Id = id,
                     Waifu = 0,
                     Cards = new List<Card>(),
                     BoosterPacks = new List<BoosterPack>(),

@@ -182,7 +182,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetModRolesConfig(GuildOptions config, SocketCommandContext context)
@@ -195,7 +195,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetLandsConfig(GuildOptions config, SocketCommandContext context)
@@ -208,7 +208,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetLevelRolesConfig(GuildOptions config, SocketCommandContext context)
@@ -221,7 +221,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetCmdChannelsConfig(GuildOptions config, SocketCommandContext context)
@@ -234,7 +234,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetWaifuCmdChannelsConfig(GuildOptions config, SocketCommandContext context)
@@ -247,7 +247,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetWaifuFightChannelsConfig(GuildOptions config, SocketCommandContext context)
@@ -260,7 +260,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetNonExpChannelsConfig(GuildOptions config, SocketCommandContext context)
@@ -273,7 +273,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         private EmbedBuilder GetNonSupChannelsConfig(GuildOptions config, SocketCommandContext context)
@@ -286,7 +286,7 @@ namespace Sanakan.Services
             }
             else value += "*brak*";
 
-            return new EmbedBuilder().WithDescription(value.TrimToLength(1950));
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
         }
 
         public EmbedBuilder GetConfiguration(GuildOptions config, SocketCommandContext context, ConfigType type)

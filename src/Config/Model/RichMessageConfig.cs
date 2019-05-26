@@ -6,6 +6,7 @@ namespace Sanakan.Config.Model
 {
     public class RichMessageConfig
     {
+        public ulong RoleId { get; set; }
         public ulong GuildId { get; set; }
         public ulong ChannelId { get; set; }
         public RichMessageType Type { get; set; }
