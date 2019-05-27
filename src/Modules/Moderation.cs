@@ -1092,7 +1092,18 @@ namespace Sanakan.Modules
             else if (duration < 1) return;
 
             if (reportMsg != null)
+            {
+                if (reason == "z raportu")
+                {
+                    try
+                    {
+                        reason = reportMsg?.Embeds?.FirstOrDefault()?.Fields.FirstOrDefault(x => x.Name == "Powód:").Value ?? reason;
+                    }
+                    catch (Exception) { }
+                }
+
                 await reportMsg.DeleteAsync();
+            }
 
             config.Raports.Remove(raport);
             await _dbConfigContext.SaveChangesAsync();

@@ -78,15 +78,35 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     await Task.Delay(TimeSpan.FromSeconds(30));
 
-                    counter -= 30;
-                    embed.Description = $"**Do końca polowania zostało:** {counter/60}m {counter%60}s";
-                    await msg.ModifyAsync(x => x.Embed = embed.Build());
+                    try
+                    {
+                        counter -= 30;
+                        if (counter < 0)
+                            counter = 0;
+
+                        embed.Description = $"**Do końca polowania zostało:** {counter / 60}m {counter % 60}s";
+                        await msg.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    catch (Exception)
+                    {
+                        counter -= 10;
+                    }
                 }
 
-                await msg.RemoveReactionAsync(ClaimEmote, _client.CurrentUser);
-                var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
-                await msg.RemoveAllReactionsAsync();
-                var users = usersReacted.ToList();
+                List<IUser> users;
+                try
+                {
+                    await msg.RemoveReactionAsync(ClaimEmote, _client.CurrentUser);
+                    var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
+                    await msg.RemoveAllReactionsAsync();
+                    users = usersReacted.ToList();
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
+                    users = usersReacted.ToList();
+                }
 
                 IUser winner = null;
                 using (var db = new Database.UserContext(_config))
