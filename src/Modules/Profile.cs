@@ -37,10 +37,19 @@ namespace Sanakan.Modules
         [Alias("wallet")]
         [Summary("wyświetla portfel użytkownika")]
         [Remarks(""), RequireCommandChannel]
-        public async Task ShowWalletAsync()
+        public async Task ShowWalletAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
-            var botuser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
-            await ReplyAsync("", embed: $"**Portfel** {Context.User.Mention}:\n\n {botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**".ToEmbedMessage(EMType.Info).Build());
+            var usr = user ?? Context.User;
+            if (usr == null) return;
+
+            var botuser = await _dbUserContext.GetCachedFullUserAsync(usr.Id);
+            if (botuser == null)
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono profilu {usr.Mention}.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            await ReplyAsync("", embed: $"**Portfel** {usr.Mention}:\n\n {botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**".ToEmbedMessage(EMType.Info).Build());
         }
 
         [Command("subskrypcje", RunMode = RunMode.Async)]
@@ -77,7 +86,7 @@ namespace Sanakan.Modules
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
         [Remarks(""), RequireCommandChannel]
-        public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/karty)")]Services.TopType type = Services.TopType.Level)
+        public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/karty)")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);

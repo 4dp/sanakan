@@ -45,8 +45,8 @@ namespace Sanakan.Modules
         [Command("harem", RunMode = RunMode.Async)]
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
-        [Remarks(""), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync()
+        [Remarks("klatka"), RequireWaifuCommandChannel]
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja)")]HaremType type = HaremType.Rarity)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -59,7 +59,7 @@ namespace Sanakan.Modules
             }
 
             session.Enumerable = false;
-            session.ListItems = user.GameDeck.Cards.OrderBy(x => x.Rarity).ToList();
+            session.ListItems = _waifu.GetListInRightOrder(user.GameDeck.Cards, type);
             session.Embed = new EmbedBuilder
             {
                 Color = EMType.Info.Color(),

@@ -301,6 +301,7 @@ namespace Sanakan.Modules
             {
                 config = new Database.Models.Configuration.GuildOptions
                 {
+                    SafariLimit = 50,
                     Id = Context.Guild.Id
                 };
                 await _dbConfigContext.Guilds.AddAsync(config);

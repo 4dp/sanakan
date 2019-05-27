@@ -698,9 +698,9 @@ namespace Sanakan.Services
             if (card.Attack < 10) startXAtk += 15;
             if (card.Attack > 99) startXAtk -= 15;
 
-            int startXHp = 390;
+            int startXHp = 380;
             if (card.Health < 10) startXHp += 15;
-            if (card.Health > 99) startXHp -= 25;
+            if (card.Health > 99) startXHp -= 15;
 
             var numFont = new Font(_latoBold, 54);
             image.Mutate(x => x.DrawText($"{card.Health}", numFont, Rgba32.FromHex("#000000"), new Point(startXHp, 190)));

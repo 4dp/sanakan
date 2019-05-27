@@ -2,7 +2,6 @@
 
 using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -106,7 +105,7 @@ namespace Sanakan.Services
 
         private async Task CyclicCheckAsync(Database.UserContext context, Database.GuildConfigContext guildContext)
         {
-            var subs = context.TimeStatuses.Include(x => x.Guild).FromCache(new[] { "users" }).Where(x => x.Type.IsSubType());
+            var subs = context.TimeStatuses.FromCache(new[] { "users" }).Where(x => x.Type.IsSubType());
             foreach (var sub in subs)
             {
                 if (sub.IsActive())

@@ -25,7 +25,17 @@ namespace Sanakan.Services.Supervisor
             TotalMessages = 0;
         }
 
-        public SupervisorMessage Get(string content) => Messages.FirstOrDefault(x => x.Content == content);
+        public SupervisorMessage Get(string content)
+        {
+            var msg = Messages.FirstOrDefault(x => x.Content == content);
+            if (msg == null)
+            {
+                msg = new SupervisorMessage(content, 0);
+                Messages.Add(msg);
+            }
+            return msg;
+        }
+
         public bool IsValid() => (DateTime.Now - LastMessage).TotalMinutes <= 2;
         public void Add(SupervisorMessage message) => Messages.Add(message);
         public int Inc()

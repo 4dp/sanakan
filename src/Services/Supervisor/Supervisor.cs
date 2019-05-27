@@ -115,10 +115,9 @@ namespace Sanakan.Services.Supervisor
             }
 
             var thisMessage = susspect.Get(messageContent);
-            if (thisMessage == null)
+            if (!thisMessage.IsValid())
             {
-                thisMessage = new SupervisorMessage(messageContent, 0);
-                susspect.Add(thisMessage);
+                thisMessage = new SupervisorMessage(messageContent);
             }
 
             using (var db = new Database.GuildConfigContext(_config))

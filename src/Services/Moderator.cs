@@ -216,7 +216,7 @@ namespace Sanakan.Services
             string value = "**Role na poziom:**\n\n";
             if (config.RolesPerLevel?.Count > 0)
             {
-                foreach (var role in config.RolesPerLevel)
+                foreach (var role in config.RolesPerLevel.OrderBy(x => x.Level))
                     value += $"*{role.Level}*: {context.Guild.GetRole(role.Role)?.Mention ?? "usunięta"}\n";
             }
             else value += "*brak*";

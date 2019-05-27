@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -22,16 +23,18 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
+        private IConfig _config;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
         private Database.UserContext _dbUserContext;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(Waifu waifu, ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img, IConfig config)
         {
             _dbUserContext = userContext;
             _shClient = shClient;
             _helper = helper;
+            _config = config;
             _waifu = waifu;
             _img = img;
         }
@@ -43,7 +46,7 @@ namespace Sanakan.Modules
         {
             try
             {
-                var reader = new Config.JsonFileReader($"./Pictures/Poke/List.json");
+                var reader = new JsonFileReader($"./Pictures/Poke/List.json");
                 var images = reader.Load<List<SafariImage>>();
 
                 var character = (await _shClient.GetCharacterInfoAsync(2)).Body;
@@ -55,6 +58,50 @@ namespace Sanakan.Modules
             {
                 await ReplyAsync("", embed: $"Coś poszło nie tak: {ex.Message}".ToEmbedMessage(EMType.Error).Build());
             }
+        }
+
+        [Command("utitle")]
+        [Summary("updatuje tytuł karty")]
+        [Remarks("ssało")]
+        public async Task ChangeTitleCardAsync([Summary("WID")]ulong wid, [Summary("tytuł")][Remainder]string title = null)
+        {
+            var thisCard = _dbUserContext.Cards.FirstOrDefault(x => x.Id == wid);
+            if (thisCard == null)
+            {
+                await ReplyAsync("", embed: $"Taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (title != null)
+            {
+                thisCard.Title = title;
+            }
+            else
+            {
+                var res = await _shClient.GetCharacterInfoAsync(thisCard.Character);
+                if (res.IsSuccessStatusCode())
+                {
+                    thisCard.Title = res.Body?.Relations?.OrderBy(x => x.Id)?.FirstOrDefault()?.Title ?? "????";
+                }
+            }
+
+            await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { "users" });
+
+            await ReplyAsync("", embed: $"Nowy tytuł to: `{thisCard.Title}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("tsafari")]
+        [Summary("wyłącza/załącza safari")]
+        [Remarks("true")]
+        public async Task ToggleSafariAsync([Summary("true/false - czy zapisać")]bool save = false)
+        {
+            var config = _config.Get();
+            config.SafariEnabled = !config.SafariEnabled;
+            if (save) _config.Save();
+
+            await ReplyAsync("", embed: $"Safari: {config.SafariEnabled} `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("lvlbadge", RunMode = RunMode.Async)]

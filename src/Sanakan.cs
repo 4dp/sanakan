@@ -14,6 +14,7 @@ using Sanakan.Services.Supervisor;
 using Shinden;
 using Shinden.Logger;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sanakan

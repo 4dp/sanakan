@@ -30,6 +30,12 @@ namespace Sanakan.Services.PocketWaifu
         None, Minus, Plus
     }
 
+    public enum HaremType
+    {
+        Rarity, Cage, Affection, Attack, Defence
+    }
+
+
     public class Waifu
     {
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
@@ -41,6 +47,28 @@ namespace Sanakan.Services.PocketWaifu
         {
             _img = img;
             _shClient = client;
+        }
+
+        public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type)
+        {
+            switch (type)
+            {
+                case HaremType.Affection:
+                    return list.OrderByDescending(x => x.Affection).ToList();
+
+                case HaremType.Attack:
+                    return list.OrderByDescending(x => x.Attack).ToList();
+
+                case HaremType.Defence:
+                    return list.OrderByDescending(x => x.Defence).ToList();
+
+                case HaremType.Cage:
+                    return list.Where(x => x.InCage).ToList();
+
+                default:
+                case HaremType.Rarity:
+                    return list.OrderBy(x => x.Rarity).ToList();
+            }
         }
 
         public Rarity RandomizeRarity()

@@ -18,7 +18,7 @@ namespace Sanakan.Preconditions
 
             await Task.CompletedTask;
 
-            return PreconditionResult.FromError($"|IMAGE|https://i.giphy.com/RX3vhj311HKLe.gif");
+            return PreconditionResult.FromError($"|IMAGE|https://i.giphy.com/d1E1msx7Yw5Ne1Fe.gif");
         }
     }
 }
