@@ -35,7 +35,6 @@ namespace Sanakan.Services.PocketWaifu
         Rarity, Cage, Affection, Attack, Defence
     }
 
-
     public class Waifu
     {
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();

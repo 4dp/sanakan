@@ -489,7 +489,7 @@ namespace Sanakan.Modules
 
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
             await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę do: {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
         }
@@ -520,7 +520,7 @@ namespace Sanakan.Modules
 
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
             await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {exp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
         }
@@ -587,7 +587,7 @@ namespace Sanakan.Modules
             
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
             await ReplyAsync("", embed: $"{user.Mention} wyciągnął {cntIn} kart z klatki.".ToEmbedMessage(EMType.Success).Build());
         }
@@ -649,7 +649,7 @@ namespace Sanakan.Modules
             thisCard.Active = !thisCard.Active;
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
             string message = thisCard.Active ? "aktywował: " : "dezaktywował: ";
             await ReplyAsync("", embed: $"{Context.User.Mention} {message}{thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
@@ -802,7 +802,7 @@ namespace Sanakan.Modules
                     dInfo.Winner = p1;
                     dInfo.Loser = p2;
 
-                    if (Services.Fun.TakeATry(6))
+                    if (Services.Fun.TakeATry(5))
                     {
                         var item = _waifu.RandomizeItemFromFight().ToItem();
                         var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
@@ -838,7 +838,7 @@ namespace Sanakan.Modules
 
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
 
             var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
@@ -945,7 +945,7 @@ namespace Sanakan.Modules
             bUser.GameDeck.Waifu = thisCard.Character;
             await _dbUserContext.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}" });
+            QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
             await ReplyAsync("", embed: $"{Context.User.Mention} ustawił {thisCard.Name} jako ulubioną postać.".ToEmbedMessage(EMType.Success).Build());
         }
@@ -966,6 +966,7 @@ namespace Sanakan.Modules
                 return;
             }
 
+            var sssCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS);
             var ssCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS);
             var sCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.S);
             var aCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.A);
@@ -980,12 +981,16 @@ namespace Sanakan.Modules
             var abr = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.BattleRoyale);
             var wbr = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.BattleRoyale);
 
+            string sssString = "";
+            if (sssCnt > 0)
+                sssString = $"**SSS**: {sssCnt} ";
+
             var embed = new EmbedBuilder()
             {
                 Color = EMType.Bot.Color(),
                 Author = new EmbedAuthorBuilder().WithUser(user),
                 Description = $"**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
-                            + $"**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
+                            + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                             + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
                             + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"
             };

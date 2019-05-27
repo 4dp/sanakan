@@ -60,6 +60,28 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("cstats", RunMode = RunMode.Async)]
+        [Summary("generuje statystyki kart począwszy od podanej karty")]
+        [Remarks("1")]
+        public async Task GeneratCardStatsAsync([Summary("WID")]ulong wid)
+        {
+            var stats = new long[(int)Rarity.E + 1];
+            var cards = _dbUserContext.Cards;
+            var count = (ulong)cards.LongCount();
+
+            for (ulong i = wid; i < count; i++)
+            {
+                var card = cards.FirstOrDefault(x => x.Id == i);
+                if(card != null) stats[(int)card.RarityOnStart] += 1;
+            }
+
+            string info = "";
+            for (int i = 0; i < stats.Length; i++)
+                info += $"{(Rarity)i}: `{stats[i]}`\n";
+
+            await ReplyAsync("", embed: info.ToEmbedMessage(EMType.Bot).Build());
+        }
+
         [Command("utitle")]
         [Summary("updatuje tytuł karty")]
         [Remarks("ssało")]

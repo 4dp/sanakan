@@ -190,10 +190,10 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
-        /// Zmiana ilości punktów SC użytkownika
+        /// Zmiana ilości punktów TC użytkownika
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
-        /// <param name="value">liczba SC</param>
+        /// <param name="value">liczba TC</param>
         /// <response code="404">User not found</response>
         [HttpPut("shinden/{id}/tc")]
         public async Task ModifyPointsTCAsync(ulong id, [FromBody, Required]long value)
