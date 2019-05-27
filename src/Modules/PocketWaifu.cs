@@ -125,7 +125,7 @@ namespace Sanakan.Modules
         [Remarks("685"), RequireWaifuCommandChannel]
         public async Task ShowCardAsync([Summary("WID")]ulong wid)
         {
-            var card  = (await _dbUserContext.Cards.Include(x => x.GameDeck).FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+            var card  = (await _dbUserContext.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
             if (card == null)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -837,6 +837,8 @@ namespace Sanakan.Modules
             }
 
             await _dbUserContext.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}" });
 
             var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
             embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));

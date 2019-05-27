@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models.Configuration
 {
     public class ModeratorRoles
@@ -8,6 +10,7 @@ namespace Sanakan.Database.Models.Configuration
         public ulong Role { get; set; }
 
         public ulong GuildOptionsId { get; set; }
+        [JsonIgnore]
         public virtual GuildOptions GuildOptions { get; set; }
     }
 }

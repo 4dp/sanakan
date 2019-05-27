@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Sanakan.Database.Models
 {
@@ -18,6 +19,7 @@ namespace Sanakan.Database.Models
         public virtual ICollection<RarityExcluded> RarityExcludedFromPack { get; set; }
 
         public ulong GameDeckId { get; set; }
+        [JsonIgnore]
         public virtual GameDeck GameDeck { get; set; }
     }
 }

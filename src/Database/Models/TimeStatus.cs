@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
 using Sanakan.Database.Models.Configuration;
 using System;
 
@@ -17,9 +18,11 @@ namespace Sanakan.Database.Models
         public DateTime EndsAt { get; set; }
 
         public ulong UserId { get; set; }
+        [JsonIgnore]
         public virtual User User { get; set; }
 
         public ulong GuildId { get; set; }
+        [JsonIgnore]
         public virtual GuildOptions Guild { get; set; }
     }
 }

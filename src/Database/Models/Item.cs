@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models
 {
     public enum ItemType
@@ -23,6 +25,7 @@ namespace Sanakan.Database.Models
         public ItemType Type { get; set; }
 
         public ulong GameDeckId { get; set; }
+        [JsonIgnore]
         public virtual GameDeck GameDeck { get; set; }
     }
 }

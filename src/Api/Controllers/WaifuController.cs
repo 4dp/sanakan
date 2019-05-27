@@ -63,7 +63,7 @@ namespace Sanakan.Api.Controllers
         [HttpGet("user/{id}/cards"), Authorize]
         public async Task<IEnumerable<Database.Models.Card>> GetUserCardsAsync(ulong id)
         {
-            var user = await _dbUserContext.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).FirstOrDefaultAsync(x => x.Shinden == id);
+            var user = await _dbUserContext.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).FirstOrDefaultAsync(x => x.Shinden == id);
             if (user == null)
             {
                 await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);

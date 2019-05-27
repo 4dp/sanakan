@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models
 {
     public class Answer
@@ -9,6 +11,7 @@ namespace Sanakan.Database.Models
         public string Content { get; set; }
 
         public ulong QuestionId { get; set; }
+        [JsonIgnore]
         public virtual Question Question { get; set; }
     }
 }

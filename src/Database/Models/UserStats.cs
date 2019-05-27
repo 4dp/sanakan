@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models
 {
     public class UserStats
@@ -22,6 +24,7 @@ namespace Sanakan.Database.Models
         public long WastedTcOnCards { get; set; }
 
         public ulong UserId { get; set; }
+        [JsonIgnore]
         public virtual User User { get; set; }
     }
 }

@@ -52,6 +52,29 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("devr")]
+        [Summary("przyznaje lub odbiera role developera")]
+        [Remarks("")]
+        public async Task ToggleDeveloperRoleAsync()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            var devr = Context.Guild.Roles.FirstOrDefault(x => x.Name == "Developer");
+            if (devr == null) return;
+
+            if (user.Roles.Contains(devr))
+            {
+                await user.RemoveRoleAsync(devr);
+                await ReplyAsync("", embed: $"{user.Mention} stracił role deva.".ToEmbedMessage(EMType.Success).Build());
+            }
+            else
+            {
+                await user.AddRoleAsync(devr);
+                await ReplyAsync("", embed: $"{user.Mention} otrzymał role deva.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("gcard")]
         [Summary("generuje kartę i dodaje ją użytkownikowi")]
         [Remarks("Sniku 54861")]

@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Sanakan.Database.Models.Configuration
 {
@@ -11,6 +12,7 @@ namespace Sanakan.Database.Models.Configuration
         public ulong Level { get; set; }
 
         public ulong GuildOptionsId { get; set; }
+        [JsonIgnore]
         public virtual GuildOptions GuildOptions { get; set; }
     }
 }

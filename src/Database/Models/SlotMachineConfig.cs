@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models
 {
     public enum SlotMachineBeat : int
@@ -26,6 +28,7 @@ namespace Sanakan.Database.Models
         public SlotMachineBeatMultiplier Multiplier { get; set; }
 
         public ulong UserId { get; set; }
+        [JsonIgnore]
         public virtual User User { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using Sanakan.Extensions;
 
 namespace Sanakan.Database.Models
@@ -18,7 +19,7 @@ namespace Sanakan.Database.Models
 
     public enum CardSource
     {
-        Activity, Safari, Shop, GodIntervention, Api, Other, Merge
+        Activity, Safari, Shop, GodIntervention, Api, Other, Migration
     }
 
     public class Card
@@ -45,6 +46,7 @@ namespace Sanakan.Database.Models
         public virtual CardArenaStats ArenaStats { get; set; }
 
         public ulong GameDeckId { get; set; }
+        [JsonIgnore]
         public virtual GameDeck GameDeck { get; set; }
 
         public override string ToString()

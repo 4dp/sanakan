@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using Newtonsoft.Json;
+
 namespace Sanakan.Database.Models.Configuration
 {
     public class SelfRole
@@ -9,6 +11,7 @@ namespace Sanakan.Database.Models.Configuration
         public string Name { get; set; }
 
         public ulong GuildOptionsId { get; set; }
+        [JsonIgnore]
         public virtual GuildOptions GuildOptions { get; set; }
     }
 }

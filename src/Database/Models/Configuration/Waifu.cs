@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Sanakan.Database.Models.Configuration
 {
@@ -14,6 +15,7 @@ namespace Sanakan.Database.Models.Configuration
         public ulong TrashCommandsChannel { get; set; }
 
         public ulong GuildOptionsId { get; set; }
+        [JsonIgnore]
         public virtual GuildOptions GuildOptions { get; set; }
 
         public virtual ICollection<WaifuCommandChannel> CommandChannels { get; set; }
