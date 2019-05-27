@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Database.Models;
@@ -10,6 +11,7 @@ using Sanakan.Services.PocketWaifu;
 using Shinden;
 using Shinden.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
@@ -32,6 +34,27 @@ namespace Sanakan.Modules
             _helper = helper;
             _waifu = waifu;
             _img = img;
+        }
+
+        [Command("poke", RunMode = RunMode.Async)]
+        [Summary("generuje obrazek safari")]
+        [Remarks("1")]
+        public async Task GeneratPokeImageAsync([Summary("nr grafiki")]int index)
+        {
+            try
+            {
+                var reader = new Config.JsonFileReader($"./Pictures/Poke/List.json");
+                var images = reader.Load<List<SafariImage>>();
+
+                var character = (await _shClient.GetCharacterInfoAsync(2)).Body;
+                var channel = Context.Channel as ITextChannel;
+
+                _ = await _waifu.GetSafariViewAsync(images[index], character, _waifu.GenerateNewCard(character), channel);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("", embed: $"Coś poszło nie tak: {ex.Message}".ToEmbedMessage(EMType.Error).Build());
+            }
         }
 
         [Command("lvlbadge", RunMode = RunMode.Async)]

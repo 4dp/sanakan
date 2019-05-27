@@ -656,11 +656,11 @@ namespace Sanakan.Services.PocketWaifu
             string uri = info != null ? info.Uri(SafariImage.Type.Truth) : SafariImage.DefaultUri(SafariImage.Type.Truth);
             var cardUri = await GetCardUrlIfExistAsync(card);
 
-            using (var winner = await _img.GetWaifuCardAsync(cardUri, character, card))
+            using (var cardImage = await _img.GetWaifuCardAsync(cardUri, character, card))
             {
                 int posX = info != null ? info.GetX() : SafariImage.DefaultX();
-                int posY = info != null ? info.GetX() : SafariImage.DefaultY();
-                using (var pokeImage = _img.GetCatchThatWaifuImage(winner, uri, posX, posY))
+                int posY = info != null ? info.GetY() : SafariImage.DefaultY();
+                using (var pokeImage = _img.GetCatchThatWaifuImage(cardImage, uri, posX, posY))
                 {
                     using (var stream = pokeImage.ToJpgStream())
                     {
