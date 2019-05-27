@@ -216,14 +216,14 @@ namespace Sanakan.Modules
                 return;
             }
 
-            var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.GuildId == Context.Guild.Id);
+            var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
             if (global == null)
             {
                 global = new Database.Models.TimeStatus
                 {
                     Type = Database.Models.StatusType.Globals,
-                    GuildId = Context.Guild.Id,
-                    EndsAt = DateTime.Now
+                    Guild = Context.Guild.Id,
+                    EndsAt = DateTime.Now,
                 };
                 botuser.TimeStatuses.Add(global);
             }
@@ -267,14 +267,14 @@ namespace Sanakan.Modules
                 return;
             }
 
-            var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.GuildId == Context.Guild.Id);
+            var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.Guild == Context.Guild.Id);
             if (colort == null)
             {
                 colort = new Database.Models.TimeStatus
                 {
                     Type = Database.Models.StatusType.Color,
-                    GuildId = Context.Guild.Id,
-                    EndsAt = DateTime.Now
+                    Guild = Context.Guild.Id,
+                    EndsAt = DateTime.Now,
                 };
                 botuser.TimeStatuses.Add(colort);
             }

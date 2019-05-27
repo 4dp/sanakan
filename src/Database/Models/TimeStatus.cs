@@ -17,12 +17,9 @@ namespace Sanakan.Database.Models
         public StatusType Type { get; set; }
         public DateTime EndsAt { get; set; }
 
+        public ulong Guild { get; set; }
         public ulong UserId { get; set; }
         [JsonIgnore]
         public virtual User User { get; set; }
-
-        public ulong GuildId { get; set; }
-        [JsonIgnore]
-        public virtual GuildOptions Guild { get; set; }
     }
 }

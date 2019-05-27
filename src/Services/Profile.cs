@@ -88,7 +88,10 @@ namespace Sanakan.Services
                 {
                     using (var db = new Database.UserContext(_config))
                     {
-                        await CyclicCheckAsync(db);
+                        using (var dbg = new Database.GuildConfigContext(_config))
+                        {
+                            await CyclicCheckAsync(db, dbg);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -101,7 +104,7 @@ namespace Sanakan.Services
             TimeSpan.FromMinutes(1));
         }
 
-        private async Task CyclicCheckAsync(Database.UserContext context)
+        private async Task CyclicCheckAsync(Database.UserContext context, Database.GuildConfigContext guildContext)
         {
             var subs = context.TimeStatuses.Include(x => x.Guild).FromCache(new[] { "users" }).Where(x => x.Type.IsSubType());
             foreach (var sub in subs)
@@ -109,11 +112,12 @@ namespace Sanakan.Services
                 if (sub.IsActive())
                     continue;
 
-                var guild = _client.GetGuild(sub.GuildId);
+                var guild = _client.GetGuild(sub.Guild);
                 switch (sub.Type)
                 {
                     case StatusType.Globals:
-                        await RemoveRoleAsync(guild, sub?.Guild?.GlobalEmotesRole ?? 0, sub.UserId);
+                        var guildConfig = await guildContext.GetCachedGuildFullConfigAsync(sub.Guild);
+                        await RemoveRoleAsync(guild, guildConfig?.GlobalEmotesRole ?? 0, sub.UserId);
                         break;
 
                     case StatusType.Color:

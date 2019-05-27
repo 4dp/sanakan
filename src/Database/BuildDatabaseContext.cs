@@ -100,9 +100,6 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.User)
                     .WithMany(u => u.TimeStatuses);
-
-                entity.HasOne(e => e.Guild)
-                    .WithMany(g => g.UserTimeStatus);
             });
 
             modelBuilder.Entity<GameDeck>(entity =>
@@ -173,9 +170,6 @@ namespace Sanakan.Database
             modelBuilder.Entity<GuildOptions>(entity =>
             {
                 entity.HasKey(e => e.Id);
-
-                entity.HasMany(e => e.UserTimeStatus)
-                    .WithOne(t => t.Guild);
             });
 
             modelBuilder.Entity<Waifu>(entity =>
