@@ -38,6 +38,7 @@ namespace Sanakan.Services.Commands
             _helper = helper;
             _provider = provider;
 
+            _cmd.AddTypeReader<SlotMachineSetting>(new TypeReaders.SlotMachineSettingType());
             _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
             _cmd.AddTypeReader<CoinSide>(new TypeReaders.CoinSideTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());

@@ -130,6 +130,9 @@ namespace Sanakan.Services.Supervisor
                     if (user.Roles.Any(x => x.Id == gConfig.AdminRole))
                         return;
 
+                if (gConfig.ChannelsWithoutSupervision.Any(x => x.Channel == message.Channel.Id))
+                    return;
+
                 var muteRole = user.Guild.GetRole(gConfig.MuteRole);
                 var userRole = user.Guild.GetRole(gConfig.UserRole);
                 var notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
