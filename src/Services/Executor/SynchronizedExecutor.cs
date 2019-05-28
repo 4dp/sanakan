@@ -47,25 +47,28 @@ namespace Sanakan.Services.Executor
         public void RunWorker()
         {
             bool run = true;
-            if (_runningTask.Status == TaskStatus.Running)
+            if (_runningTask != null)
             {
-                run = false;
-                if (_prevTaskCount > _queue.Count)
+                if (_runningTask.Status == TaskStatus.Running)
                 {
-                    _counter = 0;
-                }
-                else
-                {
-                    if (++_counter > 10)
+                    run = false;
+                    if (_prevTaskCount > _queue.Count)
                     {
-                        run = true;
-                        _cts.Cancel();
-                        _cts.Dispose();
-                        _cts = new CancellationTokenSource();
+                        _counter = 0;
                     }
-                }
+                    else
+                    {
+                        if (++_counter > 10)
+                        {
+                            run = true;
+                            _cts.Cancel();
+                            _cts.Dispose();
+                            _cts = new CancellationTokenSource();
+                        }
+                    }
 
-                _prevTaskCount = _queue.Count;
+                    _prevTaskCount = _queue.Count;
+                }
             }
 
             if (run)
