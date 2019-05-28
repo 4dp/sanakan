@@ -77,7 +77,7 @@ namespace Sanakan.Services.Commands
 
                         default:
                         case RunMode.Sync:
-                            if (!_executor.TryAdd(res.Command, TimeSpan.FromSeconds(1)))
+                            if (!await _executor.TryAdd(res.Command, TimeSpan.FromSeconds(1)))
                                     await context.Channel.SendMessageAsync("", embed: "Przekroczono czas oczekiwania!".ToEmbedMessage(EMType.Error).Build());
                             break;
                     }

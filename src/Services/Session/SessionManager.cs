@@ -123,7 +123,7 @@ namespace Sanakan.Services.Session
                     default:
                     case RunMode.Sync:
                         session.SetDestroyer(DisposeAsync);
-                        if (!_executor.TryAdd(session.GetExecutable(context), TimeSpan.FromSeconds(1)))
+                        if (!await _executor.TryAdd(session.GetExecutable(context), TimeSpan.FromSeconds(1)))
                                 _logger.Log($"Sessions: {session.GetEventType()}-{session.GetOwner().Id} waiting time has been exceeded!");
                         break;
                 }

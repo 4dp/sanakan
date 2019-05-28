@@ -133,7 +133,7 @@ namespace Sanakan.Services.PocketWaifu
                 }
 
                 var exe = GetSafariExe(embed, msg, newCard, pokeImage, character, trashChannel, winner);
-                _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             });
         }
 

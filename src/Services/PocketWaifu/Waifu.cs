@@ -77,13 +77,14 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public Embed GetGMwKView()
+        public Embed GetGMwKView(IEmote emote, Rarity max)
         {
+            var time = DateTime.Now.AddMinutes(3);
             return new EmbedBuilder
             {
                 Color = EMType.Error.Color(),
-                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{DateTime.Now.AddMinutes(3).ToShortTimeString()}`\n"
-                    + $"Wymagana minimalna liczba graczy: `5`\n\nAby dołączyć kliknij na reakcje ➕"
+                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{time.ToShortTimeString()}:{time.Second}`\n"
+                    + $"Wymagana minimalna liczba graczy: `5`\nMaksymalna jakość karty: `{max}`\n\nAby dołączyć kliknij na reakcje {emote}"
             }.Build();
         }
 

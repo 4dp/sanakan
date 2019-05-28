@@ -14,25 +14,23 @@ namespace Sanakan.Services.Executor
         private ILogger _logger;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(100);
+        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(50);
 
         private Timer _timer;
-        private Task _runningTask { get; set; }
         private CancellationTokenSource _cts { get; set; }
 
         public SynchronizedExecutor(ILogger logger)
         {
-            _cts = new CancellationTokenSource();
-            _runningTask = null;
             _logger = logger;
+            _cts = new CancellationTokenSource();
 
-            _timer = new Timer(_ =>
+            _timer = new Timer(async _ =>
             {
-                RunWorker();
+                await RunWorker();
             },
             null,
             TimeSpan.FromSeconds(10),
-            TimeSpan.FromSeconds(5));
+            TimeSpan.FromSeconds(1));
         }
 
         public void Initialize(IServiceProvider provider)
@@ -40,66 +38,52 @@ namespace Sanakan.Services.Executor
             _provider = provider;
         }
 
-        public bool TryAdd(IExecutable task, TimeSpan timeout)
+        public async Task<bool> TryAdd(IExecutable task, TimeSpan timeout)
         {
-            _logger.Log($"Executor: qc {_queue.Count}");
             if (_queue.TryAdd(task, timeout))
             {
-                RunWorker();
+                await Task.CompletedTask;
                 return true;
             }
             return false;
         }
 
-        public void RunWorker()
+        public async Task RunWorker()
         {
-            if (_runningTask == null)
-            {
-                if (_queue.Count > 0)
-                {
-                    _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token).ContinueWith(_ =>
-                    {
-                        _runningTask = null;
-                        _logger.Log($"Executor: Task canceled!");
-                    });
+            if (_queue.Count < 1)
+                return;
 
-                    _ = Task.Delay(TimeSpan.FromSeconds(120)).ContinueWith(_ =>
-                    {
-                        _logger.Log($"Executor: canceling task!");
-
-                        _cts.Cancel();
-                        _cts = new CancellationTokenSource();
-                    });
-                }
-            }
-        }
-
-        private async Task ProcessCommandsAsync()
-        {
             if (!await _semaphore.WaitAsync(0))
                 return;
 
             try
             {
-                while (_queue.Count > 0)
+                _ = Task.Run(async () => await ProcessCommandsAsync()).ContinueWith(_ =>
                 {
-                    if (_queue.TryTake(out var cmd, 100))
-                    {
-                        try
-                        {
-                            await cmd.ExecuteAsync(_provider);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Log($"Executor: {ex}");
-                        }
-                        await Task.Delay(30);
-                    }
-                }
+                    _cts.Cancel();
+                    _cts = new CancellationTokenSource();
+                });
+
+                await Task.Delay(TimeSpan.FromSeconds(90), _cts.Token);
             }
             finally
             {
                 _semaphore.Release();
+            }
+        }
+
+        private async Task ProcessCommandsAsync()
+        {
+            if (_queue.TryTake(out var cmd, 100))
+            {
+                try
+                {
+                    await cmd.ExecuteAsync(_provider);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"Executor: {ex}");
+                }
             }
         }
     }

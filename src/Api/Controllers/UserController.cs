@@ -150,7 +150,7 @@ namespace Sanakan.Api.Controllers
                 }
             }));
 
-            _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "User connected!".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 
@@ -184,7 +184,7 @@ namespace Sanakan.Api.Controllers
                 }
             }));
 
-            _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 
@@ -218,7 +218,7 @@ namespace Sanakan.Api.Controllers
                 }
             }));
 
-            _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 

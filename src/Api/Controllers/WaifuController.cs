@@ -105,7 +105,7 @@ namespace Sanakan.Api.Controllers
                 }
             }));
 
-            _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "Success".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 
@@ -204,7 +204,7 @@ namespace Sanakan.Api.Controllers
                         }
                     }));
 
-                    _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                    await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                     await "Booster pack added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
                     return;
                 }

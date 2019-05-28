@@ -805,7 +805,7 @@ namespace Sanakan.Modules
                     dInfo.Winner = p1;
                     dInfo.Loser = p2;
 
-                    if (Services.Fun.TakeATry(5))
+                    if (Services.Fun.TakeATry(4))
                     {
                         var item = _waifu.RandomizeItemFromFight().ToItem();
                         var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
@@ -859,9 +859,8 @@ namespace Sanakan.Modules
         [Remarks("SS"), RequireWaifuFightChannel]
         public async Task StartMassacreAsync([Summary("maksymalna ranga uczestniczącej karty")]Rarity max = Rarity.SSS)
         {
-            var msg = await ReplyAsync("", embed: _waifu.GetGMwKView());
-
-            var addEmote = new Emoji("➕");
+            var addEmote = Emote.Parse("<:twa_podobaju_mie_sie:573904566836396032>");
+            var msg = await ReplyAsync("", embed: _waifu.GetGMwKView(addEmote, max));
             await msg.AddReactionAsync(addEmote);
 
             await Task.Delay(TimeSpan.FromMinutes(3));
@@ -895,16 +894,16 @@ namespace Sanakan.Modules
                 return;
             }
 
-            string playerList = "*Lista graczy:*\n";
+            string playerList = "Lista graczy:\n";
             foreach (var p in players)
                 playerList += $"{p.User.Mention}: {p.Cards.First().GetString(true, false, true)}\n";
 
             var history = await _waifu.MakeFightAsync(players, true);
             var deathLog = _waifu.GetDeathLog(history, players);
 
-            _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
             
-            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n{playerList}\n{deathLog.TrimToLength(1400)} Zwycięża {history.Winner.User.Mention}!"
+            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList}\n{deathLog.TrimToLength(1400)} Zwycięża {history.Winner.User.Mention}!"
                 .TrimToLength(2000).ToEmbedMessage(EMType.Error).Build());
             await msg.RemoveAllReactionsAsync();
         }
