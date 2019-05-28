@@ -56,6 +56,9 @@ namespace Sanakan.Services.PocketWaifu
         {
             switch (type)
             {
+                case HaremType.Health:
+                    return list.OrderByDescending(x => x.GetHealthWithPenalty()).ToList();
+
                 case HaremType.Affection:
                     return list.OrderByDescending(x => x.Affection).ToList();
 
@@ -64,9 +67,6 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.Defence:
                     return list.OrderByDescending(x => x.Defence).ToList();
-
-                case HaremType.Health:
-                    return list.OrderByDescending(x => x.Health).ToList();
 
                 case HaremType.Cage:
                     return list.Where(x => x.InCage).ToList();

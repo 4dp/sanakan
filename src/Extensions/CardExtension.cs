@@ -15,7 +15,7 @@ namespace Sanakan.Extensions
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
             string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name; 
             
-            return $"{idStr} {name} **{card.Rarity}** ❤{card.Health} 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
+            return $"{idStr} {name} **{card.Rarity}** ❤{card.GetHealthWithPenalty()} 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
         }
 
         public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
@@ -23,7 +23,6 @@ namespace Sanakan.Extensions
         public static string GetDesc(this Card card)
         {
             return $"*{card.Title ?? "????"}*\n\n"
-                + $"**Życie[P]:** {card.GetHealthWithPenalty()}\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
@@ -39,7 +38,9 @@ namespace Sanakan.Extensions
         {
             var percent = card.Affection * 5d / 100d;
             var newHealth = (int) (card.Health + (card.Health * percent));
-            return newHealth < 10 ? 10 : newHealth;
+            if (newHealth > 999) newHealth = 999;
+            if (newHealth < 10) newHealth = 10;
+            return newHealth;
         }
 
         public static string GetString(this CardSource source)

@@ -16,6 +16,9 @@ namespace Sanakan.Services.Executor
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1,1);
         private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(150);
 
+        private int _counter { get; set; }
+        private Task _runningTask { get; set; }
+        private int _prevTaskCount { get; set; }
         private CancellationTokenSource _cts { get; set; }
 
         public SynchronizedExecutor(ILogger logger)
@@ -38,16 +41,38 @@ namespace Sanakan.Services.Executor
                 RunWorker();
                 return true;
             }
-            else
-            {
-                _cts.Cancel();
-                _cts = new CancellationTokenSource();
-                RunWorker();
-            }
             return false;
         }
 
-        public void RunWorker() => _ = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token);
+        public void RunWorker()
+        {
+            bool run = true;
+            if (_runningTask.Status == TaskStatus.Running)
+            {
+                run = false;
+                if (_prevTaskCount > _queue.Count)
+                {
+                    _counter = 0;
+                }
+                else
+                {
+                    if (++_counter > 10)
+                    {
+                        run = true;
+                        _cts.Cancel();
+                        _cts.Dispose();
+                        _cts = new CancellationTokenSource();
+                    }
+                }
+
+                _prevTaskCount = _queue.Count;
+            }
+
+            if (run)
+            {
+                _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token);
+            }
+        }
 
         private async Task ProcessCommandsAsync()
         {

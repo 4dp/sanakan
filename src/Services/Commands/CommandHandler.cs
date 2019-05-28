@@ -68,6 +68,7 @@ namespace Sanakan.Services.Commands
 
                 if (res.IsSuccess())
                 {
+                    _logger.Log(res.Command.Match.Command.Name);
                     switch (res.Command.Match.Command.RunMode)
                     {
                         case RunMode.Async:

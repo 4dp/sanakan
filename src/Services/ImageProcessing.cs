@@ -675,6 +675,7 @@ namespace Sanakan.Services
 
         private void ApplyStats(Image<Rgba32> image, Card card, bool applyNegativeStats = false)
         {
+            int health = card.GetHealthWithPenalty();
             using (var shield = Image.Load($"./Pictures/PW/heart.png"))
             {
                 image.Mutate(x => x.DrawImage(shield, new Point(0, 0), 1));
@@ -699,11 +700,11 @@ namespace Sanakan.Services
             if (card.Attack > 99) startXAtk -= 15;
 
             int startXHp = 380;
-            if (card.Health < 10) startXHp += 15;
-            if (card.Health > 99) startXHp -= 15;
+            if (health < 10) startXHp += 15;
+            if (health > 99) startXHp -= 15;
 
             var numFont = new Font(_latoBold, 54);
-            image.Mutate(x => x.DrawText($"{card.Health}", numFont, Rgba32.FromHex("#000000"), new Point(startXHp, 190)));
+            image.Mutate(x => x.DrawText($"{health}", numFont, Rgba32.FromHex("#000000"), new Point(startXHp, 190)));
             image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 320)));
             image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 440)));
 
