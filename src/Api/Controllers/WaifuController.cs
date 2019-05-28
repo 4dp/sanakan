@@ -168,10 +168,9 @@ namespace Sanakan.Api.Controllers
         /// <param name="boosterPack">model pakietu</param>
         /// <response code="403">The appropriate claim was not found</response>
         /// <response code="404">User not found</response>
-        /// <response code="405">This user isn't a player</response>
         /// <response code="500">Model is Invalid</response>
         [HttpPost("boosterpack"), Authorize(Policy = "Player")]
-        public async Task GiveUserAPack([FromBody]Models.CardBoosterPack boosterPack)
+        public async Task GiveUserAPackAsync([FromBody]Models.CardBoosterPack boosterPack)
         {
             if (boosterPack == null)
             {

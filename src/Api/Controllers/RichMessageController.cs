@@ -18,13 +18,11 @@ namespace Sanakan.Api.Controllers
     [Route("api/[controller]")]
     public class RichMessageController : ControllerBase
     {
-        private readonly ILogger _logger;
         private readonly IConfig _config;
         private readonly DiscordSocketClient _client;
 
-        public RichMessageController(DiscordSocketClient client, IConfig config, ILogger logger)
+        public RichMessageController(DiscordSocketClient client, IConfig config)
         {
-            _logger = logger;
             _client = client;
             _config = config;
         }
@@ -110,17 +108,12 @@ namespace Sanakan.Api.Controllers
         /// </remarks>
         /// <param name="message">wiadomość</param>
         /// <param name="mention">czy oznanczyć zainteresowanych</param>
-        /// <param name="obj">źródło zdarzania</param>
-        /// <param name="evt">rodzaj zdarzenia</param>
         /// <response code="500">Internal Server Error</response>
         [HttpPost]
-        public async Task PostRichMessageAsync([FromBody, Required]Models.RichMessage message, [FromQuery]bool? mention,
-            [FromQuery]string obj, [FromQuery]string evt)
+        public async Task PostRichMessageAsync([FromBody, Required]Models.RichMessage message, [FromQuery]bool? mention)
         {
             var config = _config.Get();
             if (!mention.HasValue) mention = false;
-
-            _logger.Log($"RM: {obj} - {evt}");
 
             var msgList = new List<ulong>();
             var rmcs = config.RMConfig.Where(x => x.Type == message.MessageType);
