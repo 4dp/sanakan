@@ -13,27 +13,33 @@ namespace Sanakan.Services.Executor
         private IServiceProvider _provider;
         private ILogger _logger;
 
-        private SemaphoreSlim _semaphore = new SemaphoreSlim(1,1);
-        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(150);
+        private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(100);
 
-        private int _counter { get; set; }
+        private Timer _timer;
         private Task _runningTask { get; set; }
-        private int _prevTaskCount { get; set; }
         private CancellationTokenSource _cts { get; set; }
 
         public SynchronizedExecutor(ILogger logger)
         {
             _cts = new CancellationTokenSource();
             _logger = logger;
+
+            _timer = new Timer(_ =>
+            {
+                RunWorker();
+            },
+            null,
+            TimeSpan.FromSeconds(10),
+            TimeSpan.FromSeconds(1));
         }
-        
+
         public void Initialize(IServiceProvider provider)
         {
             _provider = provider;
-            RunWorker();
         }
 
-        public bool TryAdd(IExecutable task, TimeSpan timeout) 
+        public bool TryAdd(IExecutable task, TimeSpan timeout)
         {
             _logger.Log($"Executor: qc {_queue.Count}");
             if (_queue.TryAdd(task, timeout))
@@ -46,34 +52,21 @@ namespace Sanakan.Services.Executor
 
         public void RunWorker()
         {
-            bool run = true;
             if (_runningTask != null)
             {
-                if (_runningTask.Status == TaskStatus.Running)
+                _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token).ContinueWith(_ =>
                 {
-                    run = false;
-                    if (_prevTaskCount > _queue.Count)
-                    {
-                        _counter = 0;
-                    }
-                    else
-                    {
-                        if (++_counter > 10)
-                        {
-                            run = true;
-                            _cts.Cancel();
-                            _cts.Dispose();
-                            _cts = new CancellationTokenSource();
-                        }
-                    }
+                    _runningTask = null;
+                    _logger.Log($"Executor: Task canceled!");
+                });
 
-                    _prevTaskCount = _queue.Count;
-                }
-            }
+                _ = Task.Delay(TimeSpan.FromSeconds(90)).ContinueWith(_ =>
+                {
+                    _logger.Log($"Executor: canceling task!");
 
-            if (run)
-            {
-                _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token);
+                    _cts.Cancel();
+                    _cts = new CancellationTokenSource();
+                });
             }
         }
 
@@ -96,12 +89,7 @@ namespace Sanakan.Services.Executor
                         {
                             _logger.Log($"Executor: {ex}");
                         }
-                        await Task.Delay(50);
-                    }
-                    else
-                    {
-                        _logger.Log($"Executor: cannot take task!");
-                        await Task.Delay(10);
+                        await Task.Delay(30);
                     }
                 }
             }
