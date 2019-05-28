@@ -185,14 +185,14 @@ namespace Sanakan.Modules
             var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
             var machine = new SlotMachine(botuser);
 
-            if (botuser.ScCnt < machine.ToPay())
+            var toPay = machine.ToPay();
+            if (botuser.ScCnt < toPay)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} brakuje Ci SC, aby za tyle zagrać.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
-
             var win = machine.Play(new SlotEqualRandom());
-            botuser.ScCnt += win;
+            botuser.ScCnt += win - toPay;
 
             await _dbUserContext.SaveChangesAsync();
 
