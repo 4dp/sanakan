@@ -7,8 +7,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
+using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu.Fight;
 using Shinden;
 using Shinden.Models;
@@ -39,12 +41,14 @@ namespace Sanakan.Services.PocketWaifu
     {
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
 
+        private IConfig _config;
         private ImageProcessing _img;
         private ShindenClient _shClient;
 
-        public Waifu(ImageProcessing img, ShindenClient client)
+        public Waifu(ImageProcessing img, ShindenClient client, IConfig config)
         {
             _img = img;
+            _config = config;
             _shClient = client;
         }
 
@@ -71,6 +75,16 @@ namespace Sanakan.Services.PocketWaifu
                 case HaremType.Rarity:
                     return list.OrderBy(x => x.Rarity).ToList();
             }
+        }
+
+        public Embed GetGMwKView()
+        {
+            return new EmbedBuilder
+            {
+                Color = EMType.Error.Color(),
+                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{DateTime.Now.AddMinutes(3).ToShortTimeString()}`\n"
+                    + $"Wymagana minimalna liczba graczy: `5`\n\nAby dołączyć kliknij na reakcje ➕"
+            }.Build();
         }
 
         public Rarity RandomizeRarity()
@@ -415,6 +429,54 @@ namespace Sanakan.Services.PocketWaifu
             if (dmg < 1) dmg = 1;
 
             return (int)dmg;
+        }
+
+        public string GetDeathLog(FightHistory fight, List<PlayerInfo> players)
+        {
+            string deathLog = "";
+            for (int i = 0; i < fight.Rounds.Count; i++)
+            {
+                var dead = fight.Rounds[i].Cards.Where(x => x.Hp <= 0);
+                if (dead.Count() > 0)
+                {
+                    deathLog += $"**Runda {i + 1}**:\n";
+                    foreach (var d in dead)
+                    {
+                        var thisCard = players.First(x => x.Cards.Any(c => c.Id == d.CardId)).Cards.First(x => x.Id == d.CardId);
+                        deathLog += $"❌ {thisCard.GetString(true, false, true)}\n";
+                    }
+                    deathLog += "\n";
+                }
+            }
+            return deathLog;
+        }
+
+        public IExecutable GetExecutableGMwK(FightHistory history, List<PlayerInfo> players)
+        {
+            return new Executable(new Task<bool>(() =>
+            {
+                using (var db = new Database.UserContext(_config))
+                {
+                    foreach (var p in players)
+                    {
+                        var u = db.GetUserOrCreateAsync(p.User.Id).Result;
+                        var stat = new CardPvPStats
+                        {
+                            Type = FightType.BattleRoyale,
+                            Result = FightResult.Lose
+                        };
+
+                        if (u.Id == history.Winner.User.Id)
+                            stat.Result = FightResult.Win;
+
+                        u.GameDeck.PvPStats.Add(stat);
+                    }
+
+                    db.SaveChanges();
+                }
+
+                return true;
+            }));
         }
 
         public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)

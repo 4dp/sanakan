@@ -498,6 +498,30 @@ namespace Sanakan.Services
             }
         }
 
+        public async Task<PenaltyInfo> BanUserAysnc(SocketGuildUser user, Database.ManagmentContext db, long duration, string reason = "nie podano")
+        {
+            var info = new PenaltyInfo
+            {
+                User = user.Id,
+                Reason = reason,
+                Guild = user.Guild.Id,
+                Type = PenaltyType.Ban,
+                StartDate = DateTime.Now,
+                DurationInHours = duration,
+                Roles = new List<OwnedRole>(),
+            };
+
+            await db.Penalties.AddAsync(info);
+
+            await db.SaveChangesAsync();
+
+            QueryCacheManager.ExpireTag(new string[] { $"mute" });
+
+            await user.Guild.AddBanAsync(user, 0, reason);
+
+            return info;
+        }
+        
         public async Task<PenaltyInfo> MuteUserAysnc(SocketGuildUser user, SocketRole muteRole, SocketRole muteModRole, SocketRole userRole, 
             Database.ManagmentContext db, long duration, string reason = "nie podano", IEnumerable<ModeratorRoles> modRoles = null)
         {

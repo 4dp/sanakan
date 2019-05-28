@@ -9,6 +9,7 @@ using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
+using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
@@ -28,16 +29,18 @@ namespace Sanakan.Modules
         private Database.UserContext _dbUserContext;
         private Sden.ShindenClient _shclient;
         private SessionManager _session;
+        private IExecutor _executor;
         private IConfig _config;
         private Waifu _waifu;
 
         public PocketWaifu(Waifu waifu, Sden.ShindenClient client, Database.UserContext userContext,
-            Database.GuildConfigContext dbGuildConfigContext, SessionManager session, IConfig config)
+            Database.GuildConfigContext dbGuildConfigContext, SessionManager session, IConfig config, IExecutor executor)
         {
             _waifu = waifu;
             _config = config;
             _shclient = client;
             _session = session;
+            _executor = executor;
             _dbUserContext = userContext;
             _dbGuildConfigContext = dbGuildConfigContext;
         }
@@ -848,6 +851,62 @@ namespace Sanakan.Modules
             }
             catch (Exception) { }
             await ReplyAsync("", embed: embed.Build());
+        }
+
+        [Command("masakra", RunMode = RunMode.Async)]
+        [Alias("massacre")]
+        [Summary("rozpoczyna odliczanie do startu GMwK")]
+        [Remarks("SS"), RequireWaifuFightChannel]
+        public async Task StartMassacreAsync([Summary("maksymalna ranga uczestniczącej karty")]Rarity max = Rarity.SSS)
+        {
+            var msg = await ReplyAsync("", embed: _waifu.GetGMwKView());
+
+            var addEmote = new Emoji("➕");
+            await msg.AddReactionAsync(addEmote);
+
+            await Task.Delay(TimeSpan.FromMinutes(3));
+
+            await msg.RemoveReactionAsync(addEmote, Context.Client.CurrentUser);
+            var users = await msg.GetReactionUsersAsync(addEmote, 300).FlattenAsync();
+
+            var players = new List<PlayerInfo>();
+            foreach (var u in users)
+            {
+                var user = Context.Guild.GetUser(u.Id);
+                if (user == null) continue;
+
+                var botUser = await _dbUserContext.GetCachedFullUserAsync(user.Id);
+                if (botUser == null) continue;
+
+                var activeCards = botUser.GameDeck.Cards.Where(x => x.Active && x.Rarity >= max).ToList();
+                if (activeCards.Count < 1) continue;
+                
+                players.Add(new PlayerInfo
+                {
+                    Cards = new List<Card> { Services.Fun.GetOneRandomFrom(activeCards) },
+                    Dbuser = botUser,
+                    User = user
+                });
+            }
+
+            if (players.Count < 5)
+            {
+                await msg.ModifyAsync(x => x.Embed = $"Na **GMwK** nie zgłosiła się wystarczająca liczba graczy!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            string playerList = "*Lista graczy:*\n";
+            foreach (var p in players)
+                playerList += $"{p.User.Mention}: {p.Cards.First().GetString(true, false, true)}\n";
+
+            var history = await _waifu.MakeFightAsync(players, true);
+            var deathLog = _waifu.GetDeathLog(history, players);
+
+            _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
+            
+            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n{playerList}\n{deathLog.TrimToLength(1400)} Zwycięża {history.Winner.User.Mention}!"
+                .TrimToLength(2000).ToEmbedMessage(EMType.Error).Build());
+            await msg.RemoveAllReactionsAsync();
         }
 
         [Command("pojedynek")]

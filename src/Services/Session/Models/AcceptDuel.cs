@@ -30,26 +30,9 @@ namespace Sanakan.Services.Session.Models
 
         public async Task<bool> OnAccept(SessionContext context)
         {
-            var fight = await _waifu.MakeFightAsync(new List<PlayerInfo> { P1, P2 });
-            string deathLog = "";
-            int roundCnt = 1;
-
-            foreach (var log in fight.Rounds)
-            {
-                var de = log.Cards.Where(x => x.Hp <= 0);
-                if (de.Count() > 0)
-                {
-                    deathLog += $"**Runda {roundCnt}**:\n";
-                    foreach (var d in de)
-                    {
-                        var thisCard = P1.Cards.FirstOrDefault(x => x.Id == d.CardId);
-                        if (thisCard == null) thisCard = P2.Cards.FirstOrDefault(x => x.Id == d.CardId);
-                        deathLog += $"❌ {thisCard.GetString(true, false, true)}\n";
-                    }
-                    deathLog += "\n";
-                }
-                ++roundCnt;
-            }
+            var players = new List<PlayerInfo> { P1, P2 };
+            var fight = await _waifu.MakeFightAsync(players);
+            string deathLog = _waifu.GetDeathLog(fight, players);
 
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
             {

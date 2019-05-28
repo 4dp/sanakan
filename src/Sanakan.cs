@@ -94,10 +94,10 @@ namespace Sanakan
 
             _img = new ImageProcessing();
             _helper = new Helper(_config);
-            _waifu = new Waifu(_img, _shindenClient);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
+            _waifu = new Waifu(_img, _shindenClient, _config);
             _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
             _spawn = new Spawn(_client, _executor, _waifu, _config);

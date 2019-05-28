@@ -67,6 +67,29 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("ban")]
+        [Summary("banuje użytkownika")]
+        [Remarks("karna"), RequireAdminRole]
+        public async Task BanUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
+        {
+            if (duration < 1) return;
+
+            var config = await _dbConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config == null)
+            {
+                await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+
+            var usr = Context.User as SocketGuildUser;
+            var info = await _moderation.BanUserAysnc(user, _dbManagmentContext, duration, reason);
+            await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
+
+            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("mute")]
         [Summary("wycisza użytkownika")]
         [Remarks("karna"), RequireAdminRole]
