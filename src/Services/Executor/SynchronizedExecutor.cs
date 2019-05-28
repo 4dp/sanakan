@@ -55,18 +55,15 @@ namespace Sanakan.Services.Executor
         {
             if (_runningTask == null)
             {
-                _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token).ContinueWith(_ =>
+                if (_queue.Count > 0)
                 {
-                    if (_runningTask != null)
+                    _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token).ContinueWith(_ =>
                     {
                         _runningTask = null;
                         _logger.Log($"Executor: Task canceled!");
-                    }
-                });
+                    });
 
-                if (_runningTask != null)
-                {
-                    _ = Task.Delay(TimeSpan.FromSeconds(90)).ContinueWith(_ =>
+                    _ = Task.Delay(TimeSpan.FromSeconds(120)).ContinueWith(_ =>
                     {
                         _logger.Log($"Executor: canceling task!");
 
