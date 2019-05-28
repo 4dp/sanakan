@@ -64,7 +64,11 @@ namespace Sanakan.Services.Executor
                     _cts = new CancellationTokenSource();
                 });
 
-                await Task.Delay(TimeSpan.FromSeconds(90), _cts.Token);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(90), _cts.Token);
+                }
+                catch (Exception) { }
             }
             finally
             {
