@@ -23,6 +23,7 @@ namespace Sanakan.Services.Executor
         public SynchronizedExecutor(ILogger logger)
         {
             _cts = new CancellationTokenSource();
+            _runningTask = null;
             _logger = logger;
 
             _timer = new Timer(_ =>
@@ -31,7 +32,7 @@ namespace Sanakan.Services.Executor
             },
             null,
             TimeSpan.FromSeconds(10),
-            TimeSpan.FromSeconds(1));
+            TimeSpan.FromSeconds(5));
         }
 
         public void Initialize(IServiceProvider provider)
@@ -52,21 +53,27 @@ namespace Sanakan.Services.Executor
 
         public void RunWorker()
         {
-            if (_runningTask != null)
+            if (_runningTask == null)
             {
                 _runningTask = Task.Run(async () => await ProcessCommandsAsync(), _cts.Token).ContinueWith(_ =>
                 {
-                    _runningTask = null;
-                    _logger.Log($"Executor: Task canceled!");
+                    if (_runningTask != null)
+                    {
+                        _runningTask = null;
+                        _logger.Log($"Executor: Task canceled!");
+                    }
                 });
 
-                _ = Task.Delay(TimeSpan.FromSeconds(90)).ContinueWith(_ =>
+                if (_runningTask != null)
                 {
-                    _logger.Log($"Executor: canceling task!");
+                    _ = Task.Delay(TimeSpan.FromSeconds(90)).ContinueWith(_ =>
+                    {
+                        _logger.Log($"Executor: canceling task!");
 
-                    _cts.Cancel();
-                    _cts = new CancellationTokenSource();
-                });
+                        _cts.Cancel();
+                        _cts = new CancellationTokenSource();
+                    });
+                }
             }
         }
 
