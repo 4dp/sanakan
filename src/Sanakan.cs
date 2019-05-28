@@ -134,8 +134,8 @@ namespace Sanakan
         private IServiceProvider BuildServiceProvider()
         {
             return new ServiceCollection()
+                .AddSingleton<IExecutor>(_executor)
                 .AddSingleton(_shindenClient)
-                .AddSingleton(_executor)
                 .AddSingleton(_sessions)
                 .AddSingleton(_profile)
                 .AddSingleton(_config)
