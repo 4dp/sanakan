@@ -15,7 +15,6 @@ using Sanakan.Api.Models;
 namespace Sanakan.Api.Controllers
 {
     [ApiController]
-    [ApiVersion("1.0")]
     [Route("api/[controller]")]
     public class TokenController : ControllerBase
     {

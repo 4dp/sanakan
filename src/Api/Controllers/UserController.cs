@@ -21,8 +21,7 @@ using Z.EntityFramework.Plus;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController]
-    [ApiVersion("1.0"), Authorize]
+    [ApiController, Authorize]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {

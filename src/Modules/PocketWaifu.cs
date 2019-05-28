@@ -46,7 +46,7 @@ namespace Sanakan.Modules
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
         [Remarks("klatka"), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja)")]HaremType type = HaremType.Rarity)
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie)")]HaremType type = HaremType.Rarity)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -841,8 +841,12 @@ namespace Sanakan.Modules
             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
 
             var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
 
+            try
+            {
+                embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
+            }
+            catch (Exception) { }
             await ReplyAsync("", embed: embed.Build());
         }
 

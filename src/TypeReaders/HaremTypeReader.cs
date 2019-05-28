@@ -38,6 +38,12 @@ namespace Sanakan.TypeReaders
                 case "affection":
                     return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Affection));
 
+                case "hp":
+                case "życie":
+                case "zycie":
+                case "health":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Health));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu haremu!"));
             }

@@ -32,7 +32,7 @@ namespace Sanakan.Services.PocketWaifu
 
     public enum HaremType
     {
-        Rarity, Cage, Affection, Attack, Defence
+        Rarity, Cage, Affection, Attack, Defence, Health
     }
 
     public class Waifu
@@ -60,6 +60,9 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.Defence:
                     return list.OrderByDescending(x => x.Defence).ToList();
+
+                case HaremType.Health:
+                    return list.OrderByDescending(x => x.Health).ToList();
 
                 case HaremType.Cage:
                     return list.Where(x => x.InCage).ToList();

@@ -87,7 +87,7 @@ namespace Sanakan.Api
                 services.AddApiVersioning(o =>
                 {
                     o.AssumeDefaultVersionWhenUnspecified = true;
-                    o.DefaultApiVersion = new ApiVersion(1, 0);
+                    o.DefaultApiVersion = new ApiVersion(3, 0);
                     o.ApiVersionReader = new HeaderApiVersionReader("x-api-version");
                 });
                 services.AddSwaggerGen(c =>
@@ -95,9 +95,9 @@ namespace Sanakan.Api
                     c.SwaggerDoc("v2", new Info
                     {
                         Title = "Sanakan API",
-                        Version = "1.0",
+                        Version = "3.0",
                         Description = "Autentykacja następuje poprzez dopasowanie tokenu przesłanego w ciele zapytania `api/token`, a następnie wysyłania w nagłowku `Authorization` z przedrostkiem `Bearer` otrzymanego w zwrocie tokena."
-                            + "\n\nDocelowa wersja api powinna zostać przesłana pod nagówkiem `x-api-version`, w przypadku jej nie podania zapytania są interpretowane jako wysłane do wersji `1.0`.",
+                            + "\n\nDocelowa wersja api powinna zostać przesłana pod nagówkiem `x-api-version`, w przypadku jej nie podania zapytania są interpretowane jako wysłane do wersji `3.0`.",
                     });
 
                     var filePath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Sanakan.xml");
