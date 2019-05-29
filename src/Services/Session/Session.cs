@@ -88,10 +88,10 @@ namespace Sanakan.Services.Session
 
         public IExecutable GetExecutable(SessionContext context)
         {
-            return new Executable(new Task<bool>(() => 
+            return new Executable($"session-{this}", new Task(() => 
             {
                 if (OnExecute == null)
-                    return true;
+                    return;
 
                 var res = OnExecute(context, this).Result;
                 if (res && RunMode == RunMode.Sync && OnSyncEnd != null)
@@ -102,8 +102,6 @@ namespace Sanakan.Services.Session
                        await OnSyncEnd(this);
                    });
                 }
-                
-                return res;
             }));
         }
     }

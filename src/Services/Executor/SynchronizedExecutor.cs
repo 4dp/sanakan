@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Shinden.Logger;
@@ -40,6 +41,7 @@ namespace Sanakan.Services.Executor
 
         public async Task<bool> TryAdd(IExecutable task, TimeSpan timeout)
         {
+            _logger.Log($"Executor: adding new task, on pool: {_queue.Count}");
             if (_queue.TryAdd(task, timeout))
             {
                 await Task.CompletedTask;
@@ -82,7 +84,12 @@ namespace Sanakan.Services.Executor
             {
                 try
                 {
+                    var taskName = cmd.GetName();
+                    _logger.Log($"Executor: running {taskName}");
+                    
+                    var watch = Stopwatch.StartNew();
                     await cmd.ExecuteAsync(_provider);
+                    _logger.Log($"Executor: completed {taskName} in {watch.ElapsedMilliseconds}ms");
                 }
                 catch (Exception ex)
                 {

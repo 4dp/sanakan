@@ -136,7 +136,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable(new Task<bool>(() =>
+            var exe = new Executable($"api-register u{id.DiscordUserId}", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -146,7 +146,6 @@ namespace Sanakan.Api.Controllers
                     db.SaveChanges();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
-                    return true;
                 }
             }));
 
@@ -170,7 +169,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable(new Task<bool>(() =>
+            var exe = new Executable($"api-tc u{id}", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -180,7 +179,6 @@ namespace Sanakan.Api.Controllers
                     db.SaveChanges();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
-                    return true;
                 }
             }));
 
@@ -204,7 +202,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable(new Task<bool>(() =>
+            var exe = new Executable($"api-tc su{id}", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -214,7 +212,6 @@ namespace Sanakan.Api.Controllers
                     db.SaveChanges();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
-                    return true;
                 }
             }));
 

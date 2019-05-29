@@ -7,6 +7,7 @@ namespace Sanakan.Services.Executor
 {
     public interface IExecutable
     {
+        string GetName();
         Task<bool> ExecuteAsync(IServiceProvider provider);
     }
 }

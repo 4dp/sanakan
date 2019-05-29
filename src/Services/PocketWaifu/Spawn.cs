@@ -140,7 +140,7 @@ namespace Sanakan.Services.PocketWaifu
         private Executable GetSafariExe(EmbedBuilder embed, IUserMessage msg, Card newCard,
             SafariImage pokeImage, ICharacterInfo character, ITextChannel trashChannel, IUser winner)
         {
-            return new Executable(new Task<bool>(() =>
+            return new Executable("safari", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -169,8 +169,6 @@ namespace Sanakan.Services.PocketWaifu
                     }
                     catch (Exception) { }
                 });
-
-                return true;
             }));
         }
 
@@ -223,12 +221,12 @@ namespace Sanakan.Services.PocketWaifu
 
         private void SpawnUserPacket(SocketUser user)
         {
-            var exe = new Executable(new Task<bool>(() =>
+            var exe = new Executable($"packet u{user.Id}", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
                     var botUser = db.GetUserOrCreateAsync(user.Id).Result;
-                    if (botUser.IsBlacklisted) return false;
+                    if (botUser.IsBlacklisted) return;
 
                     botUser.GameDeck.BoosterPacks.Add(new BoosterPack
                     {
@@ -240,8 +238,6 @@ namespace Sanakan.Services.PocketWaifu
                     });
                     db.SaveChanges();
                 }
-
-                return true;
             }));
 
             _executor.TryAdd(exe, TimeSpan.FromSeconds(1));

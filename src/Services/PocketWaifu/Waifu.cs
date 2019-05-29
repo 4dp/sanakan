@@ -454,7 +454,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public IExecutable GetExecutableGMwK(FightHistory history, List<PlayerInfo> players)
         {
-            return new Executable(new Task<bool>(() =>
+            return new Executable("GMWK", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -475,8 +475,6 @@ namespace Sanakan.Services.PocketWaifu
 
                     db.SaveChanges();
                 }
-
-                return true;
             }));
         }
 

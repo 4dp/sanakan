@@ -88,7 +88,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable(new Task<bool>(() =>
+            var exe = new Executable($"api-repair oc{oldId} c{newId}", new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -101,7 +101,6 @@ namespace Sanakan.Api.Controllers
                     db.SaveChanges();
 
                     QueryCacheManager.ExpireTag(new string[] { "users" });
-                    return true;
                 }
             }));
 
@@ -190,7 +189,7 @@ namespace Sanakan.Api.Controllers
             {
                 if (ulong.TryParse(currUser.Claims.First(x => x.Type == "DiscordId").Value, out var discordId))
                 {
-                    var exe = new Executable(new Task<bool>(() =>
+                    var exe = new Executable($"api-packet u{discordId}", new Task(() =>
                     {
                         using (var db = new Database.UserContext(_config))
                         {
@@ -200,7 +199,6 @@ namespace Sanakan.Api.Controllers
                             db.SaveChanges();
 
                             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
-                            return true;
                         }
                     }));
 

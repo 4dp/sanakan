@@ -16,6 +16,8 @@ namespace Sanakan.Services.Commands
             Context = context;
         }
 
+        public string GetName() => $"cmd-{Match.Command.Name}";
+
         public CommandMatch Match { get; private set; }
         public ParseResult Result { get; private set; }
         public ICommandContext Context { get; private set; }

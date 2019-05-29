@@ -143,7 +143,7 @@ namespace Sanakan.Services
             _messages[user.Id] = 0;
             _commands[user.Id] = 0;
 
-            _executor.TryAdd(new Executable(task), TimeSpan.FromSeconds(1));
+            _executor.TryAdd(new Executable("add exp", task), TimeSpan.FromSeconds(1));
         }
 
         private double GetPointsFromMsg(SocketMessage message)
@@ -170,14 +170,14 @@ namespace Sanakan.Services
             return experience;
         }
 
-        private Task<bool> CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters)
+        private Task CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters)
         {
-            return new Task<bool>(() =>
+            return new Task(() =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
                     var usr = db.GetUserOrCreateAsync(user.Id).Result;
-                    if (usr == null) return false;
+                    if (usr == null) return;
 
                     if ((DateTime.Now - usr.MeasureDate.AddMonths(1)).TotalSeconds > 1)
                     {
@@ -201,8 +201,6 @@ namespace Sanakan.Services
 
                     db.SaveChanges();
                 }
-
-                return true;
             });
         }
     }
