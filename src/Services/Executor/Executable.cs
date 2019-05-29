@@ -24,6 +24,11 @@ namespace Sanakan.Services.Executor
 
             await Task.CompletedTask;
 
+            if (_task is Task<bool> bTask)
+            {
+                return bTask.Result;
+            }
+
             return true;
         }
     }

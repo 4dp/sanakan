@@ -94,6 +94,7 @@ namespace Sanakan.Modules
             var users = await _dbUserContext.GetCachedAllUsersAsync();
             session.ListItems = _profile.BuildListView(_profile.GetTopUsers(users, type), type, Context.Guild);
 
+            session.Event = ExecuteOn.ReactionAdded;
             session.Embed = new EmbedBuilder
             {
                 Color = EMType.Info.Color(),
