@@ -106,7 +106,7 @@ namespace Sanakan.Modules
 
             if (numberOfItem <= 0)
             {
-                await ReplyAsync("", embed: _waifu.GetItemList(Context.User, bUser.GameDeck.Items.ToList()));
+                await ReplyAsync("", embed: _waifu.GetItemList(Context.User, itemList));
                 return;
             }
 

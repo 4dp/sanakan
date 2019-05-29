@@ -149,7 +149,7 @@ namespace Sanakan.Services.PocketWaifu
                         var privEmb = new EmbedBuilder()
                         {
                             Color = EMType.Info.Color(),
-                            Description = $"Na [polowaniu]({msg.GetJumpUrl()}) zdobyłeś:{newCard.GetString(false, false, true)}"
+                            Description = $"Na [polowaniu]({msg.GetJumpUrl()}) zdobyłeś: {newCard.GetString(false, false, true)}"
                         };
 
                         var priv = await winner.GetOrCreateDMChannelAsync();
@@ -163,6 +163,12 @@ namespace Sanakan.Services.PocketWaifu
         private async Task SpawnCardAsync(ITextChannel spawnChannel, ITextChannel trashChannel)
         {
             var character = await _waifu.GetRandomCharacterAsync();
+            if (character == null)
+            {
+                _logger.Log("In Satafi: bad shinden connection");
+                return;
+            }
+
             var newCard = _waifu.GenerateNewCard(character);
             newCard.Source = CardSource.Safari;
             newCard.Affection -= 1.8;
@@ -173,7 +179,7 @@ namespace Sanakan.Services.PocketWaifu
             var embed = new EmbedBuilder
             {
                 Color = EMType.Bot.Color(),
-                Description = $"**Polowanie zakończy się o**: `{time.ToShortTimeString()}:{time.Second}`",
+                Description = $"**Polowanie zakończy się o**: `{time.ToShortTimeString()}:{time.Second.ToString("00")}`",
                 ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, trashChannel)
             };
 

@@ -72,6 +72,50 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"**Subskrypcje** {Context.User.Mention}:\n\n{subs.TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
         }
 
+        [Command("przyznaj role", RunMode = RunMode.Async)]
+        [Summary("dodaje samozarządzaną role")]
+        [Remarks("newsy"), RequireCommandChannel]
+        public async Task AddRoleAsync([Summary("nazwa roli z wypisz role")]string name)
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            var selfRole = config.SelfRoles.FirstOrDefault(x => x.Name == name);
+            var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
+
+            if (gRole == null)
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono roli `{name}`".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            await user.AddRoleAsync(gRole);
+            await ReplyAsync("", embed: $"{user.Mention} przyznano role: `{name}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("wypisz role", RunMode = RunMode.Async)]
+        [Summary("wypisuje samozarządzane role")]
+        [Remarks(""), RequireCommandChannel]
+        public async Task ShowRolesAsync()
+        {
+            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+            if (config.SelfRoles.Count < 1)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono roli.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            string stringRole = "";
+            foreach (var selfRole in config.SelfRoles)
+            {
+                var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
+                stringRole += $" `{selfRole.Name}` ";
+            }
+
+            await ReplyAsync($"**Dostępne role:**\n{stringRole}\n\nUżyj s.przyznaj role [nazwa] aby dodać lub odebrać sobie role.");
+        }
+
         [Command("statystyki", RunMode = RunMode.Async)]
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]

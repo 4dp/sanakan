@@ -83,7 +83,7 @@ namespace Sanakan.Services.PocketWaifu
             return new EmbedBuilder
             {
                 Color = EMType.Error.Color(),
-                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{time.ToShortTimeString()}:{time.Second}`\n"
+                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{time.ToShortTimeString()}:{time.Second.ToString("00")}`\n"
                     + $"Wymagana minimalna liczba graczy: `5`\nMaksymalna jakość karty: `{max}`\n\nAby dołączyć kliknij na reakcje {emote}"
             }.Build();
         }
@@ -528,16 +528,25 @@ namespace Sanakan.Services.PocketWaifu
                 rounds.Add(round);
 
                 if (oneCard)
+                {
                     fight = totalCards.Count(x => x.Card.Health > 0) > 1;
+                }
                 else
                 {
                     var alive = totalCards.Where(x => x.Card.Health > 0);
-                    fight = alive.Any(x => x.Card.GameDeckId != alive.First().Card.GameDeckId);
+                    var one = alive.FirstOrDefault();
+                    if (one == null) fight = false;
+
+                    fight = alive.Any(x => x.Card.GameDeckId != one.Card.GameDeckId);
                 }
             }
 
-            var winnerDeck = totalCards.Where(x => x.Card.Health > 0).First().Card.GameDeckId;
-            var winner = players.First(x => x.Cards.Any(c => c.GameDeckId == winnerDeck));
+            var win = totalCards.Where(x => x.Card.Health > 0).FirstOrDefault();
+            if (win == null)
+            {
+                new JsonFileReader().Save(rounds);
+            }
+            var winner = players.First(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
             return new FightHistory(winner) { Rounds = rounds };
         }
 
@@ -573,6 +582,8 @@ namespace Sanakan.Services.PocketWaifu
             {
                 id = Fun.GetOneRandomFrom(CharId.Ids);
                 response = await _shClient.GetCharacterInfoAsync(id);
+
+                await Task.Delay(TimeSpan.FromSeconds(2));
 
                 if (check-- == 0) 
                     return null;
