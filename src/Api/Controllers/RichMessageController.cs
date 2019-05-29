@@ -122,7 +122,7 @@ namespace Sanakan.Api.Controllers
                 if (rmc.Type == Models.RichMessageType.UserNotify)
                 {
                     var user = _client.GetUser(rmc.ChannelId);
-                    if (user != null) continue;
+                    if (user == null) continue;
                     
                     var pwCh = await user.GetOrCreateDMChannelAsync();
                     var pwm = await pwCh.SendMessageAsync("", embed: message.ToEmbed());
@@ -148,7 +148,13 @@ namespace Sanakan.Api.Controllers
                 if (msg != null) msgList.Add(msg.Id);
             }
 
-            if (msgList.Count() > 1)
+            if (msgList.Count == 0)
+            {
+                await "Message not send!".ToResponse(400).ExecuteResultAsync(ControllerContext);
+                return;
+            }
+
+            if (msgList.Count > 1)
             {
                 await "Message sended!".ToResponseRich(msgList).ExecuteResultAsync(ControllerContext);
                 return;
