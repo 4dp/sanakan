@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -21,15 +22,15 @@ namespace Sanakan.Modules
     public class Profile : SanakanModuleBase<SocketCommandContext>
     {
         private Database.GuildConfigContext _dbGuildConfigContext;
-        private Database.UserContext _dbUserContext;
         private Services.Profile _profile;
         private SessionManager _session;
+        private IConfig _config;
 
-        public Profile(Database.UserContext userContext, Database.GuildConfigContext dbGuildConfigContext, Services.Profile prof, SessionManager session)
+        public Profile(IConfig config, Database.GuildConfigContext dbGuildConfigContext, Services.Profile prof, SessionManager session)
         {
             _profile = prof;
+            _config = config;
             _session = session;
-            _dbUserContext = userContext;
             _dbGuildConfigContext = dbGuildConfigContext;
         }
 
@@ -42,14 +43,17 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User;
             if (usr == null) return;
 
-            var botuser = await _dbUserContext.GetCachedFullUserAsync(usr.Id);
-            if (botuser == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: $"Nie odnaleziono profilu {usr.Mention}.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
+                var botuser = await db.GetCachedFullUserAsync(usr.Id);
+                if (botuser == null)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono profilu {usr.Mention}.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
-            await ReplyAsync("", embed: $"**Portfel** {usr.Mention}:\n\n {botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**".ToEmbedMessage(EMType.Info).Build());
+                await ReplyAsync("", embed: $"**Portfel** {usr.Mention}:\n\n {botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**".ToEmbedMessage(EMType.Info).Build());
+            }
         }
 
         [Command("subskrypcje", RunMode = RunMode.Async)]
@@ -58,18 +62,21 @@ namespace Sanakan.Modules
         [Remarks(""), RequireCommandChannel]
         public async Task ShowSubsAsync()
         {
-            var botuser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
-            var rsubs = botuser.TimeStatuses.Where(x => x.Type.IsSubType());
-
-            string subs = "brak";
-            if (rsubs.Count() > 0)
+            using (var db = new Database.UserContext(_config))
             {
-                subs = "";
-                foreach (var sub in rsubs)
-                    subs += $"{sub.ToView()}\n";
-            }
+                var botuser = await db.GetCachedFullUserAsync(Context.User.Id);
+                var rsubs = botuser.TimeStatuses.Where(x => x.Type.IsSubType());
 
-            await ReplyAsync("", embed: $"**Subskrypcje** {Context.User.Mention}:\n\n{subs.TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
+                string subs = "brak";
+                if (rsubs.Count() > 0)
+                {
+                    subs = "";
+                    foreach (var sub in rsubs)
+                        subs += $"{sub.ToView()}\n";
+                }
+
+                await ReplyAsync("", embed: $"**Subskrypcje** {Context.User.Mention}:\n\n{subs.TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
+            }
         }
 
         [Command("przyznaj role", RunMode = RunMode.Async)]
@@ -122,8 +129,11 @@ namespace Sanakan.Modules
         [Remarks(""), RequireCommandChannel]
         public async Task ShowStatsAsync()
         {
-            var botuser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
-            await ReplyAsync("", embed: $"**Statystyki** {Context.User.Mention}:\n\n{botuser.Stats.ToView().TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
+            using (var db = new Database.UserContext(_config))
+            {
+                var botuser = await db.GetCachedFullUserAsync(Context.User.Id);
+                await ReplyAsync("", embed: $"**Statystyki** {Context.User.Mention}:\n\n{botuser.Stats.ToView().TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
+            }
         }
 
         [Command("topka", RunMode = RunMode.Async)]
@@ -135,8 +145,11 @@ namespace Sanakan.Modules
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
 
-            var users = await _dbUserContext.GetCachedAllUsersAsync();
-            session.ListItems = _profile.BuildListView(_profile.GetTopUsers(users, type), type, Context.Guild);
+            using (var db = new Database.UserContext(_config))
+            {
+                var users = await db.GetCachedAllUsersAsync();
+                session.ListItems = _profile.BuildListView(_profile.GetTopUsers(users, type), type, Context.Guild);
+            }
 
             session.Event = ExecuteOn.ReactionAdded;
             session.Embed = new EmbedBuilder
@@ -146,7 +159,7 @@ namespace Sanakan.Modules
             };
 
             var msg = await ReplyAsync("", embed: session.BuildPage(0));
-            await msg.AddReactionsAsync( new [] { new Emoji("⬅"), new Emoji("➡") });
+            await msg.AddReactionsAsync(new[] { new Emoji("⬅"), new Emoji("➡") });
 
             session.Message = msg;
             await _session.TryAddSession(session);
@@ -161,17 +174,20 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
 
-            var allUsers = await _dbUserContext.GetCachedAllUsersAsync();
-            var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
-            if (botUser == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
+                var allUsers = await db.GetCachedAllUsersAsync();
+                var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
+                if (botUser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
-            using (var stream = await _profile.GetProfileImageAsync(usr, botUser, allUsers.OrderByDescending(x => x.ExpCnt).ToList().IndexOf(botUser) + 1))
-            {
-                await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+                using (var stream = await _profile.GetProfileImageAsync(usr, botUser, allUsers.OrderByDescending(x => x.ExpCnt).ToList().IndexOf(botUser) + 1))
+                {
+                    await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+                }
             }
         }
 
@@ -181,37 +197,40 @@ namespace Sanakan.Modules
         [Remarks("1 https://i.imgur.com/8UK8eby.png"), RequireCommandChannel]
         public async Task ChangeStyleAsync([Summary("typ stylu ( 0 - statystyki, 1 - obrazek, 2 - brzydkie)")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2(325 x 272)")]string imgUrl = null)
         {
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
-            if (botuser.ScCnt < 3000)
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            switch (type)
-            {
-                case ProfileType.Img:
-                case ProfileType.StatsWithImg:
-                    if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/SR{botuser.Id}.png", 325, 272))
-                    {
-                        botuser.StatsReplacementProfileUri = $"./GOut/Saved/SR{botuser.Id}.png";
-                        break;
-                    }
-                    await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.ScCnt < 3000)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
                     return;
+                }
 
-                default:
-                    break;
+                switch (type)
+                {
+                    case ProfileType.Img:
+                    case ProfileType.StatsWithImg:
+                        if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/SR{botuser.Id}.png", 325, 272))
+                        {
+                            botuser.StatsReplacementProfileUri = $"./GOut/Saved/SR{botuser.Id}.png";
+                            break;
+                        }
+                        await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+
+                    default:
+                        break;
+                }
+
+                botuser.ScCnt -= 3000;
+                botuser.ProfileType = type;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"Zmieniono styl profilu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
             }
-
-            botuser.ScCnt -= 3000;
-            botuser.ProfileType = type;
-
-            await _dbUserContext.SaveChangesAsync();
-
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
-
-            await ReplyAsync("", embed: $"Zmieniono styl profilu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("tło")]
@@ -220,30 +239,33 @@ namespace Sanakan.Modules
         [Remarks("https://i.imgur.com/LjVxiv8.png"), RequireCommandChannel]
         public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 150)")]string imgUrl)
         {
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
-            if (botuser.ScCnt < 5000)
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
-                return;
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.ScCnt < 5000)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/BG{botuser.Id}.png", 450, 150, true))
+                {
+                    botuser.BackgroundProfileUri = $"./GOut/Saved/BG{botuser.Id}.png";
+                }
+                else
+                {
+                    await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.ScCnt -= 5000;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"Zmieniono tło profilu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
             }
-
-            if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/BG{botuser.Id}.png", 450, 150, true))
-            {
-                botuser.BackgroundProfileUri = $"./GOut/Saved/BG{botuser.Id}.png";
-            }
-            else
-            {
-                await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            botuser.ScCnt -= 5000;
-
-            await _dbUserContext.SaveChangesAsync();
-
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
-
-            await ReplyAsync("", embed: $"Zmieniono tło profilu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("globalki")]
@@ -255,44 +277,47 @@ namespace Sanakan.Modules
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
 
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
-            if (botuser.TcCnt < 4000)
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            var gRole = Context.Guild.GetRole(gConfig.GlobalEmotesRole);
-            if (gRole == null)
-            {
-                await ReplyAsync("", embed: "Serwer nie ma ustawionej roli globalnych emotek.".ToEmbedMessage(EMType.Bot).Build());
-                return;
-            }
-
-            var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
-            if (global == null)
-            {
-                global = new Database.Models.TimeStatus
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                if (botuser.TcCnt < 4000)
                 {
-                    Type = Database.Models.StatusType.Globals,
-                    Guild = Context.Guild.Id,
-                    EndsAt = DateTime.Now,
-                };
-                botuser.TimeStatuses.Add(global);
+                    await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                var gRole = Context.Guild.GetRole(gConfig.GlobalEmotesRole);
+                if (gRole == null)
+                {
+                    await ReplyAsync("", embed: "Serwer nie ma ustawionej roli globalnych emotek.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
+                if (global == null)
+                {
+                    global = new Database.Models.TimeStatus
+                    {
+                        Type = StatusType.Globals,
+                        Guild = Context.Guild.Id,
+                        EndsAt = DateTime.Now,
+                    };
+                    botuser.TimeStatuses.Add(global);
+                }
+
+                if (!user.Roles.Contains(gRole))
+                    await user.AddRoleAsync(gRole);
+
+                global.EndsAt = global.EndsAt.AddMonths(1);
+                botuser.TcCnt -= 4000;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} wykupił miesiąc globalnych emotek!".ToEmbedMessage(EMType.Success).Build());
             }
-            
-            if (!user.Roles.Contains(gRole))
-                await user.AddRoleAsync(gRole);
-
-            global.EndsAt = global.EndsAt.AddMonths(1);
-            botuser.TcCnt -= 4000;
-
-            await _dbUserContext.SaveChangesAsync();
-
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
-
-            await ReplyAsync("", embed: $"{user.Mention} wykupił miesiąc globalnych emotek!".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("kolor")]
@@ -313,54 +338,57 @@ namespace Sanakan.Modules
                 }
             }
 
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
-            var points = currency == SCurrency.Tc ? botuser.TcCnt : botuser.ScCnt;
-            if (points < color.Price(currency))
+            using (var db = new Database.UserContext(_config))
             {
-                await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby {currency.ToString().ToUpper()}!".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.Guild == Context.Guild.Id);
-            if (colort == null)
-            {
-                colort = new Database.Models.TimeStatus
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                var points = currency == SCurrency.Tc ? botuser.TcCnt : botuser.ScCnt;
+                if (points < color.Price(currency))
                 {
-                    Type = Database.Models.StatusType.Color,
-                    Guild = Context.Guild.Id,
-                    EndsAt = DateTime.Now,
-                };
-                botuser.TimeStatuses.Add(colort);
-            }
-
-            await _profile.RomoveUserColorAsync(user);
-
-            if (color == FColor.CleanColor)
-            {
-                colort.EndsAt = DateTime.Now;
-            }
-            else
-            {
-                var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-                if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
-                {
-                    await ReplyAsync("", embed: $"Coś poszło nie tak!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby {currency.ToString().ToUpper()}!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                colort.EndsAt = colort.EndsAt.AddMonths(1);
+                var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.Guild == Context.Guild.Id);
+                if (colort == null)
+                {
+                    colort = new Database.Models.TimeStatus
+                    {
+                        Type = Database.Models.StatusType.Color,
+                        Guild = Context.Guild.Id,
+                        EndsAt = DateTime.Now,
+                    };
+                    botuser.TimeStatuses.Add(colort);
+                }
 
-                if (currency == SCurrency.Tc)
-                    botuser.TcCnt -= color.Price(currency);
+                await _profile.RomoveUserColorAsync(user);
+
+                if (color == FColor.CleanColor)
+                {
+                    colort.EndsAt = DateTime.Now;
+                }
                 else
-                    botuser.ScCnt -= color.Price(currency);
+                {
+                    var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                    if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
+                    {
+                        await ReplyAsync("", embed: $"Coś poszło nie tak!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    colort.EndsAt = colort.EndsAt.AddMonths(1);
+
+                    if (currency == SCurrency.Tc)
+                        botuser.TcCnt -= color.Price(currency);
+                    else
+                        botuser.ScCnt -= color.Price(currency);
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} wykupił kolor!".ToEmbedMessage(EMType.Success).Build());
             }
-
-            await _dbUserContext.SaveChangesAsync();
-
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
-
-            await ReplyAsync("", embed: $"{user.Mention} wykupił kolor!".ToEmbedMessage(EMType.Success).Build());
         }
     }
 }
