@@ -211,6 +211,8 @@ namespace Sanakan.Modules
             riddles = riddles.Shuffle().ToList();
             var riddle = riddles.FirstOrDefault();
 
+            riddle.Answers = riddle.Answers.OrderBy(x => x.Number).ToList();
+
             var msg = await ReplyAsync(riddle.Get());
             await msg.AddReactionsAsync(riddle.GetEmotes());
 

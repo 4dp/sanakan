@@ -96,7 +96,9 @@ namespace Sanakan.Modules
         public async Task ShowItemsAsync([Summary("nr przedmiotu")]int numberOfItem = 0)
         {
             var bUser = await _dbUserContext.GetCachedFullUserAsync(Context.User.Id);
-            if (bUser.GameDeck.Items.Count < 1)
+            var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
+
+            if (itemList.Count < 1)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych przemiotów.".ToEmbedMessage(EMType.Error).Build());
                 return;
@@ -114,7 +116,7 @@ namespace Sanakan.Modules
                 return;
             }
 
-            var item = bUser.GameDeck.Items.ToArray()[numberOfItem - 1];
+            var item = itemList[numberOfItem - 1];
             var embed = new EmbedBuilder
             {
                 Color = EMType.Info.Color(),
@@ -257,20 +259,21 @@ namespace Sanakan.Modules
         public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów")]int itemCnt = 1)
         {
             var bUser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
+            var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
 
-            if (bUser.GameDeck.Items.Count < 1)
+            if (itemList.Count < 1)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych pakietów.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
-            if (itemNumber <= 0 || itemNumber > bUser.GameDeck.Items.Count)
+            if (itemNumber <= 0 || itemNumber > itemList.Count)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aż tylu przedmiotów.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
-            var item = bUser.GameDeck.Items.ToArray()[itemNumber - 1];
+            var item = itemList[itemNumber - 1];
             if (item.Count < itemCnt)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz tylu sztuk tego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
