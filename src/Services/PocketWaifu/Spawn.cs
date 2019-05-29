@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -10,6 +11,7 @@ using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.Executor;
+using Shinden.Logger;
 using Shinden.Models;
 
 namespace Sanakan.Services.PocketWaifu
@@ -18,6 +20,7 @@ namespace Sanakan.Services.PocketWaifu
     {
         private DiscordSocketClient _client;
         private IExecutor _executor;
+        private ILogger _logger;
         private IConfig _config;
         private Waifu _waifu;
 
@@ -26,10 +29,11 @@ namespace Sanakan.Services.PocketWaifu
         
         private Emoji ClaimEmote = new Emoji("🖐");
 
-        public Spawn(DiscordSocketClient client, IExecutor executor, Waifu waifu, IConfig config)
+        public Spawn(DiscordSocketClient client, IExecutor executor, Waifu waifu, IConfig config, ILogger logger)
         {
             _executor = executor;
             _client = client;
+            _logger = logger;
             _config = config;
             _waifu = waifu;
 
@@ -73,38 +77,51 @@ namespace Sanakan.Services.PocketWaifu
         {
             _ = Task.Run(async () =>
             {
-                await Task.Delay(TimeSpan.FromMinutes(5));
-
-                var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
-                var users = usersReacted.ToList();
-
-                IUser winner = null;
-                using (var db = new Database.UserContext(_config))
+                try
                 {
-                    while (winner == null)
+                    await Task.Delay(TimeSpan.FromMinutes(5));
+
+                    var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
+                    var users = usersReacted.ToList();
+
+                    IUser winner = null;
+                    using (var db = new Database.UserContext(_config))
                     {
-                        if (users.Count < 1)
+                        var watch = Stopwatch.StartNew();
+                        while (winner == null)
                         {
-                            embed.Description = $"Na polowanie nie stawił się żaden łowca!";
-                            await msg.ModifyAsync(x => x.Embed = embed.Build());
-                            return;
-                        }
+                            if (watch.ElapsedMilliseconds > 60000)
+                                throw new Exception("Timeout");
 
-                        var selected = Fun.GetOneRandomFrom(users);
-                        var dUser = await db.GetCachedFullUserAsync(selected.Id);
+                            if (users.Count < 1)
+                            {
+                                embed.Description = $"Na polowanie nie stawił się żaden łowca!";
+                                await msg.ModifyAsync(x => x.Embed = embed.Build());
+                                return;
+                            }
 
-                        if (dUser != null)
-                        {
-                            if (!dUser.IsBlacklisted)
-                                winner = selected;
+                            var selected = Fun.GetOneRandomFrom(users);
+                            var dUser = await db.GetCachedFullUserAsync(selected.Id);
+
+                            if (dUser != null)
+                            {
+                                if (!dUser.IsBlacklisted)
+                                    winner = selected;
+                            }
+                            else users.Remove(selected);
                         }
-                        else users.Remove(selected);
                     }
-                }
 
-                var exe = GetSafariExe(embed, msg, newCard, pokeImage, character, trashChannel, winner);
-                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-                await msg.RemoveAllReactionsAsync();
+                    var exe = GetSafariExe(embed, msg, newCard, pokeImage, character, trashChannel, winner);
+                    await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                    await msg.RemoveAllReactionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"In Safari: {ex}");
+                    await msg.ModifyAsync(x => x.Embed = "Karta uciekła!".ToEmbedMessage(EMType.Error).Build());
+                    await msg.RemoveAllReactionsAsync();
+                }
             });
         }
 

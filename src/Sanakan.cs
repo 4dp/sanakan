@@ -100,10 +100,10 @@ namespace Sanakan
             _waifu = new Waifu(_img, _shindenClient, _config);
             _greeting = new Greeting(_client, _logger, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
-            _spawn = new Spawn(_client, _executor, _waifu, _config);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _exp = new ExperienceManager(_client, _executor, _config, _img);
+            _spawn = new Spawn(_client, _executor, _waifu, _config, _logger);
             _handler = new CommandHandler(_client, _config, _logger, _executor);
             _profile = new Profile(_client, _shindenClient, _img, _logger, _config);
         }

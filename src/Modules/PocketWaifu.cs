@@ -13,6 +13,7 @@ using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
+using Shinden.Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,13 +31,15 @@ namespace Sanakan.Modules
         private Sden.ShindenClient _shclient;
         private SessionManager _session;
         private IExecutor _executor;
+        private ILogger _logger;
         private IConfig _config;
         private Waifu _waifu;
 
-        public PocketWaifu(Waifu waifu, Sden.ShindenClient client, Database.UserContext userContext,
+        public PocketWaifu(Waifu waifu, Sden.ShindenClient client, Database.UserContext userContext, ILogger logger,
             Database.GuildConfigContext dbGuildConfigContext, SessionManager session, IConfig config, IExecutor executor)
         {
             _waifu = waifu;
+            _logger = logger;
             _config = config;
             _shclient = client;
             _session = session;
@@ -865,46 +868,54 @@ namespace Sanakan.Modules
 
             await Task.Delay(TimeSpan.FromMinutes(3));
 
-            await msg.RemoveReactionAsync(addEmote, Context.Client.CurrentUser);
-            var users = await msg.GetReactionUsersAsync(addEmote, 300).FlattenAsync();
-
-            var players = new List<PlayerInfo>();
-            foreach (var u in users)
+            try
             {
-                var user = Context.Guild.GetUser(u.Id);
-                if (user == null) continue;
+                await msg.RemoveReactionAsync(addEmote, Context.Client.CurrentUser);
+                var users = await msg.GetReactionUsersAsync(addEmote, 300).FlattenAsync();
 
-                var botUser = await _dbUserContext.GetCachedFullUserAsync(user.Id);
-                if (botUser == null) continue;
-
-                var activeCards = botUser.GameDeck.Cards.Where(x => x.Active && x.Rarity >= max).ToList();
-                if (activeCards.Count < 1) continue;
-                
-                players.Add(new PlayerInfo
+                var players = new List<PlayerInfo>();
+                foreach (var u in users)
                 {
-                    Cards = new List<Card> { Services.Fun.GetOneRandomFrom(activeCards) },
-                    Dbuser = botUser,
-                    User = user
-                });
-            }
+                    var user = Context.Guild.GetUser(u.Id);
+                    if (user == null) continue;
 
-            if (players.Count < 5)
+                    var botUser = await _dbUserContext.GetCachedFullUserAsync(user.Id);
+                    if (botUser == null) continue;
+
+                    var activeCards = botUser.GameDeck.Cards.Where(x => x.Active && x.Rarity >= max).ToList();
+                    if (activeCards.Count < 1) continue;
+
+                    players.Add(new PlayerInfo
+                    {
+                        Cards = new List<Card> { Services.Fun.GetOneRandomFrom(activeCards) },
+                        Dbuser = botUser,
+                        User = user
+                    });
+                }
+
+                if (players.Count < 5)
+                {
+                    await msg.ModifyAsync(x => x.Embed = $"Na **GMwK** nie zgłosiła się wystarczająca liczba graczy!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                string playerList = "Lista graczy:\n";
+                foreach (var p in players)
+                    playerList += $"{p.User.Mention}: {p.Cards.First().GetString(true, false, true)}\n";
+
+                var history = await _waifu.MakeFightAsync(players, true);
+                var deathLog = _waifu.GetDeathLog(history, players);
+
+                await _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
+
+                await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList.TrimToLength(900)}\n{deathLog.TrimToLength(1000)} Zwycięża {history.Winner.User.Mention}!".ToEmbedMessage(EMType.Error).Build());
+                await msg.RemoveAllReactionsAsync();
+            }
+            catch (Exception ex)
             {
+                _logger.Log($"In GMwK: {ex}");
                 await msg.ModifyAsync(x => x.Embed = $"Na **GMwK** nie zgłosiła się wystarczająca liczba graczy!".ToEmbedMessage(EMType.Error).Build());
-                return;
             }
-
-            string playerList = "Lista graczy:\n";
-            foreach (var p in players)
-                playerList += $"{p.User.Mention}: {p.Cards.First().GetString(true, false, true)}\n";
-
-            var history = await _waifu.MakeFightAsync(players, true);
-            var deathLog = _waifu.GetDeathLog(history, players);
-
-            await _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
-            
-            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList.TrimToLength(900)}\n{deathLog.TrimToLength(1000)} Zwycięża {history.Winner.User.Mention}!".ToEmbedMessage(EMType.Error).Build());
-            await msg.RemoveAllReactionsAsync();
         }
 
         [Command("pojedynek")]
