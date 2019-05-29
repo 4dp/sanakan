@@ -903,8 +903,7 @@ namespace Sanakan.Modules
 
             await _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
             
-            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList}\n{deathLog.TrimToLength(1400)} Zwycięża {history.Winner.User.Mention}!"
-                .TrimToLength(2000).ToEmbedMessage(EMType.Error).Build());
+            await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList.TrimToLength(900)}\n{deathLog.TrimToLength(1000)} Zwycięża {history.Winner.User.Mention}!".ToEmbedMessage(EMType.Error).Build());
             await msg.RemoveAllReactionsAsync();
         }
 

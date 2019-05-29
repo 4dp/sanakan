@@ -73,40 +73,10 @@ namespace Sanakan.Services.PocketWaifu
         {
             _ = Task.Run(async () =>
             {
-                int counter = 300;
-                while (counter > 0)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(30));
+                await Task.Delay(TimeSpan.FromMinutes(5));
 
-                    try
-                    {
-                        counter -= 30;
-                        if (counter < 0)
-                            counter = 0;
-
-                        embed.Description = $"**Do końca polowania zostało:** {counter / 60}m {counter % 60}s";
-                        await msg.ModifyAsync(x => x.Embed = embed.Build());
-                    }
-                    catch (Exception)
-                    {
-                        counter -= 10;
-                    }
-                }
-
-                List<IUser> users;
-                try
-                {
-                    await msg.RemoveReactionAsync(ClaimEmote, _client.CurrentUser);
-                    var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
-                    await msg.RemoveAllReactionsAsync();
-                    users = usersReacted.ToList();
-                }
-                catch (Exception)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(10));
-                    var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
-                    users = usersReacted.ToList();
-                }
+                var usersReacted = await msg.GetReactionUsersAsync(ClaimEmote, 300).FlattenAsync();
+                var users = usersReacted.ToList();
 
                 IUser winner = null;
                 using (var db = new Database.UserContext(_config))
@@ -134,6 +104,7 @@ namespace Sanakan.Services.PocketWaifu
 
                 var exe = GetSafariExe(embed, msg, newCard, pokeImage, character, trashChannel, winner);
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await msg.RemoveAllReactionsAsync();
             });
         }
 
@@ -181,17 +152,17 @@ namespace Sanakan.Services.PocketWaifu
             newCard.InCage = true;
 
             var pokeImage = _waifu.GetRandomSarafiImage();
+            var time = DateTime.Now.AddMinutes(5);
             var embed = new EmbedBuilder
             {
                 Color = EMType.Bot.Color(),
-                Description = "**Do końca polowania zostało:** 5m 0s",
+                Description = $"**Polowanie zakończy się o**: `{time.ToShortTimeString()}:{time.Second}`",
                 ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, trashChannel)
             };
 
             var msg = await spawnChannel.SendMessageAsync("", embed: embed.Build());
-            await msg.AddReactionAsync(ClaimEmote);
-
             RunSafari(embed, msg, newCard, pokeImage, character, trashChannel);
+            await msg.AddReactionAsync(ClaimEmote);
         }
 
         private void HandleUserAsync(SocketUserMessage message)
