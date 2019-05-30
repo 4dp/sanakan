@@ -25,15 +25,13 @@ namespace Sanakan.Api.Controllers
         private readonly IConfig _config;
         private readonly IExecutor _executor;
         private readonly ShindenClient _shClient;
-        private readonly Database.UserContext _dbUserContext;
 
-        public WaifuController(Database.UserContext dbUserContext, ShindenClient shClient, Waifu waifu, IExecutor executor, IConfig config)
+        public WaifuController(ShindenClient shClient, Waifu waifu, IExecutor executor, IConfig config)
         {
             _waifu = waifu;
             _config = config;
             _executor = executor;
             _shClient = shClient;
-            _dbUserContext = dbUserContext;
         }
 
         /// <summary>
@@ -44,13 +42,16 @@ namespace Sanakan.Api.Controllers
         [HttpGet("users/owning/character/{id}"), Authorize]
         public async Task<IActionResult> GetUsersOwningCharacterCardAsync(ulong id)
         {
-            var shindenIds = await _dbUserContext.Cards.Include(x => x.GameDeck).ThenInclude(x => x.User)
-                .Where(x => x.Character == id && x.GameDeck.User.Shinden != 0).Select(x => x.GameDeck.User.Shinden).Distinct().ToListAsync();
+            using (var db = new Database.UserContext(_config))
+            {
+                var shindenIds = await db.Cards.Include(x => x.GameDeck).ThenInclude(x => x.User)
+                    .Where(x => x.Character == id && x.GameDeck.User.Shinden != 0).Select(x => x.GameDeck.User.Shinden).Distinct().ToListAsync();
 
-            if (shindenIds.Count > 0)
-                return Ok(shindenIds);
+                if (shindenIds.Count > 0)
+                    return Ok(shindenIds);
 
-            return "User not found".ToResponse(404);
+                return "User not found".ToResponse(404);
+            }
         }
 
         /// <summary>
@@ -62,14 +63,17 @@ namespace Sanakan.Api.Controllers
         [HttpGet("user/{id}/cards"), Authorize]
         public async Task<IEnumerable<Database.Models.Card>> GetUserCardsAsync(ulong id)
         {
-            var user = await _dbUserContext.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).FirstOrDefaultAsync(x => x.Shinden == id);
-            if (user == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return new List<Database.Models.Card>();
-            }
+                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).FirstOrDefaultAsync(x => x.Shinden == id);
+                if (user == null)
+                {
+                    await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return new List<Database.Models.Card>();
+                }
 
-            return user.GameDeck.Cards;
+                return user.GameDeck.Cards;
+            }
         }
 
         /// <summary>
@@ -116,22 +120,25 @@ namespace Sanakan.Api.Controllers
         [HttpPost("users/make/character/{id}"), Authorize]
         public async Task GenerateCharacterCardAsync(ulong id)
         {
-            var cards = await _dbUserContext.Cards.Where(x => x.Character == id).ToListAsync();
-            if (cards.Count < 1)
+            using (var db = new Database.UserContext(_config))
             {
-                await "Cards not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return;
-            }
-
-            _ = Task.Run(async () =>
-            {
-                foreach (var card in cards)
+                var cards = await db.Cards.Where(x => x.Character == id).ToListAsync();
+                if (cards.Count < 1)
                 {
-                    _ = await _waifu.GenerateAndSaveCardAsync(card);
+                    await "Cards not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
                 }
-            });
 
-            await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                _ = Task.Run(async () =>
+                {
+                    foreach (var card in cards)
+                    {
+                        _ = await _waifu.GenerateAndSaveCardAsync(card);
+                    }
+                });
+
+                await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+            }
         }
 
         /// <summary>
@@ -145,15 +152,18 @@ namespace Sanakan.Api.Controllers
         {
             if (!System.IO.File.Exists($"./GOut/Cards/Small/{id}.png") || !System.IO.File.Exists($"./GOut/Cards/{id}.png"))
             {
-                var card = await _dbUserContext.Cards.FirstOrDefaultAsync(x => x.Id == id);
-                if (card == null)
+                using (var db = new Database.UserContext(_config))
                 {
-                    await "Card not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                    return;
-                }
+                    var card = await db.Cards.FirstOrDefaultAsync(x => x.Id == id);
+                    if (card == null)
+                    {
+                        await "Card not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                        return;
+                    }
 
-                var cardImage = await _waifu.GenerateAndSaveCardAsync(card);
-                await ControllerContext.HttpContext.Response.SendFileAsync(cardImage);
+                    var cardImage = await _waifu.GenerateAndSaveCardAsync(card);
+                    await ControllerContext.HttpContext.Response.SendFileAsync(cardImage);
+                }
             }
             else
             {

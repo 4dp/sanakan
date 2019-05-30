@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Sanakan.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Z.EntityFramework.Plus;
+using Sanakan.Config;
 
 namespace Sanakan.Api.Controllers
 {
@@ -14,11 +15,11 @@ namespace Sanakan.Api.Controllers
     [Route("api/[controller]")]
     public class QuizController : ControllerBase
     {
-        private readonly Database.UserContext _database;
+        private IConfig _config;
 
-        public QuizController(Database.UserContext db)
+        public QuizController(IConfig config)
         {
-            _database = db;
+            _config = config;
         }
 
         /// <summary>
@@ -27,7 +28,10 @@ namespace Sanakan.Api.Controllers
         [HttpGet("questions")]
         public async Task<List<Database.Models.Question>> GetQuestionsAsync()
         {
-            return await _database.GetCachedAllQuestionsAsync();
+            using (var db = new Database.UserContext(_config))
+            {
+                return await db.GetCachedAllQuestionsAsync();
+            }
         }
 
         /// <summary>
@@ -38,7 +42,10 @@ namespace Sanakan.Api.Controllers
         [HttpGet("question/{id}")]
         public async Task<Database.Models.Question> GetQuestionAsync(ulong id)
         {
-            return await _database.GetCachedQuestionAsync(id);
+            using (var db = new Database.UserContext(_config))
+            {
+                return await db.GetCachedQuestionAsync(id);
+            }
         }
 
         /// <summary>
@@ -49,11 +56,13 @@ namespace Sanakan.Api.Controllers
         [HttpPost("question")]
         public async Task AddQuestionAsync([FromBody]Database.Models.Question question)
         {
-            _database.Questions.Add(question);
-            await _database.SaveChangesAsync();
+            using (var db = new Database.UserContext(_config))
+            {
+                db.Questions.Add(question);
+                await db.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"quiz" });
-
+                QueryCacheManager.ExpireTag(new string[] { $"quiz" });
+            }
             await "Question added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 
@@ -66,16 +75,19 @@ namespace Sanakan.Api.Controllers
         [HttpDelete("question/{id}")]
         public async Task RemoveQuestionAsync(ulong id)
         {
-            var question = await _database.Questions.Include(x => x.Answer).FirstOrDefaultAsync(x => x.Id == id);
-            if (question != null)
+            using (var db = new Database.UserContext(_config))
             {
-                _database.Questions.Remove(question);
-                await _database.SaveChangesAsync();
+                var question = await db.Questions.Include(x => x.Answer).FirstOrDefaultAsync(x => x.Id == id);
+                if (question != null)
+                {
+                    db.Questions.Remove(question);
+                    await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"quiz" });
+                    QueryCacheManager.ExpireTag(new string[] { $"quiz" });
 
-                await "Question removed!".ToResponse(200).ExecuteResultAsync(ControllerContext);
-                return;
+                    await "Question removed!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                    return;
+                }
             }
             await "Question not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
         }

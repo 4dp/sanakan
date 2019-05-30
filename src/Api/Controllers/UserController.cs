@@ -30,16 +30,14 @@ namespace Sanakan.Api.Controllers
         private readonly IExecutor _executor;
         private readonly ShindenClient _shClient;
         private readonly DiscordSocketClient _client;
-        private readonly Database.UserContext _dbUserContext;
 
-        public UserController(Database.UserContext dbUserContext, DiscordSocketClient client, ShindenClient shClient, ILogger logger, IExecutor executor, IConfig config)
+        public UserController(DiscordSocketClient client, ShindenClient shClient, ILogger logger, IExecutor executor, IConfig config)
         {
             _config = config;
             _client = client;
             _logger = logger;
             _executor = executor;
             _shClient = shClient;
-            _dbUserContext = dbUserContext;
         }
 
         /// <summary>
@@ -50,7 +48,10 @@ namespace Sanakan.Api.Controllers
         [HttpGet("discord/{id}")]
         public async Task<Database.Models.User> GetUserByDiscordIdAsync(ulong id)
         {
-            return await _dbUserContext.GetCachedFullUserAsync(id);
+            using (var db = new Database.UserContext(_config))
+            {
+                return await db.GetCachedFullUserAsync(id);
+            }
         }
 
         /// <summary>
@@ -61,26 +62,29 @@ namespace Sanakan.Api.Controllers
         [HttpGet("shinden/{id}")]
         public async Task<UserWithToken> GetUserByShindenIdAsync(ulong id)
         {
-            var user = _dbUserContext.Users.FirstOrDefault(x => x.Shinden == id);
-            if (user == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return null;
-            }
+                var user = db.Users.FirstOrDefault(x => x.Shinden == id);
+                if (user == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
 
-            TokenData tokenData = null;
-            var currUser = ControllerContext.HttpContext.User;
-            if (currUser.HasClaim(x => x.Type == ClaimTypes.Webpage))
-            {
-                tokenData = BuildUserToken(user);
-            }
+                TokenData tokenData = null;
+                var currUser = ControllerContext.HttpContext.User;
+                if (currUser.HasClaim(x => x.Type == ClaimTypes.Webpage))
+                {
+                    tokenData = BuildUserToken(user);
+                }
 
-            return new UserWithToken()
-            {
-                Token = tokenData?.Token,
-                Expire = tokenData?.Expire,
-                User = await _dbUserContext.GetCachedFullUserAsync(user.Id),
-            };
+                return new UserWithToken()
+                {
+                    Token = tokenData?.Token,
+                    Expire = tokenData?.Expire,
+                    User = await db.GetCachedFullUserAsync(user.Id),
+                };
+            }
         }
 
         /// <summary>
@@ -112,45 +116,48 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var botUser = _dbUserContext.Users.FirstOrDefault(x => x.Id == id.DiscordUserId);
-            if (botUser != null)
+            using (var db = new Database.UserContext(_config))
             {
-                if (botUser.Shinden != 0)
+                var botUser = db.Users.FirstOrDefault(x => x.Id == id.DiscordUserId);
+                if (botUser != null)
                 {
-                    await "User already connected!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    if (botUser.Shinden != 0)
+                    {
+                        await "User already connected!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                        return;
+                    }
+                }
+
+                var response = await _shClient.Search.UserAsync(id.Username);
+                if (!response.IsSuccessStatusCode())
+                {
+                    await "Can't connect to shinden!".ToResponse(403).ExecuteResultAsync(ControllerContext);
                     return;
                 }
-            }
 
-            var response = await _shClient.Search.UserAsync(id.Username);
-            if (!response.IsSuccessStatusCode())
-            {
-                await "Can't connect to shinden!".ToResponse(403).ExecuteResultAsync(ControllerContext);
-                return;
-            }
-
-            var sUser = (await _shClient.User.GetAsync(response.Body.First())).Body;
-            if (sUser.ForumId.Value != id.ForumUserId)
-            {
-                await "Something went wrong!".ToResponse(500).ExecuteResultAsync(ControllerContext);
-                return;
-            }
-
-            var exe = new Executable($"api-register u{id.DiscordUserId}", new Task(() =>
-            {
-                using (var db = new Database.UserContext(_config))
+                var sUser = (await _shClient.User.GetAsync(response.Body.First())).Body;
+                if (sUser.ForumId.Value != id.ForumUserId)
                 {
-                    botUser = db.GetUserOrCreateAsync(id.DiscordUserId).Result;
-                    botUser.Shinden = sUser.Id;
-
-                    db.SaveChanges();
-
-                    QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    await "Something went wrong!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                    return;
                 }
-            }));
 
-            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-            await "User connected!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                var exe = new Executable($"api-register u{id.DiscordUserId}", new Task(() =>
+                {
+                    using (var dbs = new Database.UserContext(_config))
+                    {
+                        botUser = dbs.GetUserOrCreateAsync(id.DiscordUserId).Result;
+                        botUser.Shinden = sUser.Id;
+
+                        dbs.SaveChanges();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    }
+                }));
+
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await "User connected!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+            }
         }
 
         /// <summary>
@@ -162,28 +169,31 @@ namespace Sanakan.Api.Controllers
         [HttpPut("discord/{id}/tc")]
         public async Task ModifyPointsTCDiscordAsync(ulong id, [FromBody, Required]long value)
         {
-            var user = _dbUserContext.Users.FirstOrDefault(x => x.Id == id);
-            if (user == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return;
-            }
-
-            var exe = new Executable($"api-tc u{id}", new Task(() =>
-            {
-                using (var db = new Database.UserContext(_config))
+                var user = db.Users.FirstOrDefault(x => x.Id == id);
+                if (user == null)
                 {
-                    user = db.GetUserOrCreateAsync(id).Result;
-                    user.TcCnt += value;
-
-                    db.SaveChanges();
-
-                    QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
                 }
-            }));
 
-            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-            await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                var exe = new Executable($"api-tc u{id}", new Task(() =>
+                {
+                    using (var dbs = new Database.UserContext(_config))
+                    {
+                        user = dbs.GetUserOrCreateAsync(id).Result;
+                        user.TcCnt += value;
+
+                        dbs.SaveChanges();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    }
+                }));
+
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+            }
         }
 
         /// <summary>
@@ -195,28 +205,31 @@ namespace Sanakan.Api.Controllers
         [HttpPut("shinden/{id}/tc")]
         public async Task ModifyPointsTCAsync(ulong id, [FromBody, Required]long value)
         {
-            var user = _dbUserContext.Users.FirstOrDefault(x => x.Shinden == id);
-            if (user == null)
+            using (var db = new Database.UserContext(_config))
             {
-                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return;
-            }
-
-            var exe = new Executable($"api-tc su{id}", new Task(() =>
-            {
-                using (var db = new Database.UserContext(_config))
+                var user = db.Users.FirstOrDefault(x => x.Shinden == id);
+                if (user == null)
                 {
-                    user = db.Users.FirstOrDefault(x => x.Shinden == id);
-                    user.TcCnt += value;
-
-                    db.SaveChanges();
-
-                    QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
                 }
-            }));
 
-            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-            await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                var exe = new Executable($"api-tc su{id}", new Task(() =>
+                {
+                    using (var dbs = new Database.UserContext(_config))
+                    {
+                        user = dbs.Users.FirstOrDefault(x => x.Shinden == id);
+                        user.TcCnt += value;
+
+                        dbs.SaveChanges();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    }
+                }));
+
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+            }
         }
 
         private TokenData BuildUserToken(Database.Models.User user)

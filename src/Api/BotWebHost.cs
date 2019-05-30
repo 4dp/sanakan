@@ -49,11 +49,6 @@ namespace Sanakan.Api
             {
                 var tmpCnf = config.Get();
                 services.AddSingleton(config);
-
-                services.AddDbContext<Database.UserContext>();
-                services.AddDbContext<Database.ManagmentContext>();
-                services.AddDbContext<Database.GuildConfigContext>();
-
                 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opt =>
                 {
                     opt.TokenValidationParameters = new TokenValidationParameters
