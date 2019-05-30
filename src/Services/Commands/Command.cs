@@ -23,6 +23,11 @@ namespace Sanakan.Services.Commands
         public ICommandContext Context { get; private set; }
 
         public async Task<bool> ExecuteAsync(IServiceProvider provider)
-            => (await Match.ExecuteAsync(Context, Result, provider).ConfigureAwait(false)).IsSuccess;
+        {
+            var result = await Match.ExecuteAsync(Context, Result, provider).ConfigureAwait(false);
+            if (result.IsSuccess) return true;
+
+            throw new Exception(result.ErrorReason);
+        }
     }
 }

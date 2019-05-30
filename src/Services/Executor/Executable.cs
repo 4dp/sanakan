@@ -20,16 +20,23 @@ namespace Sanakan.Services.Executor
 
         public async Task<bool> ExecuteAsync(IServiceProvider provider)
         {
-            _task.Start();
-
-            await Task.CompletedTask;
-
-            if (_task is Task<bool> bTask)
+            try
             {
-                return bTask.Result;
-            }
+                _task.Start();
 
-            return true;
+                await Task.CompletedTask;
+
+                if (_task is Task<bool> bTask)
+                {
+                    return bTask.Result;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("in executable:", ex);
+            }
         }
     }
 }

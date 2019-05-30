@@ -9,6 +9,7 @@ using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
 using Sanakan.Services.PocketWaifu;
+using Sanakan.Services.Session;
 using Shinden;
 using Shinden.Models;
 using System;
@@ -23,13 +24,15 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
+        private SessionManager _session;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(SessionManager session, Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
         {
             _shClient = shClient;
+            _session = session;
             _helper = helper;
             _waifu = waifu;
             _img = img;
@@ -126,6 +129,34 @@ namespace Sanakan.Modules
             if (save) Config.Save();
 
             await ReplyAsync("", embed: $"Safari: {config.SafariEnabled} `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("throw")]
+        [Summary("rzuca wyjątek")]
+        [Remarks("true")]
+        public async Task ThrowAsync([Summary("w sesji?")]bool session = false)
+        {
+            if (session)
+            {
+                await _session.TryAddSession(new Session(Context.User)
+                {
+                    Event = ExecuteOn.Message,
+                    Id = $"thorwable session",
+                    RunMode = RunMode.Sync,
+                    TimeoutMs = 10000,
+                    OnExecute = async (context, sess) => 
+                    {
+                        await context.Channel.SendMessageAsync("", embed: $"Ok!".ToEmbedMessage(EMType.Bot).Build());
+
+                        throw new Exception("Throwing test session exception!");
+                    }
+                });
+                return;
+            }
+
+            await ReplyAsync("", embed: $"Ok!".ToEmbedMessage(EMType.Bot).Build());
+
+            throw new Exception("Throwing test exception!");
         }
 
         [Command("lvlbadge", RunMode = RunMode.Async)]

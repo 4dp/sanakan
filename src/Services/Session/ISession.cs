@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Sanakan.Services.Executor;
+using Shinden.Logger;
 using System;
 using System.Threading.Tasks;
 
@@ -30,6 +31,7 @@ namespace Sanakan.Services.Session
         RunMode GetRunMode();
         ExecuteOn GetEventType();
         bool IsOwner(IUser user);
+        void WithLogger(ILogger logger);
         void SetDestroyer(Func<ISession, Task> destroyer);
         IExecutable GetExecutable(SessionContext context);
     }

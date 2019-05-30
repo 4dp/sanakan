@@ -458,17 +458,21 @@ namespace Sanakan.Services.PocketWaifu
             {
                 using (var db = new Database.UserContext(_config))
                 {
+                    bool isWinner = history.Winner != null;
                     foreach (var p in players)
                     {
                         var u = db.GetUserOrCreateAsync(p.User.Id).Result;
                         var stat = new CardPvPStats
                         {
                             Type = FightType.BattleRoyale,
-                            Result = FightResult.Lose
+                            Result = isWinner ? FightResult.Lose : FightResult.Draw
                         };
 
-                        if (u.Id == history.Winner.User.Id)
-                            stat.Result = FightResult.Win;
+                        if (isWinner)
+                        {
+                            if (u.Id == history.Winner.User.Id)
+                                stat.Result = FightResult.Win;
+                        }
 
                         u.GameDeck.PvPStats.Add(stat);
                     }
@@ -498,6 +502,9 @@ namespace Sanakan.Services.PocketWaifu
                 var round = new RoundInfo();
                 foreach (var card in totalCards)
                 {
+                    if (card.Card.Health <= 0)
+                        continue;
+
                     var enemies = totalCards.Where(x => x.Card.Health > 0 && x.Card.GameDeckId != card.Card.GameDeckId);
                     if (enemies.Count() > 0)
                     {
@@ -535,18 +542,18 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     var alive = totalCards.Where(x => x.Card.Health > 0);
                     var one = alive.FirstOrDefault();
-                    if (one == null) fight = false;
+                    if (one == null) break;
 
                     fight = alive.Any(x => x.Card.GameDeckId != one.Card.GameDeckId);
                 }
             }
 
+            PlayerInfo winner = null;
             var win = totalCards.Where(x => x.Card.Health > 0).FirstOrDefault();
-            if (win == null)
-            {
-                new JsonFileReader().Save(rounds);
-            }
-            var winner = players.First(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
+
+            if (win != null)
+                winner = players.First(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
+                
             return new FightHistory(winner) { Rounds = rounds };
         }
 

@@ -110,6 +110,8 @@ namespace Sanakan.Services.Session
                     continue;
                 }
 
+                session.WithLogger(_logger);
+                
                 switch (session.GetRunMode())
                 {
                     case RunMode.Async:

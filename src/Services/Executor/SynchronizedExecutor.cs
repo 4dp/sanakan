@@ -82,9 +82,9 @@ namespace Sanakan.Services.Executor
         {
             if (_queue.TryTake(out var cmd, 100))
             {
+                var taskName = cmd.GetName();
                 try
                 {
-                    var taskName = cmd.GetName();
                     _logger.Log($"Executor: running {taskName}");
                     
                     var watch = Stopwatch.StartNew();
@@ -93,7 +93,7 @@ namespace Sanakan.Services.Executor
                 }
                 catch (Exception ex)
                 {
-                    _logger.Log($"Executor: {ex}");
+                    _logger.Log($"Executor: {taskName} - {ex}");
                 }
             }
         }

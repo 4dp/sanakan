@@ -34,9 +34,12 @@ namespace Sanakan.Services.Session.Models
             var fight = await _waifu.MakeFightAsync(players);
             string deathLog = _waifu.GetDeathLog(fight, players);
 
+            bool isWinner = fight.Winner != null;
+            string winString = isWinner ? $"Zwycięża {fight.Winner.User.Mention}!": "Remis!";
+
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
             {
-                await msg.ModifyAsync(x => x.Embed = $"{DuelName}{deathLog.TrimToLength(1400)} Zwycięża {fight.Winner.User.Mention}!".ToEmbedMessage(EMType.Error).Build());
+                await msg.ModifyAsync(x => x.Embed = $"{DuelName}{deathLog.TrimToLength(1400)}{winString}".ToEmbedMessage(EMType.Error).Build());
             }
 
             using (var db = new Database.UserContext(_config))
@@ -47,13 +50,13 @@ namespace Sanakan.Services.Session.Models
                 user1.GameDeck.PvPStats.Add(new CardPvPStats
                 {
                     Type = FightType.Versus,
-                    Result = fight.Winner.User.Id == user1.Id ? FightResult.Win : FightResult.Lose
+                    Result = isWinner ? (fight.Winner.User.Id == user1.Id ? FightResult.Win : FightResult.Lose) : FightResult.Draw
                 });
 
                 user2.GameDeck.PvPStats.Add(new CardPvPStats
                 {
                     Type = FightType.Versus,
-                    Result = fight.Winner.User.Id == user2.Id ? FightResult.Win : FightResult.Lose
+                    Result = isWinner ? (fight.Winner.User.Id == user2.Id ? FightResult.Win : FightResult.Lose) : FightResult.Draw
                 });
 
                 await db.SaveChangesAsync();

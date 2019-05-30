@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Sanakan.Services.Executor;
+using Shinden.Logger;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +18,7 @@ namespace Sanakan.Services.Session
 
         private Func<ISession, Task> OnSyncEnd { get; set; }
         private Stopwatch _timer { get; set; }
+        private ILogger _logger { get; set; }
         private bool _added { get; set; }
 
         public Session(IUser owner)
@@ -53,6 +55,7 @@ namespace Sanakan.Services.Session
         public RunMode GetRunMode() => RunMode;
         public ExecuteOn GetEventType() => Event;
         public IUser GetOwner() => _owners.First();
+        public void WithLogger(ILogger logger) => _logger = logger;
         public bool IsOwner(IUser user) => _owners.Any(x => x.Id == user.Id);
         public void SetDestroyer(Func<ISession, Task> destroyer) => OnSyncEnd = destroyer;
 
@@ -93,17 +96,29 @@ namespace Sanakan.Services.Session
                 if (OnExecute == null)
                     return true;
 
-                var res = OnExecute(context, this).Result;
-                if (res && RunMode == RunMode.Sync && OnSyncEnd != null)
+                try
                 {
-                    _ = Task.Run(async () =>
-                   {
-                       await Task.Delay(500);
-                       await OnSyncEnd(this);
-                   });
-                }
+                    var res = OnExecute(context, this).Result;
+                    if (res && RunMode == RunMode.Sync && OnSyncEnd != null)
+                    {
+                        _ = Task.Run(async () =>
+                       {
+                           await Task.Delay(500);
+                           await OnSyncEnd(this);
+                       });
+                    }
 
-                return res;
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    if (_logger != null)
+                    {
+                        string sessionName = Id ?? this.ToString();
+                        _logger.Log($"In {sessionName} session: {ex}");
+                    }
+                    return false;
+                }
             }));
         }
     }
