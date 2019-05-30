@@ -21,14 +21,12 @@ namespace Sanakan.Modules
         private ShindenClient _shclient;
         private SessionManager _session;
         private Services.Shinden _shinden;
-        private Database.UserContext _dbUserContext;
 
-        public Shinden(ShindenClient client, SessionManager session, Services.Shinden shinden, Database.UserContext userContext)
+        public Shinden(ShindenClient client, SessionManager session, Services.Shinden shinden)
         {
             _shclient = client;
             _session = session;
             _shinden = shinden;
-            _dbUserContext = userContext;
         }
 
         [Command("odcinki", RunMode = RunMode.Async)]
@@ -125,22 +123,25 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
 
-            var botUser = await _dbUserContext.GetCachedFullUserAsync(usr.Id);
-            if (botUser?.Shinden == 0)
+            using (var db = new Database.UserContext(Config))
             {
-                await ReplyAsync("", embed: "Ta osoba nie połączyła konta bota z kontem na stronie.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            using (var stream = await _shinden.GetSiteStatisticAsync(botUser.Shinden, usr))
-            {
-                if (stream == null)
+                var botUser = await db.GetCachedFullUserAsync(usr.Id);
+                if (botUser?.Shinden == 0)
                 {
-                    await ReplyAsync("", embed: $"Brak połączenia z Shindenem!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: "Ta osoba nie połączyła konta bota z kontem na stronie.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+                using (var stream = await _shinden.GetSiteStatisticAsync(botUser.Shinden, usr))
+                {
+                    if (stream == null)
+                    {
+                        await ReplyAsync("", embed: $"Brak połączenia z Shindenem!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+                }
             }
         }
 
@@ -177,18 +178,21 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (_dbUserContext.Users.Any(x => x.Shinden == shindenId))
+                using (var db = new Database.UserContext(Config))
                 {
-                    await ReplyAsync("", embed: "Wygląda na to, że ktoś już połączył się z tym kontem.".ToEmbedMessage(EMType.Error).Build());
-                    return;
+                    if (db.Users.Any(x => x.Shinden == shindenId))
+                    {
+                        await ReplyAsync("", embed: "Wygląda na to, że ktoś już połączył się z tym kontem.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                    botuser.Shinden = shindenId;
+
+                    await db.SaveChangesAsync();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
                 }
-
-                var botuser = await _dbUserContext.GetUserOrCreateAsync(Context.User.Id);
-                botuser.Shinden = shindenId;
-
-                await _dbUserContext.SaveChangesAsync();
-
-                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
 
                 await ReplyAsync("", embed: "Konta zostały połączone.".ToEmbedMessage(EMType.Success).Build());
                 return;

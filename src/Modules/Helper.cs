@@ -15,12 +15,10 @@ namespace Sanakan.Modules
     [Name("Ogólne")]
     public class Helper : SanakanModuleBase<SocketCommandContext>
     {
-        private Database.GuildConfigContext _dbGuildConfigContext;
         private Services.Helper _helper;
 
-        public Helper(Services.Helper helper, Database.GuildConfigContext dbGuildConfigContext)
+        public Helper(Services.Helper helper)
         {
-            _dbGuildConfigContext = dbGuildConfigContext;
             _helper = helper;
         }
 
@@ -129,51 +127,54 @@ namespace Sanakan.Modules
         [Remarks("63312335634561 Tak nie wolno!"), RequireUserRole]
         public async Task ReportUserAsync([Summary("id wiadomości")]ulong messageId, [Summary("powód")][Remainder]string reason)
         {
-            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            if (config == null)
+            using (var db = new Database.GuildConfigContext(Config))
             {
-                await ReplyAsync("", embed: "Serwer nie jest jeszcze skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
-                return;
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (config == null)
+                {
+                    await ReplyAsync("", embed: "Serwer nie jest jeszcze skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                var raportCh = Context.Guild.GetTextChannel(config.RaportChannel);
+                if (raportCh == null)
+                {
+                    await ReplyAsync("", embed: "Serwer nie ma skonfigurowanych raportów.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                var repMsg = await Context.Channel.GetMessageAsync(messageId);
+                if (repMsg == null) repMsg = await _helper.FindMessageInGuildAsync(Context.Guild, messageId);
+
+                if (repMsg == null)
+                {
+                    await ReplyAsync("", embed: "Nie odnaleziono wiadomości.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (repMsg.Author.IsBot || repMsg.Author.IsWebhook)
+                {
+                    await ReplyAsync("", embed: "Raportować bota? Bezsensu.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                if ((DateTime.Now - repMsg.CreatedAt.DateTime.ToLocalTime()).TotalHours > 3)
+                {
+                    await ReplyAsync("", embed: "Można raportować tylko wiadomośći, które nie są starsze jak 3h.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                await Context.Message.DeleteAsync();
+                await ReplyAsync("", embed: "Wysłano zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
+
+                string userName = $"{Context.User.Username}({Context.User.Id})";
+                var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
+                await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
+                
+                var rConfig = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+                rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
+                await db.SaveChangesAsync();
             }
-
-            var raportCh = Context.Guild.GetTextChannel(config.RaportChannel);
-            if (raportCh == null)
-            {
-                await ReplyAsync("", embed: "Serwer nie ma skonfigurowanych raportów.".ToEmbedMessage(EMType.Bot).Build());
-                return;
-            }
-
-            var repMsg = await Context.Channel.GetMessageAsync(messageId);
-            if (repMsg == null) repMsg = await _helper.FindMessageInGuildAsync(Context.Guild, messageId);
-
-            if (repMsg == null)
-            {
-                await ReplyAsync("", embed: "Nie odnaleziono wiadomości.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            if (repMsg.Author.IsBot || repMsg.Author.IsWebhook)
-            {
-                await ReplyAsync("", embed: "Raportować bota? Bezsensu.".ToEmbedMessage(EMType.Bot).Build());
-                return;
-            }
-
-            if ((DateTime.Now - repMsg.CreatedAt.DateTime.ToLocalTime()).TotalHours > 3)
-            {
-                await ReplyAsync("", embed: "Można raportować tylko wiadomośći, które nie są starsze jak 3h.".ToEmbedMessage(EMType.Bot).Build());
-                return;
-            }
-
-            await Context.Message.DeleteAsync();
-            await ReplyAsync("", embed: "Wysłano zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
-
-            string userName = $"{Context.User.Username}({Context.User.Id})";
-            var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
-            await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
-            
-            var rConfig = await _dbGuildConfigContext.GetGuildConfigOrCreateAsync(Context.Guild.Id);
-            rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
-            await _dbGuildConfigContext.SaveChangesAsync();
         }
     }
 }

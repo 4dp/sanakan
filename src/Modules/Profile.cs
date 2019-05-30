@@ -21,17 +21,13 @@ namespace Sanakan.Modules
     [Name("Profil"), RequireUserRole]
     public class Profile : SanakanModuleBase<SocketCommandContext>
     {
-        private Database.GuildConfigContext _dbGuildConfigContext;
         private Services.Profile _profile;
         private SessionManager _session;
-        private IConfig _config;
 
-        public Profile(IConfig config, Database.GuildConfigContext dbGuildConfigContext, Services.Profile prof, SessionManager session)
+        public Profile(Services.Profile prof, SessionManager session)
         {
             _profile = prof;
-            _config = config;
             _session = session;
-            _dbGuildConfigContext = dbGuildConfigContext;
         }
 
         [Command("portfel", RunMode = RunMode.Async)]
@@ -43,7 +39,7 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User;
             if (usr == null) return;
 
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetCachedFullUserAsync(usr.Id);
                 if (botuser == null)
@@ -62,7 +58,7 @@ namespace Sanakan.Modules
         [Remarks(""), RequireCommandChannel]
         public async Task ShowSubsAsync()
         {
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetCachedFullUserAsync(Context.User.Id);
                 var rsubs = botuser.TimeStatuses.Where(x => x.Type.IsSubType());
@@ -87,18 +83,21 @@ namespace Sanakan.Modules
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
 
-            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            var selfRole = config.SelfRoles.FirstOrDefault(x => x.Name == name);
-            var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
-
-            if (gRole == null)
+            using (var db = new Database.GuildConfigContext(Config))
             {
-                await ReplyAsync("", embed: $"Nie odnaleziono roli `{name}`".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                var selfRole = config.SelfRoles.FirstOrDefault(x => x.Name == name);
+                var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
 
-            await user.AddRoleAsync(gRole);
-            await ReplyAsync("", embed: $"{user.Mention} przyznano role: `{name}`".ToEmbedMessage(EMType.Success).Build());
+                if (gRole == null)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono roli `{name}`".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await user.AddRoleAsync(gRole);
+                await ReplyAsync("", embed: $"{user.Mention} przyznano role: `{name}`".ToEmbedMessage(EMType.Success).Build());
+            }
         }
 
         [Command("wypisz role", RunMode = RunMode.Async)]
@@ -106,21 +105,24 @@ namespace Sanakan.Modules
         [Remarks(""), RequireCommandChannel]
         public async Task ShowRolesAsync()
         {
-            var config = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-            if (config.SelfRoles.Count < 1)
+            using (var db = new Database.GuildConfigContext(Config))
             {
-                await ReplyAsync("", embed: "Nie odnaleziono roli.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (config.SelfRoles.Count < 1)
+                {
+                    await ReplyAsync("", embed: "Nie odnaleziono roli.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
-            string stringRole = "";
-            foreach (var selfRole in config.SelfRoles)
-            {
-                var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
-                stringRole += $" `{selfRole.Name}` ";
-            }
+                string stringRole = "";
+                foreach (var selfRole in config.SelfRoles)
+                {
+                    var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
+                    stringRole += $" `{selfRole.Name}` ";
+                }
 
-            await ReplyAsync($"**Dostępne role:**\n{stringRole}\n\nUżyj s.przyznaj role [nazwa] aby dodać lub odebrać sobie role.");
+                await ReplyAsync($"**Dostępne role:**\n{stringRole}\n\nUżyj s.przyznaj role [nazwa] aby dodać lub odebrać sobie role.");
+            }
         }
 
         [Command("statystyki", RunMode = RunMode.Async)]
@@ -129,7 +131,7 @@ namespace Sanakan.Modules
         [Remarks(""), RequireCommandChannel]
         public async Task ShowStatsAsync()
         {
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetCachedFullUserAsync(Context.User.Id);
                 await ReplyAsync("", embed: $"**Statystyki** {Context.User.Mention}:\n\n{botuser.Stats.ToView().TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
@@ -145,7 +147,7 @@ namespace Sanakan.Modules
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
 
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var users = await db.GetCachedAllUsersAsync();
                 session.ListItems = _profile.BuildListView(_profile.GetTopUsers(users, type), type, Context.Guild);
@@ -174,7 +176,7 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
 
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var allUsers = await db.GetCachedAllUsersAsync();
                 var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
@@ -197,7 +199,7 @@ namespace Sanakan.Modules
         [Remarks("1 https://i.imgur.com/8UK8eby.png"), RequireCommandChannel]
         public async Task ChangeStyleAsync([Summary("typ stylu ( 0 - statystyki, 1 - obrazek, 2 - brzydkie)")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2(325 x 272)")]string imgUrl = null)
         {
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
                 if (botuser.ScCnt < 3000)
@@ -239,7 +241,7 @@ namespace Sanakan.Modules
         [Remarks("https://i.imgur.com/LjVxiv8.png"), RequireCommandChannel]
         public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 150)")]string imgUrl)
         {
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
                 if (botuser.ScCnt < 5000)
@@ -277,7 +279,7 @@ namespace Sanakan.Modules
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
 
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
                 if (botuser.TcCnt < 4000)
@@ -286,31 +288,34 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-                var gRole = Context.Guild.GetRole(gConfig.GlobalEmotesRole);
-                if (gRole == null)
+                using (var cdb = new Database.GuildConfigContext(Config))
                 {
-                    await ReplyAsync("", embed: "Serwer nie ma ustawionej roli globalnych emotek.".ToEmbedMessage(EMType.Bot).Build());
-                    return;
-                }
-
-                var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
-                if (global == null)
-                {
-                    global = new Database.Models.TimeStatus
+                    var gConfig = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                    var gRole = Context.Guild.GetRole(gConfig.GlobalEmotesRole);
+                    if (gRole == null)
                     {
-                        Type = StatusType.Globals,
-                        Guild = Context.Guild.Id,
-                        EndsAt = DateTime.Now,
-                    };
-                    botuser.TimeStatuses.Add(global);
+                        await ReplyAsync("", embed: "Serwer nie ma ustawionej roli globalnych emotek.".ToEmbedMessage(EMType.Bot).Build());
+                        return;
+                    }
+
+                    var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
+                    if (global == null)
+                    {
+                        global = new Database.Models.TimeStatus
+                        {
+                            Type = StatusType.Globals,
+                            Guild = Context.Guild.Id,
+                            EndsAt = DateTime.Now,
+                        };
+                        botuser.TimeStatuses.Add(global);
+                    }
+
+                    if (!user.Roles.Contains(gRole))
+                        await user.AddRoleAsync(gRole);
+
+                    global.EndsAt = global.EndsAt.AddMonths(1);
+                    botuser.TcCnt -= 4000;
                 }
-
-                if (!user.Roles.Contains(gRole))
-                    await user.AddRoleAsync(gRole);
-
-                global.EndsAt = global.EndsAt.AddMonths(1);
-                botuser.TcCnt -= 4000;
 
                 await db.SaveChangesAsync();
 
@@ -338,7 +343,7 @@ namespace Sanakan.Modules
                 }
             }
 
-            using (var db = new Database.UserContext(_config))
+            using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
                 var points = currency == SCurrency.Tc ? botuser.TcCnt : botuser.ScCnt;
@@ -368,19 +373,22 @@ namespace Sanakan.Modules
                 }
                 else
                 {
-                    var gConfig = await _dbGuildConfigContext.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-                    if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
+                    using (var cdb = new Database.GuildConfigContext(Config))
                     {
-                        await ReplyAsync("", embed: $"Coś poszło nie tak!".ToEmbedMessage(EMType.Error).Build());
-                        return;
+                        var gConfig = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                        if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
+                        {
+                            await ReplyAsync("", embed: $"Coś poszło nie tak!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+
+                        colort.EndsAt = colort.EndsAt.AddMonths(1);
+
+                        if (currency == SCurrency.Tc)
+                            botuser.TcCnt -= color.Price(currency);
+                        else
+                            botuser.ScCnt -= color.Price(currency);
                     }
-
-                    colort.EndsAt = colort.EndsAt.AddMonths(1);
-
-                    if (currency == SCurrency.Tc)
-                        botuser.TcCnt -= color.Price(currency);
-                    else
-                        botuser.ScCnt -= color.Price(currency);
                 }
 
                 await db.SaveChangesAsync();

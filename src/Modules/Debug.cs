@@ -23,18 +23,14 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
-        private IConfig _config;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
-        private Database.UserContext _dbUserContext;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Database.UserContext userContext, Services.Helper helper, Services.ImageProcessing img, IConfig config)
+        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
         {
-            _dbUserContext = userContext;
             _shClient = shClient;
             _helper = helper;
-            _config = config;
             _waifu = waifu;
             _img = img;
         }
@@ -66,20 +62,23 @@ namespace Sanakan.Modules
         public async Task GeneratCardStatsAsync([Summary("WID")]ulong wid)
         {
             var stats = new long[(int)Rarity.E + 1];
-            var cards = _dbUserContext.Cards;
-            var count = (ulong)cards.LongCount();
-
-            for (ulong i = wid; i < count; i++)
+            using (var db = new Database.UserContext(Config))
             {
-                var card = cards.FirstOrDefault(x => x.Id == i);
-                if(card != null) stats[(int)card.RarityOnStart] += 1;
+                var cards = db.Cards;
+                var count = (ulong)cards.LongCount();
+
+                for (ulong i = wid; i < count; i++)
+                {
+                    var card = cards.FirstOrDefault(x => x.Id == i);
+                    if(card != null) stats[(int)card.RarityOnStart] += 1;
+                }
+
+                string info = "";
+                for (int i = 0; i < stats.Length; i++)
+                    info += $"{(Rarity)i}: `{stats[i]}`\n";
+
+                await ReplyAsync("", embed: info.ToEmbedMessage(EMType.Bot).Build());
             }
-
-            string info = "";
-            for (int i = 0; i < stats.Length; i++)
-                info += $"{(Rarity)i}: `{stats[i]}`\n";
-
-            await ReplyAsync("", embed: info.ToEmbedMessage(EMType.Bot).Build());
         }
 
         [Command("utitle")]
@@ -87,31 +86,34 @@ namespace Sanakan.Modules
         [Remarks("ssało")]
         public async Task ChangeTitleCardAsync([Summary("WID")]ulong wid, [Summary("tytuł")][Remainder]string title = null)
         {
-            var thisCard = _dbUserContext.Cards.FirstOrDefault(x => x.Id == wid);
-            if (thisCard == null)
+            using (var db = new Database.UserContext(Config))
             {
-                await ReplyAsync("", embed: $"Taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            if (title != null)
-            {
-                thisCard.Title = title;
-            }
-            else
-            {
-                var res = await _shClient.GetCharacterInfoAsync(thisCard.Character);
-                if (res.IsSuccessStatusCode())
+                var thisCard = db.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
                 {
-                    thisCard.Title = res.Body?.Relations?.OrderBy(x => x.Id)?.FirstOrDefault()?.Title ?? "????";
+                    await ReplyAsync("", embed: $"Taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                    return;
                 }
+
+                if (title != null)
+                {
+                    thisCard.Title = title;
+                }
+                else
+                {
+                    var res = await _shClient.GetCharacterInfoAsync(thisCard.Character);
+                    if (res.IsSuccessStatusCode())
+                    {
+                        thisCard.Title = res.Body?.Relations?.OrderBy(x => x.Id)?.FirstOrDefault()?.Title ?? "????";
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { "users" });
+
+                await ReplyAsync("", embed: $"Nowy tytuł to: `{thisCard.Title}`".ToEmbedMessage(EMType.Success).Build());
             }
-
-            await _dbUserContext.SaveChangesAsync();
-
-            QueryCacheManager.ExpireTag(new string[] { "users" });
-
-            await ReplyAsync("", embed: $"Nowy tytuł to: `{thisCard.Title}`".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("tsafari")]
@@ -119,9 +121,9 @@ namespace Sanakan.Modules
         [Remarks("true")]
         public async Task ToggleSafariAsync([Summary("true/false - czy zapisać")]bool save = false)
         {
-            var config = _config.Get();
+            var config = Config.Get();
             config.SafariEnabled = !config.SafariEnabled;
-            if (save) _config.Save();
+            if (save) Config.Save();
 
             await ReplyAsync("", embed: $"Safari: {config.SafariEnabled} `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
@@ -177,14 +179,17 @@ namespace Sanakan.Modules
             var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(character) : _waifu.GenerateNewCard(character, rarity);
 
             card.Source = CardSource.GodIntervention;
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
-            botuser.GameDeck.Cards.Add(card);
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.GameDeck.Cards.Add(card);
 
-            await _dbUserContext.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{user.Mention} otrzymał {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{user.Mention} otrzymał {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+            }
         }
 
         [Command("sc")]
@@ -192,14 +197,17 @@ namespace Sanakan.Modules
         [Remarks("Sniku 10000")]
         public async Task ChangeUserScAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba SC")]long amount)
         {
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
-            botuser.ScCnt += amount;
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.ScCnt += amount;
 
-            await _dbUserContext.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ScCnt} SC".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ScCnt} SC".ToEmbedMessage(EMType.Success).Build());
+            }
         }
 
         [Command("tc")]
@@ -207,14 +215,17 @@ namespace Sanakan.Modules
         [Remarks("Sniku 10000")]
         public async Task ChangeUserTcAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba TC")]long amount)
         {
-            var botuser = await _dbUserContext.GetUserOrCreateAsync(user.Id);
-            botuser.TcCnt += amount;
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.TcCnt += amount;
 
-            await _dbUserContext.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-            QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
-            await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
+            }
         }
 
         [Command("kill", RunMode = RunMode.Async)]

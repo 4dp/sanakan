@@ -149,9 +149,6 @@ namespace Sanakan
                 .AddSingleton<Services.Fun>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()
-                .AddDbContext<Database.UserContext>()
-                .AddDbContext<Database.ManagmentContext>()
-                .AddDbContext<Database.GuildConfigContext>()
                 .BuildServiceProvider();
         }
     }
