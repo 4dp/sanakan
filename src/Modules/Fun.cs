@@ -127,8 +127,8 @@ namespace Sanakan.Modules
                 var thrown = _fun.RandomizeSide();
                 var embed = $"{Context.User.Mention} pudło! Obecnie posiadasz {botuser.ScCnt} SC.".ToEmbedMessage(EMType.Error);
 
-                botuser.Stats.Tail += (thrown == Services.CoinSide.Tail) ? 1 : 0;
-                botuser.Stats.Head += (thrown == Services.CoinSide.Head) ? 1 : 0;
+                botuser.Stats.Tail += (thrown == CoinSide.Tail) ? 1 : 0;
+                botuser.Stats.Head += (thrown == CoinSide.Head) ? 1 : 0;
 
                 if (thrown == side)
                 {

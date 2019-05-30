@@ -76,6 +76,7 @@ namespace Sanakan.Modules
         }
 
         [Command("przyznaj role", RunMode = RunMode.Async)]
+        [Alias("add role")]
         [Summary("dodaje samozarządzaną role")]
         [Remarks("newsy"), RequireCommandChannel]
         public async Task AddRoleAsync([Summary("nazwa roli z wypisz role")]string name)
@@ -95,8 +96,38 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await user.AddRoleAsync(gRole);
+                if (!user.Roles.Contains(gRole))
+                    await user.AddRoleAsync(gRole);
+
                 await ReplyAsync("", embed: $"{user.Mention} przyznano role: `{name}`".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("zdejmij role", RunMode = RunMode.Async)]
+        [Alias("remove role")]
+        [Summary("zdejmuje samozarządzaną role")]
+        [Remarks("newsy"), RequireCommandChannel]
+        public async Task RemoveRoleAsync([Summary("nazwa roli z wypisz role")]string name)
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                var selfRole = config.SelfRoles.FirstOrDefault(x => x.Name == name);
+                var gRole = Context.Guild.GetRole(selfRole?.Role ?? 0);
+
+                if (gRole == null)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono roli `{name}`".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (user.Roles.Contains(gRole))
+                    await user.RemoveRoleAsync(gRole);
+
+                await ReplyAsync("", embed: $"{user.Mention} zdjęto role: `{name}`".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -121,7 +152,7 @@ namespace Sanakan.Modules
                     stringRole += $" `{selfRole.Name}` ";
                 }
 
-                await ReplyAsync($"**Dostępne role:**\n{stringRole}\n\nUżyj s.przyznaj role [nazwa] aby dodać lub odebrać sobie role.");
+                await ReplyAsync($"**Dostępne role:**\n{stringRole}\n\nUżyj `s.przyznaj role [nazwa]` aby dodać lub `s.zdejmij role [nazwa]` odebrać sobie role.");
             }
         }
 
