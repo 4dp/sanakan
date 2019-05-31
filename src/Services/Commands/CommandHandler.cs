@@ -83,6 +83,11 @@ namespace Sanakan.Services.Commands
                     }
                 }
                 else await ProcessResultAsync(res.Result, context, argPos);
+
+                using (var proc = System.Diagnostics.Process.GetCurrentProcess())
+                {
+                    _logger.Log($"mem usage: {proc.PrivateMemorySize64 / 1048576} MiB");
+                }
             }
         }
 

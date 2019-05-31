@@ -3,7 +3,6 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
