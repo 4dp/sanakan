@@ -86,7 +86,8 @@ namespace Sanakan.Services.Commands
 
                 using (var proc = System.Diagnostics.Process.GetCurrentProcess())
                 {
-                    _logger.Log($"mem usage: {proc.PrivateMemorySize64 / 1048576} MiB");
+                    _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
+                    _logger.Log($"mem[p] usage: {proc.PrivateMemorySize64 / 1048576} MiB");
                 }
             }
         }

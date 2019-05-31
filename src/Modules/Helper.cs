@@ -115,9 +115,7 @@ namespace Sanakan.Modules
             using (var proc = System.Diagnostics.Process.GetCurrentProcess())
             {
                 string info = $"**Sanakan ({typeof(Sanakan).Assembly.GetName().Version})**:\n"
-                    + $"**Czas działania**: `{(DateTime.Now - proc.StartTime).ToString(@"d'd 'hh\:mm\:ss")}`\n"
-                    + $"**Framework**: `{RuntimeInformation.FrameworkDescription}`\n"
-                    + $"**Wątki**: `{proc.Threads.Count}` / **RAM**: `{proc.PrivateMemorySize64 / 1048576} MiB`";
+                    + $"**Czas działania**: `{(DateTime.Now - proc.StartTime).ToString(@"d'd 'hh\:mm\:ss")}`";
 
                 await ReplyAsync(info);
             }
