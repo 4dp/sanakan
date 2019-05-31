@@ -67,14 +67,8 @@ namespace Sanakan.Modules
             var stats = new long[(int)Rarity.E + 1];
             using (var db = new Database.UserContext(Config))
             {
-                var cards = db.Cards;
-                var count = (ulong)cards.LongCount();
-
-                for (ulong i = wid; i < count; i++)
-                {
-                    var card = cards.FirstOrDefault(x => x.Id == i);
-                    if(card != null) stats[(int)card.RarityOnStart] += 1;
-                }
+                foreach (var rarity in (Rarity[])Enum.GetValues(typeof(Rarity)))
+                    stats[(int)rarity] = db.Cards.Count(x => x.Rarity == rarity && x.Id >= wid);
 
                 string info = "";
                 for (int i = 0; i < stats.Length; i++)

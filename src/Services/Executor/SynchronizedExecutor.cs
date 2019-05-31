@@ -95,6 +95,11 @@ namespace Sanakan.Services.Executor
                 {
                     _logger.Log($"Executor: {taskName} - {ex}");
                 }
+
+                using (var proc = Process.GetCurrentProcess())
+                {
+                    _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
+                }
             }
         }
     }

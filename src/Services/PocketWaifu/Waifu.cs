@@ -96,7 +96,7 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 75)  return Rarity.A;
             if (num < 175) return Rarity.B;
             if (num < 370) return Rarity.C;
-            if (num < 650) return Rarity.D;
+            if (num < 620) return Rarity.D;
             return Rarity.E;
         }
 
@@ -134,8 +134,8 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 2) return ItemType.IncreaseUpgradeCnt;
             if (num < 20) return ItemType.CardParamsReRoll;
             if (num < 65) return ItemType.AffectionRecoveryBig;
-            if (num < 200) return ItemType.DereReRoll;
-            if (num < 380) return ItemType.AffectionRecoveryNormal;
+            if (num < 180) return ItemType.DereReRoll;
+            if (num < 350) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
