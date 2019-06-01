@@ -15,6 +15,9 @@ namespace Sanakan.Database.Models
         RandomBoosterPackSingleE,
         RandomNormalBoosterPackB,
         RandomTitleBoosterPackSingleE,
+        RandomNormalBoosterPackA,
+        RandomNormalBoosterPackS,
+        RandomNormalBoosterPackSS,
     }
 
     public class Item

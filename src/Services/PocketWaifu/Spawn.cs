@@ -198,15 +198,15 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             UserCounter[author.Id] += GetMessageRealLenght(message);
-            if (UserCounter[author.Id] > 2000)
+            if (UserCounter[author.Id] > 2500)
             {
                 UserCounter[author.Id] = 0;
                 _ = Task.Run(async () => 
                 {
-                    if (!Fun.TakeATry(5))
+                    if (!Fun.TakeATry(6))
                     {
                         SpawnUserPacket(author);
-                        await message.Channel.SendMessageAsync("", embed: $"{author.Mention} otrzymał pakiet losowej postaci."
+                        await message.Channel.SendMessageAsync("", embed: $"{author.Mention} otrzymał pakiet losowych kart."
                             .ToEmbedMessage(EMType.Bot).Build());
                     }
                 });
@@ -224,10 +224,10 @@ namespace Sanakan.Services.PocketWaifu
 
                     botUser.GameDeck.BoosterPacks.Add(new BoosterPack
                     {
-                        CardCnt = 1,
+                        CardCnt = 2,
                         MinRarity = Rarity.E,                
                         IsCardFromPackTradable = true,
-                        Name = "Pakiet losowej postaci",
+                        Name = "Pakiet kart za aktywność",
                         CardSourceFromPack = CardSource.Activity
                     });
                     db.SaveChanges();

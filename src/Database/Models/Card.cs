@@ -31,6 +31,7 @@ namespace Sanakan.Database.Models
         public double ExpCnt { get; set; }
         public double Affection { get; set; }
         public int UpgradesCnt { get; set; }
+        public int RestartCnt { get; set; }
         public Rarity Rarity { get; set; }
         public Rarity RarityOnStart { get; set; }
         public Dere Dere { get; set; }

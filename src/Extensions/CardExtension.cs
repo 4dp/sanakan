@@ -83,8 +83,9 @@ namespace Sanakan.Extensions
         {
             switch (card.Rarity)
             {
-                case Rarity.SSS: return 10000;
-                case Rarity.SS:  return 100;
+                case Rarity.SSS:
+                case Rarity.SS:
+                    return 100;
 
                 default: return 30;
             }
@@ -94,7 +95,7 @@ namespace Sanakan.Extensions
         {
             switch (rarity)
             {
-                case Rarity.SSS: return 99;
+                case Rarity.SSS: return 100;
                 case Rarity.SS:  return 90;
                 case Rarity.S:   return 80;
                 case Rarity.A:   return 65;
@@ -150,8 +151,8 @@ namespace Sanakan.Extensions
         {
             switch (rarity)
             {
-                case Rarity.SSS: return 129;
-                case Rarity.SS:  return 99;
+                case Rarity.SSS: return 130;
+                case Rarity.SS:  return 100;
                 case Rarity.S:   return 96;
                 case Rarity.A:   return 87;
                 case Rarity.B:   return 84;
@@ -167,9 +168,9 @@ namespace Sanakan.Extensions
         {
             switch (rarity)
             {
-                case Rarity.SSS: return 95;
-                case Rarity.SS:  return 90;
-                case Rarity.S:   return 78;
+                case Rarity.SSS: return 96;
+                case Rarity.SS:  return 91;
+                case Rarity.S:   return 79;
                 case Rarity.A:   return 75;
                 case Rarity.B:   return 70;
                 case Rarity.C:   return 65;

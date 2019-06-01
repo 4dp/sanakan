@@ -22,13 +22,19 @@ namespace Sanakan.Extensions
                 case ItemType.CardParamsReRoll:
                     return "Pozwala wylosować na nowo parametry karty.";
                 case ItemType.RandomBoosterPackSingleE:
-                    return "Dodaje nowy pakiet z losową kartą.\n\nWykluczone jakości to: SS, S i A.";
+                    return "Dodaje nowy pakiet z dwiema losowymi kartami.\n\nWykluczone jakości to: SS, S i A.";
                 case ItemType.RandomTitleBoosterPackSingleE:
-                    return "Dodaje nowy pakiet z losową, niewymienialną kartą z tytułu podanego przez kupującego.\n\nWykluczone jakości to: SS.";
+                    return "Dodaje nowy pakiet z dwiema losowymi, niewymienialnymi kartami z tytułu podanego przez kupującego.\n\nWykluczone jakości to: SS i S.";
                 case ItemType.AffectionRecoverySmall:
                     return "Poprawia odrobinę relacje z kartą.";
                 case ItemType.RandomNormalBoosterPackB:
                     return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości B.\n\nWykluczone jakości to: SS.";
+                case ItemType.RandomNormalBoosterPackA:
+                    return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości A.\n\nWykluczone jakości to: SS.";
+                case ItemType.RandomNormalBoosterPackS:
+                    return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości S.\n\nWykluczone jakości to: SS.";
+                case ItemType.RandomNormalBoosterPackSS:
+                    return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości SS.";
 
                 default:
                     return "Brak opisu.";
@@ -50,13 +56,19 @@ namespace Sanakan.Extensions
                 case ItemType.CardParamsReRoll:
                     return "Naszyjnik z diamentem";
                 case ItemType.RandomBoosterPackSingleE:
-                    return "Tani pakiet losowej karty";
+                    return "Tani pakiet losowych kart";
                 case ItemType.RandomTitleBoosterPackSingleE:
-                    return "Pakiet losowej karty z tytułu";
+                    return "Pakiet losowych kart z tytułu";
                 case ItemType.AffectionRecoverySmall:
                     return "Banan w czekoladzie";
                 case ItemType.RandomNormalBoosterPackB:
                     return "Fioletowy pakiet losowych kart";
+                case ItemType.RandomNormalBoosterPackA:
+                    return "Pomarańczowy pakiet losowych kart";
+                case ItemType.RandomNormalBoosterPackS:
+                    return "Złoty pakiet losowych kart";
+                case ItemType.RandomNormalBoosterPackSS:
+                    return "Różowy pakiet losowych kart";
 
                 default:
                     return "Brak";
@@ -70,6 +82,9 @@ namespace Sanakan.Extensions
                 case ItemType.RandomBoosterPackSingleE:
                 case ItemType.RandomTitleBoosterPackSingleE:
                 case ItemType.RandomNormalBoosterPackB:
+                case ItemType.RandomNormalBoosterPackA:
+                case ItemType.RandomNormalBoosterPackS:
+                case ItemType.RandomNormalBoosterPackSS:
                     return true;
 
                 default:
@@ -82,10 +97,13 @@ namespace Sanakan.Extensions
             switch (type)
             {
                 case ItemType.RandomNormalBoosterPackB:
+                case ItemType.RandomNormalBoosterPackA:
+                case ItemType.RandomNormalBoosterPackS:
+                case ItemType.RandomNormalBoosterPackSS:
                     return 3;
 
                 default:
-                    return 1;
+                    return 2;
             }
         }
 
@@ -93,6 +111,15 @@ namespace Sanakan.Extensions
         {
             switch (type)
             {
+                case ItemType.RandomNormalBoosterPackSS:
+                    return Rarity.SS;
+
+                case ItemType.RandomNormalBoosterPackS:
+                    return Rarity.S;
+
+                case ItemType.RandomNormalBoosterPackA:
+                    return Rarity.A;
+
                 case ItemType.RandomNormalBoosterPackB:
                     return Rarity.B;
 
@@ -119,6 +146,9 @@ namespace Sanakan.Extensions
             {
                 case ItemType.RandomBoosterPackSingleE:
                 case ItemType.RandomNormalBoosterPackB:
+                case ItemType.RandomNormalBoosterPackA:
+                case ItemType.RandomNormalBoosterPackS:
+                case ItemType.RandomNormalBoosterPackSS:
                 case ItemType.RandomTitleBoosterPackSingleE:
                     return CardSource.Shop;
 
@@ -134,7 +164,13 @@ namespace Sanakan.Extensions
             switch (type)
             {
                 case ItemType.RandomTitleBoosterPackSingleE:
+                    ex.Add(new RarityExcluded { Rarity = Rarity.SS });
+                    ex.Add(new RarityExcluded { Rarity = Rarity.S });
+                    break;
+
                 case ItemType.RandomNormalBoosterPackB:
+                case ItemType.RandomNormalBoosterPackA:
+                case ItemType.RandomNormalBoosterPackS:
                     ex.Add(new RarityExcluded { Rarity = Rarity.SS });
                     break;
 

@@ -131,11 +131,11 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 2) return ItemType.IncreaseUpgradeCnt;
-            if (num < 20) return ItemType.CardParamsReRoll;
-            if (num < 65) return ItemType.AffectionRecoveryBig;
-            if (num < 180) return ItemType.DereReRoll;
-            if (num < 350) return ItemType.AffectionRecoveryNormal;
+            if (num < 8) return ItemType.IncreaseUpgradeCnt;
+            if (num < 28) return ItemType.CardParamsReRoll;
+            if (num < 78) return ItemType.AffectionRecoveryBig;
+            if (num < 200) return ItemType.DereReRoll;
+            if (num < 380) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -145,13 +145,16 @@ namespace Sanakan.Services.PocketWaifu
             {
                 new ItemWithCost(10,    ItemType.AffectionRecoverySmall.ToItem()),
                 new ItemWithCost(35,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(300,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(275,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(50,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(80,    ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(5000,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(100,    ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(3500,  ItemType.IncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1800,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1500,  ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(1400,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
+                new ItemWithCost(800,  ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(1400,  ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(2000,  ItemType.RandomNormalBoosterPackS.ToItem()),
+                new ItemWithCost(2600,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
         }
 

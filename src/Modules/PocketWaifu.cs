@@ -375,7 +375,7 @@ namespace Sanakan.Modules
                 }
 
                 if (card.Character == bUser.GameDeck.Waifu)
-                    affectionInc *= 1.5;
+                    affectionInc *= 1.2;
 
                 var response = await _shclient.GetCharacterInfoAsync(card.Character);
                 if (response.IsSuccessStatusCode())
@@ -384,12 +384,12 @@ namespace Sanakan.Modules
                     {
                         var ordered = response.Body.Points.OrderByDescending(x => x.Points);
                         if (ordered.Any(x => x.Name == embed.Author.Name))
-                            affectionInc += 1.2;
+                            affectionInc *= 1.2;
                     }
                 }
 
                 if (card.Dere == Dere.Tsundere)
-                    affectionInc *= 2;
+                    affectionInc *= 1.2;
 
                 item.Count -= itemCnt;
                 card.Affection += affectionInc;
