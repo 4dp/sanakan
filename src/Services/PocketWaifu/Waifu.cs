@@ -632,6 +632,24 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
+        public Embed GetWaifuFromCharacterTitleSearchResult(string title, IEnumerable<Card> cards, SocketGuild guild)
+        {
+            var characters = cards.GroupBy(x => x.Character);
+
+            string contentString = "";
+            foreach (var cardsG in characters)
+            {
+                string.Join(" ", cardsG.Select(x => $"**[{x.Id}]**"));
+                contentString += $"{string.Join(" ", cardsG.Select(x => $"**[{x.Id}]**"))} {cardsG.First().Name}\n";
+            }
+
+            return new EmbedBuilder()
+            {
+                Color = EMType.Info.Color(),
+                Description = $"{title}\n\n{contentString.TrimToLength(1850)}"
+            }.Build();
+        }
+
         public Embed GetBoosterPackList(SocketUser user, IList<BoosterPack> packs)
         {
             string packString = "";
@@ -742,7 +760,7 @@ namespace Sanakan.Services.PocketWaifu
             }
             else
             {
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 2)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 

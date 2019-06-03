@@ -711,11 +711,38 @@ namespace Sanakan.Modules
 
                 if (cards.Count() < 1)
                 {
-                    await ReplyAsync("", embed: $"Nie odnaleziono kart {response.Body}.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart {response.Body}".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
                 await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Guild));
+            }
+        }
+
+        [Command("jakie", RunMode = RunMode.Async)]
+        [Alias("which")]
+        [Summary("pozwala wyszukac użytkowników posiadających karty z danego tytułu")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsFromTitleAsync([Summary("id serii na shinden")]ulong id)
+        {
+            var response = await _shclient.Title.GetCharactersAsync(id);
+            if (!response.IsSuccessStatusCode())
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono postaci z serii na shindenie!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+            
+            using (var db = new Database.UserContext(Config))
+            {
+                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).FromCacheAsync( new[] {"users"});
+
+                if (cards.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterTitleSearchResult($"Karty z **{response.Body.First().Title}**:", cards, Context.Guild));
             }
         }
 
@@ -1058,7 +1085,7 @@ namespace Sanakan.Modules
                 if (prev != null)
                 {
                     var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Id == prev.Id);
-                    foreach (var card in allPrevWaifus) card.Affection -= 1;
+                    foreach (var card in allPrevWaifus) card.Affection -= 2;
                 }
 
                 bUser.GameDeck.Waifu = thisCard.Character;

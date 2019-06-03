@@ -153,6 +153,7 @@ namespace Sanakan.Services.Session
             var user = reaction.User.Value;
 
             if ((user.IsBot || user.IsWebhook)) return;
+
             var userSessions = _sessions.FindAll(x => x.IsOwner(user)
                 && x.GetEventType().HasFlag(ExecuteOn.ReactionAdded));
 
@@ -176,6 +177,7 @@ namespace Sanakan.Services.Session
             var user = reaction.User.Value;
 
             if ((user.IsBot || user.IsWebhook)) return;
+
             var userSessions = _sessions.FindAll(x => x.IsOwner(user)
                 && x.GetEventType().HasFlag(ExecuteOn.ReactionRemoved));
 

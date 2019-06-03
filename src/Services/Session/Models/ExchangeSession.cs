@@ -136,6 +136,9 @@ namespace Sanakan.Services.Session.Models
                 return;
             }
 
+            if (player.Cards.Any(x => x.Id == card.Id))
+                return;
+
             player.Cards.Add(card);
             player.Accepted = false;
             player.CustomString = BuildProposition(player);
@@ -156,6 +159,9 @@ namespace Sanakan.Services.Session.Models
                 await message.AddReactionAsync(ErrEmote);
                 return;
             }
+
+            if (!player.Cards.Any(x => x.Id == card.Id))
+                return;
 
             player.Accepted = false;
             player.Cards.Remove(card);
