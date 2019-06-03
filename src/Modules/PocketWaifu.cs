@@ -458,6 +458,46 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("reset")]
+        [Alias("restart")]
+        [Summary("restartuj kartę SSS na kartę E i dodaje stały bonus")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task ResetCardAsync([Summary("WID")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.Rarity != Rarity.SSS)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie ma najwyższego poziomu.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                card.Defence = _waifu.RandomizeDefence(Rarity.E);
+                card.Attack = _waifu.RandomizeAttack(Rarity.E);
+                card.Dere = _waifu.RandomizeDere();
+                card.Rarity = Rarity.E;
+                card.UpgradesCnt = 2;
+                card.Affection -= 10;
+                card.RestartCnt += 1;
+                card.ExpCnt = 0;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zrestartował kartę do: {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("ulepsz")]
         [Alias("upgrade")]
         [Summary("ulepsza kartę na lepszą jakość (min. 30 exp)")]
@@ -734,7 +774,7 @@ namespace Sanakan.Modules
             
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).FromCacheAsync( new[] {"users"});
+                var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character));
 
                 if (cards.Count() < 1)
                 {
