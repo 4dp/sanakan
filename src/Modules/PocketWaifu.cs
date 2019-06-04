@@ -366,7 +366,7 @@ namespace Sanakan.Modules
                         affectionInc = 0.2;
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
-                        embed.Description += $"Nowa moc karty to: 🔥{card.Attack} 🛡{card.Defence}!";
+                        embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
                         break;
 
                     default:
@@ -396,7 +396,7 @@ namespace Sanakan.Modules
 
                 if (item.Count <= 0)
                     bUser.GameDeck.Items.Remove(item);
-                
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
@@ -442,7 +442,7 @@ namespace Sanakan.Modules
                 }
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
-                
+
                 foreach (var card in cards)
                     bUser.GameDeck.Cards.Add(card);
 
@@ -657,7 +657,7 @@ namespace Sanakan.Modules
                             card.Affection -= 0.3;
                     }
                 }
-                
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
@@ -744,7 +744,7 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: $"Nie odnaleziono postaci na shindenie!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
-            
+
             using (var db = new Database.UserContext(Config))
             {
                 var cards = await db.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).FromCacheAsync( new[] {"users"});
@@ -771,7 +771,7 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: $"Nie odnaleziono postaci z serii na shindenie!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
-            
+
             using (var db = new Database.UserContext(Config))
             {
                 var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character));
@@ -1011,7 +1011,11 @@ namespace Sanakan.Modules
 
                 string playerList = "Lista graczy:\n";
                 foreach (var p in players)
-                    playerList += $"{p.User.Mention}: {p.Cards.First().GetString(true, false, true)}\n";
+                {
+                    var card = p.Cards.First();
+                    card.Health = card.GetHealthWithPenalty();
+                    playerList += $"{p.User.Mention}: {card.GetString(true, false, true)}\n";
+                }
 
                 var history = await _waifu.MakeFightAsync(players, true);
                 var deathLog = _waifu.GetDeathLog(history, players);
@@ -1048,7 +1052,7 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: $"{user1.Mention} Ty lub twój partner znajdujecie się obecnie w trakcie walki.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
-            
+
             using (var db = new Database.UserContext(Config))
             {
                 var duser1 = await db.GetCachedFullUserAsync(user1.Id);

@@ -26,7 +26,7 @@ namespace Sanakan.Services.PocketWaifu
 
         private Dictionary<ulong, long> ServerCounter;
         private Dictionary<ulong, long> UserCounter;
-        
+
         private Emoji ClaimEmote = new Emoji("🖐");
 
         public Spawn(DiscordSocketClient client, IExecutor executor, Waifu waifu, IConfig config, ILogger logger)
@@ -63,7 +63,7 @@ namespace Sanakan.Services.PocketWaifu
 
             if (daily > 0 && ServerCounter[spawnChannel.GuildId] >= daily) return;
             if (!_config.Get().SafariEnabled) return;
-            if (!Fun.TakeATry(40)) return;
+            if (!Fun.TakeATry(55)) return;
 
             ServerCounter[spawnChannel.GuildId] += 1;
             _ = Task.Run(async () =>
@@ -198,10 +198,10 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             UserCounter[author.Id] += GetMessageRealLenght(message);
-            if (UserCounter[author.Id] > 2500)
+            if (UserCounter[author.Id] > 3500)
             {
                 UserCounter[author.Id] = 0;
-                _ = Task.Run(async () => 
+                _ = Task.Run(async () =>
                 {
                     if (!Fun.TakeATry(6))
                     {
@@ -225,7 +225,7 @@ namespace Sanakan.Services.PocketWaifu
                     botUser.GameDeck.BoosterPacks.Add(new BoosterPack
                     {
                         CardCnt = 2,
-                        MinRarity = Rarity.E,                
+                        MinRarity = Rarity.E,
                         IsCardFromPackTradable = true,
                         Name = "Pakiet kart za aktywność",
                         CardSourceFromPack = CardSource.Activity

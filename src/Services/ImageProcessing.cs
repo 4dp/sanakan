@@ -40,7 +40,7 @@ namespace Sanakan.Services
                 try
                 {
                     var res = await client.GetAsync(url);
-                    if (res.IsSuccessStatusCode) 
+                    if (res.IsSuccessStatusCode)
                         return await res.Content.ReadAsStreamAsync();
 
                     if (fixExt)
@@ -158,16 +158,16 @@ namespace Sanakan.Services
             var defFontColor = Rgba32.FromHex("#7f7f7f");
             var posColor = Rgba32.FromHex("#FFD700");
 
-            if (topPos == 2) 
+            if (topPos == 2)
                 posColor = Rgba32.FromHex("#c0c0c0");
-            else if (topPos == 3) 
+            else if (topPos == 3)
                 posColor = Rgba32.FromHex("#cd7f32");
-            else if (topPos > 3) 
+            else if (topPos > 3)
                 posColor = defFontColor;
 
             profilePic.Mutate(x => x.DrawText(nickname, nickFont, Rgba32.FromHex("#a7a7a7"), new Point(132, 150 + (int)((30 - nickFont.Size) / 2))));
             profilePic.Mutate(x => x.DrawText(rangName, rangFont, defFontColor, new Point(132, 180)));
-            
+
             var mLevel = TextMeasurer.Measure($"{botUser.Level}", new RendererOptions(levelFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.Level}", levelFont, defFontColor, new Point((int)(125 - mLevel.Width) / 2, 206)));
 
@@ -176,10 +176,10 @@ namespace Sanakan.Services
 
             var mScOwn = TextMeasurer.Measure($"{botUser.ScCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.ScCnt}", rangFont, defFontColor, new Point((int)(125 - mScOwn.Width) / 2, 365)));
-            
+
             var mScLos = TextMeasurer.Measure($"{botUser.Stats?.ScLost}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.Stats?.ScLost}", rangFont, defFontColor, new Point((int)(125 - mScLos.Width) / 2, 405)));
-            
+
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 445)));
 
@@ -209,13 +209,13 @@ namespace Sanakan.Services
             {
                 profilePic.Mutate(x => x.DrawImage(inside, new Point(125, 228), 1));
             }
-            
+
             return profilePic;
         }
 
         private Image<Rgba32> GetProfileInside(IUserInfo shindenUser, User botUser)
         {
-            var image = new Image<Rgba32>(325, 272); 
+            var image = new Image<Rgba32>(325, 272);
 
             if (botUser.ProfileType == ProfileType.Img && !File.Exists(botUser.StatsReplacementProfileUri))
                 botUser.ProfileType = ProfileType.Stats;
@@ -537,7 +537,7 @@ namespace Sanakan.Services
 
             var textLength = lvlLength.Width + msgText1Length.Width > nameLength.Width ? lvlLength.Width + msgText1Length.Width : nameLength.Width;
             var estimatedLength = 106 + (int)(textLength > msgText2Length.Width ? textLength : msgText2Length.Width);
-        
+
             var nickNameColor = color.RawValue.ToString("X");
             var baseImg = new Image<Rgba32>((int)estimatedLength, 100);
 
@@ -593,12 +593,12 @@ namespace Sanakan.Services
 
                 if (i < inFirstColumn + 1)
                 {
-                    if (firstColumnMaxLength.Width <  nLen.Width) 
+                    if (firstColumnMaxLength.Width <  nLen.Width)
                         firstColumnMaxLength = nLen;
                 }
                 else
                 {
-                    if (secondColumnMaxLength.Width <  nLen.Width) 
+                    if (secondColumnMaxLength.Width <  nLen.Width)
                         secondColumnMaxLength = nLen;
                 }
             }
@@ -657,7 +657,7 @@ namespace Sanakan.Services
                     characterImg.Mutate(x => x.DrawImage(image, new Point(0, startY), 1));
                 }
             }
-            
+
             return characterImg;
         }
 
@@ -676,6 +676,9 @@ namespace Sanakan.Services
         private void ApplyStats(Image<Rgba32> image, Card card, bool applyNegativeStats = false)
         {
             int health = card.GetHealthWithPenalty();
+            int defence = card.GetDefenceWithBonus();
+            int attack = card.GetAttackWithBonus();
+
             using (var shield = Image.Load($"./Pictures/PW/heart.png"))
             {
                 image.Mutate(x => x.DrawImage(shield, new Point(0, 0), 1));
@@ -692,12 +695,12 @@ namespace Sanakan.Services
             }
 
             int startXDef = 390;
-            if (card.Defence < 10) startXDef += 15;
-            if (card.Defence > 99) startXDef -= 15;
+            if (defence < 10) startXDef += 15;
+            if (defence > 99) startXDef -= 15;
 
             int startXAtk = 390;
-            if (card.Attack < 10) startXAtk += 15;
-            if (card.Attack > 99) startXAtk -= 15;
+            if (attack < 10) startXAtk += 15;
+            if (attack > 99) startXAtk -= 15;
 
             int startXHp = 380;
             if (health < 10) startXHp += 15;
@@ -705,8 +708,8 @@ namespace Sanakan.Services
 
             var numFont = new Font(_latoBold, 54);
             image.Mutate(x => x.DrawText($"{health}", numFont, Rgba32.FromHex("#000000"), new Point(startXHp, 190)));
-            image.Mutate(x => x.DrawText($"{card.Attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 320)));
-            image.Mutate(x => x.DrawText($"{card.Defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 440)));
+            image.Mutate(x => x.DrawText($"{attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 320)));
+            image.Mutate(x => x.DrawText($"{defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 440)));
 
             if (applyNegativeStats)
             {

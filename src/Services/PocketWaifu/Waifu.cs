@@ -63,10 +63,10 @@ namespace Sanakan.Services.PocketWaifu
                     return list.OrderByDescending(x => x.Affection).ToList();
 
                 case HaremType.Attack:
-                    return list.OrderByDescending(x => x.Attack).ToList();
+                    return list.OrderByDescending(x => x.GetAttackWithBonus()).ToList();
 
                 case HaremType.Defence:
-                    return list.OrderByDescending(x => x.Defence).ToList();
+                    return list.OrderByDescending(x => x.GetDefenceWithBonus()).ToList();
 
                 case HaremType.Cage:
                     return list.Where(x => x.InCage).ToList();
@@ -204,7 +204,7 @@ namespace Sanakan.Services.PocketWaifu
                 bool c2 = evt2 == FAEvent.ExtraShield && winner == FightWinner.Card1;
                 if (c1 || c2) winner = FightWinner.Draw;
             }
-            
+
             // kamidere && deredere
             if (winner == FightWinner.Draw)
                 return CheckKamidereAndDeredere(card1, card2);
@@ -247,8 +247,8 @@ namespace Sanakan.Services.PocketWaifu
         {
             evt = FAEvent.None;
 
-            double atk1 = target.Card.Attack;
-            double def1 = target.Card.Defence;
+            double atk1 = target.Card.GetAttackWithBonus();
+            double def1 = target.Card.GetDefenceWithBonus();
             if (!target.Info.HasImage)
             {
                 atk1 -= atk1 * 20 / 100;
@@ -259,8 +259,8 @@ namespace Sanakan.Services.PocketWaifu
             if (atk1 < 1) atk1 = 1;
             if (def1 < 1) def1 = 1;
 
-            double atk2 = enemy.Card.Attack;
-            double def2 = enemy.Card.Defence;
+            double atk2 = enemy.Card.GetAttackWithBonus();
+            double def2 = enemy.Card.GetDefenceWithBonus();
             if (!enemy.Info.HasImage)
             {
                 atk2 -= atk2 * 20 / 100;
@@ -283,11 +283,11 @@ namespace Sanakan.Services.PocketWaifu
             {
                 switch (bodere)
                 {
-                    case BodereBonus.Minus: 
+                    case BodereBonus.Minus:
                         atk -= atk / 10;
                     break;
 
-                    case BodereBonus.Plus: 
+                    case BodereBonus.Plus:
                         atk += atk / 10;
                     break;
 
@@ -374,7 +374,7 @@ namespace Sanakan.Services.PocketWaifu
         {
             var m = (double)(nMax - nMin)/(double)(oMax - oMin);
             var c = (oMin * m) - nMin;
-            
+
             return (int)((m * value) - c);
         }
 
@@ -447,7 +447,7 @@ namespace Sanakan.Services.PocketWaifu
                     foreach (var d in dead)
                     {
                         var thisCard = players.First(x => x.Cards.Any(c => c.Id == d.CardId)).Cards.First(x => x.Id == d.CardId);
-                        deathLog += $"❌ {thisCard.GetString(true, false, true)}\n";
+                        deathLog += $"❌ {thisCard.GetString(true, false, true, true)}\n";
                     }
                     deathLog += "\n";
                 }
@@ -490,11 +490,13 @@ namespace Sanakan.Services.PocketWaifu
             var totalCards = new List<CardInfo>();
 
             foreach (var player in players)
+            {
                 foreach (var card in player.Cards)
                 {
                     card.Health = card.GetHealthWithPenalty();
                     totalCards.Add(await card.GetCardInfoAsync(_shClient));
                 }
+            }
 
             totalCards = totalCards.Shuffle().ToList();
             var rounds = new List<RoundInfo>();
@@ -556,7 +558,7 @@ namespace Sanakan.Services.PocketWaifu
 
             if (win != null)
                 winner = players.First(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
-                
+
             return new FightHistory(winner) { Rounds = rounds };
         }
 
@@ -568,9 +570,9 @@ namespace Sanakan.Services.PocketWaifu
                 Description = "**Twoje aktywne karty to**:\n\n",
             };
 
-            foreach(var card in list) 
+            foreach(var card in list)
                 embed.Description += card.GetString(false, false, true) + "\n";
-            
+
             return embed.Build();
         }
 
@@ -595,7 +597,7 @@ namespace Sanakan.Services.PocketWaifu
 
                 await Task.Delay(TimeSpan.FromSeconds(2));
 
-                if (check-- == 0) 
+                if (check-- == 0)
                     return null;
             }
             return response.Body;
@@ -686,7 +688,7 @@ namespace Sanakan.Services.PocketWaifu
                 if (pack.Characters.Count > 0)
                 {
                     var id = pack.Characters.First();
-                    if (pack.Characters.Count > 1) 
+                    if (pack.Characters.Count > 1)
                         id = Fun.GetOneRandomFrom(pack.Characters);
 
                     var res = await _shClient.GetCharacterInfoAsync(id.Character);
@@ -718,10 +720,10 @@ namespace Sanakan.Services.PocketWaifu
                     var newCard = GenerateNewCard(chara, pack.RarityExcludedFromPack.Select(x => x.Rarity).ToList());
                     if (pack.MinRarity != Rarity.E && i == pack.CardCnt - 1)
                         newCard = GenerateNewCard(chara, pack.MinRarity);
-                    
+
                     newCard.IsTradable = pack.IsCardFromPackTradable;
                     newCard.Source = pack.CardSourceFromPack;
-                    
+
                     cardsFromPack.Add(newCard);
                 }
             }
@@ -873,7 +875,7 @@ namespace Sanakan.Services.PocketWaifu
         public Embed GetShopView(ItemWithCost[] items)
         {
             string embedString = "";
-            for (int i = 0; i < items.Length; i++) 
+            for (int i = 0; i < items.Length; i++)
                 embedString+= $"**[{i + 1}]** _{items[i].Item.Name}_ - {items[i].Cost} TC\n";
 
             return new EmbedBuilder

@@ -9,13 +9,13 @@ namespace Sanakan.Extensions
 {
     public static class CardExtension
     {
-        public static string GetString(this Card card, bool withoutId = false, bool withUpgrades = false, bool nameAsUrl = false)
+        public static string GetString(this Card card, bool withoutId = false, bool withUpgrades = false, bool nameAsUrl = false, bool allowZero = false)
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
-            string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name; 
-            
-            return $"{idStr} {name} **{card.Rarity}** ❤{card.GetHealthWithPenalty()} 🔥{card.Attack} 🛡{card.Defence} {upgCnt}";
+            string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name;
+
+            return $"{idStr} {name} **{card.Rarity}** ❤{card.GetHealthWithPenalty(allowZero)} 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()} {upgCnt}";
         }
 
         public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
@@ -31,16 +31,30 @@ namespace Sanakan.Extensions
                 + $"**Możliwość wymiany:** {card.IsTradable.GetYesNo()}\n\n"
                 + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
                 + $"**WID:** {card.Id}\n"
+                + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n\n";
         }
 
-        public static int GetHealthWithPenalty(this Card card)
+        public static int GetHealthWithPenalty(this Card card, bool allowZero = false)
         {
             var percent = card.Affection * 5d / 100d;
             var newHealth = (int) (card.Health + (card.Health * percent));
             if (newHealth > 999) newHealth = 999;
-            if (newHealth < 10) newHealth = 10;
+
+            if (allowZero) if (newHealth < 0) newHealth = 0;
+            else if (newHealth < 10) newHealth = 10;
+
             return newHealth;
+        }
+
+        public static int GetAttackWithBonus(this Card card)
+            => card.Attack + card.RestartCnt * 2;
+
+        public static int GetDefenceWithBonus(this Card card)
+        {
+            var newDefence = card.Defence + card.RestartCnt;
+            if (newDefence > 99) newDefence = 99;
+            return newDefence;
         }
 
         public static string GetString(this CardSource source)
@@ -119,7 +133,7 @@ namespace Sanakan.Extensions
                 case Rarity.B:   return 50;
                 case Rarity.C:   return 32;
                 case Rarity.D:   return 15;
-                
+
                 case Rarity.E:
                 default: return 1;
             }
@@ -158,7 +172,7 @@ namespace Sanakan.Extensions
                 case Rarity.B:   return 84;
                 case Rarity.C:   return 68;
                 case Rarity.D:   return 50;
-                
+
                 case Rarity.E:
                 default: return 35;
             }
@@ -175,7 +189,7 @@ namespace Sanakan.Extensions
                 case Rarity.B:   return 70;
                 case Rarity.C:   return 65;
                 case Rarity.D:   return 53;
-                
+
                 case Rarity.E:
                 default: return 38;
             }
