@@ -49,7 +49,7 @@ namespace Sanakan.Services
 
         public async Task NotifyAboutLevelAsync(SocketGuildUser user, ISocketMessageChannel channel, long level)
         {
-            using (var badge = await _img.GetLevelUpBadgeAsync(user.Nickname ?? user.Username, 
+            using (var badge = await _img.GetLevelUpBadgeAsync(user.Nickname ?? user.Username,
                 level, user.GetAvatarUrl(), user.Roles.OrderByDescending(x => x.Position).First().Color))
             {
                 using (var badgeStream = badge.ToPngStream())
@@ -100,12 +100,12 @@ namespace Sanakan.Services
         {
             if (!_messages.Any(x => x.Key == userId))
                 _messages.Add(userId, 1);
-            else 
+            else
                 _messages[userId]++;
 
             if (!_commands.Any(x => x.Key == userId))
                 _commands.Add(userId, isCommand ? 1u : 0u);
-            else 
+            else
                 if (isCommand)
                     _commands[userId]++;
         }
@@ -114,7 +114,7 @@ namespace Sanakan.Services
         {
             if (!_characters.Any(x => x.Key == userId))
                 _characters.Add(userId, characters);
-            else 
+            else
                 _characters[userId] += characters;
         }
 
@@ -185,7 +185,7 @@ namespace Sanakan.Services
                         usr.MessagesCntAtDate = usr.MessagesCnt;
                         usr.CharacterCntFromDate = characters;
                     }
-                    else 
+                    else
                         usr.CharacterCntFromDate += characters;
 
                     usr.ExpCnt += exp;
@@ -198,6 +198,32 @@ namespace Sanakan.Services
                         usr.Level = newLevel;
                         _ = Task.Run(async () => { await NotifyAboutLevelAsync(user, channel, newLevel); });
                     }
+
+                    _ = Task.Run(async () =>
+                    {
+                        using (var dbc = new Database.GuildConfigContext(_config))
+                        {
+                            var config = await dbc.GetCachedGuildFullConfigAsync(user.Guild.Id);
+                            if (config == null) return;
+
+                            foreach (var lvlRole in config.RolesPerLevel)
+                            {
+                                var role = user.Guild.GetRole(lvlRole.Role);
+                                if (role == null) continue;
+
+                                bool hasRole = user.Roles.Any(x => x.Id == role.Id);
+                                if (newLevel >= (long)lvlRole.Level)
+                                {
+                                    if (!hasRole)
+                                        await user.AddRoleAsync(role);
+                                }
+                                else if (hasRole)
+                                {
+                                    await user.RemoveRoleAsync(role);
+                                }
+                            }
+                        }
+                    });
 
                     db.SaveChanges();
                 }
