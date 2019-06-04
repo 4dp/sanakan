@@ -183,7 +183,7 @@ namespace Sanakan.Services
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 445)));
 
-            var prevLvlExp = ExperienceManager.CalculateExpForLevel(botUser.Level - 1);
+            var prevLvlExp = ExperienceManager.CalculateExpForLevel(botUser.Level);
             var nextLvlExp = ExperienceManager.CalculateExpForLevel(botUser.Level + 1);
             var expOnLvl = botUser.ExpCnt - prevLvlExp;
             var lvlExp = nextLvlExp - prevLvlExp;
