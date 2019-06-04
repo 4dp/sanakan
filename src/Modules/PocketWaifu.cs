@@ -1013,7 +1013,9 @@ namespace Sanakan.Modules
                 foreach (var p in players)
                 {
                     var card = p.Cards.First();
-                    card.Health = card.GetHealthWithPenalty();
+                    var rUser = await db.GetUserOrCreateAsync(p.User.Id);
+                    card.Health = rUser.GameDeck.Cards.First(x => x.Id == card.Id).Health;
+
                     playerList += $"{p.User.Mention}: {card.GetString(true, false, true)}\n";
                 }
 
