@@ -61,7 +61,7 @@ namespace Sanakan.Modules
                     return;
                 }
             }
-            
+
             await ReplyAsync("", embed: "Nie udało się pobrać listy odcinków.".ToEmbedMessage(EMType.Error).Build());
         }
 
@@ -126,6 +126,12 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetCachedFullUserAsync(usr.Id);
+                if (botUser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 if (botUser?.Shinden == 0)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie połączyła konta bota z kontem na stronie.".ToEmbedMessage(EMType.Error).Build());
@@ -171,7 +177,7 @@ namespace Sanakan.Modules
             {
                 var user = response.Body;
                 var userNameInDiscord = (Context.User as SocketGuildUser).Nickname ?? Context.User.Username;
-                
+
                 if (!user.Name.Equals(userNameInDiscord))
                 {
                     await ReplyAsync("", embed: "Wykryto próbę podszycia się. Nieładnie!".ToEmbedMessage(EMType.Error).Build());

@@ -170,7 +170,7 @@ namespace Sanakan.Modules
                 string userName = $"{Context.User.Username}({Context.User.Id})";
                 var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
                 await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
-                
+
                 var rConfig = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
                 rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
                 await db.SaveChangesAsync();

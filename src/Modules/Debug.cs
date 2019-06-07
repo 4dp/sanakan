@@ -138,7 +138,7 @@ namespace Sanakan.Modules
                     Id = $"thorwable session",
                     RunMode = RunMode.Sync,
                     TimeoutMs = 10000,
-                    OnExecute = async (context, sess) => 
+                    OnExecute = async (context, sess) =>
                     {
                         await context.Channel.SendMessageAsync("", embed: $"Ok!".ToEmbedMessage(EMType.Bot).Build());
 
@@ -161,7 +161,7 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
 
-            using (var badge = await _img.GetLevelUpBadgeAsync("Very very long nickname of trolly user", 
+            using (var badge = await _img.GetLevelUpBadgeAsync("Very very long nickname of trolly user",
                 2154, usr.GetAvatarUrl(), usr.Roles.OrderByDescending(x => x.Position).First().Color))
             {
                 using (var badgeStream = badge.ToPngStream())

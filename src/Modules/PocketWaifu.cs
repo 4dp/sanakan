@@ -966,6 +966,69 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("arenam", RunMode = RunMode.Async)]
+        [Alias("wildm")]
+        [Summary("walka przeciwko botowi w stylu GMwK")]
+        [Remarks("1"), RequireWaifuFightChannel]
+        public async Task StartPvEMassacreAsync([Summary("nr aktywnej karty(1-3)")]int activeCard)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botUser = await db.GetCachedFullUserAsync(Context.User.Id);
+                var active = botUser.GameDeck.Cards.Where(x => x.Active).ToList();
+                if (active.Count < activeCard || activeCard <= 0)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz tylu aktywnych kart!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var thisCard = active[--activeCard];
+                var rUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                thisCard.Health = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id).Health;
+
+                var players = new List<PlayerInfo>();
+                players.Add(new PlayerInfo
+                {
+                    User = Context.User as SocketGuildUser,
+                    Cards = new List<Card> { thisCard },
+                    Dbuser = botUser
+                });
+
+                var cardsCnt = Services.Fun.GetRandomValue(7, 16);
+                var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
+                for (int i = 0; i < cardsCnt; i++)
+                {
+                    var character = await _waifu.GetRandomCharacterAsync();
+                    var botCard = _waifu.GenerateNewCard(character, thisCard.Rarity);
+
+                    botCard.GameDeckId = (ulong)i;
+                    botCard.Id = (ulong)i;
+
+                    if (i == 0 && botCard.Health < thisCard.Health)
+                        botCard.Health = thisCard.Health;
+
+                    if (i == 0 && botCard.Defence < thisCard.Defence)
+                        botCard.Defence = thisCard.Defence;
+
+                    players.Add(new PlayerInfo
+                    {
+                        Cards = new List<Card> { botCard },
+                    });
+                }
+
+                var history = await _waifu.MakeFightAsync(players, true);
+                var deathLog = _waifu.GetDeathLog(history, players);
+
+                string resultString = $"Niestety przegrałeś {Context.User.Mention}";
+                if (history.Winner?.User != null) resultString = $"Wygrałeś {Context.User.Mention}!";
+
+                //TODO: Randomize prize item, check if player won a card from fight, inflict negative affection and add exp for each dead card in fight.
+                //If card is in unusable state, inflict extra negative affection, and discard prizez other than item.
+
+                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Error).Build());
+            }
+        }
+
         [Command("masakra", RunMode = RunMode.Async)]
         [Alias("massacre")]
         [Summary("rozpoczyna odliczanie do startu GMwK")]
@@ -1147,7 +1210,7 @@ namespace Sanakan.Modules
         [Alias("cpf")]
         [Summary("wyświetla profil PocketWaifu")]
         [Remarks("Karna"), RequireWaifuCommandChannel]
-        public async Task ShowProfileAsync([Summary("użytkownik")]SocketGuildUser usr = null)
+        public async Task ShowProfileAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -1157,7 +1220,7 @@ namespace Sanakan.Modules
                 var bUser = await db.GetCachedFullUserAsync(user.Id);
                 if (bUser == null)
                 {
-                    await ReplyAsync("", embed: $"{user.Mention} nie ma konta w bocie!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

@@ -43,7 +43,7 @@ namespace Sanakan.Modules
                 var botuser = await db.GetCachedFullUserAsync(usr.Id);
                 if (botuser == null)
                 {
-                    await ReplyAsync("", embed: $"Nie odnaleziono profilu {usr.Mention}.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -159,12 +159,21 @@ namespace Sanakan.Modules
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]
         [Remarks(""), RequireCommandChannel]
-        public async Task ShowStatsAsync()
+        public async Task ShowStatsAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
+            var usr = user ?? Context.User;
+            if (usr == null) return;
+
             using (var db = new Database.UserContext(Config))
             {
-                var botuser = await db.GetCachedFullUserAsync(Context.User.Id);
-                await ReplyAsync("", embed: $"**Statystyki** {Context.User.Mention}:\n\n{botuser.Stats.ToView().TrimToLength(1950)}".ToEmbedMessage(EMType.Info).Build());
+                var botuser = await db.GetCachedFullUserAsync(usr.Id);
+                if (botuser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: botuser.GetStatsView(usr).Build());
             }
         }
 

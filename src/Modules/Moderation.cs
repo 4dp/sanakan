@@ -217,7 +217,7 @@ namespace Sanakan.Modules
                     await _moderation.UnmuteUserAsync(user, muteRole, muteModRole, mdb);
                 }
             }
-            
+
             await ReplyAsync("", embed: $"{user.Mention} już nie jest wyciszony.".ToEmbedMessage(EMType.Success).Build());
         }
 
@@ -354,7 +354,7 @@ namespace Sanakan.Modules
             using (var db = new Database.GuildConfigContext(Config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-                if (config == null) 
+                if (config == null)
                 {
                     config = new Database.Models.Configuration.GuildOptions
                     {
@@ -1203,7 +1203,7 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: "Kanał raportów nie jest ustawiony.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
-                
+
                 var reportMsg = await reportChannel.GetMessageAsync(raport.Message);
                 if (duration == -1)
                 {
@@ -1254,7 +1254,7 @@ namespace Sanakan.Modules
                     var info = await _moderation.MuteUserAysnc(user, muteRole, null, userRole, mdb, duration, reason);
                     await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
                 }
-                
+
                 await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
             }
         }

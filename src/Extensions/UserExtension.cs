@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Discord;
 using Sanakan.Database.Models;
 using Sanakan.Services;
 using System;
@@ -29,7 +30,7 @@ namespace Sanakan.Extensions
                 CharacterCntFromDate = 0,
                 ProfileType = ProfileType.Stats,
                 StatsReplacementProfileUri = "none",
-                GameDeck = new GameDeck 
+                GameDeck = new GameDeck
                 {
                     Id = id,
                     Waifu = 0,
@@ -67,6 +68,17 @@ namespace Sanakan.Extensions
             });
 
             return user;
+        }
+
+        public static EmbedBuilder GetStatsView(this User u, IUser user)
+        {
+            string stats = $"**Wiadomości**: {u.MessagesCnt}\n**Poleceń**: {u.CommandsCnt}";
+
+            return new EmbedBuilder
+            {
+                Color = EMType.Info.Color(),
+                Description = $"**Statystyki** {user.Mention}:\n\n{stats}\n{u.Stats.ToView()}".TrimToLength(1950)
+            };
         }
 
         public static string GetViewValueForTop(this User u, TopType type)

@@ -100,6 +100,65 @@ namespace Sanakan.Services.PocketWaifu
             return Rarity.E;
         }
 
+        public List<Rarity> GetExcludedArenaRarity(Rarity cardRarity)
+        {
+            var excudled = new List<Rarity>();
+
+            switch (cardRarity)
+            {
+                case Rarity.SSS:
+                    excudled.Add(Rarity.A);
+                    excudled.Add(Rarity.B);
+                    excudled.Add(Rarity.C);
+                    excudled.Add(Rarity.D);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.SS:
+                    excudled.Add(Rarity.B);
+                    excudled.Add(Rarity.C);
+                    excudled.Add(Rarity.D);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.S:
+                    excudled.Add(Rarity.C);
+                    excudled.Add(Rarity.D);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.A:
+                    excudled.Add(Rarity.D);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.B:
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.C:
+                    excudled.Add(Rarity.SS);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                case Rarity.D:
+                    excudled.Add(Rarity.SS);
+                    excudled.Add(Rarity.S);
+                    excudled.Add(Rarity.E);
+                    break;
+
+                default:
+                case Rarity.E:
+                    excudled.Add(Rarity.SS);
+                    excudled.Add(Rarity.S);
+                    excudled.Add(Rarity.A);
+                    excudled.Add(Rarity.E);
+                    break;
+            }
+
+            return excudled;
+        }
+
         public Rarity RandomizeRarity(List<Rarity> rarityExcluded)
         {
             if (rarityExcluded == null) return RandomizeRarity();
@@ -131,9 +190,9 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 8) return ItemType.IncreaseUpgradeCnt;
-            if (num < 28) return ItemType.CardParamsReRoll;
-            if (num < 78) return ItemType.AffectionRecoveryBig;
+            if (num < 10) return ItemType.IncreaseUpgradeCnt;
+            if (num < 30) return ItemType.CardParamsReRoll;
+            if (num < 80) return ItemType.AffectionRecoveryBig;
             if (num < 200) return ItemType.DereReRoll;
             if (num < 380) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
@@ -147,11 +206,11 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(35,    ItemType.AffectionRecoveryNormal.ToItem()),
                 new ItemWithCost(275,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(50,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(100,    ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(100,   ItemType.CardParamsReRoll.ToItem()),
                 new ItemWithCost(3500,  ItemType.IncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
                 new ItemWithCost(1400,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(800,  ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(800,   ItemType.RandomNormalBoosterPackB.ToItem()),
                 new ItemWithCost(1400,  ItemType.RandomNormalBoosterPackA.ToItem()),
                 new ItemWithCost(2000,  ItemType.RandomNormalBoosterPackS.ToItem()),
                 new ItemWithCost(2600,  ItemType.RandomNormalBoosterPackSS.ToItem()),
@@ -498,13 +557,14 @@ namespace Sanakan.Services.PocketWaifu
                 }
             }
 
-            totalCards = totalCards.Shuffle().ToList();
             var rounds = new List<RoundInfo>();
             bool fight = true;
 
             while (fight)
             {
                 var round = new RoundInfo();
+                totalCards = totalCards.Shuffle().ToList();
+
                 foreach (var card in totalCards)
                 {
                     if (card.Card.Health <= 0)
@@ -557,7 +617,7 @@ namespace Sanakan.Services.PocketWaifu
             var win = totalCards.Where(x => x.Card.Health > 0).FirstOrDefault();
 
             if (win != null)
-                winner = players.First(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
+                winner = players.FirstOrDefault(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
 
             return new FightHistory(winner) { Rounds = rounds };
         }
