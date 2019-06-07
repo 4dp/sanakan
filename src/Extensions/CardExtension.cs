@@ -41,8 +41,16 @@ namespace Sanakan.Extensions
             var newHealth = (int) (card.Health + (card.Health * percent));
             if (newHealth > 999) newHealth = 999;
 
-            if (allowZero) if (newHealth < 0) newHealth = 0;
-            else if (newHealth < 10) newHealth = 10;
+            if (allowZero)
+            {
+                if (newHealth < 0)
+                    newHealth = 0;
+            }
+            else
+            {
+                if (newHealth < 10)
+                    newHealth = 10;
+            }
 
             return newHealth;
         }

@@ -996,7 +996,7 @@ namespace Sanakan.Modules
                     }
                 };
 
-                var cardsCnt = Services.Fun.GetRandomValue(4, 7);
+                var cardsCnt = Services.Fun.GetRandomValue(4, 9);
                 var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
                 for (int i = 0; i < cardsCnt; i++)
                 {
@@ -1036,23 +1036,21 @@ namespace Sanakan.Modules
                 bool userWonPack = Services.Fun.TakeATry(10);
                 var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
 
-                double exp = 0.1;
-                var deadCards = players.Select(x => x.Cards.FirstOrDefault(c => c.Health <= 0)).Where(x => x != null);
+                var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
+                double exp = 0.18 * blowsDeal;
 
                 double affection = thisCharacter.HasImage ? 0.2 : 0.5;
-                affection *= deadCards.Count();
                 if (!userWon) affection *= 1.5;
-
-                foreach (var deadCard in deadCards)
-                    exp += _waifu.GetExpToUpgrade(thisCard, deadCard, true);
+                affection *= blowsDeal;
 
                 if (thisCard.IsUnusable())
                 {
                     affection *= 2;
-                    exp /= 10;
+                    exp /= 5;
                 }
 
-                if (userWon && !thisCard.IsUnusable())
+                bool allowItems = Services.Fun.TakeATry(2 + (int)thisCard.Affection);
+                if ((userWon && !thisCard.IsUnusable()) || allowItems)
                 {
                     foreach (var item in items)
                         resultString += $"+{item.Name}\n";
@@ -1072,7 +1070,7 @@ namespace Sanakan.Modules
                         trCard.Affection -= affection;
                         trCard.ExpCnt += exp;
 
-                        if (userWon && !trCard.IsUnusable())
+                        if ((userWon && !trCard.IsUnusable()) || allowItems)
                         {
                             foreach (var item in items)
                             {
