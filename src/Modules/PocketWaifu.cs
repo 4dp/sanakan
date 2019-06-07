@@ -879,7 +879,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var enemyCard = _waifu.GenerateNewCard(enemyCharacter);
+                var enemyCard = _waifu.GenerateNewCard(enemyCharacter, _waifu.RandomizeRarity(_waifu.GetExcludedArenaRarity(thisCard.Rarity)));
                 var embed = new EmbedBuilder
                 {
                     Color = EMType.Bot.Color(),
@@ -986,15 +986,17 @@ namespace Sanakan.Modules
                 var rUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 thisCard.Health = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id).Health;
 
-                var players = new List<PlayerInfo>();
-                players.Add(new PlayerInfo
+                var players = new List<PlayerInfo>
                 {
-                    User = Context.User as SocketGuildUser,
-                    Cards = new List<Card> { thisCard },
-                    Dbuser = botUser
-                });
+                    new PlayerInfo
+                    {
+                        User = Context.User as SocketGuildUser,
+                        Cards = new List<Card> { thisCard },
+                        Dbuser = botUser
+                    }
+                };
 
-                var cardsCnt = Services.Fun.GetRandomValue(7, 16);
+                var cardsCnt = Services.Fun.GetRandomValue(4, 7);
                 var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
                 for (int i = 0; i < cardsCnt; i++)
                 {
@@ -1010,22 +1012,91 @@ namespace Sanakan.Modules
                     if (i == 0 && botCard.Defence < thisCard.Defence)
                         botCard.Defence = thisCard.Defence;
 
-                    players.Add(new PlayerInfo
-                    {
-                        Cards = new List<Card> { botCard },
-                    });
+                    players.Add(new PlayerInfo { Cards = new List<Card> { botCard } });
                 }
 
                 var history = await _waifu.MakeFightAsync(players, true);
                 var deathLog = _waifu.GetDeathLog(history, players);
 
-                string resultString = $"Niestety przegrałeś {Context.User.Mention}";
-                if (history.Winner?.User != null) resultString = $"Wygrałeś {Context.User.Mention}!";
+                bool userWon = history.Winner?.User != null;
+                string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
+                if (userWon) resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
 
-                //TODO: Randomize prize item, check if player won a card from fight, inflict negative affection and add exp for each dead card in fight.
-                //If card is in unusable state, inflict extra negative affection, and discard prizez other than item.
+                var items = new List<Item> { _waifu.RandomizeItemFromFight().ToItem(), _waifu.RandomizeItemFromFight().ToItem() };
+                var boosterPack = new BoosterPack
+                {
+                    RarityExcludedFromPack = new List<RarityExcluded>(),
+                    CardSourceFromPack = CardSource.PvE,
+                    Name = "Pakiet kart z masakry PvE",
+                    IsCardFromPackTradable = true,
+                    MinRarity = Rarity.E,
+                    CardCnt = 2
+                };
 
-                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Error).Build());
+                bool userWonPack = Services.Fun.TakeATry(10);
+                var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
+
+                double exp = 0.1;
+                var deadCards = players.Select(x => x.Cards.FirstOrDefault(c => c.Health <= 0)).Where(x => x != null);
+
+                double affection = thisCharacter.HasImage ? 0.2 : 0.5;
+                affection *= deadCards.Count();
+                if (!userWon) affection *= 1.5;
+
+                foreach (var deadCard in deadCards)
+                    exp += _waifu.GetExpToUpgrade(thisCard, deadCard, true);
+
+                if (thisCard.IsUnusable())
+                {
+                    affection *= 2;
+                    exp /= 10;
+                }
+
+                if (userWon && !thisCard.IsUnusable())
+                {
+                    foreach (var item in items)
+                        resultString += $"+{item.Name}\n";
+                }
+                resultString += $"+{exp.ToString("F")} exp\n";
+
+                if (userWonPack)
+                    resultString += $"+{boosterPack.Name}";
+
+                var exe = new Executable("GMwK PvE", new Task(() =>
+                {
+                    using (var dbu = new Database.UserContext(_config))
+                    {
+                        var trUser = dbu.GetUserOrCreateAsync(Context.User.Id).Result;
+                        var trCard = trUser.GameDeck.Cards.First(x => x.Id == thisCard.Id);
+
+                        trCard.Affection -= affection;
+                        trCard.ExpCnt += exp;
+
+                        if (userWon && !trCard.IsUnusable())
+                        {
+                            foreach (var item in items)
+                            {
+                                var thisItem = trUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                                if (thisItem == null)
+                                {
+                                    thisItem = item;
+                                    trUser.GameDeck.Items.Add(thisItem);
+                                }
+                                else ++thisItem.Count;
+                            }
+                        }
+
+                        if (userWonPack)
+                            trUser.GameDeck.BoosterPacks.Add(boosterPack);
+
+                        dbu.SaveChanges();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{trUser.Id}", "users" });
+                    }
+                }));
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+
+                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
             }
         }
 

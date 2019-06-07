@@ -48,7 +48,7 @@ namespace Sanakan.Extensions
         }
 
         public static int GetAttackWithBonus(this Card card)
-            => card.Attack + card.RestartCnt * 2;
+            => card.Attack + (card.RestartCnt * 2);
 
         public static int GetDefenceWithBonus(this Card card)
         {
@@ -67,6 +67,7 @@ namespace Sanakan.Extensions
                 case CardSource.GodIntervention: return "Czity";
                 case CardSource.Api:             return "Nieznane";
                 case CardSource.Migration:       return "Stara baza";
+                case CardSource.PvE:             return "Walki na boty";
 
                 default:
                 case CardSource.Other: return "Inne";
