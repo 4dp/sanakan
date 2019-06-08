@@ -1033,15 +1033,20 @@ namespace Sanakan.Modules
                     CardCnt = 2
                 };
 
-                bool userWonPack = Services.Fun.TakeATry(10);
+                bool userWonPack = Services.Fun.TakeATry(20);
                 var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
 
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
                 double exp = 0.18 * blowsDeal;
 
                 double affection = thisCharacter.HasImage ? 0.2 : 0.5;
-                if (!userWon) affection *= 1.5;
                 affection *= blowsDeal;
+
+                if (!userWon)
+                {
+                    affection *= 1.5;
+                    exp /= 2;
+                }
 
                 if (thisCard.IsUnusable())
                 {
@@ -1049,7 +1054,10 @@ namespace Sanakan.Modules
                     exp /= 5;
                 }
 
-                bool allowItems = Services.Fun.TakeATry(2 + (int)thisCard.Affection);
+                int chance = 10 - (int)thisCard.Affection;
+                if (chance < 6) chance = 6;
+
+                bool allowItems = Services.Fun.TakeATry(chance);
                 if ((userWon && !thisCard.IsUnusable()) || allowItems)
                 {
                     foreach (var item in items)
@@ -1057,7 +1065,7 @@ namespace Sanakan.Modules
                 }
                 resultString += $"+{exp.ToString("F")} exp\n";
 
-                if (userWonPack)
+                if (userWonPack && userWon)
                     resultString += $"+{boosterPack.Name}";
 
                 var exe = new Executable("GMwK PvE", new Task(() =>
@@ -1084,7 +1092,7 @@ namespace Sanakan.Modules
                             }
                         }
 
-                        if (userWonPack)
+                        if (userWonPack && userWon)
                             trUser.GameDeck.BoosterPacks.Add(boosterPack);
 
                         dbu.SaveChanges();
