@@ -84,21 +84,37 @@ namespace Sanakan.Extensions
 
         public static string GetYesNo(this bool b) => b ? "Tak" : "Nie";
 
-        public static bool IsUnusable(this Card card) => card.GetAffectionString() == "Nienawiść";
+        public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -100;
+
+        public static bool IsBroken(this Card card) => card.GetAffectionString() == "Pogarda";
+
+        public static bool IsUnusable(this Card card)
+        {
+            switch (card.GetAffectionString())
+            {
+                case "Pogarda":
+                case "Nienawiść":
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
 
         public static string GetAffectionString(this Card card)
         {
-            if (card.Affection <= -5) return "Nienawiść";
-            if (card.Affection <= -4) return "Zawiść";
-            if (card.Affection <= -3) return "Wrogość";
-            if (card.Affection <= -2) return "Złośliwość";
-            if (card.Affection <= -1) return "Chłodność";
-            if (card.Affection >= 50) return "Obsesyjna miłość";
-            if (card.Affection >= 5)  return "Miłość";
-            if (card.Affection >= 4)  return "Zauroczenie";
-            if (card.Affection >= 3)  return "Przyjaźń";
-            if (card.Affection >= 2)  return "Fascynacja";
-            if (card.Affection >= 1)  return "Zaciekawienie";
+            if (card.Affection <= -50) return "Pogarda";
+            if (card.Affection <= -5)  return "Nienawiść";
+            if (card.Affection <= -4)  return "Zawiść";
+            if (card.Affection <= -3)  return "Wrogość";
+            if (card.Affection <= -2)  return "Złośliwość";
+            if (card.Affection <= -1)  return "Chłodność";
+            if (card.Affection >= 50)  return "Obsesyjna miłość";
+            if (card.Affection >= 5)   return "Miłość";
+            if (card.Affection >= 4)   return "Zauroczenie";
+            if (card.Affection >= 3)   return "Przyjaźń";
+            if (card.Affection >= 2)   return "Fascynacja";
+            if (card.Affection >= 1)   return "Zaciekawienie";
             return "Obojętność";
         }
 

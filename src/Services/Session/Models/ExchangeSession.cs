@@ -130,7 +130,7 @@ namespace Sanakan.Services.Session.Models
                 return;
             }
 
-            if (card.InCage || !card.IsTradable)
+            if (card.InCage || !card.IsTradable || card.IsBroken())
             {
                 await message.AddReactionAsync(ErrEmote);
                 return;

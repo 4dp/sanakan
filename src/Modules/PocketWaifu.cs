@@ -580,6 +580,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (cardToSac.IsBroken())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może zostać poświęcona.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 ++bUser.Stats.SacraficeCards;
 
                 var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
@@ -984,7 +990,16 @@ namespace Sanakan.Modules
 
                 var thisCard = active[--activeCard];
                 var rUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                thisCard.Health = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id).Health;
+                var rcrd = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id);
+
+                thisCard.Health = rcrd.Health;
+                thisCard.Affection = rcrd.Affection;
+
+                if (!thisCard.CanFightOnPvEGMwK())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
                 var players = new List<PlayerInfo>
                 {
@@ -996,12 +1011,16 @@ namespace Sanakan.Modules
                     }
                 };
 
+                var items = new List<Item> { _waifu.RandomizeItemFromFight().ToItem() };
+                var characters = new List<BoosterPackCharacter>();
+
                 var cardsCnt = Services.Fun.GetRandomValue(4, 9);
                 var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
                 for (int i = 0; i < cardsCnt; i++)
                 {
                     var character = await _waifu.GetRandomCharacterAsync();
                     var botCard = _waifu.GenerateNewCard(character, thisCard.Rarity);
+                    characters.Add(new BoosterPackCharacter { Character = character.Id });
 
                     botCard.GameDeckId = (ulong)i;
                     botCard.Id = (ulong)i;
@@ -1022,18 +1041,19 @@ namespace Sanakan.Modules
                 string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
                 if (userWon) resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
 
-                var items = new List<Item> { _waifu.RandomizeItemFromFight().ToItem(), _waifu.RandomizeItemFromFight().ToItem() };
+                items.Add(_waifu.RandomizeItemFromFight().ToItem());
                 var boosterPack = new BoosterPack
                 {
                     RarityExcludedFromPack = new List<RarityExcluded>(),
                     CardSourceFromPack = CardSource.PvE,
-                    Name = "Pakiet kart z masakry PvE",
+                    Name = "Losowa karta z masakry PvE",
                     IsCardFromPackTradable = true,
+                    Characters = characters,
                     MinRarity = Rarity.E,
-                    CardCnt = 2
+                    CardCnt = 1
                 };
 
-                bool userWonPack = Services.Fun.TakeATry(20);
+                bool userWonPack = Services.Fun.TakeATry(12);
                 var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
 
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
@@ -1053,11 +1073,14 @@ namespace Sanakan.Modules
                     affection *= 2;
                     exp /= 5;
                 }
+                exp += 0.001;
 
                 int chance = 10 - (int)thisCard.Affection;
                 if (chance < 6) chance = 6;
 
                 bool allowItems = Services.Fun.TakeATry(chance);
+                if (thisCard.IsBroken()) allowItems = false;
+
                 if ((userWon && !thisCard.IsUnusable()) || allowItems)
                 {
                     foreach (var item in items)

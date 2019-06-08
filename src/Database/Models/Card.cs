@@ -56,7 +56,7 @@ namespace Sanakan.Database.Models
             { 
                 InCage ? "[C]" : "", 
                 Active ? "[A]" : "",
-                this.IsUnusable() ? "[N]" : ""
+                this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
             
             string mark = marks.Any(x => x != "") ? $"**{string.Join("", marks)}** " : "";
