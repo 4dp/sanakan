@@ -138,13 +138,11 @@ namespace Sanakan.Services.PocketWaifu
 
                 case Rarity.C:
                     excudled.Add(Rarity.SS);
-                    excudled.Add(Rarity.E);
                     break;
 
                 case Rarity.D:
                     excudled.Add(Rarity.SS);
                     excudled.Add(Rarity.S);
-                    excudled.Add(Rarity.E);
                     break;
 
                 default:
@@ -152,7 +150,6 @@ namespace Sanakan.Services.PocketWaifu
                     excudled.Add(Rarity.SS);
                     excudled.Add(Rarity.S);
                     excudled.Add(Rarity.A);
-                    excudled.Add(Rarity.E);
                     break;
             }
 

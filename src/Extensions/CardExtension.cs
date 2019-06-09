@@ -84,7 +84,7 @@ namespace Sanakan.Extensions
 
         public static string GetYesNo(this bool b) => b ? "Tak" : "Nie";
 
-        public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -100;
+        public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -80;
 
         public static bool IsBroken(this Card card) => card.GetAffectionString() == "Pogarda";
 

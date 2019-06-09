@@ -1065,12 +1065,12 @@ namespace Sanakan.Modules
                 if (!userWon)
                 {
                     affection *= 1.5;
-                    exp /= 2;
+                    exp /= 1.5;
                 }
 
                 if (thisCard.IsUnusable())
                 {
-                    affection *= 2;
+                    affection *= 1.5;
                     exp /= 5;
                 }
                 exp += 0.001;
@@ -1091,7 +1091,7 @@ namespace Sanakan.Modules
                 if (userWonPack && userWon)
                     resultString += $"+{boosterPack.Name}";
 
-                var exe = new Executable("GMwK PvE", new Task(() =>
+                var exe = new Executable($"GMwK PvE - {thisCard.Name}", new Task(() =>
                 {
                     using (var dbu = new Database.UserContext(_config))
                     {
@@ -1101,7 +1101,7 @@ namespace Sanakan.Modules
                         trCard.Affection -= affection;
                         trCard.ExpCnt += exp;
 
-                        if ((userWon && !trCard.IsUnusable()) || allowItems)
+                        if ((userWon && !thisCard.IsUnusable()) || allowItems)
                         {
                             foreach (var item in items)
                             {
@@ -1125,7 +1125,7 @@ namespace Sanakan.Modules
                 }));
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
 
-                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
+                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n**Twoja karta**: {thisCard.GetString(false, false, true)}\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
             }
         }
 
