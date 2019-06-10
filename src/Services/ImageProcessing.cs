@@ -764,7 +764,9 @@ namespace Sanakan.Services
                 Mode = ResizeMode.Max,
                 Size = new Size(450, 0)
             }));
-            los.Mutate(x => x.Grayscale());
+
+            if (info.Side != DuelInfo.WinnerSide.Draw)
+                los.Mutate(x => x.Grayscale());
 
             img.Mutate(x => x.DrawImage(win, new Point(Xiw, Yi), 1));
             img.Mutate(x => x.DrawImage(los, new Point(Xil, Yi), 1));
