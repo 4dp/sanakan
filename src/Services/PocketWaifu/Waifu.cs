@@ -188,10 +188,11 @@ namespace Sanakan.Services.PocketWaifu
         {
             var num = Fun.GetRandomValue(1000);
             if (num < 10) return ItemType.IncreaseUpgradeCnt;
-            if (num < 30) return ItemType.CardParamsReRoll;
-            if (num < 80) return ItemType.AffectionRecoveryBig;
-            if (num < 200) return ItemType.DereReRoll;
-            if (num < 380) return ItemType.AffectionRecoveryNormal;
+            if (num < 40) return ItemType.AffectionRecoveryGreat;
+            if (num < 100) return ItemType.AffectionRecoveryBig;
+            if (num < 190) return ItemType.CardParamsReRoll;
+            if (num < 280) return ItemType.DereReRoll;
+            if (num < 480) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -201,7 +202,7 @@ namespace Sanakan.Services.PocketWaifu
             {
                 new ItemWithCost(10,    ItemType.AffectionRecoverySmall.ToItem()),
                 new ItemWithCost(35,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(275,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(225,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(50,    ItemType.DereReRoll.ToItem()),
                 new ItemWithCost(100,   ItemType.CardParamsReRoll.ToItem()),
                 new ItemWithCost(3500,  ItemType.IncreaseUpgradeCnt.ToItem()),
@@ -249,9 +250,14 @@ namespace Sanakan.Services.PocketWaifu
             var FAcard1 = GetFA(card1, card2, out var evt1, diffInSex);
             var FAcard2 = GetFA(card2, card1, out var evt2, diffInSex);
 
+            var c1Health = card1.Card.GetHealthWithPenalty();
+            var c2Health = card2.Card.GetHealthWithPenalty();
+            var atkTk1 = c1Health / FAcard2;
+            var atkTk2 = c2Health / FAcard1;
+
             var winner = FightWinner.Draw;
-            if (FAcard1 > FAcard2 + 1) winner = FightWinner.Card1;
-            if (FAcard2 > FAcard1 + 1) winner = FightWinner.Card2;
+            if (atkTk1 > atkTk2 + 0.3) winner = FightWinner.Card1;
+            if (atkTk2 > atkTk1 + 0.3) winner = FightWinner.Card2;
 
             // extra shield from bonuses
             if ((evt1 != FAEvent.None || evt2 != FAEvent.None) && winner != FightWinner.Draw)

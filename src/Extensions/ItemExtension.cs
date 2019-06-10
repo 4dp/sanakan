@@ -11,6 +11,8 @@ namespace Sanakan.Extensions
         {
             switch (type)
             {
+                case ItemType.AffectionRecoveryGreat:
+                    return "Poprawia relacje z kartą w dużym stopniu.";
                 case ItemType.AffectionRecoveryBig:
                     return "Poprawia relacje z kartą w znacznym stopniu.";
                 case ItemType.AffectionRecoveryNormal:
@@ -45,6 +47,8 @@ namespace Sanakan.Extensions
         {
             switch (type)
             {
+                case ItemType.AffectionRecoveryGreat:
+                    return "Wielka fontanna czekolady";
                 case ItemType.AffectionRecoveryBig:
                     return "Tort czekoladowy";
                 case ItemType.AffectionRecoveryNormal:
@@ -201,12 +205,12 @@ namespace Sanakan.Extensions
         {
             if (!type.IsBoosterPack())
                 return null;
-                
+
             return new BoosterPack
             {
                 Name = type.Name(),
                 CardCnt = type.Count(),
-                MinRarity = type.MinRarity(),                
+                MinRarity = type.MinRarity(),
                 CardSourceFromPack = type.GetSource(),
                 IsCardFromPackTradable = type.IsTradable(),
                 RarityExcludedFromPack = type.RarityExcluded(),

@@ -297,6 +297,7 @@ namespace Sanakan.Modules
                     case ItemType.AffectionRecoveryBig:
                     case ItemType.AffectionRecoverySmall:
                     case ItemType.AffectionRecoveryNormal:
+                    case ItemType.AffectionRecoveryGreat:
                         break;
 
                     default:
@@ -326,18 +327,23 @@ namespace Sanakan.Modules
 
                 switch (item.Type)
                 {
+                    case ItemType.AffectionRecoveryGreat:
+                        affectionInc = 1.7 * itemCnt;
+                        embed.Description += "Bardzo powiekszyła się relacja z kartą!";
+                        break;
+
                     case ItemType.AffectionRecoveryBig:
                         affectionInc = 1 * itemCnt;
                         embed.Description += "Znacznie powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryNormal:
-                        affectionInc = 0.1 * itemCnt;
+                        affectionInc = 0.12 * itemCnt;
                         embed.Description += "Powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoverySmall:
-                        affectionInc = 0.025 * itemCnt;
+                        affectionInc = 0.03 * itemCnt;
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
                         break;
 
