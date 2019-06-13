@@ -20,7 +20,7 @@ namespace Sanakan.Services
 {
     public enum TopType
     {
-        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards
+        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower
     }
 
     public enum SCurrency
@@ -200,16 +200,19 @@ namespace Sanakan.Services
                     return list.OrderByDescending(x => x.MessagesCnt).ToList();
 
                 case TopType.PostsMonthly:
-                    return list.Where(x => x.IsCharCounterActive()).OrderByDescending(x => x.MessagesCntAtDate - x.MessagesCnt).ToList();
+                    return list.Where(x => x.IsCharCounterActive()).OrderByDescending(x => x.MessagesCnt - x.MessagesCntAtDate).ToList();
 
                 case TopType.PostsMonthlyCharacter:
-                    return list.Where(x => x.IsCharCounterActive()).OrderByDescending(x => x.CharacterCntFromDate / (x.MessagesCntAtDate - x.MessagesCnt)).ToList();
+                    return list.Where(x => x.IsCharCounterActive()).OrderByDescending(x => x.CharacterCntFromDate / (x.MessagesCnt - x.MessagesCntAtDate)).ToList();
 
                 case TopType.Commands:
                     return list.OrderByDescending(x => x.CommandsCnt).ToList();
 
                 case TopType.Cards:
                     return list.OrderByDescending(x => x.GameDeck.Cards.Count).ToList();
+
+                case TopType.CardsPower:
+                    return list.OrderByDescending(x => x.GameDeck.Cards.Sum(c => c.GetValue())).ToList();
             }
         }
 

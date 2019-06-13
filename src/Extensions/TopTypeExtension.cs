@@ -34,6 +34,9 @@ namespace Sanakan.Extensions
 
                 case TopType.Cards:
                     return "liczby kart";
+
+                case TopType.CardsPower:
+                    return "mocy kart";
             }
         }
     }

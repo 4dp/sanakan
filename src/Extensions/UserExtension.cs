@@ -5,6 +5,7 @@ using Sanakan.Database.Models;
 using Sanakan.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sanakan.Extensions
 {
@@ -99,17 +100,33 @@ namespace Sanakan.Extensions
                     return $"{u.MessagesCnt}";
 
                 case TopType.PostsMonthly:
-                    return $"{u.MessagesCntAtDate - u.MessagesCnt}";
+                    return $"{u.MessagesCnt - u.MessagesCntAtDate}";
 
                 case TopType.PostsMonthlyCharacter:
-                    return $"{u.CharacterCntFromDate / (u.MessagesCntAtDate - u.MessagesCnt)} znaki";
+                    return $"{u.CharacterCntFromDate / (u.MessagesCnt - u.MessagesCntAtDate)} znaki";
 
                 case TopType.Commands:
                     return $"{u.CommandsCnt}";
 
                 case TopType.Cards:
                     return $"{u.GameDeck.Cards.Count}";
+
+                case TopType.CardsPower:
+                    return u.GameDeck.GetCardCountStats();
             }
+        }
+
+        public static string GetCardCountStats(this GameDeck deck)
+        {
+            string stats = "";
+
+            foreach (Rarity rarity in (Rarity[])Enum.GetValues(typeof(Rarity)))
+            {
+                var count = deck.Cards.Count(x => x.Rarity == rarity);
+                if (count > 0) stats += $"**{rarity.ToString().ToUpper()}**: {count} ";
+            }
+
+            return stats;
         }
 
         public static bool ApplySlotMachineSetting(this User user, SlotMachineSetting type, string value)

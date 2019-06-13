@@ -13,6 +13,7 @@ using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Shinden.Logger;
 using Shinden.Models;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Services.PocketWaifu
 {
@@ -135,6 +136,8 @@ namespace Sanakan.Services.PocketWaifu
                     var botUser = db.GetUserOrCreateAsync(winner.Id).Result;
                     botUser.GameDeck.Cards.Add(newCard);
                     db.SaveChanges();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                 }
 
                 _ = Task.Run(async () =>

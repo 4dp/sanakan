@@ -57,6 +57,10 @@ namespace Sanakan.TypeReaders
                 case "cards":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Cards));
 
+                case "kartym":
+                case "cardsp":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.CardsPower));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu topki!"));
             }

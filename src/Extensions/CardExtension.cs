@@ -20,6 +20,23 @@ namespace Sanakan.Extensions
 
         public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
 
+        public static int GetValue(this Card card)
+        {
+            switch (card.Rarity)
+            {
+                case Rarity.SSS: return 30;
+                case Rarity.SS:  return 20;
+                case Rarity.S:   return 15;
+                case Rarity.A:   return 10;
+                case Rarity.B:   return 7;
+                case Rarity.C:   return 5;
+                case Rarity.D:   return 3;
+
+                default:
+                case Rarity.E: return 1;
+            }
+        }
+
         public static string GetDesc(this Card card)
         {
             return $"*{card.Title ?? "????"}*\n\n"
