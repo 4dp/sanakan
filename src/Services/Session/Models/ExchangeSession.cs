@@ -76,10 +76,13 @@ namespace Sanakan.Services.Session.Models
 
         private async Task HandleMessageAsync(SessionContext context)
         {
+            if (State != ExchangeStatus.Add)
+                return;
+
             if (context.Message.Id == Message.Id)
                 return;
 
-            if (State != ExchangeStatus.Add)
+            if (context.Message.Channel.Id != Message.Channel.Id)
                 return;
 
             var cmd = context.Message?.Content?.ToLower();

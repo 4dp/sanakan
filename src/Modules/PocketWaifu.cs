@@ -794,7 +794,11 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterTitleSearchResult($"Karty z **{response.Body.First().Title}**:", cards, Context.Guild));
+                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                {
+                    await ReplyAsync("", embed: emb);
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
             }
         }
 

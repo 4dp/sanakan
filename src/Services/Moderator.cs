@@ -62,7 +62,7 @@ namespace Sanakan.Services
             },
             null,
             TimeSpan.FromMinutes(1),
-            TimeSpan.FromMinutes(1));
+            TimeSpan.FromSeconds(30));
         }
 
         private async Task CyclicCheckPenalties(Database.ManagmentContext db)
@@ -83,7 +83,8 @@ namespace Sanakan.Services
 
                         if ((DateTime.Now - penalty.StartDate).TotalHours < penalty.DurationInHours)
                         {
-                            _ = Task.Run(async () => { await MuteUserGuildAsync(user, muteRole, penalty.Roles); });
+                            var muteMod = penalty.Roles.Any(x => gconfig.ModeratorRoles.Any(z => z.Role == x.Role)) ? muteModRole : null;
+                            _ = Task.Run(async () => { await MuteUserGuildAsync(user, muteRole, penalty.Roles, muteMod); });
                             continue;
                         }
 
@@ -450,12 +451,18 @@ namespace Sanakan.Services
             QueryCacheManager.ExpireTag(new string[] { $"mute" });
         }
 
-        private async Task MuteUserGuildAsync(SocketGuildUser user, SocketRole muteRole, IEnumerable<OwnedRole> roles)
+        private async Task MuteUserGuildAsync(SocketGuildUser user, SocketRole muteRole, IEnumerable<OwnedRole> roles, SocketRole modMuteRole = null)
         {
             if (muteRole != null)
             {
                 if (!user.Roles.Contains(muteRole))
                     await user.AddRoleAsync(muteRole);
+            }
+
+            if (modMuteRole != null)
+            {
+                if (!user.Roles.Contains(modMuteRole))
+                    await user.AddRoleAsync(modMuteRole);
             }
 
             if (roles != null)

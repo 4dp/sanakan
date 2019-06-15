@@ -80,7 +80,7 @@ namespace Sanakan.Services.Session
         }
 
         public bool SessionExist<T>(T session) where T : ISession
-            => _sessions.Where(x => x.IsOwner(session.GetOwner()))
+            => _sessions.Where(x => x.IsOwner(session.GetParticipants()))
                 .Any(x => ((x.GetId() == null) ? (x is T) : (x.GetId() == session.GetId())));
         
         private async Task DisposeAsync(ISession session)

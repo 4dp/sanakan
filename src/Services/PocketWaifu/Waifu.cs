@@ -697,22 +697,47 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
-        public Embed GetWaifuFromCharacterTitleSearchResult(string title, IEnumerable<Card> cards, SocketGuild guild)
+        public List<Embed> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client)
         {
+            var list = new List<Embed>();
             var characters = cards.GroupBy(x => x.Character);
 
             string contentString = "";
             foreach (var cardsG in characters)
             {
-                string.Join(" ", cardsG.Select(x => $"**[{x.Id}]**"));
-                contentString += $"{string.Join(" ", cardsG.Select(x => $"**[{x.Id}]**"))} {cardsG.First().Name}\n";
+                string tempContentString = $"\n**{cardsG.First().Name}**\n";
+                foreach (var card in cardsG)
+                {
+                    var user = client.GetUser(card.GameDeckId);
+                    var uString = user?.Mention ?? "????";
+
+                    tempContentString += $"{uString}: **[{card.Id}]**\n";
+                }
+
+                if ((contentString.Length + tempContentString.Length) <= 2000)
+                {
+                    contentString += tempContentString;
+                }
+                else
+                {
+                    list.Add(new EmbedBuilder()
+                    {
+                        Color = EMType.Info.Color(),
+                        Description = contentString.TrimToLength(2000)
+                    }.Build());
+
+                    contentString = tempContentString;
+                }
+                tempContentString = "";
             }
 
-            return new EmbedBuilder()
+            list.Add(new EmbedBuilder()
             {
                 Color = EMType.Info.Color(),
-                Description = $"{title}\n\n{contentString.TrimToLength(1850)}"
-            }.Build();
+                Description = contentString.TrimToLength(2000)
+            }.Build());
+
+            return list;
         }
 
         public Embed GetBoosterPackList(SocketUser user, IList<BoosterPack> packs)

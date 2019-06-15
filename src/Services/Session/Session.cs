@@ -56,8 +56,10 @@ namespace Sanakan.Services.Session
         public ExecuteOn GetEventType() => Event;
         public IUser GetOwner() => _owners.First();
         public void WithLogger(ILogger logger) => _logger = logger;
+        public IEnumerable<IUser> GetParticipants() => _owners.AsReadOnly();
         public bool IsOwner(IUser user) => _owners.Any(x => x.Id == user.Id);
         public void SetDestroyer(Func<ISession, Task> destroyer) => OnSyncEnd = destroyer;
+        public bool IsOwner(IEnumerable<IUser> user) => _owners.Any(x => user.Any(z => z.Id == x.Id));
 
         public void MarkAsAdded()
         {
