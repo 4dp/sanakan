@@ -539,7 +539,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.UpgradesCnt < 10 && card.Rarity == Rarity.SS)
+                if (card.UpgradesCnt < 5 && card.Rarity == Rarity.SS)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt małą ilość ulepszeń.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -555,7 +555,7 @@ namespace Sanakan.Modules
 
                 card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
                 card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
-                card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 10 : 1);
+                card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 5 : 1);
                 card.Rarity = --card.Rarity;
                 card.Affection += 1;
                 card.ExpCnt = 0;
@@ -1049,7 +1049,16 @@ namespace Sanakan.Modules
 
                 bool userWon = history.Winner?.User != null;
                 string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
-                if (userWon) resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
+                if (userWon)
+                {
+                    resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
+                    for (int i = 0; i < cardsCnt - 3; i++)
+                    {
+                        await Task.Delay(15);
+                        if (Services.Fun.TakeATry(4))
+                            items.Add(_waifu.RandomizeItemFromFight().ToItem());
+                    }
+                }
 
                 items.Add(_waifu.RandomizeItemFromFight().ToItem());
                 var boosterPack = new BoosterPack
@@ -1067,9 +1076,9 @@ namespace Sanakan.Modules
                 var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
 
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
-                double exp = 0.18 * blowsDeal;
+                double exp = 0.22 * blowsDeal;
 
-                double affection = thisCharacter.HasImage ? 0.2 : 0.5;
+                double affection = thisCharacter.HasImage ? 0.15 : 0.5;
                 affection *= blowsDeal;
 
                 if (!userWon)

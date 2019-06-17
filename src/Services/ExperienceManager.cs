@@ -39,7 +39,9 @@ namespace Sanakan.Services
             _messages = new Dictionary<ulong, ulong>();
             _commands = new Dictionary<ulong, ulong>();
             _characters = new Dictionary<ulong, ulong>();
+
 #if !DEBUG
+            _client.GuildMemberUpdated += GuildMemberUpdatedAsync;
             _client.MessageReceived += HandleMessageAsync;
 #endif
         }
@@ -56,6 +58,35 @@ namespace Sanakan.Services
                 {
                     await channel.SendFileAsync(badgeStream, $"{user.Id}.png");
                 }
+            }
+        }
+
+        private async Task GuildMemberUpdatedAsync(SocketGuildUser userOld, SocketGuildUser userNew)
+        {
+            if (userOld.IsBot || userOld.IsWebhook)
+                return;
+
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                var config = await db.GetCachedGuildFullConfigAsync(userNew.Guild.Id);
+                if (config == null)
+                    return;
+
+                if (!userNew.Roles.Any(x => x.Id == config.UserRole))
+                    return;
+
+                var task = new Task(() =>
+                {
+                    using (var dbu = new Database.UserContext(_config))
+                    {
+                        if (!dbu.Users.Any(x => x.Id == userNew.Id))
+                            return;
+
+                        _ = dbu.GetUserOrCreateAsync(userNew.Id).Result;
+                        dbu.SaveChanges();
+                    }
+                });
+                await _executor.TryAdd(new Executable("check profile", task), TimeSpan.FromSeconds(1));
             }
         }
 
@@ -107,7 +138,7 @@ namespace Sanakan.Services
                 _commands.Add(userId, isCommand ? 1u : 0u);
             else
                 if (isCommand)
-                    _commands[userId]++;
+                _commands[userId]++;
         }
 
         private void CountCharacters(ulong userId, ulong characters)
