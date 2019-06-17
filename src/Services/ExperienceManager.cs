@@ -41,7 +41,6 @@ namespace Sanakan.Services
             _characters = new Dictionary<ulong, ulong>();
 
 #if !DEBUG
-            _client.GuildMemberUpdated += GuildMemberUpdatedAsync;
             _client.MessageReceived += HandleMessageAsync;
 #endif
         }
@@ -58,35 +57,6 @@ namespace Sanakan.Services
                 {
                     await channel.SendFileAsync(badgeStream, $"{user.Id}.png");
                 }
-            }
-        }
-
-        private async Task GuildMemberUpdatedAsync(SocketGuildUser userOld, SocketGuildUser userNew)
-        {
-            if (userOld.IsBot || userOld.IsWebhook)
-                return;
-
-            using (var db = new Database.GuildConfigContext(_config))
-            {
-                var config = await db.GetCachedGuildFullConfigAsync(userNew.Guild.Id);
-                if (config == null)
-                    return;
-
-                if (!userNew.Roles.Any(x => x.Id == config.UserRole))
-                    return;
-
-                var task = new Task(() =>
-                {
-                    using (var dbu = new Database.UserContext(_config))
-                    {
-                        if (!dbu.Users.Any(x => x.Id == userNew.Id))
-                            return;
-
-                        _ = dbu.GetUserOrCreateAsync(userNew.Id).Result;
-                        dbu.SaveChanges();
-                    }
-                });
-                await _executor.TryAdd(new Executable("check profile", task), TimeSpan.FromSeconds(1));
             }
         }
 
