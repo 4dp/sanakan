@@ -188,8 +188,8 @@ namespace Sanakan.Services.PocketWaifu
         {
             var num = Fun.GetRandomValue(1000);
             if (num < 10) return ItemType.IncreaseUpgradeCnt;
-            if (num < 40) return ItemType.AffectionRecoveryGreat;
-            if (num < 100) return ItemType.AffectionRecoveryBig;
+            if (num < 35) return ItemType.AffectionRecoveryGreat;
+            if (num < 90) return ItemType.AffectionRecoveryBig;
             if (num < 190) return ItemType.CardParamsReRoll;
             if (num < 280) return ItemType.DereReRoll;
             if (num < 480) return ItemType.AffectionRecoveryNormal;
@@ -205,7 +205,7 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(225,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(50,    ItemType.DereReRoll.ToItem()),
                 new ItemWithCost(100,   ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(3500,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(3000,  ItemType.IncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
                 new ItemWithCost(1400,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
                 new ItemWithCost(800,   ItemType.RandomNormalBoosterPackB.ToItem()),
@@ -218,7 +218,9 @@ namespace Sanakan.Services.PocketWaifu
         public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
             double rExp = 30f / (wild ? 100f : 30f);
-            if (toUp.Id == toSac.Id) rExp = 30f / 5f;
+
+            if (toUp.Character == toSac.Character)
+                rExp = 30f / 5f;
 
             var sacVal = (int) toSac.Rarity;
             var upVal = (int) toUp.Rarity;

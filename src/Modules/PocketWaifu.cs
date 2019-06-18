@@ -1055,7 +1055,7 @@ namespace Sanakan.Modules
                     for (int i = 0; i < cardsCnt - 3; i++)
                     {
                         await Task.Delay(15);
-                        if (Services.Fun.TakeATry(4))
+                        if (Services.Fun.TakeATry(2))
                             items.Add(_waifu.RandomizeItemFromFight().ToItem());
                     }
                 }
