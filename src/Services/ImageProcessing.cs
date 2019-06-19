@@ -222,21 +222,8 @@ namespace Sanakan.Services
 
             switch (botUser.ProfileType)
             {
-                case ProfileType.Img:
-                case ProfileType.StatsWithImg:
-                {
-                    using (var userBg = Image.Load(botUser.StatsReplacementProfileUri))
-                    {
-                        image.Mutate(x => x.DrawImage(userBg, new Point(0, 0), 1));
-                    }
-
-                    if (botUser.ProfileType == ProfileType.StatsWithImg)
-                        goto case ProfileType.Stats;
-                }
-                break;
-
-                default:
                 case ProfileType.Stats:
+                case ProfileType.StatsWithImg:
                     if (shindenUser != null)
                     {
                         if (shindenUser?.ListStats?.AnimeStatus != null)
@@ -255,8 +242,20 @@ namespace Sanakan.Services
                                 image.Mutate(x => x.DrawImage(stats, new Point(0, 142), 1));
                             }
                         }
+
+                        if (botUser.ProfileType == ProfileType.StatsWithImg)
+                            goto case ProfileType.Img;
                     }
-                break;
+                    break;
+
+                case ProfileType.Img:
+                    {
+                        using (var userBg = Image.Load(botUser.StatsReplacementProfileUri))
+                        {
+                            image.Mutate(x => x.DrawImage(userBg, new Point(0, 0), 1));
+                        }
+                    }
+                    break;
             }
 
             return image;
@@ -272,7 +271,7 @@ namespace Sanakan.Services
             using (var border = new Image<Rgba32>(3, 57))
             {
                 border.Mutate(x => x.BackgroundColor(Rgba32.FromHex(color)));
-                badge.Mutate(x => x.DrawImage(border,  new Point(63, 5), 1));
+                badge.Mutate(x => x.DrawImage(border, new Point(63, 5), 1));
             }
 
             using (var stream = await GetImageFromUrlAsync(avatarUrl))
@@ -593,12 +592,12 @@ namespace Sanakan.Services
 
                 if (i < inFirstColumn + 1)
                 {
-                    if (firstColumnMaxLength.Width <  nLen.Width)
+                    if (firstColumnMaxLength.Width < nLen.Width)
                         firstColumnMaxLength = nLen;
                 }
                 else
                 {
-                    if (secondColumnMaxLength.Width <  nLen.Width)
+                    if (secondColumnMaxLength.Width < nLen.Width)
                         secondColumnMaxLength = nLen;
                 }
             }
@@ -726,7 +725,7 @@ namespace Sanakan.Services
 
             using (var chara = await GetCharacterPictureAsync(character))
             {
-                image.Mutate(x => x.DrawImage(chara,new Point(13, 13), 1));
+                image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
             }
 
             using (var bord = GenerateBorder(card))

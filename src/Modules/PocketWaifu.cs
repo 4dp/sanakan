@@ -1072,7 +1072,7 @@ namespace Sanakan.Modules
                     CardCnt = 1
                 };
 
-                bool userWonPack = Services.Fun.TakeATry(12);
+                bool userWonPack = Services.Fun.TakeATry(10);
                 var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
 
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
@@ -1119,6 +1119,11 @@ namespace Sanakan.Modules
 
                         trCard.Affection -= affection;
                         trCard.ExpCnt += exp;
+
+                        if (userWon)
+                            trCard.ArenaStats.Wins += 1;
+                        else
+                            trCard.ArenaStats.Loses += 1;
 
                         if ((userWon && !thisCard.IsUnusable()) || allowItems)
                         {
