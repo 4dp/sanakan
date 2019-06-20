@@ -355,9 +355,26 @@ namespace Sanakan.Modules
                         }
                         if (!card.CanGiveBloodOrUpgradeToSSS())
                         {
-                            affectionInc = -5;
-                            embed.Color = EMType.Error.Color();
-                            embed.Description += $"Karta się przeraziła!";
+                            if (card.HasNoNegativeEffectAfterBloodUsage())
+                            {
+                                if (card.CanGiveRing())
+                                {
+                                    affectionInc = 1.8;
+                                    embed.Description += "Bardzo powiekszyła się relacja z kartą!";
+                                }
+                                else
+                                {
+                                    affectionInc = 1.2;
+                                    embed.Color = EMType.Warning.Color();
+                                    embed.Description += $"Karta się zmartwiła!";
+                                }
+                            }
+                            else
+                            {
+                                affectionInc = -5;
+                                embed.Color = EMType.Error.Color();
+                                embed.Description += $"Karta się przeraziła!";
+                            }
                         }
                         else
                         {

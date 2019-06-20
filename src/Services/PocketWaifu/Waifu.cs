@@ -22,11 +22,6 @@ namespace Sanakan.Services.PocketWaifu
         Card1, Card2, Draw
     }
 
-    public enum FAEvent
-    {
-        None, ExtraShield
-    }
-
     public enum BodereBonus
     {
         None, Minus, Plus
@@ -187,13 +182,13 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 2) return ItemType.BetterIncreaseUpgradeCnt;
-            if (num < 10) return ItemType.IncreaseUpgradeCnt;
-            if (num < 35) return ItemType.AffectionRecoveryGreat;
-            if (num < 90) return ItemType.AffectionRecoveryBig;
-            if (num < 160) return ItemType.CardParamsReRoll;
-            if (num < 250) return ItemType.DereReRoll;
-            if (num < 470) return ItemType.AffectionRecoveryNormal;
+            if (num < 7) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 15) return ItemType.IncreaseUpgradeCnt;
+            if (num < 40) return ItemType.AffectionRecoveryGreat;
+            if (num < 95) return ItemType.AffectionRecoveryBig;
+            if (num < 165) return ItemType.CardParamsReRoll;
+            if (num < 255) return ItemType.DereReRoll;
+            if (num < 475) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -250,8 +245,8 @@ namespace Sanakan.Services.PocketWaifu
                     diffInSex = BodereBonus.Plus;
             }
 
-            var FAcard1 = GetFA(card1, card2, out var evt1, diffInSex);
-            var FAcard2 = GetFA(card2, card1, out var evt2, diffInSex);
+            var FAcard1 = GetFA(card1, card2, diffInSex);
+            var FAcard2 = GetFA(card2, card1, diffInSex);
 
             var c1Health = card1.Card.GetHealthWithPenalty();
             var c2Health = card2.Card.GetHealthWithPenalty();
@@ -261,14 +256,6 @@ namespace Sanakan.Services.PocketWaifu
             var winner = FightWinner.Draw;
             if (atkTk1 > atkTk2 + 0.3) winner = FightWinner.Card1;
             if (atkTk2 > atkTk1 + 0.3) winner = FightWinner.Card2;
-
-            // extra shield from bonuses
-            if ((evt1 != FAEvent.None || evt2 != FAEvent.None) && winner != FightWinner.Draw)
-            {
-                bool c1 = evt1 == FAEvent.ExtraShield && winner == FightWinner.Card2;
-                bool c2 = evt2 == FAEvent.ExtraShield && winner == FightWinner.Card1;
-                if (c1 || c2) winner = FightWinner.Draw;
-            }
 
             // kamidere && deredere
             if (winner == FightWinner.Draw)
@@ -308,10 +295,8 @@ namespace Sanakan.Services.PocketWaifu
             return FightWinner.Draw;
         }
 
-        public double GetFA(CardInfo target, CardInfo enemy, out FAEvent evt, BodereBonus bodere)
+        public double GetFA(CardInfo target, CardInfo enemy, BodereBonus bodere)
         {
-            evt = FAEvent.None;
-
             double atk1 = target.Card.GetAttackWithBonus();
             double def1 = target.Card.GetDefenceWithBonus();
             if (!target.Info.HasImage)
@@ -335,9 +320,7 @@ namespace Sanakan.Services.PocketWaifu
             TryApplyDereBonus(enemy.Card.Dere, ref atk2, ref def2, bodere);
             if (atk2 < 1) atk2 = 1;
             if (def2 < 1) def2 = 1;
-
             if (def2 > 99) def2 = 99;
-            if (def1 >= 100) evt = FAEvent.ExtraShield;
 
             return atk1 * (100 - def2) / 100;
         }
@@ -494,7 +477,7 @@ namespace Sanakan.Services.PocketWaifu
                 else bonus = BodereBonus.Minus;
             }
 
-            var dmg = GetFA(c1, c2, out _, bonus);
+            var dmg = GetFA(c1, c2, bonus);
             if (dmg < 1) dmg = 1;
 
             return (int)dmg;

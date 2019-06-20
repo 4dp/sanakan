@@ -104,6 +104,7 @@ namespace Sanakan.Extensions
         public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -80;
 
         public static bool CanGiveRing(this Card card) => card.Affection >= 5;
+        public static bool HasNoNegativeEffectAfterBloodUsage(this Card card) => card.Affection >= 4;
 
         public static bool CanGiveBloodOrUpgradeToSSS(this Card card) => card.Affection >= 50;
 
