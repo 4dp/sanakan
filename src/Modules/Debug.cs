@@ -11,7 +11,6 @@ using Sanakan.Services.Commands;
 using Sanakan.Services.PocketWaifu;
 using Sanakan.Services.Session;
 using Shinden;
-using Shinden.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,15 +23,13 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
-        private SessionManager _session;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
 
-        public Debug(SessionManager session, Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
         {
             _shClient = shClient;
-            _session = session;
             _helper = helper;
             _waifu = waifu;
             _img = img;
@@ -125,34 +122,6 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Safari: {config.SafariEnabled} `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("throw")]
-        [Summary("rzuca wyjątek")]
-        [Remarks("true")]
-        public async Task ThrowAsync([Summary("w sesji?")]bool session = false)
-        {
-            if (session)
-            {
-                await _session.TryAddSession(new Session(Context.User)
-                {
-                    Event = ExecuteOn.Message,
-                    Id = $"thorwable session",
-                    RunMode = RunMode.Sync,
-                    TimeoutMs = 10000,
-                    OnExecute = async (context, sess) =>
-                    {
-                        await context.Channel.SendMessageAsync("", embed: $"Ok!".ToEmbedMessage(EMType.Bot).Build());
-
-                        throw new Exception("Throwing test session exception!");
-                    }
-                });
-                return;
-            }
-
-            await ReplyAsync("", embed: $"Ok!".ToEmbedMessage(EMType.Bot).Build());
-
-            throw new Exception("Throwing test exception!");
-        }
-
         [Command("lvlbadge", RunMode = RunMode.Async)]
         [Summary("generuje przykładowy obrazek otrzymania poziomu")]
         [Remarks("")]
@@ -194,11 +163,37 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("gitem")]
+        [Summary("generuje przedmiot i daje go użytkownikowi")]
+        [Remarks("Sniku 2 1")]
+        public async Task GenerateItemAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("przedmiot")]ItemType itemType, [Summary("liczba przedmiotów")]uint count = 1)
+        {
+            var item = itemType.ToItem(count);
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                if (thisItem == null)
+                {
+                    thisItem = item;
+                    botuser.GameDeck.Items.Add(thisItem);
+                }
+                else ++thisItem.Count;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                string cnt = (count > 1) ? $" x{count}" : "";
+                await ReplyAsync("", embed: $"{user.Mention} otrzymał _{item.Name}_{cnt}.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("gcard")]
-        [Summary("generuje kartę i dodaje ją użytkownikowi")]
+        [Summary("generuje kartę i daje ją użytkownikowi")]
         [Remarks("Sniku 54861")]
         public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
-            [Summary("jakość karty(nie podanie - losowo)")] Rarity rarity = Rarity.E)
+            [Summary("jakość karty(nie podanie - losowo)")]Rarity rarity = Rarity.E)
         {
             var character = (id == 0) ? await _waifu.GetRandomCharacterAsync() : (await _shClient.GetCharacterInfoAsync(id)).Body;
             var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(character) : _waifu.GenerateNewCard(character, rarity);

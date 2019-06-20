@@ -103,20 +103,13 @@ namespace Sanakan.Extensions
 
         public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -80;
 
-        public static bool IsBroken(this Card card) => card.GetAffectionString() == "Pogarda";
+        public static bool CanGiveRing(this Card card) => card.Affection >= 5;
 
-        public static bool IsUnusable(this Card card)
-        {
-            switch (card.GetAffectionString())
-            {
-                case "Pogarda":
-                case "Nienawiść":
-                    return true;
+        public static bool CanGiveBloodOrUpgradeToSSS(this Card card) => card.Affection >= 50;
 
-                default:
-                    return false;
-            }
-        }
+        public static bool IsBroken(this Card card) => card.Affection <= -50;
+
+        public static bool IsUnusable(this Card card) => card.Affection <= -5;
 
         public static string GetAffectionString(this Card card)
         {
@@ -139,7 +132,6 @@ namespace Sanakan.Extensions
         {
             switch (card.Rarity)
             {
-                case Rarity.SSS:
                 case Rarity.SS:
                     return 100;
 

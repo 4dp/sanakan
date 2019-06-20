@@ -187,12 +187,13 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
+            if (num < 2) return ItemType.BetterIncreaseUpgradeCnt;
             if (num < 10) return ItemType.IncreaseUpgradeCnt;
             if (num < 35) return ItemType.AffectionRecoveryGreat;
             if (num < 90) return ItemType.AffectionRecoveryBig;
-            if (num < 190) return ItemType.CardParamsReRoll;
-            if (num < 280) return ItemType.DereReRoll;
-            if (num < 480) return ItemType.AffectionRecoveryNormal;
+            if (num < 160) return ItemType.CardParamsReRoll;
+            if (num < 250) return ItemType.DereReRoll;
+            if (num < 470) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -852,7 +853,7 @@ namespace Sanakan.Services.PocketWaifu
             }
             else
             {
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 2)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 1)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 

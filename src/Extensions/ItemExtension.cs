@@ -17,8 +17,10 @@ namespace Sanakan.Extensions
                     return "Poprawia relacje z kartą w znacznym stopniu.";
                 case ItemType.AffectionRecoveryNormal:
                     return "Poprawia relacje z kartą.";
+                case ItemType.BetterIncreaseUpgradeCnt:
+                    return "Może zwiększyć znacznie liczbę ulepszeń karty, tylko kto by chciał twoją krew?";
                 case ItemType.IncreaseUpgradeCnt:
-                    return "Pozwala ulepszyć kartę ponownie.";
+                    return "Dodaje dodatkowy punkt ulepszenia do karty.";
                 case ItemType.DereReRoll:
                     return "Pozwala zmienić charakter karty.";
                 case ItemType.CardParamsReRoll:
@@ -53,6 +55,8 @@ namespace Sanakan.Extensions
                     return "Tort czekoladowy";
                 case ItemType.AffectionRecoveryNormal:
                     return "Ciasto truskawkowe";
+                case ItemType.BetterIncreaseUpgradeCnt:
+                    return "Kropla twojej krwi";
                 case ItemType.IncreaseUpgradeCnt:
                     return "Pierścionek zaręczynowy";
                 case ItemType.DereReRoll:

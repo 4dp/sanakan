@@ -328,7 +328,7 @@ namespace Sanakan.Modules
                 switch (item.Type)
                 {
                     case ItemType.AffectionRecoveryGreat:
-                        affectionInc = 1.7 * itemCnt;
+                        affectionInc = 1.6 * itemCnt;
                         embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                         break;
 
@@ -347,10 +347,30 @@ namespace Sanakan.Modules
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
                         break;
 
-                    case ItemType.IncreaseUpgradeCnt:
-                        if (card.GetAffectionString() != "Miłość")
+                    case ItemType.BetterIncreaseUpgradeCnt:
+                        if (card.Rarity == Rarity.SSS)
                         {
-                            await ReplyAsync("", embed: $"{Context.User.Mention} karta musi mieć poziom relacji: *Miłość*.".ToEmbedMessage(EMType.Error).Build());
+                            await ReplyAsync("", embed: $"{Context.User.Mention} karty **SSS** nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (!card.CanGiveBloodOrUpgradeToSSS())
+                        {
+                            affectionInc = -5;
+                            embed.Color = EMType.Error.Color();
+                            embed.Description += $"Karta się przeraziła!";
+                        }
+                        else
+                        {
+                            affectionInc = 1.5;
+                            card.UpgradesCnt += 2;
+                            embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
+                        }
+                        break;
+
+                    case ItemType.IncreaseUpgradeCnt:
+                        if (!card.CanGiveRing())
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} karta musi mieć min. poziom relacji: *Miłość*.".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
                         if (card.Rarity == Rarity.SSS)
@@ -492,8 +512,8 @@ namespace Sanakan.Modules
                 card.Dere = _waifu.RandomizeDere();
                 card.Rarity = Rarity.E;
                 card.UpgradesCnt = 2;
-                card.Affection -= 10;
                 card.RestartCnt += 1;
+                card.Affection = 0;
                 card.ExpCnt = 0;
 
                 await db.SaveChangesAsync();
@@ -545,7 +565,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.GetAffectionString() != "Obsesyjna miłość" && card.Rarity == Rarity.SS)
+                if (!card.CanGiveBloodOrUpgradeToSSS() && card.Rarity == Rarity.SS)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt małą relacje aby ją ulepszyć.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -595,7 +615,7 @@ namespace Sanakan.Modules
                 ++bUser.Stats.SacraficeCards;
 
                 var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
-                cardToUp.Affection += 0.01;
+                cardToUp.Affection += 0.05;
                 cardToUp.ExpCnt += exp;
 
                 bUser.GameDeck.Cards.Remove(cardToSac);
