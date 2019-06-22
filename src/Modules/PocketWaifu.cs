@@ -359,7 +359,7 @@ namespace Sanakan.Modules
                             {
                                 if (card.CanGiveRing())
                                 {
-                                    affectionInc = 1.8;
+                                    affectionInc = 1.7;
                                     embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                                 }
                                 else
@@ -605,12 +605,46 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("zniszcz")]
+        [Alias("destroy")]
+        [Summary("niszczy posiadaną kartę")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task DestroyCardAsync([Summary("WID")]ulong idToSac)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToSac);
+
+                if (cardToSac == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                ++bUser.Stats.SacraficeCards;
+                bUser.GameDeck.Cards.Remove(cardToSac);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zniszczył kartę: {cardToSac.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("poświęć")]
         [Alias("kill", "sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
         [Summary("dodaje exp do karty, poświęcając inną")]
-        [Remarks("5412"), RequireWaifuCommandChannel]
+        [Remarks("5412 5411"), RequireWaifuCommandChannel]
         public async Task SacraficeCardAsync([Summary("WID(do poświęcenia)")]ulong idToSac, [Summary("WID(do ulepszenia)")]ulong idToUp)
         {
+            if (idToSac == idToUp)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} podałeś dwa razy ten sam WID.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);

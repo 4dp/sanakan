@@ -73,7 +73,7 @@ namespace Sanakan.Extensions
 
         public static EmbedBuilder GetStatsView(this User u, IUser user)
         {
-            string stats = $"**Wiadomości**: {u.MessagesCnt}\n**Poleceń**: {u.CommandsCnt}";
+            string stats = $"**Wiadomości**: {u.MessagesCnt}";
 
             return new EmbedBuilder
             {
