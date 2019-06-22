@@ -1408,7 +1408,7 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
                                 + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"
