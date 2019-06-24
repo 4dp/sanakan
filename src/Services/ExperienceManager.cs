@@ -67,23 +67,38 @@ namespace Sanakan.Services
             var user = message.Author as SocketGuildUser;
             if (user == null) return;
 
+            bool calculateExp = true;
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
                 if (config != null)
                 {
-                    if (config.ChannelsWithoutExp != null)
-                        if (config.ChannelsWithoutExp.Any(x => x.Channel == message.Channel.Id))
-                            return;
-
                     var role = user.Guild.GetRole(config.UserRole);
                     if (role != null)
+                    {
                         if (!user.Roles.Contains(role))
                             return;
+                    }
+
+                    if (config.ChannelsWithoutExp != null)
+                    {
+                        if (config.ChannelsWithoutExp.Any(x => x.Channel == message.Channel.Id))
+                            calculateExp = false;
+                    }
                 }
             }
 
-            CalculateExpAndCreateTask(user, message);
+            using (var db = new Database.UserContext(_config))
+            {
+                if (!db.Users.Any(x => x.Id == user.Id))
+                {
+                    var task = CreateUserTask(user);
+                    await _executor.TryAdd(new Executable("add user", task), TimeSpan.FromSeconds(1));
+                }
+            }
+
+            CountMessage(user.Id, message.Content.IsCommand(_config.Get().Prefix));
+            CalculateExpAndCreateTask(user, message, calculateExp);
         }
 
         private bool CheckLastSave(ulong userId)
@@ -94,7 +109,7 @@ namespace Sanakan.Services
                 return false;
             }
 
-            return (DateTime.Now - _saved[userId].AddHours(1)).TotalSeconds > 1;
+            return (DateTime.Now - _saved[userId].AddMinutes(30)).TotalSeconds > 1;
         }
 
         private void CountMessage(ulong userId, bool isCommand)
@@ -119,10 +134,10 @@ namespace Sanakan.Services
                 _characters[userId] += characters;
         }
 
-        private void CalculateExpAndCreateTask(SocketGuildUser user, SocketMessage message)
+        private void CalculateExpAndCreateTask(SocketGuildUser user, SocketMessage message, bool calculateExp)
         {
-            CountMessage(user.Id, message.Content.IsCommand(_config.Get().Prefix));
             var exp = GetPointsFromMsg(message);
+            if (!calculateExp) exp = 0;
 
             if (!_exp.Any(x => x.Key == user.Id))
             {
@@ -169,6 +184,22 @@ namespace Sanakan.Services
             if (experience < min) return min;
             if (experience > max) return max;
             return experience;
+        }
+
+        private Task CreateUserTask(SocketGuildUser user)
+        {
+            return new Task(() =>
+            {
+                using (var db = new Database.UserContext(_config))
+                {
+                    if (!db.Users.Any(x => x.Id == user.Id))
+                    {
+                        var bUser = new Database.Models.User().Default(user.Id);
+                        db.Users.Add(bUser);
+                        db.SaveChanges();
+                    }
+                }
+            });
         }
 
         private Task CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters)
