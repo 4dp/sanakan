@@ -88,12 +88,15 @@ namespace Sanakan.Services
                 }
             }
 
-            using (var db = new Database.UserContext(_config))
+            if (!_messages.Any(x => x.Key == user.Id))
             {
-                if (!db.Users.Any(x => x.Id == user.Id))
+                using (var db = new Database.UserContext(_config))
                 {
-                    var task = CreateUserTask(user);
-                    await _executor.TryAdd(new Executable("add user", task), TimeSpan.FromSeconds(1));
+                    if (!db.Users.Any(x => x.Id == user.Id))
+                    {
+                        var task = CreateUserTask(user);
+                        await _executor.TryAdd(new Executable("add user", task), TimeSpan.FromSeconds(1));
+                    }
                 }
             }
 
