@@ -39,6 +39,7 @@ namespace Sanakan.Api.Models
         {
             var pack = new BoosterPack
             {
+                Characters = new List<BoosterPackCharacter>(),
                 CardSourceFromPack = CardSource.Api,
                 IsCardFromPackTradable = Tradable,
                 MinRarity = Rarity,
