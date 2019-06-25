@@ -3,9 +3,12 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
+using Sanakan.Services;
 using Sanakan.Services.Commands;
+using Shinden;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,10 +21,14 @@ namespace Sanakan.Modules
     public class Moderation : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
+        private ShindenClient _shClient;
+        private Services.Profile _profile;
         private Services.Moderator _moderation;
 
-        public Moderation(Services.Helper helper, Services.Moderator moderation)
+        public Moderation(Services.Helper helper, Services.Moderator moderation, Services.Profile prof, ShindenClient sh)
         {
+            _shClient = sh;
+            _profile = prof;
             _helper = helper;
             _moderation = moderation;
         }
@@ -1169,6 +1176,90 @@ namespace Sanakan.Modules
 
                 await todoChannel.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
             }
+        }
+
+        [Command("check")]
+        [Summary("sprawdza użytkownika")]
+        [Remarks("Karna"), RequireAdminRole]
+        public async Task CheckUserAsync([Summary("użytkownik")]SocketGuildUser user)
+        {
+            string report = "**Globalki:** ✅\n\n";
+            using (var dbg = new Database.GuildConfigContext(Config))
+            {
+                var guildConfig = await dbg.GetCachedGuildFullConfigAsync(user.Guild.Id);
+                using (var db = new Database.UserContext(Config))
+                {
+                    var duser = await db.GetUserOrCreateAsync(user.Id);
+                    var globalRole = user.Guild.GetRole(guildConfig.GlobalEmotesRole);
+                    if (globalRole != null)
+                    {
+                        if (user.Roles.Contains(globalRole))
+                        {
+                            var sub = duser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Globals && x.Guild == user.Guild.Id);
+                            if (sub == null)
+                            {
+                                report = $"**Globalki:** ❗\n\n";
+                                await user.RemoveRoleAsync(globalRole);
+                            }
+                            else if (!sub.IsActive())
+                            {
+                                report = $"**Globalki:** ⚠\n\n";
+                                await user.RemoveRoleAsync(globalRole);
+                            }
+                        }
+                    }
+
+                    string kolorRep = $"**Kolor:** ✅\n\n";
+                    var colorRoles = (IEnumerable<uint>) Enum.GetValues(typeof(FColor));
+                    if (user.Roles.Any(x => colorRoles.Any(c => c.ToString() == x.Name)))
+                    {
+                        var sub = duser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Color && x.Guild == user.Guild.Id);
+                        if (sub == null)
+                        {
+                            kolorRep = $"**Kolor:** ❗\n\n";
+                            await _profile.RomoveUserColorAsync(user);
+                        }
+                        else if (!sub.IsActive())
+                        {
+                            kolorRep = $"**Kolor:** ⚠\n\n";
+                            await _profile.RomoveUserColorAsync(user);
+                        }
+                    }
+                    report += kolorRep;
+
+                    string nickRep = $"**Nick:** ✅";
+                    if (guildConfig.UserRole != 0)
+                    {
+                        var userRole = user.Guild.GetRole(guildConfig.UserRole);
+                        if (userRole != null)
+                        {
+                            if (user.Roles.Contains(userRole))
+                            {
+                                var realNick = user.Nickname ?? user.Username;
+                                if (duser.Shinden != 0)
+                                {
+                                    var res = await _shClient.User.GetAsync(duser.Shinden);
+                                    if (res.Body.Name != realNick)
+                                        nickRep = $"**Nick:** ❗ {res.Body.Name}";
+                                }
+                                else
+                                {
+                                    var res = await _shClient.Search.UserAsync(realNick);
+                                    if (res.IsSuccessStatusCode())
+                                    {
+                                        if (!res.Body.Any(x => x.Name == realNick))
+                                            nickRep = $"**Nick:** ⚠";
+                                    }
+                                    else nickRep = $"**Nick:** ⚠";
+                                }
+                            }
+                        }
+                    }
+                    report += nickRep;
+                }
+            }
+
+            await ReplyAsync("", embed: report.ToEmbedMessage(EMType.Bot).WithAuthor(new EmbedAuthorBuilder().WithUser(user)).Build());
         }
 
         [Command("raport")]

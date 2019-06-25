@@ -75,6 +75,21 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("duser")]
+        [Summary("usuwa użytkownika o podanym id z bazy")]
+        [Remarks("845155646123")]
+        public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var user = await db.GetUserOrCreateAsync(id);
+                db.Users.Remove(user);
+                await db.SaveChangesAsync();
+            }
+
+            await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został wymazany.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("utitle")]
         [Summary("updatuje tytuł karty")]
         [Remarks("ssało")]

@@ -147,7 +147,7 @@ namespace Sanakan.Services
             var colorNumeric = (uint)color;
             var aRole = user.Guild.GetRole(adminRole);
             if (aRole == null) return false;
-            
+
             var cRole = user.Guild.Roles.FirstOrDefault(x => x.Name == colorNumeric.ToString());
             if (cRole == null)
             {
