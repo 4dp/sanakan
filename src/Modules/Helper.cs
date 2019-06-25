@@ -122,7 +122,7 @@ namespace Sanakan.Modules
         }
 
         [Command("zgłoś", RunMode = RunMode.Async)]
-        [Alias("raport", "report", "zgłos", "zglos")]
+        [Alias("raport", "report", "zgłos", "zglos", "zgloś")]
         [Summary("zgłasza wiadomośc użytkownika")]
         [Remarks("63312335634561 Tak nie wolno!"), RequireUserRole]
         public async Task ReportUserAsync([Summary("id wiadomości")]ulong messageId, [Summary("powód")][Remainder]string reason)
