@@ -40,7 +40,7 @@ namespace Sanakan.Api.Controllers
         /// <param name="id">id postaci z bazy shindena</param>
         /// <returns>lista id</returns>
         [HttpGet("users/owning/character/{id}"), Authorize]
-        public async Task<IActionResult> GetUsersOwningCharacterCardAsync(ulong id)
+        public async Task<IEnumerable<ulong>> GetUsersOwningCharacterCardAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
             {
@@ -48,9 +48,10 @@ namespace Sanakan.Api.Controllers
                     .Where(x => x.Character == id && x.GameDeck.User.Shinden != 0).Select(x => x.GameDeck.User.Shinden).Distinct().ToListAsync();
 
                 if (shindenIds.Count > 0)
-                    return Ok(shindenIds);
+                    return shindenIds;
 
-                return "User not found".ToResponse(404);
+                await "Users not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                return null;
             }
         }
 
