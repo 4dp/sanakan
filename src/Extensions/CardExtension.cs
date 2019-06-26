@@ -13,10 +13,12 @@ namespace Sanakan.Extensions
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
-            string name = nameAsUrl ? $"[{card.Name}]({card.GetCharacterUrl()})" : card.Name;
+            string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
 
             return $"{idStr} {name} **{card.Rarity}** ❤{card.GetHealthWithPenalty(allowZero)} 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()} {upgCnt}";
         }
+
+        public static string GetNameWithUrl(this Card card) => $"[{card.Name}]({card.GetCharacterUrl()})";
 
         public static string GetCharacterUrl(this Card card) => Shinden.API.Url.GetCharacterURL(card.Character);
 
