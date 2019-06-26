@@ -823,20 +823,37 @@ namespace Sanakan.Services.PocketWaifu
             return small ? sImageLocation : imageLocation;
         }
 
-        private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false)
+        public void DeleteCardImageIfExist(Card card)
+        {
+            string imageLocation = $"./GOut/Cards/{card.Id}.png";
+            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+
+            try
+            {
+                if (File.Exists(imageLocation))
+                    File.Delete(imageLocation);
+
+                if (File.Exists(sImageLocation))
+                    File.Delete(sImageLocation);
+            }
+            catch (Exception) {}
+        }
+
+        private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false, bool force = false)
         {
             string imageUrl = null;
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
 
-            if (!File.Exists(imageLocation) || !File.Exists(sImageLocation))
+            if (!File.Exists(imageLocation) || !File.Exists(sImageLocation) || force)
             {
                 if (card.Id != 0)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
             else
             {
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 1)
+                imageUrl = imageLocation;
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 
@@ -887,8 +904,8 @@ namespace Sanakan.Services.PocketWaifu
         public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
         {
             string url = null;
-            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner.Card);
-            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser.Card);
+            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner.Card, force: true);
+            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser.Card, force: true);
 
             DuelImage dImg = null;
             var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");

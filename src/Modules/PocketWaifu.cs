@@ -403,6 +403,7 @@ namespace Sanakan.Modules
                         affectionInc = 0.1;
                         card.Dere = _waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
+                        _waifu.DeleteCardImageIfExist(card);
                         break;
 
                     case ItemType.CardParamsReRoll:
@@ -410,6 +411,7 @@ namespace Sanakan.Modules
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
                         embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
+                        _waifu.DeleteCardImageIfExist(card);
                         break;
 
                     default:
@@ -534,6 +536,7 @@ namespace Sanakan.Modules
                 card.ExpCnt = 0;
 
                 await db.SaveChangesAsync();
+                _waifu.DeleteCardImageIfExist(card);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
@@ -598,6 +601,7 @@ namespace Sanakan.Modules
                 card.ExpCnt = 0;
 
                 await db.SaveChangesAsync();
+                _waifu.DeleteCardImageIfExist(card);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
@@ -626,6 +630,7 @@ namespace Sanakan.Modules
                 bUser.GameDeck.Cards.Remove(cardToSac);
 
                 await db.SaveChangesAsync();
+                _waifu.DeleteCardImageIfExist(cardToSac);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
@@ -672,6 +677,7 @@ namespace Sanakan.Modules
                 bUser.GameDeck.Cards.Remove(cardToSac);
 
                 await db.SaveChangesAsync();
+                _waifu.DeleteCardImageIfExist(cardToSac);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
