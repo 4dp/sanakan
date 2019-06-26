@@ -39,6 +39,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id postaci z bazy shindena</param>
         /// <returns>lista id</returns>
+        /// <response code="404">Users not found</response>
         [HttpGet("users/owning/character/{id}"), Authorize]
         public async Task<IEnumerable<ulong>> GetUsersOwningCharacterCardAsync(ulong id)
         {
