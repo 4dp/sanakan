@@ -142,13 +142,13 @@ namespace Sanakan.Services.PocketWaifu
 
                 _ = Task.Run(async () =>
                 {
-                    embed.ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, character, newCard, trashChannel);
-                    embed.Description = $"{winner.Mention} zdobył na polowaniu i wsadził do klatki:\n"
-                                       + $"{newCard.GetString(false, false, true)}\n({newCard.Title})";
-                    await msg.ModifyAsync(x => x.Embed = embed.Build());
-
                     try
                     {
+                        embed.ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, character, newCard, trashChannel);
+                        embed.Description = $"{winner.Mention} zdobył na polowaniu i wsadził do klatki:\n"
+                                        + $"{newCard.GetString(false, false, true)}\n({newCard.Title})";
+                        await msg.ModifyAsync(x => x.Embed = embed.Build());
+
                         var privEmb = new EmbedBuilder()
                         {
                             Color = EMType.Info.Color(),
@@ -158,7 +158,10 @@ namespace Sanakan.Services.PocketWaifu
                         var priv = await winner.GetOrCreateDMChannelAsync();
                         if (priv != null) await priv.SendMessageAsync("", false, privEmb.Build());
                     }
-                    catch (Exception) { }
+                    catch (Exception ex)
+                    {
+                        _logger.Log($"In Safari: {ex}");
+                    }
                 });
             }));
         }
@@ -201,17 +204,14 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             UserCounter[author.Id] += GetMessageRealLenght(message);
-            if (UserCounter[author.Id] > 3500)
+            if (UserCounter[author.Id] > 3250)
             {
                 UserCounter[author.Id] = 0;
                 _ = Task.Run(async () =>
                 {
-                    if (!Fun.TakeATry(6))
-                    {
-                        SpawnUserPacket(author);
-                        await message.Channel.SendMessageAsync("", embed: $"{author.Mention} otrzymał pakiet losowych kart."
-                            .ToEmbedMessage(EMType.Bot).Build());
-                    }
+                    SpawnUserPacket(author);
+                    await message.Channel.SendMessageAsync("", embed: $"{author.Mention} otrzymał pakiet losowych kart."
+                        .ToEmbedMessage(EMType.Bot).Build());
                 });
             }
         }

@@ -38,7 +38,7 @@ namespace Sanakan.Modules
         [Command("poke", RunMode = RunMode.Async)]
         [Summary("generuje obrazek safari")]
         [Remarks("1")]
-        public async Task GeneratPokeImageAsync([Summary("nr grafiki")]int index)
+        public async Task GeneratePokeImageAsync([Summary("nr grafiki")]int index)
         {
             try
             {
@@ -56,10 +56,39 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("missingu", RunMode = RunMode.Async)]
+        [Summary("generuje liste id użytkowników, których nie widzi bot na serwerach")]
+        [Remarks("")]
+        public async Task GenerateMissingUsersListAsync()
+        {
+            var allUsers = Context.Client.Guilds.SelectMany(x => x.Users).Distinct();
+            using (var db = new Database.UserContext(Config))
+            {
+                var nonExistingIds = db.Users.Where(x => !allUsers.Any(u => u.Id == x.Id)).Select(x => x.Id).ToList();
+                await ReplyAsync("", embed: string.Join("\n", nonExistingIds).ToEmbedMessage(EMType.Bot).Build());
+            }
+        }
+
+        [Command("missingc", RunMode = RunMode.Async)]
+        [Summary("generuje liste id kart, których właścicieli nie widzi bot na serwerach")]
+        [Remarks("true")]
+        public async Task GenerateMissingUsersCardListAsync([Summary("czy wypisać idki")]bool ids = false)
+        {
+            var allUsers = Context.Client.Guilds.SelectMany(x => x.Users).Distinct();
+            using (var db = new Database.UserContext(Config))
+            {
+                var nonExistingIds = db.Cards.Where(x => !allUsers.Any(u => u.Id == x.GameDeckId)).Select(x => x.Id).ToList();
+                await ReplyAsync("", embed: $"Kart: {nonExistingIds.Count}".ToEmbedMessage(EMType.Bot).Build());
+
+                if (ids)
+                    await ReplyAsync("", embed: string.Join("\n", nonExistingIds).ToEmbedMessage(EMType.Bot).Build());
+            }
+        }
+
         [Command("cstats", RunMode = RunMode.Async)]
         [Summary("generuje statystyki kart począwszy od podanej karty")]
         [Remarks("1")]
-        public async Task GeneratCardStatsAsync([Summary("WID")]ulong wid)
+        public async Task GenerateCardStatsAsync([Summary("WID")]ulong wid)
         {
             var stats = new long[(int)Rarity.E + 1];
             using (var db = new Database.UserContext(Config))
