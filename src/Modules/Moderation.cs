@@ -1262,6 +1262,26 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: report.ToEmbedMessage(EMType.Bot).WithAuthor(new EmbedAuthorBuilder().WithUser(user)).Build());
         }
 
+        [Command("loteria", RunMode = RunMode.Async)]
+        [Summary("bot losuje osobę spośród tych co dodali reakcję")]
+        [Remarks("5"), RequireAdminRole]
+        public async Task GetRandomUserAsync([Summary("długość w minutach")]uint duration)
+        {
+            var emote = new Emoji("🎰");
+            var time = DateTime.Now.AddMinutes(duration);
+            var msg = await ReplyAsync("", embed: $"Loteria! zareaguj {emote} aby wziąć udział.\n\n Koniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+
+            await msg.AddReactionAsync(emote);
+            await Task.Delay(TimeSpan.FromMinutes(duration));
+            await msg.RemoveReactionAsync(emote, Context.Client.CurrentUser);
+
+            var reactions = await msg.GetReactionUsersAsync(emote, 300).FlattenAsync();
+            var winner = Services.Fun.GetOneRandomFrom(reactions);
+            await msg.DeleteAsync();
+
+            await ReplyAsync("", embed: $"Zwycięzca loterii: {winner.Mention}".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("raport")]
         [Summary("rozwiązuje raport")]
         [Remarks("2342123444212 4 kara dla Ciebie"), RequireAdminRole]

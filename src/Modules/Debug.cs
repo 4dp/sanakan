@@ -69,6 +69,31 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("tranc")]
+        [Summary("przenosi kartę między użytkownikami")]
+        [Remarks("41231 Sniku")]
+        public async Task TransferCardAsync([Summary("WID")]ulong wid, [Summary("użytkownik")]SocketGuildUser user)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var thisCard = db.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"Karta o WID: `{wid}` nie istnieje.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                var targetUser = await db.GetUserOrCreateAsync(user.Id);
+                var fromUser = await db.GetUserOrCreateAsync(thisCard.GameDeckId);
+
+                fromUser.GameDeck.Cards.Remove(thisCard);
+                targetUser.GameDeck.Cards.Add(thisCard);
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} została przeniesiona.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("missingc", RunMode = RunMode.Async)]
         [Summary("generuje liste id kart, których właścicieli nie widzi bot na serwerach")]
         [Remarks("true")]
