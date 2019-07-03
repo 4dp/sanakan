@@ -221,5 +221,70 @@ namespace Sanakan.Api.Controllers
             }
             await "The appropriate claim was not found".ToResponse(403).ExecuteResultAsync(ControllerContext);
         }
+
+        /// <summary>
+        /// Aktywuje lub dezaktywuje kartę (wymagany Bearer od użytkownika)
+        /// </summary>
+        /// <param name="wid">id karty</param>
+        /// <response code="403">The appropriate claim was not found</response>
+        /// <response code="404">Card not found</response>
+        [HttpPut("deck/toggle/card/{wid}"), Authorize(Policy = "Player")]
+        public async Task ToggleCardStatusAsync(ulong wid)
+        {
+            var currUser = ControllerContext.HttpContext.User;
+            if (currUser.HasClaim(x => x.Type == "DiscordId"))
+            {
+                if (ulong.TryParse(currUser.Claims.First(x => x.Type == "DiscordId").Value, out var discordId))
+                {
+                    using (var db = new Database.UserContext(_config))
+                    {
+                        var botUserCh = await db.GetCachedFullUserAsync(discordId);
+                        if (botUserCh == null)
+                        {
+                            await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                            return;
+                        }
+
+                        var thisCardCh = botUserCh.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                        if (thisCardCh == null)
+                        {
+                            await "Card not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                            return;
+                        }
+
+                        if (thisCardCh.InCage)
+                        {
+                            await "Card is in cage!".ToResponse(403).ExecuteResultAsync(ControllerContext);
+                            return;
+                        }
+
+                        if (!thisCardCh.Active && botUserCh.GameDeck.Cards.Where(x => x.Active).Count() >= 3)
+                        {
+                            await "Limit of active cards triggered!".ToResponse(403).ExecuteResultAsync(ControllerContext);
+                            return;
+                        }
+                    }
+
+                    var exe = new Executable($"api-deck u{discordId}", new Task(() =>
+                    {
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var botUser = db.GetUserOrCreateAsync(discordId).Result;
+                            var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                            thisCard.Active = !thisCard.Active;
+
+                            db.SaveChanges();
+
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+                        }
+                    }));
+
+                    await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                    await "Card status toggled".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                    return;
+                }
+            }
+            await "The appropriate claim was not found".ToResponse(403).ExecuteResultAsync(ControllerContext);
+        }
     }
 }
