@@ -599,9 +599,9 @@ namespace Sanakan.Modules
         }
 
         [Command("selfrole")]
-        [Summary("dodaje nową role do automatycznego zarządzania")]
+        [Summary("dodaje/usuwa role do automatycznego zarządzania")]
         [Remarks("34125343243432 newsy"), RequireAdminRole]
-        public async Task SetSelfRoleAsync([Summary("id roli")]SocketRole role, [Summary("nazwa")][Remainder]string name)
+        public async Task SetSelfRoleAsync([Summary("id roli")]SocketRole role, [Summary("nazwa")][Remainder]string name = null)
         {
             if (role == null)
             {
@@ -622,6 +622,12 @@ namespace Sanakan.Modules
                     QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
 
                     await ReplyAsync("", embed: $"Usunięto {role.Mention} z listy roli automatycznego zarządzania.".ToEmbedMessage(EMType.Success).Build());
+                    return;
+                }
+
+                if (name == null)
+                {
+                    await ReplyAsync("", embed: "Nie podano nazwy roli.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

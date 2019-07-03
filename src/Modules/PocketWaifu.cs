@@ -48,7 +48,7 @@ namespace Sanakan.Modules
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
         [Remarks("tag konie"), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag)")]HaremType type = HaremType.Rarity, string tag = null)
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag)")]HaremType type = HaremType.Rarity, [Summary("tag)")][Remainder]string tag = null)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -765,7 +765,7 @@ namespace Sanakan.Modules
         [Alias("oznacz")]
         [Summary("zmienia tag na karcie")]
         [Remarks("1 konie"), RequireWaifuCommandChannel]
-        public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")]string tag = null)
+        public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")][Remainder]string tag = null)
         {
             using (var db = new Database.UserContext(Config))
             {
