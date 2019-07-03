@@ -43,6 +43,7 @@ namespace Sanakan.Database.Models
         public DateTime CreationDate { get; set; }
         public CardSource Source { get; set; }
         public string Title { get; set; }
+        public string Tags { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 
@@ -52,13 +53,13 @@ namespace Sanakan.Database.Models
 
         public override string ToString()
         {
-            var marks = new[] 
-            { 
-                InCage ? "[C]" : "", 
+            var marks = new[]
+            {
+                InCage ? "[C]" : "",
                 Active ? "[A]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
-            
+
             string mark = marks.Any(x => x != "") ? $"**{string.Join("", marks)}** " : "";
             return $"{mark}{this.GetString(false, false, true)}";
         }

@@ -51,7 +51,8 @@ namespace Sanakan.Extensions
                 + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
                 + $"**WID:** {card.Id}\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
-                + $"**Pochodzenie:** {card.Source.GetString()}\n\n";
+                + $"**Pochodzenie:** {card.Source.GetString()}\n"
+                + $"**Tagi:** {card.Tags}\n\n";
         }
 
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)

@@ -405,7 +405,8 @@ namespace Sanakan.Services.PocketWaifu
                 RarityOnStart = rarity,
                 IsTradable = true,
                 UpgradesCnt = 2,
-                Rarity = rarity
+                Rarity = rarity,
+                Tags = "none",
             };
 
             card.Health = RandomizeHealth(card);

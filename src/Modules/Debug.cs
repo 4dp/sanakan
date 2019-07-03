@@ -86,6 +86,10 @@ namespace Sanakan.Modules
                 var targetUser = await db.GetUserOrCreateAsync(user.Id);
                 var fromUser = await db.GetUserOrCreateAsync(thisCard.GameDeckId);
 
+                thisCard.Active = false;
+                thisCard.InCage = false;
+                thisCard.Tags = "none";
+
                 fromUser.GameDeck.Cards.Remove(thisCard);
                 targetUser.GameDeck.Cards.Add(thisCard);
                 await db.SaveChangesAsync();
