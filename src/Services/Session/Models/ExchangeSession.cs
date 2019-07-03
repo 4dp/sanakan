@@ -270,7 +270,7 @@ namespace Sanakan.Services.Session.Models
                                 var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = "none";
+                                    card.Tags = null;
                                     card.Active = false;
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
@@ -282,7 +282,7 @@ namespace Sanakan.Services.Session.Models
                                 var card = user2.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = "none";
+                                    card.Tags = null;
                                     card.Active = false;
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);

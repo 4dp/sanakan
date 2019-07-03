@@ -52,7 +52,7 @@ namespace Sanakan.Extensions
                 + $"**WID:** {card.Id}\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n"
-                + $"**Tagi:** {card.Tags}\n\n";
+                + $"**Tagi:** {card.Tags ?? "---"}\n\n";
         }
 
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)

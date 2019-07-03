@@ -44,6 +44,9 @@ namespace Sanakan.TypeReaders
                 case "health":
                     return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Health));
 
+                case "tag":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Tag));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu haremu!"));
             }

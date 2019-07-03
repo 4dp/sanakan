@@ -83,16 +83,19 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var oldOwnerId = thisCard.GameDeckId;
                 var targetUser = await db.GetUserOrCreateAsync(user.Id);
-                var fromUser = await db.GetUserOrCreateAsync(thisCard.GameDeckId);
+                var fromUser = await db.GetUserOrCreateAsync(oldOwnerId);
 
                 thisCard.Active = false;
                 thisCard.InCage = false;
-                thisCard.Tags = "none";
+                thisCard.Tags = null;
 
                 fromUser.GameDeck.Cards.Remove(thisCard);
                 targetUser.GameDeck.Cards.Add(thisCard);
                 await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{oldOwnerId}" });
 
                 await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} została przeniesiona.".ToEmbedMessage(EMType.Success).Build());
             }
@@ -143,6 +146,8 @@ namespace Sanakan.Modules
                 var user = await db.GetUserOrCreateAsync(id);
                 db.Users.Remove(user);
                 await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { "users" });
             }
 
             await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został wymazany.".ToEmbedMessage(EMType.Success).Build());

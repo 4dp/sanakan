@@ -47,11 +47,17 @@ namespace Sanakan.Modules
         [Command("harem", RunMode = RunMode.Async)]
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
-        [Remarks("klatka"), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie)")]HaremType type = HaremType.Rarity)
+        [Remarks("tag konie"), RequireWaifuCommandChannel]
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag)")]HaremType type = HaremType.Rarity, string tag = null)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
+
+            if (type == HaremType.Tag && tag == null)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} musisz sprecyzować tag!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
 
             using (var db = new Database.UserContext(Config))
             {
@@ -63,7 +69,7 @@ namespace Sanakan.Modules
                 }
 
                 session.Enumerable = false;
-                session.ListItems = _waifu.GetListInRightOrder(user.GameDeck.Cards, type);
+                session.ListItems = _waifu.GetListInRightOrder(user.GameDeck.Cards, type, tag);
                 session.Embed = new EmbedBuilder
                 {
                     Color = EMType.Info.Color(),
@@ -752,6 +758,39 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{user.Mention} wyciągnął {cntIn} kart z klatki.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("tag")]
+        [Alias("oznacz")]
+        [Summary("zmienia tag na karcie")]
+        [Remarks("1 konie"), RequireWaifuCommandChannel]
+        public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")]string tag = null)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (thisCard.Tags == null || tag == null)
+                {
+                    thisCard.Tags = tag;
+                }
+                else
+                {
+                    thisCard.Tags += $" {tag}";
+                }
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

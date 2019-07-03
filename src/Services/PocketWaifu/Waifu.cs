@@ -29,7 +29,7 @@ namespace Sanakan.Services.PocketWaifu
 
     public enum HaremType
     {
-        Rarity, Cage, Affection, Attack, Defence, Health
+        Rarity, Cage, Affection, Attack, Defence, Health, Tag
     }
 
     public class Waifu
@@ -47,7 +47,7 @@ namespace Sanakan.Services.PocketWaifu
             _shClient = client;
         }
 
-        public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type)
+        public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type, string tag)
         {
             switch (type)
             {
@@ -65,6 +65,9 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.Cage:
                     return list.Where(x => x.InCage).ToList();
+
+                case HaremType.Tag:
+                    return list.Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag)).ToList();
 
                 default:
                 case HaremType.Rarity:
@@ -406,7 +409,7 @@ namespace Sanakan.Services.PocketWaifu
                 IsTradable = true,
                 UpgradesCnt = 2,
                 Rarity = rarity,
-                Tags = "none",
+                Tags = null,
             };
 
             card.Health = RandomizeHealth(card);
