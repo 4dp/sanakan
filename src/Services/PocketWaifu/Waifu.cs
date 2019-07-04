@@ -29,7 +29,7 @@ namespace Sanakan.Services.PocketWaifu
 
     public enum HaremType
     {
-        Rarity, Cage, Affection, Attack, Defence, Health, Tag
+        Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag
     }
 
     public class Waifu
@@ -67,7 +67,10 @@ namespace Sanakan.Services.PocketWaifu
                     return list.Where(x => x.InCage).ToList();
 
                 case HaremType.Tag:
-                    return list.Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag)).ToList();
+                    return list.Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).ToList();
+
+                case HaremType.NoTag:
+                    return list.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
 
                 default:
                 case HaremType.Rarity:
@@ -676,8 +679,18 @@ namespace Sanakan.Services.PocketWaifu
             string contentString = "";
             foreach (var card in cards)
             {
+                string favIcon = "";
+                string shopIcon = "";
+                string tradableIcon = card.IsTradable ? "" : "⛔";
+                if (card.Tags != null)
+                {
+                    favIcon = card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase) ? " 💗" : "";
+                    shopIcon = card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) ? " 🔄" : "";
+                }
+                string tags = $"{tradableIcon}{favIcon}{shopIcon}";
+
                 var thU = guild.GetUser(card.GameDeck.UserId);
-                if (thU != null) contentString += $"{thU.Mention} **[{card.Id}]**\n";
+                if (thU != null) contentString += $"{thU.Mention ?? "????"} **[{card.Id}]** {tags}\n";
             }
 
             return new EmbedBuilder()
@@ -698,10 +711,20 @@ namespace Sanakan.Services.PocketWaifu
                 string tempContentString = $"\n**{cardsG.First().GetNameWithUrl()}**\n";
                 foreach (var card in cardsG)
                 {
+                    string favIcon = "";
+                    string shopIcon = "";
+                    string tradableIcon = card.IsTradable ? "" : "⛔";
+                    if (card.Tags != null)
+                    {
+                        favIcon = card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase) ? " 💗" : "";
+                        shopIcon = card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) ? " 🔄" : "";
+                    }
+                    string tags = $"{tradableIcon}{favIcon}{shopIcon}";
+
                     var user = client.GetUser(card.GameDeckId);
                     var uString = user?.Mention ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]**\n";
+                    tempContentString += $"{uString}: **[{card.Id}]** {tags}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)

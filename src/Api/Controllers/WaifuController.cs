@@ -144,6 +144,19 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Pobiera liste kart z danym tagiem
+        /// </summary>
+        /// <param name="tag">tag na karcie</param>
+        [HttpGet("cards/tag/{tag}"), Authorize]
+        public async Task<IEnumerable<Database.Models.Card>> GetCardsWithTagAsync(string tag)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                return await db.Cards.Include(x => x.ArenaStats).Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).ToListAsync();
+            }
+        }
+
+        /// <summary>
         /// Wymusza na bocie wygenerowanie obrazka jeśli nie istnieje
         /// </summary>
         /// <param name="id">id karty (wid)</param>
