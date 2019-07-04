@@ -679,18 +679,8 @@ namespace Sanakan.Services.PocketWaifu
             string contentString = "";
             foreach (var card in cards)
             {
-                string favIcon = "";
-                string shopIcon = "";
-                string tradableIcon = card.IsTradable ? "" : "⛔";
-                if (card.Tags != null)
-                {
-                    favIcon = card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase) ? " 💗" : "";
-                    shopIcon = card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) ? " 🔄" : "";
-                }
-                string tags = $"{tradableIcon}{favIcon}{shopIcon}";
-
                 var thU = guild.GetUser(card.GameDeck.UserId);
-                if (thU != null) contentString += $"{thU.Mention ?? "????"} **[{card.Id}]** {tags}\n";
+                if (thU != null) contentString += $"{thU.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
             }
 
             return new EmbedBuilder()
@@ -711,20 +701,10 @@ namespace Sanakan.Services.PocketWaifu
                 string tempContentString = $"\n**{cardsG.First().GetNameWithUrl()}**\n";
                 foreach (var card in cardsG)
                 {
-                    string favIcon = "";
-                    string shopIcon = "";
-                    string tradableIcon = card.IsTradable ? "" : "⛔";
-                    if (card.Tags != null)
-                    {
-                        favIcon = card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase) ? " 💗" : "";
-                        shopIcon = card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) ? " 🔄" : "";
-                    }
-                    string tags = $"{tradableIcon}{favIcon}{shopIcon}";
-
                     var user = client.GetUser(card.GameDeckId);
                     var uString = user?.Mention ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]** {tags}\n";
+                    tempContentString += $"{uString}: **[{card.Id}]** {card.GetStatusIcons()}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)

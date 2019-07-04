@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Sanakan.Database.Models;
 using Sanakan.Services.PocketWaifu;
@@ -37,6 +38,25 @@ namespace Sanakan.Extensions
                 default:
                 case Rarity.E: return 1;
             }
+        }
+
+        public static string GetStatusIcons(this Card card)
+        {
+            var icons = new List<string>();
+            if (!card.IsTradable) icons.Add("⛔");
+            if (card.IsBroken()) icons.Add("💔");
+            if (card.InCage) icons.Add("🔒");
+
+            if (card.Tags != null)
+            {
+                if (card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
+                    icons.Add("💗");
+
+                if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) && icons.Count == 0)
+                    icons.Add("🔄");
+            }
+
+            return string.Join(" ", icons);
         }
 
         public static string GetDesc(this Card card)
