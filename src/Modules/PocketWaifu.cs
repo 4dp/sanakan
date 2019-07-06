@@ -135,6 +135,25 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("karta-", RunMode = RunMode.Async)]
+        [Alias("card-")]
+        [Summary("pozwala wyświetlić kartę w prostej postaci")]
+        [Remarks("685"), RequireWaifuCommandChannel]
+        public async Task ShowCardStringAsync([Summary("WID")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var card = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).FromCacheAsync(new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"{card.GetString(false, true, true)} {card.GetStatusIcons()}\n\n{card.GetAffectionString()}\n{card.ExpCnt.ToString("F")}".ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
         [Command("karta", RunMode = RunMode.Async)]
         [Alias("card")]
         [Summary("pozwala wyświetlić kartę")]
@@ -1495,7 +1514,7 @@ namespace Sanakan.Modules
 
                 if (bUser.GameDeck?.Waifu != 0)
                 {
-                    var tChar = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
+                    var tChar = bUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
                     if (tChar != null)
                     {
                         var response = await _shclient.GetCharacterInfoAsync(tChar.Character);

@@ -256,7 +256,7 @@ namespace Sanakan.Modules
                     thisItem = item;
                     botuser.GameDeck.Items.Add(thisItem);
                 }
-                else ++thisItem.Count;
+                else thisItem.Count += count;
 
                 await db.SaveChangesAsync();
 
