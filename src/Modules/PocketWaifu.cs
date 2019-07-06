@@ -906,6 +906,43 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("ulubione", RunMode = RunMode.Async)]
+        [Alias("favs")]
+        [Summary("pozwala wyszukac użytkowników posiadających karty z naszej listy ulubionych postaci")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsFromFavListAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var user = await db.GetCachedFullUserAsync(Context.User.Id);
+                if (user == null)
+                {
+                    await ReplyAsync("", embed: "Nie posiadasz profilu bota!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var response = await _shclient.User.GetFavCharactersAsync(user.Shinden);
+                if (!response.IsSuccessStatusCode())
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono listy ulubionych postaci!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character));
+                if (cards.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                {
+                    await ReplyAsync("", embed: emb);
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
+            }
+        }
+
         [Command("jakie", RunMode = RunMode.Async)]
         [Alias("which")]
         [Summary("pozwala wyszukac użytkowników posiadających karty z danego tytułu")]
