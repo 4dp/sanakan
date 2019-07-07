@@ -9,6 +9,9 @@ namespace Sanakan.Extensions
     {
         public static EmbedAuthorBuilder WithUser(this EmbedAuthorBuilder builder, IUser user, bool includeId = false)
         {
+            if (user == null)
+                return builder.WithName("????");
+
             string id = includeId ? $" ({user.Id})" : "";
 
             if (user is SocketGuildUser sUser)
