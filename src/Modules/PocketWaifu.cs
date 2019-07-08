@@ -358,21 +358,25 @@ namespace Sanakan.Modules
                 {
                     case ItemType.AffectionRecoveryGreat:
                         affectionInc = 1.6 * itemCnt;
+                        bUser.GameDeck.Karma += 0.02 * itemCnt;
                         embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryBig:
                         affectionInc = 1 * itemCnt;
+                        bUser.GameDeck.Karma += 0.01 * itemCnt;
                         embed.Description += "Znacznie powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryNormal:
                         affectionInc = 0.12 * itemCnt;
+                        bUser.GameDeck.Karma += 0.005 * itemCnt;
                         embed.Description += "Powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoverySmall:
                         affectionInc = 0.03 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
                         break;
 
@@ -389,11 +393,13 @@ namespace Sanakan.Modules
                                 if (card.CanGiveRing())
                                 {
                                     affectionInc = 1.7;
+                                    bUser.GameDeck.Karma += 0.2;
                                     embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                                 }
                                 else
                                 {
                                     affectionInc = 1.2;
+                                    bUser.GameDeck.Karma += 0.01;
                                     embed.Color = EMType.Warning.Color();
                                     embed.Description += $"Karta się zmartwiła!";
                                 }
@@ -401,6 +407,7 @@ namespace Sanakan.Modules
                             else
                             {
                                 affectionInc = -5;
+                                bUser.GameDeck.Karma -= 1;
                                 embed.Color = EMType.Error.Color();
                                 embed.Description += $"Karta się przeraziła!";
                             }
@@ -409,6 +416,7 @@ namespace Sanakan.Modules
                         {
                             affectionInc = 1.5;
                             card.UpgradesCnt += 2;
+                            bUser.GameDeck.Karma += 2;
                             embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
                         }
                         break;
@@ -425,11 +433,13 @@ namespace Sanakan.Modules
                             return;
                         }
                         affectionInc = 0.7;
+                        bUser.GameDeck.Karma += 1;
                         embed.Description += $"Zwiększono liczbę ulepszeń do {++card.UpgradesCnt}!";
                         break;
 
                     case ItemType.DereReRoll:
                         affectionInc = 0.1;
+                        bUser.GameDeck.Karma += 0.001;
                         card.Dere = _waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -437,6 +447,7 @@ namespace Sanakan.Modules
 
                     case ItemType.CardParamsReRoll:
                         affectionInc = 0.2;
+                        bUser.GameDeck.Karma += 0.002;
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
                         embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
@@ -555,6 +566,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                bUser.GameDeck.Karma -= 2;
+
                 card.Defence = _waifu.RandomizeDefence(Rarity.E);
                 card.Attack = _waifu.RandomizeAttack(Rarity.E);
                 card.Dere = _waifu.RandomizeDere();
@@ -621,6 +634,7 @@ namespace Sanakan.Modules
                 }
 
                 ++bUser.Stats.UpgaredCards;
+                bUser.GameDeck.Karma += 1;
 
                 card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
                 card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
@@ -655,7 +669,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                ++bUser.Stats.SacraficeCards;
+                bUser.GameDeck.Karma -= 1;
+                bUser.GameDeck.CTCnt += cardToSac.GetValue();
                 bUser.GameDeck.Cards.Remove(cardToSac);
 
                 await db.SaveChangesAsync();
@@ -698,6 +713,7 @@ namespace Sanakan.Modules
                 }
 
                 ++bUser.Stats.SacraficeCards;
+                bUser.GameDeck.Karma -= 0.3;
 
                 var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
                 cardToUp.Affection += 0.05;
@@ -737,6 +753,8 @@ namespace Sanakan.Modules
 
                 if (wid == 0)
                 {
+                    bUser.GameDeck.Karma += 0.01;
+
                     foreach (var card in cardsInCage)
                     {
                         card.InCage = false;
@@ -763,6 +781,7 @@ namespace Sanakan.Modules
                         return;
                     }
 
+                    bUser.GameDeck.Karma -= 0.1;
                     thisCard.InCage = false;
                     cntIn = 1;
 
@@ -1140,6 +1159,7 @@ namespace Sanakan.Modules
                         break;
                 }
 
+                botUser.GameDeck.Karma -= 0.01;
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
@@ -1317,6 +1337,8 @@ namespace Sanakan.Modules
 
                         if (userWonPack && userWon)
                             trUser.GameDeck.BoosterPacks.Add(boosterPack);
+
+                        trUser.GameDeck.Karma -= 0.01;
 
                         dbu.SaveChanges();
 
@@ -1547,7 +1569,7 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
                                 + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"

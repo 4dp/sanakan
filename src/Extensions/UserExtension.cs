@@ -11,6 +11,9 @@ namespace Sanakan.Extensions
 {
     public static class UserExtension
     {
+        public static bool SendAnyMsgInMonth(this User u)
+            => (u.MessagesCnt - u.MessagesCntAtDate) > 0;
+
         public static bool IsCharCounterActive(this User u)
             => DateTime.Now.Month == u.MeasureDate.Month && DateTime.Now.Year == u.MeasureDate.Year;
 
@@ -103,7 +106,7 @@ namespace Sanakan.Extensions
                     return $"{u.MessagesCnt - u.MessagesCntAtDate}";
 
                 case TopType.PostsMonthlyCharacter:
-                    return $"{u.CharacterCntFromDate / (u.MessagesCnt - u.MessagesCntAtDate)} znaki";
+                    return $"{u.CharacterCntFromDate / (u.MessagesCnt - u.MessagesCntAtDate)}";
 
                 case TopType.Commands:
                     return $"{u.CommandsCnt}";

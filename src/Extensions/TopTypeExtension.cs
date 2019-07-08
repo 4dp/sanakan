@@ -27,7 +27,7 @@ namespace Sanakan.Extensions
                     return "liczby wiadomości w miesiącu";
 
                 case TopType.PostsMonthlyCharacter:
-                    return "liczby znaków w wiadomości";
+                    return "liczby liczących się znaków znaków na wiadomość";
 
                 case TopType.Commands:
                     return "liczby użytych poleceń";

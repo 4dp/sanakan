@@ -1,26 +1,31 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Extensions;
+using Sanakan.Services.Executor;
 using Shinden.Logger;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Services
 {
     public class Greeting
     {
         private DiscordSocketClient _client { get; set; }
+        private IExecutor _executor { get; set; }
         private ILogger _logger { get; set; }
         private IConfig _config { get; set; }
 
-        public Greeting(DiscordSocketClient client, ILogger logger, IConfig config)
+        public Greeting(DiscordSocketClient client, ILogger logger, IConfig config, IExecutor exe)
         {
             _client = client;
             _logger = logger;
             _config = config;
+            _executor = exe;
 #if !DEBUG
             _client.UserJoined += UserJoinedAsync;
             _client.UserLeft += UserLeftAsync;
@@ -67,6 +72,30 @@ namespace Sanakan.Services
 
                 await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
             }
+
+            var thisUser = _client.Guilds.FirstOrDefault(x => x.Id == user.Id);
+            if (thisUser != null) return;
+
+            var moveTask = new Task(() =>
+            {
+                using (var db = new Database.UserContext(_config))
+                {
+                    var duser = db.GetUserOrCreateAsync(user.Id).Result;
+                    var fakeu = db.GetUserOrCreateAsync(1).Result;
+
+                    foreach (var card in duser.GameDeck.Cards)
+                        fakeu.GameDeck.Cards.Add(card);
+
+                    duser.GameDeck.Cards.Clear();
+                    db.Users.Remove(duser);
+
+                    db.SaveChanges();
+
+                    QueryCacheManager.ExpireTag(new string[] { "users" });
+                }
+            });
+
+            await _executor.TryAdd(new Executable("delete user", moveTask), TimeSpan.FromSeconds(1));
         }
 
         private async Task SendMessageAsync(string message, ITextChannel channel)
