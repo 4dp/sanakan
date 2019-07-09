@@ -44,9 +44,9 @@ namespace Sanakan.Services.Commands
             _cmd.AddTypeReader<CoinSide>(new TypeReaders.CoinSideTypeReader());
             _cmd.AddTypeReader<HaremType>(new TypeReaders.HaremTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
-            
+
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
-            
+
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));
             _helper.PrivateModulesInfo.Add("Debug", await _cmd.AddModuleAsync<Modules.Debug>(_provider));
 
@@ -61,7 +61,7 @@ namespace Sanakan.Services.Commands
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
             int argPos = 0;
-            if (msg.HasStringPrefix(_config.Get().Prefix, ref argPos))
+            if (msg.HasStringPrefix(_config.Get().Prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
             {
                 var context = new SocketCommandContext(_client, msg);
                 var res = await _cmd.GetExecutableCommandAsync(context, argPos, _provider);
