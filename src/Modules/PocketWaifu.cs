@@ -358,19 +358,19 @@ namespace Sanakan.Modules
                 {
                     case ItemType.AffectionRecoveryGreat:
                         affectionInc = 1.6 * itemCnt;
-                        bUser.GameDeck.Karma += 0.02 * itemCnt;
+                        bUser.GameDeck.Karma += 0.08 * itemCnt;
                         embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryBig:
                         affectionInc = 1 * itemCnt;
-                        bUser.GameDeck.Karma += 0.01 * itemCnt;
+                        bUser.GameDeck.Karma += 0.03 * itemCnt;
                         embed.Description += "Znacznie powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryNormal:
                         affectionInc = 0.12 * itemCnt;
-                        bUser.GameDeck.Karma += 0.005 * itemCnt;
+                        bUser.GameDeck.Karma += 0.008 * itemCnt;
                         embed.Description += "Powiekszyła się relacja z kartą!";
                         break;
 
@@ -439,7 +439,7 @@ namespace Sanakan.Modules
 
                     case ItemType.DereReRoll:
                         affectionInc = 0.1;
-                        bUser.GameDeck.Karma += 0.001;
+                        bUser.GameDeck.Karma += 0.003;
                         card.Dere = _waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -447,7 +447,7 @@ namespace Sanakan.Modules
 
                     case ItemType.CardParamsReRoll:
                         affectionInc = 0.2;
-                        bUser.GameDeck.Karma += 0.002;
+                        bUser.GameDeck.Karma += 0.008;
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
                         embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
@@ -529,7 +529,10 @@ namespace Sanakan.Modules
                 bUser.GameDeck.BoosterPacks.Remove(pack);
 
                 foreach (var card in cards)
+                {
+                    card.Affection += bUser.GameDeck.Karma / 100;
                     bUser.GameDeck.Cards.Add(card);
+                }
 
                 await db.SaveChangesAsync();
 
@@ -800,6 +803,48 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{user.Mention} wyciągnął {cntIn} kart z klatki.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("wyzwól")]
+        [Alias("unleash", "wyzwol")]
+        [Summary("zmienia karte niewymienialną na wymienialną (200 CT)")]
+        [Remarks("8651"), RequireWaifuCommandChannel]
+        public async Task UnleashCardAsync([Summary("WID")]ulong wid)
+        {
+            int cost = 200;
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (thisCard.IsTradable)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest wymienialna.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.CTCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                bUser.GameDeck.CTCnt -= cost;
+                bUser.GameDeck.Karma += 0.5;
+                thisCard.IsTradable = true;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} wyzwolił kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -1569,7 +1614,7 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n\n**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
                                 + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"
