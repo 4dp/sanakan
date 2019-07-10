@@ -74,6 +74,14 @@ namespace Sanakan.Extensions
             return user;
         }
 
+        public static double AffectionFromKarma(this GameDeck deck)
+        {
+            var karmaDif = deck.Karma / 100d;
+            if (karmaDif < -6) karmaDif = -6;
+            if (karmaDif > 6) karmaDif = 6;
+            return karmaDif;
+        }
+
         public static EmbedBuilder GetStatsView(this User u, IUser user)
         {
             string stats = $"**Wiadomości**: {u.MessagesCnt}\n**Polecenia:** {u.CommandsCnt}";

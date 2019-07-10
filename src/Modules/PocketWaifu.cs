@@ -358,19 +358,19 @@ namespace Sanakan.Modules
                 {
                     case ItemType.AffectionRecoveryGreat:
                         affectionInc = 1.6 * itemCnt;
-                        bUser.GameDeck.Karma += 0.08 * itemCnt;
+                        bUser.GameDeck.Karma += 0.3 * itemCnt;
                         embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryBig:
                         affectionInc = 1 * itemCnt;
-                        bUser.GameDeck.Karma += 0.03 * itemCnt;
+                        bUser.GameDeck.Karma += 0.1 * itemCnt;
                         embed.Description += "Znacznie powiekszyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryNormal:
                         affectionInc = 0.12 * itemCnt;
-                        bUser.GameDeck.Karma += 0.008 * itemCnt;
+                        bUser.GameDeck.Karma += 0.01 * itemCnt;
                         embed.Description += "Powiekszyła się relacja z kartą!";
                         break;
 
@@ -393,13 +393,13 @@ namespace Sanakan.Modules
                                 if (card.CanGiveRing())
                                 {
                                     affectionInc = 1.7;
-                                    bUser.GameDeck.Karma += 0.2;
+                                    bUser.GameDeck.Karma += 0.6;
                                     embed.Description += "Bardzo powiekszyła się relacja z kartą!";
                                 }
                                 else
                                 {
                                     affectionInc = 1.2;
-                                    bUser.GameDeck.Karma += 0.01;
+                                    bUser.GameDeck.Karma += 0.4;
                                     embed.Color = EMType.Warning.Color();
                                     embed.Description += $"Karta się zmartwiła!";
                                 }
@@ -407,7 +407,7 @@ namespace Sanakan.Modules
                             else
                             {
                                 affectionInc = -5;
-                                bUser.GameDeck.Karma -= 1;
+                                bUser.GameDeck.Karma -= 0.5;
                                 embed.Color = EMType.Error.Color();
                                 embed.Description += $"Karta się przeraziła!";
                             }
@@ -439,7 +439,7 @@ namespace Sanakan.Modules
 
                     case ItemType.DereReRoll:
                         affectionInc = 0.1;
-                        bUser.GameDeck.Karma += 0.003;
+                        bUser.GameDeck.Karma += 0.02;
                         card.Dere = _waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -447,7 +447,7 @@ namespace Sanakan.Modules
 
                     case ItemType.CardParamsReRoll:
                         affectionInc = 0.2;
-                        bUser.GameDeck.Karma += 0.008;
+                        bUser.GameDeck.Karma += 0.03;
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
                         embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
@@ -530,7 +530,7 @@ namespace Sanakan.Modules
 
                 foreach (var card in cards)
                 {
-                    card.Affection += bUser.GameDeck.Karma / 100;
+                    card.Affection += bUser.GameDeck.AffectionFromKarma();
                     bUser.GameDeck.Cards.Add(card);
                 }
 
@@ -716,10 +716,10 @@ namespace Sanakan.Modules
                 }
 
                 ++bUser.Stats.SacraficeCards;
-                bUser.GameDeck.Karma -= 0.3;
+                bUser.GameDeck.Karma -= 0.18;
 
                 var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
-                cardToUp.Affection += 0.05;
+                cardToUp.Affection += 0.08;
                 cardToUp.ExpCnt += exp;
 
                 bUser.GameDeck.Cards.Remove(cardToSac);
@@ -837,7 +837,7 @@ namespace Sanakan.Modules
                 }
 
                 bUser.GameDeck.CTCnt -= cost;
-                bUser.GameDeck.Karma += 0.5;
+                bUser.GameDeck.Karma += 2;
                 thisCard.IsTradable = true;
 
                 await db.SaveChangesAsync();
@@ -1383,7 +1383,7 @@ namespace Sanakan.Modules
                         if (userWonPack && userWon)
                             trUser.GameDeck.BoosterPacks.Add(boosterPack);
 
-                        trUser.GameDeck.Karma -= 0.01;
+                        trUser.GameDeck.Karma -= 0.03;
 
                         dbu.SaveChanges();
 

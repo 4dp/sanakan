@@ -134,7 +134,8 @@ namespace Sanakan.Services.PocketWaifu
                 using (var db = new Database.UserContext(_config))
                 {
                     var botUser = db.GetUserOrCreateAsync(winner.Id).Result;
-                    newCard.Affection += botUser.GameDeck.Karma / 50;
+                    newCard.Affection += botUser.GameDeck.AffectionFromKarma();
+
                     botUser.GameDeck.Cards.Add(newCard);
                     db.SaveChanges();
 
