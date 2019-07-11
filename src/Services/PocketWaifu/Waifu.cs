@@ -998,7 +998,7 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
-        public async Task<IEnumerable<Card>> GetCardsFromWishlist(List<ulong> cardsId, List<ulong> charactersId, List<ulong> titlesId, Database.UserContext db)
+        public async Task<IEnumerable<Card>> GetCardsFromWishlist(List<ulong> cardsId, List<ulong> charactersId, List<ulong> titlesId, Database.UserContext db, IEnumerable<Card> userCards)
         {
             var cards = new List<Card>();
             if (cardsId != null)
@@ -1023,7 +1023,7 @@ namespace Sanakan.Services.PocketWaifu
 
             if (characters.Count > 0)
             {
-                characters = characters.Distinct().ToList();
+                characters = characters.Distinct().Where(c => !userCards.Any(x => x.Character == c)).ToList();
                 var cads = await db.Cards.Where(x => characters.Any(c => c == x.Character)).FromCacheAsync(new[] { "users" });
                 cards.AddRange(cads);
             }

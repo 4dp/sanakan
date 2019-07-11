@@ -932,7 +932,7 @@ namespace Sanakan.Modules
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
         [Remarks("Dzida"), RequireWaifuCommandChannel]
-        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
+        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione(true/false)")]bool showFavs = true)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -956,8 +956,11 @@ namespace Sanakan.Modules
                 var t = bUser.GameDeck.GetTitlesWishList();
                 var c = bUser.GameDeck.GetCardsWishList();
 
-                var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db);
+                var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db, bUser.GameDeck.Cards);
                 cards = cards.Where(x => x.GameDeckId != bUser.Id);
+
+                if (!showFavs)
+                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
 
                 if (cards.Count() < 1)
                 {
