@@ -20,6 +20,8 @@ namespace Sanakan.Database.Models
 
         public long UpgaredCards { get; set; }
         public long SacraficeCards { get; set; }
+        public long DestroyedCards { get; set; }
+        public long UnleashedCards { get; set; }
         public long WastedTcOnCookies { get; set; }
         public long WastedTcOnCards { get; set; }
 

@@ -39,12 +39,13 @@ namespace Sanakan.Services.Commands
             _helper = helper;
             _provider = provider;
 
+            _cmd.AddTypeReader<WishlistObjectType>(new TypeReaders.WishlistObjectTypeReader());
             _cmd.AddTypeReader<SlotMachineSetting>(new TypeReaders.SlotMachineSettingType());
             _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
             _cmd.AddTypeReader<CoinSide>(new TypeReaders.CoinSideTypeReader());
             _cmd.AddTypeReader<HaremType>(new TypeReaders.HaremTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
-
+            
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));

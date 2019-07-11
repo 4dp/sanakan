@@ -673,6 +673,7 @@ namespace Sanakan.Modules
                 }
 
                 bUser.GameDeck.Karma -= 1;
+                bUser.Stats.DestroyedCards += 1;
                 bUser.GameDeck.CTCnt += cardToSac.GetValue();
                 bUser.GameDeck.Cards.Remove(cardToSac);
 
@@ -806,11 +807,132 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("żusuń")]
+        [Alias("wremove", "zusuń", "żusun", "zusun")]
+        [Summary("usuwa kartę/tytuł/postać z listy życzeń")]
+        [Remarks("karta 4212"), RequireWaifuCommandChannel]
+        public async Task RemoveFromWishlistAsync([Summary("typ id(p - postać, t - tytuł, c - karta)")]WishlistObjectType type, [Summary("id/WID")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                string toAdd = "";
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+
+                switch (type)
+                {
+                    case WishlistObjectType.Card:
+                        toAdd = $"c{id}";
+                        break;
+
+                    case WishlistObjectType.Title:
+                        toAdd = $"t{id}";
+                        break;
+
+                    case WishlistObjectType.Character:
+                        toAdd = $"p{id}";
+                        break;
+                }
+
+                var arr = new List<string>();
+                if (bUser.GameDeck.Wishlist != null)
+                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
+
+                if (!arr.Any(x => x == toAdd))
+                {
+                    await ReplyAsync("", embed: "Nie posiadasz takiej pozycji na liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                arr.Remove(toAdd);
+                bUser.GameDeck.Wishlist = string.Join(";", arr);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} usunął pozycję z listy życzeń.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("żdodaj")]
+        [Alias("wadd", "zdodaj")]
+        [Summary("dodaje kartę/tytuł/postać do listy życzeń")]
+        [Remarks("karta 4212"), RequireWaifuCommandChannel]
+        public async Task AddToWishlistAsync([Summary("typ id(p - postać, t - tytuł, c - karta)")]WishlistObjectType type, [Summary("id/WID")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                string toAdd = "";
+                string response = "";
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+
+                switch (type)
+                {
+                    case WishlistObjectType.Card:
+                        toAdd = $"c{id}";
+                        var card = db.Cards.FirstOrDefault(x => x.Id == id);
+                        if (card == null)
+                        {
+                            await ReplyAsync("", embed: "Taka karta nie istnieje!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (card.GameDeckId == bUser.Id)
+                        {
+                            await ReplyAsync("", embed: "Już posiadasz taką kartę!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        response = card.GetString(false, false, true);
+                        break;
+
+                    case WishlistObjectType.Title:
+                        toAdd = $"t{id}";
+                        var res1 = await _shclient.Title.GetInfoAsync(id);
+                        if (!res1.IsSuccessStatusCode())
+                        {
+                            await ReplyAsync("", embed: $"Nie odnaleziono serii!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        response = res1.Body.Title;
+                        break;
+
+                    case WishlistObjectType.Character:
+                        toAdd = $"p{id}";
+                        var res2 = await _shclient.GetCharacterInfoAsync(id);
+                        if (!res2.IsSuccessStatusCode())
+                        {
+                            await ReplyAsync("", embed: $"Nie odnaleziono postaci!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        response = res2.Body.ToString();
+                        break;
+                }
+
+                var arr = new List<string>();
+                if (bUser.GameDeck.Wishlist != null)
+                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
+
+                if (arr.Any(x => x == toAdd))
+                {
+                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                arr.Add(toAdd);
+                bUser.GameDeck.Wishlist = string.Join(";", arr);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} dodał do listy życzeń: {response}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("życzenia", RunMode = RunMode.Async)]
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
         [Remarks("Dzida"), RequireWaifuCommandChannel]
-        public async Task ShowWishListAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
+        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -881,6 +1003,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                bUser.Stats.UnleashedCards += 1;
                 bUser.GameDeck.CTCnt -= cost;
                 bUser.GameDeck.Karma += 2;
                 thisCard.IsTradable = true;
