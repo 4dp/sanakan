@@ -52,6 +52,9 @@ namespace Sanakan.Extensions
                 if (card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
                     icons.Add("💗");
 
+                if (card.Tags.Contains("rezerwacja", StringComparison.CurrentCultureIgnoreCase))
+                    icons.Add("📝");
+
                 if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) && icons.Count == 0)
                     icons.Add("🔄");
             }

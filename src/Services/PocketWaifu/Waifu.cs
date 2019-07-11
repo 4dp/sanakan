@@ -14,6 +14,7 @@ using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu.Fight;
 using Shinden;
 using Shinden.Models;
+using Z.EntityFramework.Plus;
 
 namespace Sanakan.Services.PocketWaifu
 {
@@ -990,6 +991,39 @@ namespace Sanakan.Services.PocketWaifu
                 Color = EMType.Info.Color(),
                 Description =$"**{item.Item.Name}**\n_{item.Item.Type.Desc()}_",
             }.Build();
+        }
+
+        public async Task<IEnumerable<Card>> GetCardsFromWishlist(List<ulong> cardsId, List<ulong> charactersId, List<ulong> titlesId, Database.UserContext db)
+        {
+            var cards = new List<Card>();
+            if (cardsId != null)
+            {
+                var cds = await db.Cards.Where(x => cardsId.Any(c => c == x.Id)).FromCacheAsync( new[] {"users"});
+                cards.AddRange(cds);
+            }
+
+            var characters = new List<ulong>();
+            if (charactersId != null)
+                characters.AddRange(charactersId);
+
+            if (titlesId != null)
+            {
+                foreach (var id in titlesId)
+                {
+                    var response = await _shClient.Title.GetCharactersAsync(id);
+                    if (response.IsSuccessStatusCode())
+                        characters.AddRange(response.Body.Where(x => x.CharacterId.HasValue).Select(x => x.CharacterId.Value));
+                }
+            }
+
+            if (characters.Count > 0)
+            {
+                characters = characters.Distinct().ToList();
+                var cads = await db.Cards.Where(x => characters.Any(c => c == x.Character)).FromCacheAsync(new[] { "users" });
+                cards.AddRange(cads);
+            }
+
+            return cards.Distinct();
         }
     }
 }

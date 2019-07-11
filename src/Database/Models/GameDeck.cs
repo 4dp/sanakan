@@ -11,6 +11,7 @@ namespace Sanakan.Database.Models
         public long CTCnt { get; set; }
         public ulong Waifu { get; set; }
         public double Karma { get; set; }
+        public string Wishlist { get; set; }
 
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }

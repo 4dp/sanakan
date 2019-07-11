@@ -82,6 +82,24 @@ namespace Sanakan.Extensions
             return karmaDif;
         }
 
+        public static List<ulong> GetTitlesWishList(this GameDeck deck)
+        {
+            var all = deck.Wishlist.Split(";");
+            return all.Where(x => x.StartsWith("t")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+        }
+
+        public static List<ulong> GetCardsWishList(this GameDeck deck)
+        {
+            var all = deck.Wishlist.Split(";");
+            return all.Where(x => x.StartsWith("c")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+        }
+
+        public static List<ulong> GetCharactersWishList(this GameDeck deck)
+        {
+            var all = deck.Wishlist.Split(";");
+            return all.Where(x => x.StartsWith("p")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+        }
+
         public static EmbedBuilder GetStatsView(this User u, IUser user)
         {
             string stats = $"**Wiadomości**: {u.MessagesCnt}\n**Polecenia:** {u.CommandsCnt}";

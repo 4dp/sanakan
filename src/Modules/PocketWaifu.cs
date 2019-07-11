@@ -806,6 +806,51 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("życzenia", RunMode = RunMode.Async)]
+        [Alias("wishlist", "zyczenia")]
+        [Summary("wyświetla liste życzeń użytkownika")]
+        [Remarks("Dzida"), RequireWaifuCommandChannel]
+        public async Task ShowWishListAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
+        {
+            var user = (usr ?? Context.User) as SocketGuildUser;
+            if (user == null) return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetCachedFullUserAsync(user.Id);
+                if (bUser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.Wishlist == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var p = bUser.GameDeck.GetCharactersWishList();
+                var t = bUser.GameDeck.GetTitlesWishList();
+                var c = bUser.GameDeck.GetCardsWishList();
+
+                var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db);
+                cards = cards.Where(x => x.GameDeckId != bUser.Id);
+
+                if (cards.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                {
+                    await ReplyAsync("", embed: emb);
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
+            }
+        }
+
         [Command("wyzwól")]
         [Alias("unleash", "wyzwol")]
         [Summary("zmienia karte niewymienialną na wymienialną (200 CT)")]
