@@ -274,6 +274,16 @@ namespace Sanakan.Services.Session.Models
                                     card.Active = false;
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
+
+                                    if (user2.GameDeck.Wishlist != null)
+                                    {
+                                        var sp = user2.GameDeck.Wishlist.Split(";").ToList();
+                                        if (sp.Contains($"c{card.Id}"))
+                                        {
+                                            sp.Remove($"c{card.Id}");
+                                            user2.GameDeck.Wishlist = string.Join(";", sp);
+                                        }
+                                    }
                                 }
                             }
 
@@ -286,6 +296,16 @@ namespace Sanakan.Services.Session.Models
                                     card.Active = false;
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);
+
+                                    if (user1.GameDeck.Wishlist != null)
+                                    {
+                                        var sp = user1.GameDeck.Wishlist.Split(";").ToList();
+                                        if (sp.Contains($"c{card.Id}"))
+                                        {
+                                            sp.Remove($"c{card.Id}");
+                                            user1.GameDeck.Wishlist = string.Join(";", sp);
+                                        }
+                                    }
                                 }
                             }
 
