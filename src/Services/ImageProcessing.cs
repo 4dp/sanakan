@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.PocketWaifu;
+using Shinden;
 using Shinden.Models;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -24,8 +25,12 @@ namespace Sanakan.Services
         private FontFamily _latoLight = new FontCollection().Install("Fonts/Lato-Light.ttf");
         private FontFamily _latoRegular = new FontCollection().Install("Fonts/Lato-Regular.ttf");
 
-        public ImageProcessing()
+        private readonly ShindenClient _shclient;
+
+        public ImageProcessing(ShindenClient shinden)
         {
+            _shclient = shinden;
+
             if (!Directory.Exists("GOut")) Directory.CreateDirectory("GOut");
             if (!Directory.Exists("GOut/Saved")) Directory.CreateDirectory("GOut/Saved");
             if (!Directory.Exists("GOut/Cards")) Directory.CreateDirectory("GOut/Cards");
@@ -182,6 +187,24 @@ namespace Sanakan.Services
 
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 445)));
+
+            if (botUser.GameDeck.Waifu != 0)
+            {
+                var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
+                var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
+                if (response.IsSuccessStatusCode())
+                {
+                    using (var cardImage = await GetWaifuCardNoStatsAsync(response.Body, tChar))
+                    {
+                        cardImage.Mutate(x => x.Resize(new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(105, 0)
+                        }));
+                        profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 350), 1));
+                    }
+                }
+            }
 
             var prevLvlExp = ExperienceManager.CalculateExpForLevel(botUser.Level);
             var nextLvlExp = ExperienceManager.CalculateExpForLevel(botUser.Level + 1);

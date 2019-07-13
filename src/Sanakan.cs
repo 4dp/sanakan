@@ -91,8 +91,8 @@ namespace Sanakan
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
                 tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
 
-            _img = new ImageProcessing();
             _helper = new Helper(_config);
+            _img = new ImageProcessing(_shindenClient);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);

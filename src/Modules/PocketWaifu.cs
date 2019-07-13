@@ -528,11 +528,21 @@ namespace Sanakan.Modules
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
 
+                var sp = new List<string>();
+                if (bUser.GameDeck.Wishlist != null)
+                    sp = bUser.GameDeck.Wishlist.Split(";").ToList();
+
                 foreach (var card in cards)
                 {
                     card.Affection += bUser.GameDeck.AffectionFromKarma();
                     bUser.GameDeck.Cards.Add(card);
+
+                    if (sp.Contains($"p{card.Character}"))
+                        sp.Remove($"p{card.Character}");
                 }
+
+                if (sp.Count > 0)
+                    bUser.GameDeck.Wishlist = string.Join(";", sp);
 
                 await db.SaveChangesAsync();
 
@@ -1785,7 +1795,8 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Poświęcone karty:** {bUser.Stats.SacraficeCards}\n**Ulepszone karty:** {bUser.Stats.UpgaredCards}\n\n**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                    Description = $"**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
+                                + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
                                 + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"

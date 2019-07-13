@@ -278,11 +278,14 @@ namespace Sanakan.Services.Session.Models
                                     if (user2.GameDeck.Wishlist != null)
                                     {
                                         var sp = user2.GameDeck.Wishlist.Split(";").ToList();
+
                                         if (sp.Contains($"c{card.Id}"))
-                                        {
                                             sp.Remove($"c{card.Id}");
-                                            user2.GameDeck.Wishlist = string.Join(";", sp);
-                                        }
+
+                                        if (sp.Contains($"p{card.Character}"))
+                                            sp.Remove($"p{card.Character}");
+
+                                        user2.GameDeck.Wishlist = string.Join(";", sp);
                                     }
                                 }
                             }
@@ -300,11 +303,14 @@ namespace Sanakan.Services.Session.Models
                                     if (user1.GameDeck.Wishlist != null)
                                     {
                                         var sp = user1.GameDeck.Wishlist.Split(";").ToList();
+
                                         if (sp.Contains($"c{card.Id}"))
-                                        {
                                             sp.Remove($"c{card.Id}");
-                                            user1.GameDeck.Wishlist = string.Join(";", sp);
-                                        }
+
+                                        if (sp.Contains($"p{card.Character}"))
+                                            sp.Remove($"p{card.Character}");
+
+                                        user1.GameDeck.Wishlist = string.Join(";", sp);
                                     }
                                 }
                             }
