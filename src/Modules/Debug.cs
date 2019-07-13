@@ -69,6 +69,24 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("blacklist")]
+        [Summary("dodaje/usuwa użytkownika do czarnej listy")]
+        [Remarks("Karna")]
+        public async Task TransferCardAsync([Summary("użytkownik")]SocketGuildUser user)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var targetUser = await db.GetUserOrCreateAsync(user.Id);
+
+                targetUser.IsBlacklisted = !targetUser.IsBlacklisted;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} - blacklist: {targetUser.IsBlacklisted}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("tranc")]
         [Summary("przenosi kartę między użytkownikami")]
         [Remarks("41231 Sniku")]
