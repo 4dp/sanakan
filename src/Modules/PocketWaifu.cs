@@ -665,6 +665,36 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("uwolnij")]
+        [Alias("release")]
+        [Summary("uwalnia posiadaną kartę")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task ReleaseCardAsync([Summary("WID")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+
+                if (cardToSac == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                bUser.GameDeck.Karma += 0.7;
+                bUser.Stats.ReleasedCards += 1;
+                bUser.GameDeck.Cards.Remove(cardToSac);
+
+                await db.SaveChangesAsync();
+                _waifu.DeleteCardImageIfExist(cardToSac);
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} uwolnił kartę: {cardToSac.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("zniszcz")]
         [Alias("destroy")]
         [Summary("niszczy posiadaną kartę")]
@@ -1795,7 +1825,7 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
+                    Description = $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
