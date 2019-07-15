@@ -23,11 +23,6 @@ namespace Sanakan.Services.PocketWaifu
         Card1, Card2, Draw
     }
 
-    public enum BodereBonus
-    {
-        None, Minus, Plus
-    }
-
     public enum HaremType
     {
         Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag
@@ -249,16 +244,8 @@ namespace Sanakan.Services.PocketWaifu
 
         public FightWinner GetFightWinner(CardInfo card1, CardInfo card2)
         {
-            var diffInSex = BodereBonus.None;
-            if (card1.Info.Gender != Sex.NotSpecified && card2.Info.Gender != Sex.NotSpecified)
-            {
-                diffInSex = BodereBonus.Minus;
-                if (card1.Info.Gender != card2.Info.Gender)
-                    diffInSex = BodereBonus.Plus;
-            }
-
-            var FAcard1 = GetFA(card1, card2, diffInSex);
-            var FAcard2 = GetFA(card2, card1, diffInSex);
+            var FAcard1 = GetFA(card1, card2);
+            var FAcard2 = GetFA(card2, card1);
 
             var c1Health = card1.Card.GetHealthWithPenalty();
             var c2Health = card2.Card.GetHealthWithPenalty();
@@ -269,121 +256,26 @@ namespace Sanakan.Services.PocketWaifu
             if (atkTk1 > atkTk2 + 0.3) winner = FightWinner.Card1;
             if (atkTk2 > atkTk1 + 0.3) winner = FightWinner.Card2;
 
-            // kamidere && deredere
-            if (winner == FightWinner.Draw)
-                return CheckKamidereAndDeredere(card1, card2);
-
             return winner;
         }
 
-        private FightWinner CheckKamidereAndDeredere(CardInfo card1, CardInfo card2)
-        {
-            if (card1.Card.Dere == Dere.Kamidere)
-            {
-                if (card2.Card.Dere == Dere.Kamidere)
-                    return FightWinner.Draw;
-
-                return FightWinner.Card1;
-            }
-
-            if (card2.Card.Dere == Dere.Kamidere)
-            {
-                return FightWinner.Card2;
-            }
-
-            bool card1Lose = false;
-            bool card2Lose = false;
-
-            if (card1.Card.Dere == Dere.Deredere)
-                card1Lose = Fun.TakeATry(2);
-
-            if (card2.Card.Dere == Dere.Deredere)
-                card2Lose = Fun.TakeATry(2);
-
-            if (card1Lose && card2Lose) return FightWinner.Draw;
-            if (card1Lose) return FightWinner.Card2;
-            if (card2Lose) return FightWinner.Card1;
-
-            return FightWinner.Draw;
-        }
-
-        public double GetFA(CardInfo target, CardInfo enemy, BodereBonus bodere)
+        public double GetFA(CardInfo target, CardInfo enemy)
         {
             double atk1 = target.Card.GetAttackWithBonus();
-            double def1 = target.Card.GetDefenceWithBonus();
-            if (!target.Info.HasImage)
-            {
-                atk1 -= atk1 * 20 / 100;
-                def1 -= def1 * 20 / 100;
-            }
-
-            TryApplyDereBonus(target.Card.Dere, ref atk1, ref def1, bodere);
+            if (!target.Info.HasImage) atk1 -= atk1 * 20 / 100;
             if (atk1 < 1) atk1 = 1;
-            if (def1 < 1) def1 = 1;
 
-            double atk2 = enemy.Card.GetAttackWithBonus();
             double def2 = enemy.Card.GetDefenceWithBonus();
-            if (!enemy.Info.HasImage)
-            {
-                atk2 -= atk2 * 20 / 100;
-                def2 -= def2 * 20 / 100;
-            }
-
-            TryApplyDereBonus(enemy.Card.Dere, ref atk2, ref def2, bodere);
-            if (atk2 < 1) atk2 = 1;
+            if (!enemy.Info.HasImage) def2 -= def2 * 20 / 100;
             if (def2 < 1) def2 = 1;
             if (def2 > 99) def2 = 99;
 
-            return atk1 * (100 - def2) / 100;
-        }
+            var realAtk1 = atk1 * (100 - def2) / 100;
+            if (enemy.Card.IsWeakTo(target.Card.Dere)) realAtk1 *= 2;
+            if (enemy.Card.IsResistTo(target.Card.Dere)) realAtk1 /= 2;
+            if (realAtk1 < 1) realAtk1 = 1;
 
-        private void TryApplyDereBonus(Dere dere, ref double atk, ref double def, BodereBonus bodere)
-        {
-            if (dere == Dere.Bodere)
-            {
-                switch (bodere)
-                {
-                    case BodereBonus.Minus:
-                        atk -= atk / 10;
-                    break;
-
-                    case BodereBonus.Plus:
-                        atk += atk / 10;
-                    break;
-
-                    default:
-                    break;
-                }
-            }
-            else if (Fun.TakeATry(5))
-            {
-                var tenAtk = atk / 10;
-                var tenDef = def / 10;
-
-                switch(dere)
-                {
-                    case Dere.Yandere:
-                        atk += tenAtk;
-                    break;
-
-                    case Dere.Dandere:
-                        def += tenDef;
-                    break;
-
-                    case Dere.Kuudere:
-                        atk -= tenAtk;
-                        def += tenAtk;
-                    break;
-
-                    case Dere.Mayadere:
-                        def -= tenDef;
-                        atk += tenDef;
-                    break;
-
-                    default:
-                    break;
-                }
-            }
+            return realAtk1;
         }
 
         public int RandomizeAttack(Rarity rarity)
@@ -397,8 +289,17 @@ namespace Sanakan.Services.PocketWaifu
 
         public Dere RandomizeDere()
         {
-            var allDere = Enum.GetValues(typeof(Dere)).Cast<Dere>();
-            return Fun.GetOneRandomFrom(allDere);
+            return Fun.GetOneRandomFrom(new List<Dere>()
+            {
+                Dere.Tsundere,
+                Dere.Kamidere,
+                Dere.Deredere,
+                Dere.Yandere,
+                Dere.Dandere,
+                Dere.Kuudere,
+                Dere.Mayadere,
+                Dere.Bodere
+            });
         }
 
         public Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
@@ -483,14 +384,7 @@ namespace Sanakan.Services.PocketWaifu
 
         private int GetDmgDeal(CardInfo c1, CardInfo c2)
         {
-            var bonus = BodereBonus.None;
-            if (c1.Info.Gender != Sex.NotSpecified && c2.Info.Gender != Sex.NotSpecified)
-            {
-                if (c1.Info.Gender != c2.Info.Gender) bonus = BodereBonus.Plus;
-                else bonus = BodereBonus.Minus;
-            }
-
-            var dmg = GetFA(c1, c2, bonus);
+            var dmg = GetFA(c1, c2);
             if (dmg < 1) dmg = 1;
 
             return (int)dmg;

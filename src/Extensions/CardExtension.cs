@@ -155,6 +155,70 @@ namespace Sanakan.Extensions
             return "Obojętność";
         }
 
+        public static bool IsWeakTo(this Card card, Dere dere)
+        {
+            switch (card.Dere)
+            {
+                case Dere.Tsundere:
+                    if (dere != Dere.Tsundere)
+                        return true;
+                    return false;
+
+                case Dere.Kamidere:
+                    if (dere == Dere.Deredere)
+                        return true;
+                    return false;
+
+                case Dere.Deredere:
+                    if (dere == Dere.Yandere)
+                        return true;
+                    return false;
+
+                case Dere.Yandere:
+                    if (dere == Dere.Dandere)
+                        return true;
+                    return false;
+
+                case Dere.Dandere:
+                    if (dere == Dere.Kuudere)
+                        return true;
+                    return false;
+
+                case Dere.Kuudere:
+                    if (dere == Dere.Mayadere)
+                        return true;
+                    return false;
+
+                case Dere.Mayadere:
+                    if (dere == Dere.Bodere)
+                        return true;
+                    return false;
+
+                case Dere.Bodere:
+                    if (dere == Dere.Kamidere)
+                        return true;
+                    return false;
+
+                case Dere.Yami:
+                    if (dere == Dere.Raito)
+                        return true;
+                    return false;
+
+                case Dere.Raito:
+                    if (dere == Dere.Yami)
+                        return true;
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsResistTo(this Card card, Dere dere)
+        {
+            return card.Dere == dere;
+        }
+
         public static double ExpToUpgrade(this Card card)
         {
             switch (card.Rarity)
