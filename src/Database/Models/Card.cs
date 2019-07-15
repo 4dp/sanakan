@@ -14,7 +14,7 @@ namespace Sanakan.Database.Models
 
     public enum Dere
     {
-        Tsundere, Kamidere, Deredere, Yandere, Dandere, Kuudere, Mayadere, Bodere, Yami, Raito
+        Tsundere, Kamidere, Deredere, Yandere, Dandere, Kuudere, Mayadere, Bodere, Yami, Raito, Yato
     }
 
     public enum CardSource

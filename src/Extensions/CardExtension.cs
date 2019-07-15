@@ -209,6 +209,11 @@ namespace Sanakan.Extensions
                         return true;
                     return false;
 
+                case Dere.Yato:
+                    if (dere == Dere.Yato)
+                        return true;
+                    return false;
+
                 default:
                     return false;
             }
@@ -216,7 +221,65 @@ namespace Sanakan.Extensions
 
         public static bool IsResistTo(this Card card, Dere dere)
         {
-            return card.Dere == dere;
+            if (card.Dere == dere && dere != Dere.Yato)
+                return true;
+
+            switch (card.Dere)
+            {
+                case Dere.Tsundere:
+                    return false;
+
+                case Dere.Kamidere:
+                    if (dere == Dere.Yandere)
+                        return true;
+                    return false;
+
+                case Dere.Deredere:
+                    if (dere == Dere.Dandere)
+                        return true;
+                    return false;
+
+                case Dere.Yandere:
+                    if (dere == Dere.Kuudere)
+                        return true;
+                    return false;
+
+                case Dere.Dandere:
+                    if (dere == Dere.Mayadere)
+                        return true;
+                    return false;
+
+                case Dere.Kuudere:
+                    if (dere == Dere.Bodere)
+                        return true;
+                    return false;
+
+                case Dere.Mayadere:
+                    if (dere == Dere.Kamidere)
+                        return true;
+                    return false;
+
+                case Dere.Bodere:
+                    if (dere == Dere.Deredere)
+                        return true;
+                    return false;
+
+                case Dere.Yami:
+                    if (dere != Dere.Raito)
+                        return true;
+                    return false;
+
+                case Dere.Raito:
+                    if (dere != Dere.Yami)
+                        return true;
+                    return false;
+
+                case Dere.Yato:
+                    return false;
+
+                default:
+                    return false;
+            }
         }
 
         public static double ExpToUpgrade(this Card card)
