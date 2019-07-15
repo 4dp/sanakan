@@ -157,6 +157,9 @@ namespace Sanakan.Extensions
 
         public static bool IsWeakTo(this Card card, Dere dere)
         {
+            if (dere == Dere.Yato && card.Dere != Dere.Yato)
+                return true;
+
             switch (card.Dere)
             {
                 case Dere.Tsundere:
@@ -210,8 +213,6 @@ namespace Sanakan.Extensions
                     return false;
 
                 case Dere.Yato:
-                    if (dere == Dere.Yato)
-                        return true;
                     return false;
 
                 default:
@@ -275,7 +276,7 @@ namespace Sanakan.Extensions
                     return false;
 
                 case Dere.Yato:
-                    return false;
+                    return true;
 
                 default:
                     return false;
