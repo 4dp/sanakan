@@ -148,7 +148,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id użytkownika discorda</param>
         /// <response code="404">User not found</response>
-        [HttpGet("user/discord/{id}/wishlist}"), Authorize]
+        [HttpGet("user/discord/{id}/wishlist"), Authorize]
         public async Task<IEnumerable<Database.Models.Card>> GetUserWishlistAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
@@ -179,7 +179,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
         /// <response code="404">User not found</response>
-        [HttpGet("user/shinden/{id}/wishlist}"), Authorize]
+        [HttpGet("user/shinden/{id}/wishlist"), Authorize]
         public async Task<IEnumerable<Database.Models.Card>> GetShindenUserWishlistAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
