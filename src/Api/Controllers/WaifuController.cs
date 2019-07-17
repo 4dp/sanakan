@@ -144,6 +144,68 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Pobiera listę życzeń użytkownika
+        /// </summary>
+        /// <param name="id">id użytkownika discorda</param>
+        /// <response code="404">User not found</response>
+        [HttpGet("user/discord/{id}/wishlist}"), Authorize]
+        public async Task<IEnumerable<Database.Models.Card>> GetUserWishlistAsync(ulong id)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.GetCachedFullUserAsync(id);
+                if (user == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+
+                if (user.GameDeck.Wishlist == null)
+                {
+                    await "Wishlist not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+
+                var p = user.GameDeck.GetCharactersWishList();
+                var t = user.GameDeck.GetTitlesWishList();
+                var c = user.GameDeck.GetCardsWishList();
+
+                return await _waifu.GetCardsFromWishlist(c, p ,t, db, user.GameDeck.Cards);
+            }
+        }
+
+        /// <summary>
+        /// Pobiera listę życzeń użytkownika
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <response code="404">User not found</response>
+        [HttpGet("user/shinden/{id}/wishlist}"), Authorize]
+        public async Task<IEnumerable<Database.Models.Card>> GetShindenUserWishlistAsync(ulong id)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).FirstOrDefaultAsync(x => x.Shinden == id);
+                if (user == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+
+                if (user.GameDeck.Wishlist == null)
+                {
+                    await "Wishlist not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+
+                var p = user.GameDeck.GetCharactersWishList();
+                var t = user.GameDeck.GetTitlesWishList();
+                var c = user.GameDeck.GetCardsWishList();
+
+                return await _waifu.GetCardsFromWishlist(c, p ,t, db, user.GameDeck.Cards);
+            }
+        }
+
+        /// <summary>
         /// Pobiera liste kart z danym tagiem
         /// </summary>
         /// <param name="tag">tag na karcie</param>

@@ -153,7 +153,7 @@ namespace Sanakan.Modules
                 SocketUser user = Context.Guild.GetUser(card.GameDeck.UserId);
                 if (user == null) user = Context.Client.GetUser(card.GameDeck.UserId);
 
-                await ReplyAsync("", embed: $"**[{card.Id}]**\n{card.GetString(true, true, true)}\n_{card.Title}_\n\n{card.GetAffectionString()}\n{card.ExpCnt.ToString("F")} exp\n\n{card.Tags ?? "---"}\n{card.GetStatusIcons()}".TrimToLength(2000)
+                await ReplyAsync("", embed: $"**[{card.Id}]** *({card.Character})*\n{card.GetString(true, true, true)}\n_{card.Title}_\n\n{card.GetAffectionString()}\n{card.ExpCnt.ToString("F")} exp\n\n{card.Tags ?? "---"}\n{card.GetStatusIcons()}".TrimToLength(2000)
                     .ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(user)).Build());
             }
         }
