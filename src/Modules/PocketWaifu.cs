@@ -1794,7 +1794,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (!bUser.GameDeck.IsEvil() || !bUser.GameDeck.IsGood())
+                if (!bUser.GameDeck.CanCreateDemon() || !bUser.GameDeck.CanCreateAngel())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie jesteś zły, ani dobry - po prostu nijaki.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1829,7 +1829,7 @@ namespace Sanakan.Modules
                 if (blood.Count > 3) blood.Count -= 3;
                 else bUser.GameDeck.Items.Remove(blood);
 
-                if (bUser.GameDeck.IsEvil())
+                if (bUser.GameDeck.CanCreateDemon())
                 {
                     if (thisCard.Dere == Dere.Yami)
                     {
@@ -1839,7 +1839,7 @@ namespace Sanakan.Modules
 
                     thisCard.Dere = (thisCard.Dere == Dere.Raito) ? Dere.Yato : Dere.Yami;
                 }
-                else if (bUser.GameDeck.IsGood())
+                else if (bUser.GameDeck.CanCreateAngel())
                 {
                     if (thisCard.Dere == Dere.Raito)
                     {

@@ -95,8 +95,17 @@ namespace Sanakan.Services.Session.Models
             if (cmdType == null) return;
 
             PlayerInfo thisPlayer = null;
-            if (context.User.Id == P1.User.Id) thisPlayer = P1;
-            if (context.User.Id == P2.User.Id) thisPlayer = P2;
+            PlayerInfo targetPlayer = null;
+            if (context.User.Id == P1.User.Id)
+            {
+                thisPlayer = P1;
+                targetPlayer = P2;
+            }
+            if (context.User.Id == P2.User.Id)
+            {
+                thisPlayer = P2;
+                targetPlayer = P1;
+            }
             if (thisPlayer == null) return;
 
             var WIDStr = splitedCmd?[1];
@@ -118,13 +127,13 @@ namespace Sanakan.Services.Session.Models
             {
                 if (ulong.TryParse(WIDStr, out var WID))
                 {
-                    await HandleAddAsync(thisPlayer, WID, context.Message);
+                    await HandleAddAsync(thisPlayer, WID, context.Message, targetPlayer);
                 }
                 RestartTimer();
             }
         }
 
-        private async Task HandleAddAsync(PlayerInfo player, ulong wid, IUserMessage message)
+        private async Task HandleAddAsync(PlayerInfo player, ulong wid, IUserMessage message, PlayerInfo target)
         {
             var card = player.Dbuser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
             if (card == null)
@@ -134,6 +143,24 @@ namespace Sanakan.Services.Session.Models
             }
 
             if (card.InCage || !card.IsTradable || card.IsBroken())
+            {
+                await message.AddReactionAsync(ErrEmote);
+                return;
+            }
+
+            if (card.Dere == Database.Models.Dere.Yato)
+            {
+                await message.AddReactionAsync(ErrEmote);
+                return;
+            }
+
+            if (card.Dere == Database.Models.Dere.Yami && target.Dbuser.GameDeck.IsGood())
+            {
+                await message.AddReactionAsync(ErrEmote);
+                return;
+            }
+
+            if (card.Dere == Database.Models.Dere.Raito && target.Dbuser.GameDeck.IsEvil())
             {
                 await message.AddReactionAsync(ErrEmote);
                 return;

@@ -76,20 +76,34 @@ namespace Sanakan.Extensions
 
         public static string GetUserNameStatus(this GameDeck deck)
         {
-            if (deck.IsGood()) return $"Papaj";
-            if (deck.IsLesserGood()) return $"Pionek buga";
-            if (deck.IsEvil()) return $"Mroczny panocek";
-            if (deck.IsLesserEvil()) return $"Ciemny pionek";
+            if (deck.Karma >= 5000) return $"Mocno na +";
+            if (deck.Karma >= 2000) return $"Papaj";
+            if (deck.Karma >= 1600) return $"Miłościwy kumpel";
+            if (deck.Karma >= 800) return $"Pan pokoiku";
+            if (deck.Karma >= 400) return $"Błogosławiony rycerz";
+            if (deck.Karma >= 200) return $"Pionek buga";
+            if (deck.Karma >= 100) return $"Sługa buga";
+            if (deck.Karma >= 10) return $"Pantofel";
+            if (deck.Karma >= 5) return $"Lizus";
+            if (deck.Karma <= -5000) return $"Mocno na -";
+            if (deck.Karma <= -2000) return $"Mroczny panocek";
+            if (deck.Karma <= -1600) return $"Nienawistny koleżka";
+            if (deck.Karma <= -800) return $"Pan wojenki";
+            if (deck.Karma <= -400) return $"Przeklęty rycerz";
+            if (deck.Karma <= -200) return $"Ciemny pionek";
+            if (deck.Karma <= -100) return $"Sługa mroku";
+            if (deck.Karma <= -10) return $"Rzezimieszek";
+            if (deck.Karma <= -5) return $"Buntownik";
             return "Wieśniak";
         }
 
-        public static bool IsEvil(this GameDeck deck) => deck.Karma < -2000;
+        public static bool CanCreateDemon(this GameDeck deck) => deck.Karma <= -2000;
 
-        public static bool IsLesserEvil(this GameDeck deck) => deck.Karma < -200;
+        public static bool CanCreateAngel(this GameDeck deck) => deck.Karma >= 2000;
 
-        public static bool IsGood(this GameDeck deck) => deck.Karma > 2000;
+        public static bool IsEvil(this GameDeck deck) => deck.Karma <= -10;
 
-        public static bool IsLesserGood(this GameDeck deck) => deck.Karma > 200;
+        public static bool IsGood(this GameDeck deck) => deck.Karma >= 10;
 
         public static double AffectionFromKarma(this GameDeck deck)
         {
