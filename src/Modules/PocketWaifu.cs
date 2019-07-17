@@ -526,8 +526,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (pack.CardSourceFromPack == CardSource.Activity)
+                    bUser.Stats.OpenedBoosterPacksActivity += 1;
+                else
+                    bUser.Stats.OpenedBoosterPacks += 1;
+
                 bUser.GameDeck.BoosterPacks.Remove(pack);
-                bUser.Stats.OpenedBoosterPacks += 1;
 
                 var sp = new List<string>();
                 if (bUser.GameDeck.Wishlist != null)
@@ -1813,6 +1817,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (!thisCard.CanGiveBloodOrUpgradeToSSS())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt niską relacje".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 var blood = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.BetterIncreaseUpgradeCnt);
                 if (blood == null)
                 {
@@ -1837,7 +1847,16 @@ namespace Sanakan.Modules
                         return;
                     }
 
-                    thisCard.Dere = (thisCard.Dere == Dere.Raito) ? Dere.Yato : Dere.Yami;
+                    if (thisCard.Dere == Dere.Raito)
+                    {
+                        thisCard.Dere = Dere.Yato;
+                        bUser.Stats.YatoUpgrades += 1;
+                    }
+                    else
+                    {
+                        thisCard.Dere = Dere.Yami;
+                        bUser.Stats.YamiUpgrades += 1;
+                    }
                 }
                 else if (bUser.GameDeck.CanCreateAngel())
                 {
@@ -1847,7 +1866,16 @@ namespace Sanakan.Modules
                         return;
                     }
 
-                    thisCard.Dere = (thisCard.Dere == Dere.Yami) ? Dere.Yato : Dere.Raito;
+                    if (thisCard.Dere == Dere.Yami)
+                    {
+                        thisCard.Dere = Dere.Yato;
+                        bUser.Stats.YatoUpgrades += 1;
+                    }
+                    else
+                    {
+                        thisCard.Dere = Dere.Raito;
+                        bUser.Stats.RaitoUpgrades += 1;
+                    }
                 }
 
                 await db.SaveChangesAsync();
