@@ -527,6 +527,7 @@ namespace Sanakan.Modules
                 }
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
+                bUser.Stats.OpenedBoosterPacks += 1;
 
                 var sp = new List<string>();
                 if (bUser.GameDeck.Wishlist != null)
@@ -1784,6 +1785,78 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("ofiaruj")]
+        [Alias("doante")]
+        [Summary("ofiaruj trzy krople swojej krwii, aby przeistoczyć kartę w anioła lub demona(wymagany odpowiedni poziom karmy)")]
+        [Remarks("451"), RequireWaifuCommandChannel]
+        public async Task ChangeCardAsync([Summary("WID")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (!bUser.GameDeck.IsEvil() || !bUser.GameDeck.IsGood())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie jesteś zły, ani dobry - po prostu nijaki.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (thisCard.InCage)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się w klatce.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var blood = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.BetterIncreaseUpgradeCnt);
+                if (blood == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} odziwo nie posiadasz kropli swojej krwii.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (blood.Count < 3)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} odziwo posaidasz za mało kropli swojej krwii.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (blood.Count > 3) blood.Count -= 3;
+                else bUser.GameDeck.Items.Remove(blood);
+
+                if (bUser.GameDeck.IsEvil())
+                {
+                    if (thisCard.Dere == Dere.Yami)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} ta karta została już przeistoczona wcześniej.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    thisCard.Dere = (thisCard.Dere == Dere.Raito) ? Dere.Yato : Dere.Yami;
+                }
+                else if (bUser.GameDeck.IsGood())
+                {
+                    if (thisCard.Dere == Dere.Raito)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} ta karta została już przeistoczona wcześniej.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    thisCard.Dere = (thisCard.Dere == Dere.Yami) ? Dere.Yato : Dere.Raito;
+                }
+
+                await db.SaveChangesAsync();
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} nowy charakter to {thisCard.Dere}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("karcianka", RunMode = RunMode.Async)]
         [Alias("cpf")]
         [Summary("wyświetla profil PocketWaifu")]
@@ -1825,7 +1898,8 @@ namespace Sanakan.Modules
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
-                    Description = $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
+                    Description = $"*{bUser.GameDeck.GetUserNameStatus()}*\n\n"
+                                + $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
                                 + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"

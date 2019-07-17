@@ -23,6 +23,7 @@ namespace Sanakan.Database.Models
         public long DestroyedCards { get; set; }
         public long UnleashedCards { get; set; }
         public long ReleasedCards { get; set; }
+        public long OpenedBoosterPacks { get; set; }
         public long WastedTcOnCookies { get; set; }
         public long WastedTcOnCards { get; set; }
 

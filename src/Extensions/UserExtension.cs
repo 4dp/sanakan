@@ -74,6 +74,23 @@ namespace Sanakan.Extensions
             return user;
         }
 
+        public static string GetUserNameStatus(this GameDeck deck)
+        {
+            if (deck.IsGood()) return $"Papaj";
+            if (deck.IsLesserGood()) return $"Pionek buga";
+            if (deck.IsEvil()) return $"Mroczny panocek";
+            if (deck.IsLesserEvil()) return $"Ciemny pionek";
+            return "Wieśniak";
+        }
+
+        public static bool IsEvil(this GameDeck deck) => deck.Karma < -2000;
+
+        public static bool IsLesserEvil(this GameDeck deck) => deck.Karma < -200;
+
+        public static bool IsGood(this GameDeck deck) => deck.Karma > 2000;
+
+        public static bool IsLesserGood(this GameDeck deck) => deck.Karma > 200;
+
         public static double AffectionFromKarma(this GameDeck deck)
         {
             var karmaDif = deck.Karma / 100d;
