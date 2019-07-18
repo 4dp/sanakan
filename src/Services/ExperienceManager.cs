@@ -51,7 +51,7 @@ namespace Sanakan.Services
         public async Task NotifyAboutLevelAsync(SocketGuildUser user, ISocketMessageChannel channel, long level)
         {
             using (var badge = await _img.GetLevelUpBadgeAsync(user.Nickname ?? user.Username,
-                level, user.GetAvatarUrl(), user.Roles.OrderByDescending(x => x.Position).First().Color))
+                level, user.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg", user.Roles.OrderByDescending(x => x.Position).First().Color))
             {
                 using (var badgeStream = badge.ToPngStream())
                 {

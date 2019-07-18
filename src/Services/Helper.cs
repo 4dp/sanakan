@@ -185,7 +185,7 @@ namespace Sanakan.Services
             return new EmbedBuilder
             {
                 Author = new EmbedAuthorBuilder().WithUser(user),
-                ThumbnailUrl = user.GetAvatarUrl(),
+                ThumbnailUrl = user.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg",
                 Fields = GetInfoUserFields(user),
                 Color = EMType.Info.Color(),
             }.Build();

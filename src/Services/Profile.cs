@@ -243,7 +243,7 @@ namespace Sanakan.Services
         {
             var response = await _shClient.User.GetAsync(botUser.Shinden);
 
-            using (var image = await _img.GetUserProfileAsync(response.Body, botUser, user.GetAvatarUrl().Split("?")[0],
+            using (var image = await _img.GetUserProfileAsync(response.Body, botUser, user.GetAvatarUrl()?.Split("?")[0] ?? "https://i.imgur.com/xVIMQiB.jpg",
                 topPosition, user.Nickname ?? user.Username, user.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Discord.Color.DarkerGrey))
             {
                 return image.ToPngStream();
