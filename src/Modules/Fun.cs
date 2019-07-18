@@ -229,6 +229,12 @@ namespace Sanakan.Modules
                 return;
             }
 
+            if (user.Id == Context.User.Id)
+            {
+                await ReplyAsync("", embed: "Coś tutaj nie gra.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 if (!db.Users.Any(x => x.Id == user.Id))
