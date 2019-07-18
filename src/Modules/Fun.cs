@@ -2,6 +2,7 @@
 
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -213,6 +214,48 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{_fun.GetSlotMachineResult(machine.Draw(), Context.User, botuser, win)}".ToEmbedMessage(EMType.Bot).Build());
+            }
+        }
+
+        [Command("podarujsc")]
+        [Alias("donatesc")]
+        [Summary("dajesz datek innemu graczowi w postaci SC obarczony 40% podatkiem")]
+        [Remarks("Karna 2000"), RequireCommandChannel]
+        public async Task GiveUserScAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba SC(min. 1000)")]uint value)
+        {
+            if (value < 1000)
+            {
+                await ReplyAsync("", embed: "Nie można podarować mniej jak 1000 SC.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                if (!db.Users.Any(x => x.Id == user.Id))
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var targetUser = await db.GetUserOrCreateAsync(user.Id);
+                var thisUser = await db.GetUserOrCreateAsync(Context.User.Id);
+
+                if (thisUser.ScCnt < value)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej ilości SC.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                thisUser.ScCnt -= value;
+
+                var newScCnt = (value * 60) / 100;
+                targetUser.ScCnt += newScCnt;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{thisUser.Id}", "users", $"user-{targetUser.Id}" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} podarował {user.Mention} {newScCnt} SC".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

@@ -40,7 +40,7 @@ namespace Sanakan.Services
             bool http = splited[0].Equals("https:") || splited[0].Equals("http:");
             int toChek = http ? 2 : 0;
 
-            if (splited.Length < (toChek == 2 ? 5 : 3)) 
+            if (splited.Length < (toChek == 2 ? 5 : 3))
                 return UrlParsingError.InvalidUrl;
 
             if (splited[toChek].Equals("shinden.pl") || splited[toChek].Equals("www.shinden.pl"))
@@ -143,7 +143,7 @@ namespace Sanakan.Services
             var resLW = await _shClient.User.GetLastWatchedAsync(shindenId);
 
             using (var image = await _img.GetSiteStatisticAsync(response.Body,
-                user.Roles.OrderByDescending(x => x.Position).First().Color,
+                user.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Discord.Color.DarkerGrey,
                 resLR.IsSuccessStatusCode() ? resLR.Body : null,
                 resLW.IsSuccessStatusCode() ? resLW.Body : null))
             {

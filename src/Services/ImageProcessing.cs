@@ -131,6 +131,9 @@ namespace Sanakan.Services
 
         public async Task<Image<Rgba32>> GetUserProfileAsync(IUserInfo shindenUser, User botUser, string avatarUrl, long topPos, string nickname, Discord.Color color)
         {
+            if (color == Discord.Color.Default)
+                color = Discord.Color.DarkerGrey;
+
             string rangName = shindenUser?.Rank ?? "";
             string colorRank = color.RawValue.ToString("X");
 
@@ -501,6 +504,9 @@ namespace Sanakan.Services
 
         public async Task<Image<Rgba32>> GetSiteStatisticAsync(IUserInfo shindenInfo, Discord.Color color, List<ILastReaded> lastRead = null, List<ILastWatched> lastWatch = null)
         {
+            if (color == Discord.Color.Default)
+                color = Discord.Color.DarkerGrey;
+
             var baseImg = new Image<Rgba32>(500, 320);
             baseImg.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
 
@@ -545,6 +551,9 @@ namespace Sanakan.Services
 
         public async Task<Image<Rgba32>> GetLevelUpBadgeAsync(string name, long ulvl, string avatarUrl, Discord.Color color)
         {
+            if (color == Discord.Color.Default)
+                color = Discord.Color.DarkerGrey;
+
             var msgText1 = "POZIOM";
             var msgText2 = "Awansuje na:";
 
