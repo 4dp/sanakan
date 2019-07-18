@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -108,15 +109,15 @@ namespace Sanakan.Services.Session.Models
             }
             if (thisPlayer == null) return;
 
-            var WIDStr = splitedCmd?[1];
-            if (string.IsNullOrEmpty(WIDStr))
-            {
-                await context.Message.AddReactionAsync(ErrEmote);
-                return;
-            }
-
             if (cmdType.Contains("usuń") || cmdType.Contains("usun"))
             {
+                var WIDStr = splitedCmd?[1];
+                if (string.IsNullOrEmpty(WIDStr))
+                {
+                    await context.Message.AddReactionAsync(ErrEmote);
+                    return;
+                }
+
                 if (ulong.TryParse(WIDStr, out var WID))
                 {
                     await HandleDeleteAsync(thisPlayer, WID, context.Message);
@@ -125,55 +126,70 @@ namespace Sanakan.Services.Session.Models
             }
             else if (cmdType.Contains("dodaj"))
             {
-                if (ulong.TryParse(WIDStr, out var WID))
+                var ids = new List<ulong>();
+                foreach (var WIDStr in splitedCmd)
+                    if (ulong.TryParse(WIDStr, out var WID))
+                        ids.Add(WID);
+
+                if (ids.Count > 0)
                 {
-                    await HandleAddAsync(thisPlayer, WID, context.Message, targetPlayer);
+                    await HandleAddAsync(thisPlayer, ids, context.Message, targetPlayer);
                 }
+                else await context.Message.AddReactionAsync(ErrEmote);
                 RestartTimer();
             }
         }
 
-        private async Task HandleAddAsync(PlayerInfo player, ulong wid, IUserMessage message, PlayerInfo target)
+        private async Task HandleAddAsync(PlayerInfo player, List<ulong> wid, IUserMessage message, PlayerInfo target)
         {
-            var card = player.Dbuser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
-            if (card == null)
+            bool error = false;
+            bool added = false;
+
+            foreach (var id in wid)
             {
-                await message.AddReactionAsync(ErrEmote);
-                return;
+                var card = player.Dbuser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+                if (card == null)
+                {
+                    error = true;
+                    continue;
+                }
+
+                if (card.InCage || !card.IsTradable || card.IsBroken())
+                {
+                    error = true;
+                    continue;
+                }
+
+                if (card.Dere == Database.Models.Dere.Yato)
+                {
+                    error = true;
+                    continue;
+                }
+
+                if (card.Dere == Database.Models.Dere.Yami && target.Dbuser.GameDeck.IsGood())
+                {
+                    error = true;
+                    continue;
+                }
+
+                if (card.Dere == Database.Models.Dere.Raito && target.Dbuser.GameDeck.IsEvil())
+                {
+                    error = true;
+                    continue;
+                }
+
+                if (player.Cards.Any(x => x.Id == card.Id))
+                    continue;
+
+                player.Cards.Add(card);
+                added = true;
             }
 
-            if (card.InCage || !card.IsTradable || card.IsBroken())
-            {
-                await message.AddReactionAsync(ErrEmote);
-                return;
-            }
-
-            if (card.Dere == Database.Models.Dere.Yato)
-            {
-                await message.AddReactionAsync(ErrEmote);
-                return;
-            }
-
-            if (card.Dere == Database.Models.Dere.Yami && target.Dbuser.GameDeck.IsGood())
-            {
-                await message.AddReactionAsync(ErrEmote);
-                return;
-            }
-
-            if (card.Dere == Database.Models.Dere.Raito && target.Dbuser.GameDeck.IsEvil())
-            {
-                await message.AddReactionAsync(ErrEmote);
-                return;
-            }
-
-            if (player.Cards.Any(x => x.Id == card.Id))
-                return;
-
-            player.Cards.Add(card);
             player.Accepted = false;
             player.CustomString = BuildProposition(player);
 
-            await message.AddReactionAsync(InEmote);
+            if (added) await message.AddReactionAsync(InEmote);
+            if (error) await message.AddReactionAsync(ErrEmote);
 
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
             {
