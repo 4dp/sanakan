@@ -48,6 +48,12 @@ namespace Sanakan.Services.PocketWaifu
             _shClient = client;
         }
 
+        public bool GetEventSate() => CharId.EventEnabled;
+
+        public void SetEventState(bool state) => CharId.EventEnabled = state;
+
+        public void SetEventIds(List<ulong> ids) => CharId.SetEventIds(ids);
+
         public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type, string tag)
         {
             switch (type)
@@ -543,12 +549,12 @@ namespace Sanakan.Services.PocketWaifu
                 CharId.Update(characters.Body);
             }
 
-            ulong id = Fun.GetOneRandomFrom(CharId.Ids);
+            ulong id = Fun.GetOneRandomFrom(CharId.GetIds());
             var response = await _shClient.GetCharacterInfoAsync(id);
 
             while (!response.IsSuccessStatusCode())
             {
-                id = Fun.GetOneRandomFrom(CharId.Ids);
+                id = Fun.GetOneRandomFrom(CharId.GetIds());
                 response = await _shClient.GetCharacterInfoAsync(id);
 
                 await Task.Delay(TimeSpan.FromSeconds(2));

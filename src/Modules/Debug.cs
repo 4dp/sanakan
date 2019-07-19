@@ -13,7 +13,9 @@ using Sanakan.Services.Session;
 using Shinden;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
 
@@ -215,7 +217,59 @@ namespace Sanakan.Modules
             config.SafariEnabled = !config.SafariEnabled;
             if (save) Config.Save();
 
-            await ReplyAsync("", embed: $"Safari: {config.SafariEnabled} `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"Safari: `{config.SafariEnabled.GetYesNo()}` `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("twevent")]
+        [Summary("wyłącza/załącza event waifu")]
+        [Remarks("")]
+        public async Task ToggleWaifuEventAsync()
+        {
+            var state = _waifu.GetEventSate();
+            _waifu.SetEventState(!state);
+
+            await ReplyAsync("", embed: $"Waifu event: `{(!state).GetYesNo()}`.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("wevent")]
+        [Summary("ustawia idt eventu(kasowane są po restarcie)")]
+        [Remarks("https://pastebin.com/raw/Y6a8gH5P")]
+        public async Task SetWaifuEventIdsAsync([Summary("link do pliku z id postaci oddzielnymi średnikami")]string url)
+        {
+            using (var client = new HttpClient())
+            {
+                var ids = new List<ulong>();
+                var res = await client.GetAsync(url);
+                if (res.IsSuccessStatusCode)
+                {
+                    using (var body = await res.Content.ReadAsStreamAsync())
+                    {
+                        using (var sr = new StreamReader(body))
+                        {
+                            var content = await sr.ReadToEndAsync();
+
+                            try
+                            {
+                                ids = content.Split(";").Select(x => ulong.Parse(x)).ToList();
+                            }
+                            catch (Exception ex)
+                            {
+                                await ReplyAsync("", embed: $"Format pliku jest niepoprawny! ({ex.Message})".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                        }
+                    }
+
+                    if (ids.Count > 0)
+                    {
+                        _waifu.SetEventIds(ids);
+                        await ReplyAsync("", embed: $"Ustawiono `{ids.Count}` id.".ToEmbedMessage(EMType.Success).Build());
+                        return;
+                    }
+                }
+            }
+
+            await ReplyAsync("", embed: $"Nie udało się odczytać pliku.".ToEmbedMessage(EMType.Error).Build());
         }
 
         [Command("lvlbadge", RunMode = RunMode.Async)]
