@@ -212,8 +212,7 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 75) return ItemType.AffectionRecoveryBig;
             if (num < 165) return ItemType.CardParamsReRoll;
             if (num < 255) return ItemType.DereReRoll;
-            if (num < 475) return ItemType.AffectionRecoveryNormal;
-            return ItemType.AffectionRecoverySmall;
+            return ItemType.AffectionRecoveryNormal;
         }
 
         public ItemWithCost[] GetItemsWithCost()

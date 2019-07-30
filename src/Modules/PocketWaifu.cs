@@ -771,12 +771,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Market);
+                var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Market);
                 if (market == null)
                 {
-                    market = new Database.Models.TimeStatus
+                    market = new TimeStatus
                     {
-                        Type = Database.Models.StatusType.Market,
+                        Type = StatusType.Market,
                         EndsAt = DateTime.MinValue
                     };
                     botuser.TimeStatuses.Add(market);
@@ -789,23 +789,36 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                int nextMarket = 20 - (int) (botuser.GameDeck.Karma / 100);
+                int nextMarket = 20 - (int)(botuser.GameDeck.Karma / 100);
                 if (nextMarket > 22) nextMarket = 22;
                 if (nextMarket < 4) nextMarket = 4;
+
+                int itemCnt = 1 + (int)(card.Affection / 15);
+                itemCnt += (int)(botuser.GameDeck.Karma / 180);
+                if (itemCnt > 10) itemCnt = 10;
+                if (itemCnt < 1) itemCnt = 1;
+
+                if (card.CanGiveRing()) ++itemCnt;
+                if (botuser.GameDeck.CanCreateAngel()) ++itemCnt;
 
                 market.EndsAt = DateTime.Now.AddHours(nextMarket);
                 card.Affection += 0.1;
 
-                var item = _waifu.RandomizeItemFromMarket().ToItem();
-                var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
-                if (thisItem == null)
+                string reward = "";
+                for (int i = 0; i < itemCnt; i++)
                 {
-                    thisItem = item;
-                    botuser.GameDeck.Items.Add(thisItem);
-                }
-                else ++thisItem.Count;
+                    var item = _waifu.RandomizeItemFromMarket().ToItem();
+                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                    if (thisItem == null)
+                    {
+                        thisItem = item;
+                        botuser.GameDeck.Items.Add(thisItem);
+                    }
+                    else ++thisItem.Count;
 
-                string reward = $"+{item.Name}\n";
+                    reward += $"+{item.Name}\n";
+                }
+
                 if (Services.Fun.TakeATry(3))
                 {
                     botuser.GameDeck.CTCnt += 1;
