@@ -206,7 +206,8 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} brakuje Ci SC, aby za tyle zagrać.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
-                var win = machine.Play(new SlotEqualRandom());
+                var win = machine.Play(new SlotWickedRandom());
+                // var win = machine.Play(new SlotEqualRandom());
                 botuser.ScCnt += win - toPay;
 
                 await db.SaveChangesAsync();

@@ -673,30 +673,36 @@ namespace Sanakan.Modules
         [Command("uwolnij")]
         [Alias("release")]
         [Summary("uwalnia posiadaną kartę")]
-        [Remarks("5412"), RequireWaifuCommandChannel]
-        public async Task ReleaseCardAsync([Summary("WID")]ulong wid)
+        [Remarks("5412 5413"), RequireWaifuCommandChannel]
+        public async Task ReleaseCardAsync([Summary("WID kart")]params ulong[] ids)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                var cardsToSac = bUser.GameDeck.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
 
-                if (cardToSac == null)
+                if (cardsToSac.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takich kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                bUser.GameDeck.Karma += 0.7;
-                bUser.Stats.ReleasedCards += 1;
-                bUser.GameDeck.Cards.Remove(cardToSac);
+                foreach (var card in cardsToSac)
+                {
+                    bUser.GameDeck.Karma += 0.7;
+                    bUser.Stats.ReleasedCards += 1;
+                    bUser.GameDeck.Cards.Remove(card);
+                    _waifu.DeleteCardImageIfExist(card);
+                }
+
+                string response = $"kartę: {cardsToSac.First().GetString(false, false, true)}";
+                if (cardsToSac.Count > 1) response = $" {cardsToSac.Count} kart";
 
                 await db.SaveChangesAsync();
-                _waifu.DeleteCardImageIfExist(cardToSac);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} uwolnił kartę: {cardToSac.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} uwolnił {response}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -704,30 +710,95 @@ namespace Sanakan.Modules
         [Alias("destroy")]
         [Summary("niszczy posiadaną kartę")]
         [Remarks("5412"), RequireWaifuCommandChannel]
-        public async Task DestroyCardAsync([Summary("WID")]ulong idToSac)
+        public async Task DestroyCardAsync([Summary("WID kart")]params ulong[] ids)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToSac);
+                var cardsToSac = bUser.GameDeck.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
 
-                if (cardToSac == null)
+                if (cardsToSac.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takich kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cardsToSac)
+                {
+                    bUser.GameDeck.Karma -= 1;
+                    bUser.Stats.DestroyedCards += 1;
+                    bUser.GameDeck.CTCnt += card.GetValue();
+                    bUser.GameDeck.Cards.Remove(card);
+                    _waifu.DeleteCardImageIfExist(card);
+                }
+
+                string response = $"kartę: {cardsToSac.First().GetString(false, false, true)}";
+                if (cardsToSac.Count > 1) response = $" {cardsToSac.Count} kart";
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zniszczył {response}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("poświęćm")]
+        [Alias("killm", "sacrificem", "poswiecm", "poświecm", "poświećm", "poswięćm", "poswiećm")]
+        [Summary("dodaje exp do karty, poświęcając kilka innych")]
+        [Remarks("5412 5411 5410"), RequireWaifuCommandChannel]
+        public async Task SacraficeCardMultiAsync([Summary("WID(do ulepszenia)")]ulong idToUp, [Summary("WID kart(do poświęcenia)")]params ulong[] idsToSac)
+        {
+            if (idsToSac.Any(x => x == idToUp))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} podałeś ten sam WID do ulepszenia i zniszczenia.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardToUp = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToUp);
+                var cardsToSac = bUser.GameDeck.Cards.Where(x => idsToSac.Any(c => c == x.Id)).ToList();
+
+                if (cardsToSac.Count < 1 || cardToUp == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                bUser.GameDeck.Karma -= 1;
-                bUser.Stats.DestroyedCards += 1;
-                bUser.GameDeck.CTCnt += cardToSac.GetValue();
-                bUser.GameDeck.Cards.Remove(cardToSac);
+                double totalExp = 0;
+                var broken = new List<Card>();
+                foreach (var card in cardsToSac)
+                {
+                    if (card.IsBroken())
+                    {
+                        broken.Add(card);
+                        continue;
+                    }
+
+                    ++bUser.Stats.SacraficeCards;
+                    bUser.GameDeck.Karma -= 0.18;
+
+                    var exp = _waifu.GetExpToUpgrade(cardToUp, card);
+                    cardToUp.Affection += 0.08;
+                    cardToUp.ExpCnt += exp;
+                    totalExp += exp;
+
+                    bUser.GameDeck.Cards.Remove(card);
+                    _waifu.DeleteCardImageIfExist(card);
+                }
 
                 await db.SaveChangesAsync();
-                _waifu.DeleteCardImageIfExist(cardToSac);
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} zniszczył kartę: {cardToSac.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {totalExp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
+
+                if (broken.Count > 0)
+                {
+                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się poświęcić {broken.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+                }
             }
         }
 

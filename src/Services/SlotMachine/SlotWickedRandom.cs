@@ -11,7 +11,7 @@ namespace Sanakan.Services.SlotMachine
             double[] chance = new double[max];
             for (int i = 0; i < (max + 1); i++) sum += i;
             for (int i = 0; i < max; i++) chance[i] = (max-i)*(rMax/sum);
-            
+
             int low = 0;
             int high = 0;
             int next = Services.Fun.GetRandomValue(min, (int)(rMax * 10));
