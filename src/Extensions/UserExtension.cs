@@ -101,6 +101,8 @@ namespace Sanakan.Extensions
 
         public static bool CanCreateAngel(this GameDeck deck) => deck.Karma >= 2000;
 
+        public static bool IsMarketDisabled(this GameDeck deck) => deck.Karma <= -400;
+
         public static bool IsEvil(this GameDeck deck) => deck.Karma <= -10;
 
         public static bool IsGood(this GameDeck deck) => deck.Karma >= 10;

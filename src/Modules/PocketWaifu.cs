@@ -743,6 +743,83 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("rynek")]
+        [Alias("market")]
+        [Summary("udajesz się na rynek z wybraną przez Ciebie kartą aby pohandlować")]
+        [Remarks("2145"), RequireWaifuCommandChannel]
+        public async Task GoToMarketAsync([Summary("WID")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.GameDeck.IsMarketDisabled())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} wszyscy na twój widok się rozbiegli, nic dziś nie zdziałasz.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = botuser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.IsUnusable())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ktoś kto Cie nienawidzi, nie pomoże Ci w niczym.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Market);
+                if (market == null)
+                {
+                    market = new Database.Models.TimeStatus
+                    {
+                        Type = Database.Models.StatusType.Market,
+                        EndsAt = DateTime.MinValue
+                    };
+                    botuser.TimeStatuses.Add(market);
+                }
+
+                if (market.IsActive())
+                {
+                    var timeTo = (int)market.RemainingMinutes();
+                    await ReplyAsync("", embed: $"{Context.User.Mention} możesz udać się ponownie na rynek za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                int nextMarket = 20 - (int) (botuser.GameDeck.Karma / 100);
+                if (nextMarket > 22) nextMarket = 22;
+                if (nextMarket < 4) nextMarket = 4;
+
+                market.EndsAt = DateTime.Now.AddHours(nextMarket);
+                card.Affection += 0.1;
+
+                var item = _waifu.RandomizeItemFromMarket().ToItem();
+                var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                if (thisItem == null)
+                {
+                    thisItem = item;
+                    botuser.GameDeck.Items.Add(thisItem);
+                }
+                else ++thisItem.Count;
+
+                string reward = $"+{item.Name}\n";
+                if (Services.Fun.TakeATry(3))
+                {
+                    botuser.GameDeck.CTCnt += 1;
+                    reward += "+1CT";
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} udało Ci się zdobyć:\n\n{reward}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("poświęćm")]
         [Alias("killm", "sacrificem", "poswiecm", "poświecm", "poświećm", "poswięćm", "poswiećm")]
         [Summary("dodaje exp do karty, poświęcając kilka innych")]
@@ -1048,7 +1125,7 @@ namespace Sanakan.Modules
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
         [Remarks("Dzida"), RequireWaifuCommandChannel]
-        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione(true/false)")]bool showFavs = true)
+        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -1265,7 +1342,7 @@ namespace Sanakan.Modules
         [Alias("favs")]
         [Summary("pozwala wyszukac użytkowników posiadających karty z naszej listy ulubionych postaci")]
         [Remarks(""), RequireWaifuCommandChannel]
-        public async Task SearchCharacterCardsFromFavListAsync()
+        public async Task SearchCharacterCardsFromFavListAsync([Summary("czy pokazać ulubione(true/false) domyślnie ukryte")]bool showFavs = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -1284,6 +1361,10 @@ namespace Sanakan.Modules
                 }
 
                 var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character));
+
+                if (!showFavs)
+                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+
                 if (cards.Count() < 1)
                 {
                     await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
