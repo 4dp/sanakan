@@ -833,6 +833,84 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("czarny rynek")]
+        [Alias("black market")]
+        [Summary("udajesz się na czarny rynek z wybraną przez Ciebie kartą, wolałbym nie wiedzieć co tam będziesz robić")]
+        [Remarks("2145"), RequireWaifuCommandChannel]
+        public async Task GoToBlackMarketAsync([Summary("WID")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.GameDeck.IsBlackMarketDisabled())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} halo koleżko, to nie miejsce dla Ciebie!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = botuser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Market);
+                if (market == null)
+                {
+                    market = new TimeStatus
+                    {
+                        Type = StatusType.Market,
+                        EndsAt = DateTime.MinValue
+                    };
+                    botuser.TimeStatuses.Add(market);
+                }
+
+                if (market.IsActive())
+                {
+                    var timeTo = (int)market.RemainingMinutes();
+                    await ReplyAsync("", embed: $"{Context.User.Mention} możesz udać się ponownie na czarny rynek za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                int nextMarket = 20 + (int)(botuser.GameDeck.Karma / 100);
+                if (nextMarket > 22) nextMarket = 22;
+                if (nextMarket < 4) nextMarket = 4;
+
+                int itemCnt = 1 + (int)(card.Affection / 15);
+                itemCnt -= (int)(botuser.GameDeck.Karma / 180);
+                if (itemCnt > 10) itemCnt = 10;
+                if (itemCnt < 1) itemCnt = 1;
+
+                if (card.CanGiveBloodOrUpgradeToSSS()) ++itemCnt;
+                if (botuser.GameDeck.CanCreateDemon()) ++itemCnt;
+
+                market.EndsAt = DateTime.Now.AddHours(nextMarket);
+                card.Affection -= 0.2;
+
+                string reward = "";
+                for (int i = 0; i < itemCnt; i++)
+                {
+                    var item = _waifu.RandomizeItemFromBlackMarket().ToItem();
+                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                    if (thisItem == null)
+                    {
+                        thisItem = item;
+                        botuser.GameDeck.Items.Add(thisItem);
+                    }
+                    else ++thisItem.Count;
+
+                    reward += $"+{item.Name}\n";
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} udało Ci się zdobyć:\n\n{reward}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("poświęćm")]
         [Alias("killm", "sacrificem", "poswiecm", "poświecm", "poświećm", "poswięćm", "poswiećm")]
         [Summary("dodaje exp do karty, poświęcając kilka innych")]
@@ -1489,19 +1567,18 @@ namespace Sanakan.Modules
         [Alias("wild")]
         [Summary("walka z losowo wygenerowaną kartą")]
         [Remarks("1"), RequireWaifuFightChannel]
-        public async Task FightInArenaAsync([Summary("nr aktywnej karty(1-3)")]int activeCard)
+        public async Task FightInArenaAsync([Summary("WID")]ulong wid)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var active = botUser.GameDeck.Cards.Where(x => x.Active).ToList();
-                if (active.Count < activeCard || activeCard <= 0)
+                var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz tylu aktywnych kart!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var thisCard = active[--activeCard];
                 if (thisCard.IsUnusable())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
@@ -1608,19 +1685,18 @@ namespace Sanakan.Modules
         [Alias("wildm")]
         [Summary("walka przeciwko botowi w stylu GMwK")]
         [Remarks("1"), RequireWaifuFightChannel]
-        public async Task StartPvEMassacreAsync([Summary("nr aktywnej karty(1-3)")]int activeCard)
+        public async Task StartPvEMassacreAsync([Summary("WID")]ulong wid)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetCachedFullUserAsync(Context.User.Id);
-                var active = botUser.GameDeck.Cards.Where(x => x.Active).ToList();
-                if (active.Count < activeCard || activeCard <= 0)
+                var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz tylu aktywnych kart!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var thisCard = active[--activeCard];
                 var rUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var rcrd = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id);
 

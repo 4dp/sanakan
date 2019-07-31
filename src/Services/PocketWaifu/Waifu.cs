@@ -205,6 +205,18 @@ namespace Sanakan.Services.PocketWaifu
             return ItemType.AffectionRecoverySmall;
         }
 
+        public ItemType RandomizeItemFromBlackMarket()
+        {
+            var num = Fun.GetRandomValue(1000);
+            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 20) return ItemType.IncreaseUpgradeCnt;
+            if (num < 60) return ItemType.AffectionRecoveryGreat;
+            if (num < 110) return ItemType.AffectionRecoveryBig;
+            if (num < 165) return ItemType.CardParamsReRoll;
+            if (num < 255) return ItemType.DereReRoll;
+            return ItemType.AffectionRecoveryNormal;
+        }
+
         public ItemType RandomizeItemFromMarket()
         {
             var num = Fun.GetRandomValue(1000);
