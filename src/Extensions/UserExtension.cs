@@ -115,6 +115,11 @@ namespace Sanakan.Extensions
             return karmaDif;
         }
 
+        public static double GetStrongestCardPower(this GameDeck deck)
+        {
+            return deck.Cards.OrderByDescending(x => x.GetCardPower()).FirstOrDefault()?.GetCardPower() ?? 0;
+        }
+
         public static List<ulong> GetTitlesWishList(this GameDeck deck)
         {
             var all = deck.Wishlist.Split(";");
@@ -170,11 +175,18 @@ namespace Sanakan.Extensions
                 case TopType.Commands:
                     return $"{u.CommandsCnt}";
 
+                case TopType.Card:
+                    return u.GameDeck.Cards.OrderByDescending(x => x.GetCardPower())?.FirstOrDefault()?.GetString(false, false, true) ?? "---";
+
                 case TopType.Cards:
                     return $"{u.GameDeck.Cards.Count}";
 
                 case TopType.CardsPower:
                     return u.GameDeck.GetCardCountStats();
+
+                case TopType.Karma:
+                case TopType.KarmaNegative:
+                    return $"{u.GameDeck.Karma}";
             }
         }
 

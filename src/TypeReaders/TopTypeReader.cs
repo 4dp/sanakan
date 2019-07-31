@@ -53,6 +53,10 @@ namespace Sanakan.TypeReaders
                 case "polecenia":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Commands));
 
+                case "karta":
+                case "card":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Card));
+
                 case "karty":
                 case "cards":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Cards));
@@ -60,6 +64,15 @@ namespace Sanakan.TypeReaders
                 case "kartym":
                 case "cardsp":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.CardsPower));
+
+                case "karma":
+                case "karma+":
+                case "+karma":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Karma));
+
+                case "karma-":
+                case "-karma":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.KarmaNegative));
 
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu topki!"));

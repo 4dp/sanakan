@@ -20,7 +20,7 @@ namespace Sanakan.Services
 {
     public enum TopType
     {
-        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower
+        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower, Card, Karma, KarmaNegative
     }
 
     public enum SCurrency
@@ -208,11 +208,20 @@ namespace Sanakan.Services
                 case TopType.Commands:
                     return list.OrderByDescending(x => x.CommandsCnt).ToList();
 
+                case TopType.Card:
+                    return list.OrderByDescending(x => x.GameDeck.GetStrongestCardPower()).ToList();
+
                 case TopType.Cards:
                     return list.OrderByDescending(x => x.GameDeck.Cards.Count).ToList();
 
                 case TopType.CardsPower:
-                    return list.OrderByDescending(x => x.GameDeck.Cards.Sum(c => c.GetValue())).ToList();
+                    return list.OrderByDescending(x => x.GameDeck.Cards.Sum(c => c.GetCardPower())).ToList();
+
+                case TopType.Karma:
+                    return list.OrderByDescending(x => x.GameDeck.Karma).ToList();
+
+                case TopType.KarmaNegative:
+                    return list.OrderBy(x => x.GameDeck.Karma).ToList();
             }
         }
 

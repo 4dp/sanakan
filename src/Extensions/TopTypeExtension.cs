@@ -32,11 +32,18 @@ namespace Sanakan.Extensions
                 case TopType.Commands:
                     return "liczby użytych poleceń";
 
+                case TopType.Card:
+                    return "mocy karty";
+
                 case TopType.Cards:
                     return "liczby kart";
 
                 case TopType.CardsPower:
                     return "mocy kart";
+
+                case TopType.Karma:
+                case TopType.KarmaNegative:
+                    return "karmy";
             }
         }
     }

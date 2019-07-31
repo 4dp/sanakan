@@ -40,6 +40,13 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static double GetCardPower(this Card card)
+        {
+            return (card.GetHealthWithPenalty() * 0.018)
+                   + (card.GetAttackWithBonus() * 0.019)
+                   + (card.GetDefenceWithBonus() * 2.76);
+        }
+
         public static string GetStatusIcons(this Card card)
         {
             var icons = new List<string>();
