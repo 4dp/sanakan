@@ -27,6 +27,7 @@ namespace Sanakan.Database.Models
         public DateTime MeasureDate { get; set; }
         public ulong MessagesCntAtDate { get; set; }
         public ulong CharacterCntFromDate { get; set; }
+        public bool ShowWaifuInProfile { get; set; }
 
         public virtual UserStats Stats { get; set; }
         public virtual GameDeck GameDeck { get; set; }

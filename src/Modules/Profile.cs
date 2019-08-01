@@ -181,7 +181,7 @@ namespace Sanakan.Modules
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
         [Remarks(""), RequireCommandChannel]
-        public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/karty)")]TopType type = TopType.Level)
+        public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -204,6 +204,27 @@ namespace Sanakan.Modules
 
             session.Message = msg;
             await _session.TryAddSession(session);
+        }
+
+        [Command("widok waifu")]
+        [Alias("waifu view")]
+        [Summary("przełącza widoczność waifu na pasku bocznym profilu użytkownika")]
+        [Remarks(""), RequireCommandChannel]
+        public async Task ToggleWaifuViewInProfileAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                botuser.ShowWaifuInProfile = !botuser.ShowWaifuInProfile;
+
+                string result = botuser.ShowWaifuInProfile ? "załączony" : "wyłączony";
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"Podgląd waifu w profilu {Context.User.Mention} został {result}.".ToEmbedMessage(EMType.Success).Build());
+            }
         }
 
         [Command("profil", RunMode = RunMode.Async)]

@@ -191,7 +191,7 @@ namespace Sanakan.Services
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 445)));
 
-            if (botUser.GameDeck.Waifu != 0)
+            if (botUser.GameDeck.Waifu != 0 && botUser.ShowWaifuInProfile)
             {
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
                 var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
