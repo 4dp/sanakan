@@ -1212,6 +1212,39 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("na życzeniach", RunMode = RunMode.Async)]
+        [Alias("on wishlist", "na zyczenia")]
+        [Summary("wyświetla obiekty dodane do listy życzeń")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task ShowThingsOnWishlistAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetCachedFullUserAsync(Context.User.Id);
+                if (bUser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.Wishlist == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var p = bUser.GameDeck.GetCharactersWishList();
+                var t = bUser.GameDeck.GetTitlesWishList();
+                var c = bUser.GameDeck.GetCardsWishList();
+
+                foreach (var emb in await _waifu.GetContentOfWishlist(c, p, t))
+                {
+                    await ReplyAsync("", embed: emb);
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
+            }
+        }
+
         [Command("życzenia", RunMode = RunMode.Async)]
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
@@ -1303,8 +1336,8 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("tag")]
-        [Alias("oznacz")]
+        [Command("oznacz")]
+        [Alias("tag")]
         [Summary("zmienia tag na karcie")]
         [Remarks("1 konie"), RequireWaifuCommandChannel]
         public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")][Remainder]string tag = null)
@@ -1326,13 +1359,43 @@ namespace Sanakan.Modules
                 }
                 else
                 {
-                    thisCard.Tags += $" {tag}";
+                    if (!thisCard.Tags.Contains(tag))
+                        thisCard.Tags += $" {tag}";
                 }
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("oznacz puste")]
+        [Alias("tag empty")]
+        [Summary("zmienia tag na kartach które nie są oznaczone")]
+        [Remarks("1 konie"), RequireWaifuCommandChannel]
+        public async Task ChangeCardsTagAsync([Summary("tag")][Remainder]string tag)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var untaggedCards = bUser.GameDeck.Cards.Where(x => x.Tags == null).ToList();
+
+                if (untaggedCards.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono nieoznaczonych kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in untaggedCards)
+                    card.Tags = tag;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył {untaggedCards.Count} kart.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

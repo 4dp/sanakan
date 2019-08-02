@@ -920,6 +920,50 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
+        public async Task<IEnumerable<Embed>> GetContentOfWishlist(List<ulong> cardsId, List<ulong> charactersId, List<ulong> titlesId)
+        {
+            var contentTable = new List<string>();
+            if (cardsId.Count > 0) contentTable.Add($"**Karty:** {string.Join(", ", cardsId)}");
+
+            foreach (var character in charactersId)
+            {
+                var res = await _shClient.GetCharacterInfoAsync(character);
+                if (!res.IsSuccessStatusCode()) continue;
+
+                contentTable.Add($"**P[{res.Body.Id}]** [{res.Body}]({res.Body.CharacterUrl})");
+            }
+
+            foreach (var title in titlesId)
+            {
+                var res = await _shClient.Title.GetInfoAsync(title);
+                if (!res.IsSuccessStatusCode()) continue;
+
+                var url = "https://shinden.pl/";
+                if (res.Body is IAnimeTitleInfo ai) url = ai.AnimeUrl;
+                else if (res.Body is IMangaTitleInfo mi) url = mi.MangaUrl;
+
+                contentTable.Add($"**T[{res.Body.Id}]** [{res.Body}]({url})");
+            }
+
+            string temp = "";
+            var content = new List<Embed>();
+            for (int i = 0; i < contentTable.Count; i++)
+            {
+                if (temp.Length + contentTable[i].Length > 2000 || (i == contentTable.Count - 1))
+                {
+                    content.Add(new EmbedBuilder()
+                    {
+                        Color = EMType.Info.Color(),
+                        Description = temp
+                    }.Build());
+                    temp = contentTable[i];
+                }
+                else temp += $"\n{contentTable[i]}";
+            }
+
+            return content;
+        }
+
         public async Task<IEnumerable<Card>> GetCardsFromWishlist(List<ulong> cardsId, List<ulong> charactersId, List<ulong> titlesId, Database.UserContext db, IEnumerable<Card> userCards)
         {
             var cards = new List<Card>();

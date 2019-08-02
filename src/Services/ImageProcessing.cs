@@ -185,8 +185,8 @@ namespace Sanakan.Services
             var mScOwn = TextMeasurer.Measure($"{botUser.ScCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.ScCnt}", rangFont, defFontColor, new Point((int)(125 - mScOwn.Width) / 2, 365)));
 
-            var mScLos = TextMeasurer.Measure($"{botUser.Stats?.ScLost}", new RendererOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText($"{botUser.Stats?.ScLost}", rangFont, defFontColor, new Point((int)(125 - mScLos.Width) / 2, 405)));
+            var mTcOwn = TextMeasurer.Measure($"{botUser.TcCnt}", new RendererOptions(rangFont));
+            profilePic.Mutate(x => x.DrawText($"{botUser.TcCnt}", rangFont, defFontColor, new Point((int)(125 - mTcOwn.Width) / 2, 405)));
 
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new RendererOptions(rangFont));
             profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 445)));
@@ -222,7 +222,7 @@ namespace Sanakan.Services
             {
                 using (var progressBar = new Image<Rgba32>(progressBarLength, 19))
                 {
-                    progressBar.Mutate(x => x.BackgroundColor(Rgba32.FromHex(colorRank)));
+                    progressBar.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#828282")));
                     profilePic.Mutate(x => x.DrawImage(progressBar, new Point(135, 201), 1));
                 }
             }
