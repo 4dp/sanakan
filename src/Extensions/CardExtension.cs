@@ -126,6 +126,7 @@ namespace Sanakan.Extensions
                 case CardSource.Api:             return "Nieznane";
                 case CardSource.Migration:       return "Stara baza";
                 case CardSource.PvE:             return "Walki na boty";
+                case CardSource.Daily:           return "Karta+";
 
                 default:
                 case CardSource.Other: return "Inne";

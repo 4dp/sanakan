@@ -8,7 +8,7 @@ namespace Sanakan.Database.Models
 {
     public enum StatusType
     {
-        Hourly, Daily, Globals, Color, Market
+        Hourly, Daily, Globals, Color, Market, Card
     }
 
     public class TimeStatus

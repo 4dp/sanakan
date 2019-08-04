@@ -687,8 +687,15 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
+                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    {
+                        broken.Add(card);
+                        continue;
+                    }
+
                     bUser.GameDeck.Karma += 0.7;
                     bUser.Stats.ReleasedCards += 1;
                     bUser.GameDeck.Cards.Remove(card);
@@ -702,7 +709,15 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} uwolnił {response}".ToEmbedMessage(EMType.Success).Build());
+                if (broken.Count != cardsToSac.Count)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} uwolnił {response}".ToEmbedMessage(EMType.Success).Build());
+                }
+
+                if (broken.Count > 0)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się uwolnić {broken.Count} kart, najpewniej znajdują się w klatce lub są oznaczone jako ulubione.".ToEmbedMessage(EMType.Error).Build());
+                }
             }
         }
 
@@ -723,8 +738,15 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
+                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    {
+                        broken.Add(card);
+                        continue;
+                    }
+
                     bUser.GameDeck.Karma -= 1;
                     bUser.Stats.DestroyedCards += 1;
                     bUser.GameDeck.CTCnt += card.GetValue();
@@ -739,7 +761,68 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} zniszczył {response}".ToEmbedMessage(EMType.Success).Build());
+                if (broken.Count != cardsToSac.Count)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} zniszczył {response}".ToEmbedMessage(EMType.Success).Build());
+                }
+
+                if (broken.Count > 0)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się zniszczyć {broken.Count} kart, najpewniej znajdują się w klatce lub są oznaczone jako ulubione.".ToEmbedMessage(EMType.Error).Build());
+                }
+            }
+        }
+
+        [Command("karta+")]
+        [Alias("free card")]
+        [Summary("dostajesz jedną darmową kartę")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task GetFreeCardAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var freeCard = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Card);
+                if (freeCard == null)
+                {
+                    freeCard = new TimeStatus
+                    {
+                        Type = StatusType.Card,
+                        EndsAt = DateTime.MinValue
+                    };
+                    botuser.TimeStatuses.Add(freeCard);
+                }
+
+                if (freeCard.IsActive())
+                {
+                    var timeTo = (int)freeCard.RemainingMinutes();
+                    await ReplyAsync("", embed: $"{Context.User.Mention} możesz otrzymać następną darmową kartę dopiero za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                freeCard.EndsAt = DateTime.Now.AddHours(22);
+
+                var card = _waifu.GenerateNewCard(await _waifu.GetRandomCharacterAsync(), new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
+                card.Affection += botuser.GameDeck.AffectionFromKarma();
+                card.Source = CardSource.Daily;
+
+                var sp = new List<string>();
+                if (botuser.GameDeck.Wishlist != null)
+                    sp = botuser.GameDeck.Wishlist.Split(";").ToList();
+
+                if (sp.Contains($"p{card.Character}"))
+                {
+                    sp.Remove($"p{card.Character}");
+                    botuser.GameDeck.Wishlist = string.Join(";", sp);
+                }
+
+                botuser.GameDeck.Cards.Add(card);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś {card.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -935,11 +1018,17 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (cardToUp.InCage)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się w klatce.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 double totalExp = 0;
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.IsBroken())
+                    if (card.IsBroken() || card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
                     {
                         broken.Add(card);
                         continue;
@@ -965,7 +1054,7 @@ namespace Sanakan.Modules
 
                 if (broken.Count > 0)
                 {
-                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się poświęcić {broken.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się poświęcić {broken.Count} kart.".ToEmbedMessage(EMType.Error).Build());
                 }
             }
         }
@@ -997,6 +1086,18 @@ namespace Sanakan.Modules
                 if (cardToSac.IsBroken())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może zostać poświęcona.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (cardToSac.InCage || cardToUp.InCage)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się w klatce.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (cardToSac.Tags != null && cardToSac.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz poświęcić karty oznaczonej jako ulubiona.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -1374,7 +1475,7 @@ namespace Sanakan.Modules
         [Command("oznacz puste")]
         [Alias("tag empty")]
         [Summary("zmienia tag na kartach które nie są oznaczone")]
-        [Remarks("1 konie"), RequireWaifuCommandChannel]
+        [Remarks("konie"), RequireWaifuCommandChannel]
         public async Task ChangeCardsTagAsync([Summary("tag")][Remainder]string tag)
         {
             using (var db = new Database.UserContext(Config))
