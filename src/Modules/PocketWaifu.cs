@@ -820,7 +820,7 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś {card.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
             }
@@ -910,7 +910,7 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} udało Ci się zdobyć:\n\n{reward}".ToEmbedMessage(EMType.Success).Build());
             }
@@ -988,7 +988,7 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} udało Ci się zdobyć:\n\n{reward}".ToEmbedMessage(EMType.Success).Build());
             }
