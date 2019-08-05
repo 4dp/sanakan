@@ -671,7 +671,7 @@ namespace Sanakan.Modules
         }
 
         [Command("uwolnij")]
-        [Alias("release")]
+        [Alias("release", "pusmje")]
         [Summary("uwalnia posiadaną kartę")]
         [Remarks("5412 5413"), RequireWaifuCommandChannel]
         public async Task ReleaseCardAsync([Summary("WID kart")]params ulong[] ids)
