@@ -949,7 +949,7 @@ namespace Sanakan.Services.PocketWaifu
             var content = new List<Embed>();
             for (int i = 0; i < contentTable.Count; i++)
             {
-                if (temp.Length + contentTable[i].Length > 2000 || (i == contentTable.Count - 1))
+                if (temp.Length + contentTable[i].Length > 2000)
                 {
                     content.Add(new EmbedBuilder()
                     {
@@ -960,6 +960,12 @@ namespace Sanakan.Services.PocketWaifu
                 }
                 else temp += $"\n{contentTable[i]}";
             }
+
+            content.Add(new EmbedBuilder()
+            {
+                Color = EMType.Info.Color(),
+                Description = temp
+            }.Build());
 
             return content;
         }
