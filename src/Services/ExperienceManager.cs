@@ -157,7 +157,7 @@ namespace Sanakan.Services
             _exp[message.Author.Id] -= fullP;
             _saved[user.Id] = DateTime.Now;
 
-            var task = CreateTask(user, message.Channel, fullP, _messages[user.Id], _commands[user.Id], _characters[user.Id]);
+            var task = CreateTask(user, message.Channel, fullP, _messages[user.Id], _commands[user.Id], _characters[user.Id], calculateExp);
             _characters[user.Id] = 0;
             _messages[user.Id] = 0;
             _commands[user.Id] = 0;
@@ -205,7 +205,7 @@ namespace Sanakan.Services
             });
         }
 
-        private Task CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters)
+        private Task CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters, bool calculateExp)
         {
             return new Task(() =>
             {
@@ -228,7 +228,7 @@ namespace Sanakan.Services
                     usr.CommandsCnt += commands;
 
                     var newLevel = CalculateLevel(usr.ExpCnt);
-                    if (newLevel != usr.Level)
+                    if (newLevel != usr.Level && calculateExp)
                     {
                         usr.Level = newLevel;
                         _ = Task.Run(async () => { await NotifyAboutLevelAsync(user, channel, newLevel); });
@@ -240,6 +240,7 @@ namespace Sanakan.Services
                         {
                             var config = await dbc.GetCachedGuildFullConfigAsync(user.Guild.Id);
                             if (config == null) return;
+                            if (!calculateExp) return;
 
                             foreach (var lvlRole in config.RolesPerLevel)
                             {
