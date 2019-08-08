@@ -1500,6 +1500,49 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("oznacz podmień")]
+        [Alias("tag replace", "oznacz podmien")]
+        [Summary("podmienia tag na wszystkich kartach, nie podanie nowego tagu usuwa tag z kart")]
+        [Remarks("konie wymiana"), RequireWaifuCommandChannel]
+        public async Task ReplaceCardsTagAsync([Summary("stary tag")]string oldTag, [Summary("nowy tag")]string newTag = "%$-1")
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cards = bUser.GameDeck.Cards.Where(x => x.Tags != null && x.Tags.Contains(oldTag)).ToList();
+
+                if (cards.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono nieoznaczonych kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cards)
+                {
+                    var tags = card.Tags.Split(" ").ToList();
+                    var thisTag = tags.FirstOrDefault(x => x == oldTag);
+                    if (thisTag != null)
+                    {
+                        tags.Remove(thisTag);
+
+                        if (newTag != "%$-1")
+                            tags.Add(newTag);
+
+                        if (tags.Count > 0)
+                            card.Tags = string.Join(" ", tags);
+                        else
+                            card.Tags = null;
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył {cards.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("talia")]
         [Alias("deck", "aktywne")]
         [Summary("wyświetla aktywne karty/ustawia karte jako aktywną")]
