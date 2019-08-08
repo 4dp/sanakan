@@ -58,7 +58,7 @@ namespace Sanakan.Extensions
                     break;
 
                 case Dere.Tsundere:
-                    cardPower -= 10;
+                    cardPower -= 5;
                     break;
 
                 default:
@@ -130,7 +130,11 @@ namespace Sanakan.Extensions
         }
 
         public static int GetAttackWithBonus(this Card card)
-            => card.Attack + (card.RestartCnt * 2);
+        {
+            var newAttack = card.Attack + (card.RestartCnt * 2);
+            if (newAttack > 990) newAttack = 999;
+            return newAttack;
+        }
 
         public static int GetDefenceWithBonus(this Card card)
         {
@@ -190,6 +194,9 @@ namespace Sanakan.Extensions
         public static bool IsWeakTo(this Card card, Dere dere)
         {
             if (dere == Dere.Yato && card.Dere != Dere.Yato)
+                return true;
+
+            if (dere == Dere.Yami && (card.Dere != Dere.Yato && card.Dere != Dere.Raito && card.Dere != Dere.Yami))
                 return true;
 
             switch (card.Dere)
@@ -298,8 +305,6 @@ namespace Sanakan.Extensions
                     return false;
 
                 case Dere.Yami:
-                    if (dere != Dere.Raito)
-                        return true;
                     return false;
 
                 case Dere.Raito:

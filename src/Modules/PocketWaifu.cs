@@ -1317,11 +1317,14 @@ namespace Sanakan.Modules
         [Alias("on wishlist", "na zyczenia")]
         [Summary("wyświetla obiekty dodane do listy życzeń")]
         [Remarks(""), RequireWaifuCommandChannel]
-        public async Task ShowThingsOnWishlistAsync()
+        public async Task ShowThingsOnWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
         {
+            var user = (usr ?? Context.User) as SocketGuildUser;
+            if (user == null) return;
+
             using (var db = new Database.UserContext(Config))
             {
-                var bUser = await db.GetCachedFullUserAsync(Context.User.Id);
+                var bUser = await db.GetCachedFullUserAsync(user.Id);
                 if (bUser == null)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
