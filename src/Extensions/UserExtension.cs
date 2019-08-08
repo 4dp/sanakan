@@ -74,6 +74,14 @@ namespace Sanakan.Extensions
             return user;
         }
 
+        public static bool CanFightPvP(this GameDeck deck) =>
+            deck.GetMaxDeckPower() >= deck.GetDeckPower();
+
+        public static double GetDeckPower(this GameDeck deck)
+            => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
+
+        public static double GetMaxDeckPower(this GameDeck deck) => 500;
+
         public static string GetUserNameStatus(this GameDeck deck)
         {
             if (deck.Karma >= 5000) return $"Mocno na +";

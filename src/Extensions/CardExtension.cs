@@ -42,9 +42,33 @@ namespace Sanakan.Extensions
 
         public static double GetCardPower(this Card card)
         {
-            return (card.GetHealthWithPenalty() * 0.018)
-                   + (card.GetAttackWithBonus() * 0.019)
-                   + (card.GetDefenceWithBonus() * 2.76);
+            var cardPower = card.GetHealthWithPenalty() * 0.018;
+            cardPower += card.GetAttackWithBonus() * 0.019;
+            cardPower += card.GetDefenceWithBonus() * 2.76;
+
+            switch (card.Dere)
+            {
+                case Dere.Yami:
+                case Dere.Raito:
+                    cardPower += 5;
+                    break;
+
+                case Dere.Yato:
+                    cardPower += 10;
+                    break;
+
+                case Dere.Tsundere:
+                    cardPower -= 10;
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (cardPower < 1)
+                cardPower = 1;
+
+            return cardPower;
         }
 
         public static string GetStatusIcons(this Card card)

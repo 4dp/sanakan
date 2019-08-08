@@ -2089,6 +2089,8 @@ namespace Sanakan.Modules
                     var activeCards = botUser.GameDeck.Cards.Where(x => x.Active && x.Rarity >= max).ToList();
                     if (activeCards.Count < 1) continue;
 
+                    if (!botUser.GameDeck.CanFightPvP()) continue;
+
                     players.Add(new PlayerInfo
                     {
                         Cards = new List<Card> { Services.Fun.GetOneRandomFrom(activeCards) },
@@ -2154,17 +2156,30 @@ namespace Sanakan.Modules
                 var duser1 = await db.GetCachedFullUserAsync(user1.Id);
                 var duser2 = await db.GetCachedFullUserAsync(user2.Id);
 
-                var active1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-                if (active1.Count < 1)
+
+                if (!duser1.GameDeck.CanFightPvP())
                 {
-                    await ReplyAsync("", embed: $"{user1.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{user1.Mention} ma zbyt silną talie ({duser1.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var active1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
+                if (active1.Count < 3)
+                {
+                    await ReplyAsync("", embed: $"{user1.Mention} nie ma 3 aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (!duser2.GameDeck.CanFightPvP())
+                {
+                    await ReplyAsync("", embed: $"{user2.Mention} ma zbyt silną talie ({duser2.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
                 var active2 = duser2?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-                if (active2.Count < 1)
+                if (active2.Count < 3)
                 {
-                    await ReplyAsync("", embed: $"{user2.Mention} nie ma aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{user2.Mention} nie ma 3 aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

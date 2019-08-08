@@ -551,11 +551,12 @@ namespace Sanakan.Services.PocketWaifu
             var embed = new EmbedBuilder()
             {
                 Color = EMType.Info.Color(),
+                Footer = new EmbedFooterBuilder().WithText($"MOC {list.Sum(x => x.GetCardPower()).ToString("F")}"),
                 Description = "**Twoje aktywne karty to**:\n\n",
             };
 
             foreach(var card in list)
-                embed.Description += card.GetString(false, false, true) + "\n";
+                embed.Description += $"**P:** {card.GetCardPower().ToString("F")} {card.GetString(false, false, true)}\n";
 
             return embed.Build();
         }
