@@ -51,6 +51,15 @@ namespace Sanakan.TypeReaders
                 case "tag-":
                     return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.NoTag));
 
+                case "blocked":
+                case "inconvertible":
+                case "niewymienialne":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Blocked));
+
+                case "broken":
+                case "uszkodzone":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Broken));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu haremu!"));
             }
