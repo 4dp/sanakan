@@ -425,16 +425,25 @@ namespace Sanakan.Modules
                     botuser.TimeStatuses.Add(colort);
                 }
 
-                await _profile.RomoveUserColorAsync(user);
-
                 if (color == FColor.CleanColor)
                 {
                     colort.EndsAt = DateTime.Now;
+                    await _profile.RomoveUserColorAsync(user);
                 }
                 else
                 {
                     using (var cdb = new Database.GuildConfigContext(Config))
                     {
+                        if (_profile.HasSameColor(user, color) && colort.IsActive())
+                        {
+                            colort.EndsAt = colort.EndsAt.AddMonths(1);
+                        }
+                        else
+                        {
+                            await _profile.RomoveUserColorAsync(user);
+                            colort.EndsAt = DateTime.Now.AddMonths(1);
+                        }
+
                         var gConfig = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
                         if (!await _profile.SetUserColorAsync(user, gConfig.AdminRole, color))
                         {
@@ -442,12 +451,14 @@ namespace Sanakan.Modules
                             return;
                         }
 
-                        colort.EndsAt = colort.EndsAt.AddMonths(1);
-
                         if (currency == SCurrency.Tc)
+                        {
                             botuser.TcCnt -= color.Price(currency);
+                        }
                         else
+                        {
                             botuser.ScCnt -= color.Price(currency);
+                        }
                     }
                 }
 

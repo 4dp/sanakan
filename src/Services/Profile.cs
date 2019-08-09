@@ -140,6 +140,14 @@ namespace Sanakan.Services
             await user.RemoveRoleAsync(role);
         }
 
+        public bool HasSameColor(SocketGuildUser user, FColor color)
+        {
+            if (user == null) return false;
+
+            var colorNumeric = (uint)color;
+            return user.Roles.Any(x => x.Name == colorNumeric.ToString());
+        }
+
         public async Task<bool> SetUserColorAsync(SocketGuildUser user, ulong adminRole, FColor color)
         {
             if (user == null) return false;

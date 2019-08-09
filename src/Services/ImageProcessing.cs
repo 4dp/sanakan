@@ -157,6 +157,14 @@ namespace Sanakan.Services
 
             using (var avatar = Image.Load(await GetImageFromUrlAsync(avatarUrl)))
             {
+                using (var avBack = new Image<Rgba32>(82, 82))
+                {
+                    avBack.Mutate(x => x.BackgroundColor(Rgba32.FromHex(colorRank)));
+                    avBack.Mutate(x => x.Round(42));
+
+                    profilePic.Mutate(x => x.DrawImage(avBack, new Point(20, 115), 1));
+                }
+
                 avatar.Mutate(x => x.Resize(new Size(80, 80)));
                 avatar.Mutate(x => x.Round(42));
 
@@ -243,8 +251,11 @@ namespace Sanakan.Services
         {
             var image = new Image<Rgba32>(325, 272);
 
-            if (botUser.ProfileType == ProfileType.Img && !File.Exists(botUser.StatsReplacementProfileUri))
-                botUser.ProfileType = ProfileType.Stats;
+            if (!File.Exists(botUser.StatsReplacementProfileUri))
+            {
+                if ((botUser.ProfileType == ProfileType.Img || botUser.ProfileType == ProfileType.StatsWithImg))
+                    botUser.ProfileType = ProfileType.Stats;
+            }
 
             switch (botUser.ProfileType)
             {

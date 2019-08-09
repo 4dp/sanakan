@@ -12,12 +12,12 @@ namespace Sanakan.Extensions
                 return 0;
 
             if (currency == SCurrency.Sc)
-                return 30000;
+                return 39999;
 
             switch (color)
             {
                 case FColor.DefinitelyNotWhite:
-                    return 400;
+                    return 799;
 
                 default:
                     return 800;
