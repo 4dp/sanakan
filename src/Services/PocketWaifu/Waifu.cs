@@ -237,18 +237,18 @@ namespace Sanakan.Services.PocketWaifu
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(10,    ItemType.AffectionRecoverySmall.ToItem()),
-                new ItemWithCost(35,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(225,   ItemType.AffectionRecoveryBig.ToItem()),
-                new ItemWithCost(50,    ItemType.DereReRoll.ToItem()),
+                new ItemWithCost(1,     ItemType.AffectionRecoverySmall.ToItem()),
+                new ItemWithCost(20,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(150,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(40,    ItemType.DereReRoll.ToItem()),
                 new ItemWithCost(100,   ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(3000,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(2500,  ItemType.IncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1400,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(800,   ItemType.RandomNormalBoosterPackB.ToItem()),
-                new ItemWithCost(1400,  ItemType.RandomNormalBoosterPackA.ToItem()),
-                new ItemWithCost(2000,  ItemType.RandomNormalBoosterPackS.ToItem()),
-                new ItemWithCost(2600,  ItemType.RandomNormalBoosterPackSS.ToItem()),
+                new ItemWithCost(1200,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
+                new ItemWithCost(600,   ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(1200,  ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(1800,  ItemType.RandomNormalBoosterPackS.ToItem()),
+                new ItemWithCost(2400,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
         }
 

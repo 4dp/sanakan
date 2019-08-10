@@ -231,6 +231,17 @@ namespace Sanakan.Modules
                         await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build());
                         return;
                     }
+                    var response2 = await _shclient.Title.GetCharactersAsync(response.Body);
+                    if (!response2.IsSuccessStatusCode())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można kupić pakietu z tytułu z miejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
                     boosterPackTitleName = $" ({response.Body.Title})";
                     boosterPackTitleId = response.Body.Id;
                     itemCount = 1;
@@ -1399,11 +1410,11 @@ namespace Sanakan.Modules
 
         [Command("wyzwól")]
         [Alias("unleash", "wyzwol")]
-        [Summary("zmienia karte niewymienialną na wymienialną (200 CT)")]
+        [Summary("zmienia karte niewymienialną na wymienialną (300 CT)")]
         [Remarks("8651"), RequireWaifuCommandChannel]
         public async Task UnleashCardAsync([Summary("WID")]ulong wid)
         {
-            int cost = 200;
+            int cost = 300;
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
