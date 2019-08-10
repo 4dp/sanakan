@@ -220,7 +220,8 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 110) return ItemType.AffectionRecoveryBig;
             if (num < 165) return ItemType.CardParamsReRoll;
             if (num < 255) return ItemType.DereReRoll;
-            return ItemType.AffectionRecoveryNormal;
+            if (num < 800) return ItemType.AffectionRecoveryNormal;
+            return ItemType.AffectionRecoverySmall;
         }
 
         public ItemType RandomizeItemFromMarket()
@@ -230,14 +231,15 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 75) return ItemType.AffectionRecoveryBig;
             if (num < 165) return ItemType.CardParamsReRoll;
             if (num < 255) return ItemType.DereReRoll;
-            return ItemType.AffectionRecoveryNormal;
+            if (num < 475) return ItemType.AffectionRecoveryNormal;
+            return ItemType.AffectionRecoverySmall;
         }
 
         public ItemWithCost[] GetItemsWithCost()
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(1,     ItemType.AffectionRecoverySmall.ToItem()),
+                new ItemWithCost(5,     ItemType.AffectionRecoverySmall.ToItem()),
                 new ItemWithCost(20,    ItemType.AffectionRecoveryNormal.ToItem()),
                 new ItemWithCost(150,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(40,    ItemType.DereReRoll.ToItem()),
