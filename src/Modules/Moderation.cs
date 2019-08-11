@@ -1253,7 +1253,7 @@ namespace Sanakan.Modules
                                     var res = await _shClient.Search.UserAsync(realNick);
                                     if (res.IsSuccessStatusCode())
                                     {
-                                        if (!res.Body.Any(x => x.Name == realNick))
+                                        if (!res.Body.Any(x => x.Name.Equals(realNick, StringComparison.Ordinal)))
                                             nickRep = $"**Nick:** ⚠";
                                     }
                                     else nickRep = $"**Nick:** ⚠";
