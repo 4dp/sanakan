@@ -354,6 +354,16 @@ namespace Sanakan.Modules
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
                 botuser.GameDeck.Cards.Add(card);
 
+                var sp = new List<string>();
+                if (botuser.GameDeck.Wishlist != null)
+                    sp = botuser.GameDeck.Wishlist.Split(";").ToList();
+
+                if (sp.Contains($"p{card.Character}"))
+                    sp.Remove($"p{card.Character}");
+
+                if (sp.Count > 0)
+                    botuser.GameDeck.Wishlist = string.Join(";", sp);
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
