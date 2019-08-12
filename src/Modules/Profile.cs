@@ -387,9 +387,9 @@ namespace Sanakan.Modules
 
         [Command("kolor")]
         [Alias("color", "colour")]
-        [Summary("zmienia kolor użytkownika (koszt TC na liście/30000 SC)")]
+        [Summary("zmienia kolor użytkownika (koszt TC/SC na liście)")]
         [Remarks("pink"), RequireCommandChannel]
-        public async Task ToggleColorRoleAsync([Summary("kolor z listy(brak - lista)")]FColor color = FColor.None, [Summary("waluta(SC/TC)")]SCurrency currency = SCurrency.Tc)
+        public async Task ToggleColorRoleAsync([Summary("kolor z listy(none - lista)")]FColor color = FColor.None, [Summary("waluta(SC/TC)")]SCurrency currency = SCurrency.Tc)
         {
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
