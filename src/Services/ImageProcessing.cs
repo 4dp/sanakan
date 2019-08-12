@@ -202,17 +202,20 @@ namespace Sanakan.Services
             if (botUser.GameDeck.Waifu != 0 && botUser.ShowWaifuInProfile)
             {
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
-                var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
-                if (response.IsSuccessStatusCode())
+                if (tChar != null)
                 {
-                    using (var cardImage = await GetWaifuCardNoStatsAsync(response.Body, tChar))
+                    var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
+                    if (response.IsSuccessStatusCode())
                     {
-                        cardImage.Mutate(x => x.Resize(new ResizeOptions
+                        using (var cardImage = await GetWaifuCardNoStatsAsync(response.Body, tChar))
                         {
-                            Mode = ResizeMode.Max,
-                            Size = new Size(105, 0)
-                        }));
-                        profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 350), 1));
+                            cardImage.Mutate(x => x.Resize(new ResizeOptions
+                            {
+                                Mode = ResizeMode.Max,
+                                Size = new Size(105, 0)
+                            }));
+                            profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 350), 1));
+                        }
                     }
                 }
             }

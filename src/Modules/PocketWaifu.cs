@@ -1005,8 +1005,8 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("poświęćm")]
-        [Alias("killm", "sacrificem", "poswiecm", "poświecm", "poświećm", "poswięćm", "poswiećm")]
+        [Command("poświęć")]
+        [Alias("kill", "sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
         [Summary("dodaje exp do karty, poświęcając kilka innych")]
         [Remarks("5412 5411 5410"), RequireWaifuCommandChannel]
         public async Task SacraficeCardMultiAsync([Summary("WID(do ulepszenia)")]ulong idToUp, [Summary("WID kart(do poświęcenia)")]params ulong[] idsToSac)
@@ -1067,66 +1067,6 @@ namespace Sanakan.Modules
                 {
                      await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się poświęcić {broken.Count} kart.".ToEmbedMessage(EMType.Error).Build());
                 }
-            }
-        }
-
-        [Command("poświęć")]
-        [Alias("kill", "sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
-        [Summary("dodaje exp do karty, poświęcając inną")]
-        [Remarks("5412 5411"), RequireWaifuCommandChannel]
-        public async Task SacraficeCardAsync([Summary("WID(do poświęcenia)")]ulong idToSac, [Summary("WID(do ulepszenia)")]ulong idToUp)
-        {
-            if (idToSac == idToUp)
-            {
-                await ReplyAsync("", embed: $"{Context.User.Mention} podałeś dwa razy ten sam WID.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            using (var db = new Database.UserContext(Config))
-            {
-                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var cardToSac = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToSac);
-                var cardToUp = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == idToUp);
-
-                if (cardToSac == null || cardToUp == null)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (cardToSac.IsBroken())
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może zostać poświęcona.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (cardToSac.InCage || cardToUp.InCage)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się w klatce.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (cardToSac.Tags != null && cardToSac.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz poświęcić karty oznaczonej jako ulubiona.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                ++bUser.Stats.SacraficeCards;
-                bUser.GameDeck.Karma -= 0.18;
-
-                var exp = _waifu.GetExpToUpgrade(cardToUp, cardToSac);
-                cardToUp.Affection += 0.08;
-                cardToUp.ExpCnt += exp;
-
-                bUser.GameDeck.Cards.Remove(cardToSac);
-
-                await db.SaveChangesAsync();
-                _waifu.DeleteCardImageIfExist(cardToSac);
-
-                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
-
-                await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {exp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
