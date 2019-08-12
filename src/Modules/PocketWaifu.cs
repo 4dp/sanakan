@@ -537,10 +537,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (pack.CardSourceFromPack == CardSource.Activity)
+                if (pack.CardSourceFromPack == CardSource.Activity || pack.CardSourceFromPack == CardSource.Migration)
+                {
                     bUser.Stats.OpenedBoosterPacksActivity += 1;
+                }
                 else
+                {
                     bUser.Stats.OpenedBoosterPacks += 1;
+                }
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
 

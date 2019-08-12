@@ -355,7 +355,13 @@ namespace Sanakan.Services.PocketWaifu
                 IsTradable = true,
                 UpgradesCnt = 2,
                 Rarity = rarity,
+                InCage = false,
+                RestartCnt = 0,
+                Active = false,
+                Affection = 0,
                 Tags = null,
+                Health = 0,
+                ExpCnt = 0,
             };
 
             card.Health = RandomizeHealth(card);
