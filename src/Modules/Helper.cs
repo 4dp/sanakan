@@ -6,8 +6,8 @@ using Discord.WebSocket;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
+using Shinden.Logger;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Sanakan.Modules
@@ -16,10 +16,12 @@ namespace Sanakan.Modules
     public class Helper : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Helper _helper;
+        private ILogger _logger;
 
-        public Helper(Services.Helper helper)
+        public Helper(Services.Helper helper, ILogger logger)
         {
             _helper = helper;
+            _logger = logger;
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]
@@ -169,11 +171,20 @@ namespace Sanakan.Modules
 
                 string userName = $"{Context.User.Username}({Context.User.Id})";
                 var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
-                await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
 
-                var rConfig = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
-                rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
-                await db.SaveChangesAsync();
+                try
+                {
+                    await sendMsg.ModifyAsync(x => x.Embed = _helper.BuildRaportInfo(repMsg, userName, reason, sendMsg.Id));
+
+                    var rConfig = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+                    rConfig.Raports.Add(new Database.Models.Configuration.Raport { User = repMsg.Author.Id, Message = sendMsg.Id });
+                    await db.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"in raport: {ex}");
+                    await sendMsg.DeleteAsync();
+                }
             }
         }
     }

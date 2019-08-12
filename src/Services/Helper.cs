@@ -347,8 +347,8 @@ namespace Sanakan.Services
             return new EmbedBuilder
             {
                 Footer = new EmbedFooterBuilder().WithText($"Zgłasza: {reportAuthor}".TrimToLength(EmbedFooterBuilder.MaxFooterTextLength)),
+                Description = message.Content?.TrimToLength(1500) ?? "sam załącznik",
                 Author = new EmbedAuthorBuilder().WithUser(message.Author),
-                Description = message.Content.TrimToLength(1500),
                 Color = EMType.Error.Color(),
                 Fields = new List<EmbedFieldBuilder>
                 {
