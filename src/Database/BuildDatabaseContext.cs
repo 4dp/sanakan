@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Sanakan.Config;
 using Sanakan.Database.Models;
+using Sanakan.Database.Models.Analytics;
 using Sanakan.Database.Models.Configuration;
 using Sanakan.Database.Models.Management;
 using System;
@@ -48,6 +49,8 @@ namespace Sanakan.Database
         public DbSet<WaifuFightChannel> WaifuFightChannels { get; set; }
         public DbSet<PenaltyInfo> Penalties { get; set; }
         public DbSet<OwnedRole> OwnedRoles { get; set; }
+        public DbSet<UserAnalytics> UsersData { get; set; }
+        public DbSet<SystemAnalytics> SystemData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -276,6 +279,17 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.PenaltyInfo)
                     .WithMany(p => p.Roles);
+            });
+
+            // Analytics
+            modelBuilder.Entity<UserAnalytics>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<SystemAnalytics>(entity =>
+            {
+                entity.HasKey(e => e.Id);
             });
         }
     }
