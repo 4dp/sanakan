@@ -65,8 +65,10 @@ namespace Sanakan.Services.Commands
             if (msg.HasStringPrefix(_config.Get().Prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
             {
                 var context = new SocketCommandContext(_client, msg);
-                var res = await _cmd.GetExecutableCommandAsync(context, argPos, _provider);
+                if (_config.Get().BlacklistedGuilds.Any(x => x == context.Guild.Id))
+                    return;
 
+                var res = await _cmd.GetExecutableCommandAsync(context, argPos, _provider);
                 if (res.IsSuccess())
                 {
                     _logger.Log($"Run cmd: u{msg.Author.Id} {res.Command.Match.Command.Name}");
@@ -88,6 +90,16 @@ namespace Sanakan.Services.Commands
                 using (var proc = System.Diagnostics.Process.GetCurrentProcess())
                 {
                     _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
+                    using (var dba = new Database.AnalyticsContext(_config))
+                    {
+                        dba.SystemData.Add(new Database.Models.Analytics.SystemAnalytics
+                        {
+                            MeasureDate = DateTime.Now,
+                            Value = proc.WorkingSet64 / 1048576,
+                            Type = Database.Models.Analytics.SystemAnalyticsEventType.Ram
+                        });
+                        dba.SaveChanges();
+                    }
                 }
             }
         }

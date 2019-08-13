@@ -58,6 +58,19 @@ namespace Sanakan.Services
                     await channel.SendFileAsync(badgeStream, $"{user.Id}.png");
                 }
             }
+
+            using (var dba = new Database.AnalyticsContext(_config))
+            {
+                dba.UsersData.Add(new Database.Models.Analytics.UserAnalytics
+                {
+                    Value = level,
+                    UserId = user.Id,
+                    GuildId = user.Guild.Id,
+                    MeasureDate = DateTime.Now,
+                    Type = Database.Models.Analytics.UserAnalyticsEventType.Level
+                });
+                dba.SaveChanges();
+            }
         }
 
         private async Task HandleMessageAsync(SocketMessage message)
@@ -66,6 +79,9 @@ namespace Sanakan.Services
 
             var user = message.Author as SocketGuildUser;
             if (user == null) return;
+
+            if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+                return;
 
             bool calculateExp = true;
             using (var db = new Database.GuildConfigContext(_config))

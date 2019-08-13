@@ -36,6 +36,9 @@ namespace Sanakan.Services
         {
             if (user.IsBot || user.IsWebhook) return;
 
+            if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+                return;
+
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
@@ -64,13 +67,16 @@ namespace Sanakan.Services
         {
             if (user.IsBot || user.IsWebhook) return;
 
-            using (var db = new Database.GuildConfigContext(_config))
+            if (!_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
             {
-                var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
-                if (config?.GoodbyeMessage == null) return;
-                if (config.GoodbyeMessage == "off") return;
+                using (var db = new Database.GuildConfigContext(_config))
+                {
+                    var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
+                    if (config?.GoodbyeMessage == null) return;
+                    if (config.GoodbyeMessage == "off") return;
 
-                await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
+                    await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
+                }
             }
 
             var thisUser = _client.Guilds.FirstOrDefault(x => x.Id == user.Id);

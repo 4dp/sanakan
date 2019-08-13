@@ -6,7 +6,7 @@ namespace Sanakan.Database.Models.Analytics
 {
     public enum UserAnalyticsEventType
     {
-        Card, Pack, Level, Characters, Cmd
+        Card, Pack, Level
     }
 
     public class UserAnalytics

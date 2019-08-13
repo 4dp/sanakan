@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -32,6 +33,9 @@ namespace Sanakan.Services
 
             if (message.Value.Channel is SocketGuildChannel gChannel)
             {
+                if (_config.Get().BlacklistedGuilds.Any(x => x == gChannel.Guild.Id))
+                    return;
+
                 _ = Task.Run(async () =>
                 {
                     await LogMessageAsync(gChannel, message.Value);

@@ -150,6 +150,19 @@ namespace Sanakan.Services.PocketWaifu
                     db.SaveChanges();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+
+                    using (var dba = new Database.AnalyticsContext(_config))
+                    {
+                        dba.UsersData.Add(new Database.Models.Analytics.UserAnalytics
+                        {
+                            Value = 1,
+                            UserId = winner.Id,
+                            MeasureDate = DateTime.Now,
+                            GuildId = trashChannel?.Guild?.Id ?? 0,
+                            Type = Database.Models.Analytics.UserAnalyticsEventType.Card
+                        });
+                        dba.SaveChanges();
+                    }
                 }
 
                 _ = Task.Run(async () =>
@@ -250,6 +263,20 @@ namespace Sanakan.Services.PocketWaifu
             }));
 
             _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+
+            var gUser = user as SocketGuildUser;
+            using (var db = new Database.AnalyticsContext(_config))
+            {
+                db.UsersData.Add(new Database.Models.Analytics.UserAnalytics
+                {
+                    Value = 1,
+                    UserId = user.Id,
+                    MeasureDate = DateTime.Now,
+                    GuildId = gUser?.Guild?.Id ?? 0,
+                    Type = Database.Models.Analytics.UserAnalyticsEventType.Pack
+                });
+                db.SaveChanges();
+            }
         }
 
         private long GetMessageRealLenght(SocketUserMessage message)
@@ -272,6 +299,9 @@ namespace Sanakan.Services.PocketWaifu
 
             var user = msg.Author as SocketGuildUser;
             if (user == null) return;
+
+            if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+                return;
 
             using (var db = new Database.GuildConfigContext(_config))
             {

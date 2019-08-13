@@ -18,5 +18,6 @@ namespace Sanakan.Config.Model
         public JwtConfig Jwt { get; set; }
         public List<SanakanApiKey> ApiKeys { get; set; }
         public List<RichMessageConfig> RMConfig { get; set; }
+        public List<ulong> BlacklistedGuilds { get; set; }
     }
 }

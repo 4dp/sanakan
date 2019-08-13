@@ -74,6 +74,9 @@ namespace Sanakan.Services.Supervisor
             var user = msg.Author as SocketGuildUser;
             if (user == null) return;
 
+            if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+                return;
+
             _ = Task.Run(async () =>
             {
                 await _semaphore.WaitAsync();
