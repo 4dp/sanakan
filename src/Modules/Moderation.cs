@@ -243,6 +243,24 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("prefix")]
+        [Summary("ustawia prefix serwera(nie podanie reset)")]
+        [Remarks("."), RequireAdminRole]
+        public async Task SetPrefixPerServerAsync([Summary("nowy prefix")]string prefix = null)
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+                config.Prefix = prefix;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                await ReplyAsync("", embed: $"Ustawiono `{prefix ?? "domyślny"}` prefix.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("przywitanie")]
         [Alias("welcome")]
         [Summary("ustawia/wyświetla wiadomośc przywitania")]
@@ -1184,6 +1202,42 @@ namespace Sanakan.Modules
                 }
 
                 await todoChannel.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
+            }
+        }
+
+        [Command("tchaos")]
+        [Summary("włącza lub wyłącza tryb siania chaosu")]
+        [Remarks(""), RequireAdminRole]
+        public async Task SetToggleChaosModeAsync()
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+                config.ChaosMode = !config.ChaosMode;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                await ReplyAsync("", embed: $"Tryb siania chaosu - włączony? `{config.ChaosMode.GetYesNo()}`.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("tsup")]
+        [Summary("włącza lub wyłącza tryb nadzoru")]
+        [Remarks(""), RequireAdminRole]
+        public async Task SetToggleSupervisionModeAsync()
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+                config.Supervision = !config.Supervision;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                await ReplyAsync("", embed: $"Tryb nadzoru - włączony?`{config.ChaosMode.GetYesNo()}`.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

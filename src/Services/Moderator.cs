@@ -142,7 +142,10 @@ namespace Sanakan.Services
             return new EmbedBuilder
             {
                 Color = EMType.Bot.Color(),
-                Description = $"**Admin:** {context.Guild.GetRole(config.AdminRole)?.Mention ?? "--"}\n"
+                Description = $"**Prefix:** {config.Prefix ?? "--"}\n"
+                            + $"**Nadzór:** {config.Supervision.GetYesNo()}\n"
+                            + $"**Chaos:** {config.ChaosMode.GetYesNo()}\n"
+                            + $"**Admin:** {context.Guild.GetRole(config.AdminRole)?.Mention ?? "--"}\n"
                             + $"**User:** {context.Guild.GetRole(config.UserRole)?.Mention ?? "--"}\n"
                             + $"**Mute:** {context.Guild.GetRole(config.MuteRole)?.Mention ?? "--"}\n"
                             + $"**ModMute:** {context.Guild.GetRole(config.ModMuteRole)?.Mention ?? "--"}\n"
