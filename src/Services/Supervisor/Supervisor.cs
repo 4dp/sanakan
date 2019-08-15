@@ -96,37 +96,39 @@ namespace Sanakan.Services.Supervisor
 
         private async Task Analize(SocketGuildUser user, SocketUserMessage message)
         {
-            if (!_guilds.Any(x => x.Key == user.Guild.Id))
-            {
-                _guilds.Add(user.Guild.Id, new Dictionary<ulong, SupervisorEntity>());
-                return;
-            }
-
-            var guild = _guilds[user.Guild.Id];
-            var messageContent = GetMessageContent(message);
-            if (!guild.Any(x => x.Key == user.Id))
-            {
-                guild.Add(user.Id, new SupervisorEntity(messageContent));
-                return;
-            }
-
-            var susspect = guild[user.Id];
-            if (!susspect.IsValid())
-            {
-                susspect = new SupervisorEntity(messageContent);
-                return;
-            }
-
-            var thisMessage = susspect.Get(messageContent);
-            if (!thisMessage.IsValid())
-            {
-                thisMessage = new SupervisorMessage(messageContent);
-            }
-
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
                 if (gConfig == null) return;
+
+                if (!gConfig.Supervision) return;
+
+                if (!_guilds.Any(x => x.Key == user.Guild.Id))
+                {
+                    _guilds.Add(user.Guild.Id, new Dictionary<ulong, SupervisorEntity>());
+                    return;
+                }
+
+                var guild = _guilds[user.Guild.Id];
+                var messageContent = GetMessageContent(message);
+                if (!guild.Any(x => x.Key == user.Id))
+                {
+                    guild.Add(user.Id, new SupervisorEntity(messageContent));
+                    return;
+                }
+
+                var susspect = guild[user.Id];
+                if (!susspect.IsValid())
+                {
+                    susspect = new SupervisorEntity(messageContent);
+                    return;
+                }
+
+                var thisMessage = susspect.Get(messageContent);
+                if (!thisMessage.IsValid())
+                {
+                    thisMessage = new SupervisorMessage(messageContent);
+                }
 
                 if (gConfig.AdminRole != 0)
                     if (user.Roles.Any(x => x.Id == gConfig.AdminRole))

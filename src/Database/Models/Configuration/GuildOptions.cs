@@ -23,6 +23,9 @@ namespace Sanakan.Database.Models.Configuration
         public string WelcomeMessagePW { get; set; }
         public string GoodbyeMessage { get; set; }
         public long SafariLimit { get; set; }
+        public bool Supervision { get; set; }
+        public bool ChaosMode { get; set; }
+        public string Prefix { get; set; }
 
         public virtual Waifu WaifuConfig { get; set; }
 

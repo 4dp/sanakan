@@ -54,7 +54,7 @@ namespace Sanakan.Services
             return $"**Lista poleceń:**\n\n**{item.Prefix}:** " + string.Join("  ", item.Commands);
         }
 
-        public string GiveHelpAboutPrivateCmd(string moduleName, string command)
+        public string GiveHelpAboutPrivateCmd(string moduleName, string command, string prefix)
         {
             var info = PrivateModulesInfo[moduleName];
 
@@ -64,15 +64,15 @@ namespace Sanakan.Services
                 thisCommands = info.Commands.FirstOrDefault(x => x.Aliases.Any(c => c == command));
 
             if (thisCommands != null)
-                return GetCommandInfo(thisCommands);
+                return GetCommandInfo(thisCommands, prefix);
 
             throw new Exception("Polecenie nie istnieje!");
         }
 
-        public string GetCommandInfo(CommandInfo cmd)
+        public string GetCommandInfo(CommandInfo cmd, string prefix = null)
         {
             string modulePrefix = GetModGroupPrefix(cmd.Module);
-            string botPrefix = _config.Get().Prefix;
+            string botPrefix = prefix ?? _config.Get().Prefix;
 
             string command = $"**{botPrefix}{modulePrefix}{cmd.Name}**";
 
@@ -96,7 +96,7 @@ namespace Sanakan.Services
             return command;
         }
 
-        public string GiveHelpAboutPublicCmd(string command)
+        public string GiveHelpAboutPublicCmd(string command, string prefix)
         {
             foreach(var module in PublicModulesInfo)
             {
@@ -106,7 +106,7 @@ namespace Sanakan.Services
                     thisCommands = module.Commands.FirstOrDefault(x => x.Aliases.Any(c => c == command));
 
                 if (thisCommands != null)
-                    return GetCommandInfo(thisCommands);
+                    return GetCommandInfo(thisCommands, prefix);
             }
             throw new Exception("Polecenie nie istnieje!");
         }

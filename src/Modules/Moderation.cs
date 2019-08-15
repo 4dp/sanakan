@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -20,15 +21,17 @@ namespace Sanakan.Modules
     [Name("Moderacja"), Group("mod"), DontAutoLoad]
     public class Moderation : SanakanModuleBase<SocketCommandContext>
     {
+        private IConfig _config;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.Profile _profile;
         private Services.Moderator _moderation;
 
-        public Moderation(Services.Helper helper, Services.Moderator moderation, Services.Profile prof, ShindenClient sh)
+        public Moderation(Services.Helper helper, Services.Moderator moderation, Services.Profile prof, ShindenClient sh, IConfig config)
         {
             _shClient = sh;
             _profile = prof;
+            _config = config;
             _helper = helper;
             _moderation = moderation;
         }
@@ -1386,7 +1389,17 @@ namespace Sanakan.Modules
             {
                 try
                 {
-                    await ReplyAsync(_helper.GiveHelpAboutPrivateCmd("Moderacja", command));
+                    string prefix = _config.Get().Prefix;
+                    if (Context.Guild != null)
+                    {
+                        using (var db = new Database.GuildConfigContext(_config))
+                        {
+                            var gConfig = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                            if (gConfig?.Prefix != null) prefix = gConfig.Prefix;
+                        }
+                    }
+
+                    await ReplyAsync(_helper.GiveHelpAboutPrivateCmd("Moderacja", command, prefix));
                 }
                 catch (Exception ex)
                 {

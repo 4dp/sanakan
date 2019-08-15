@@ -11,6 +11,7 @@ using Shinden.Logger;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sanakan.Services.Commands
@@ -24,6 +25,7 @@ namespace Sanakan.Services.Commands
         private ILogger _logger;
         private IConfig _config;
         private Helper _helper;
+        private Timer _timer;
 
         public CommandHandler(DiscordSocketClient client, IConfig config, ILogger logger, IExecutor executor)
         {
@@ -32,6 +34,34 @@ namespace Sanakan.Services.Commands
             _logger = logger;
             _executor = executor;
             _cmd = new CommandService();
+
+            _timer = new Timer(async _ =>
+            {
+                try
+                {
+                    using (var proc = System.Diagnostics.Process.GetCurrentProcess())
+                    {
+                        _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
+                        using (var dba = new Database.AnalyticsContext(_config))
+                        {
+                            dba.SystemData.Add(new Database.Models.Analytics.SystemAnalytics
+                            {
+                                MeasureDate = DateTime.Now,
+                                Value = proc.WorkingSet64 / 1048576,
+                                Type = Database.Models.Analytics.SystemAnalyticsEventType.Ram
+                            });
+                            await dba.SaveChangesAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log($"in mem check: {ex}");
+                }
+            },
+            null,
+            TimeSpan.FromMinutes(1),
+            TimeSpan.FromMinutes(1));
         }
 
         public async Task InitializeAsync(IServiceProvider provider, Helper helper)
@@ -61,10 +91,20 @@ namespace Sanakan.Services.Commands
 
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
-            int argPos = 0;
-            if (msg.HasStringPrefix(_config.Get().Prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
+            string prefix = _config.Get().Prefix;
+            var context = new SocketCommandContext(_client, msg);
+            if (context.Guild != null)
             {
-                var context = new SocketCommandContext(_client, msg);
+                using (var db = new Database.GuildConfigContext(_config))
+                {
+                    var gConfig = await db.GetCachedGuildFullConfigAsync(context.Guild.Id);
+                    if (gConfig?.Prefix != null) prefix = gConfig.Prefix;
+                }
+            }
+
+            int argPos = 0;
+            if (msg.HasStringPrefix(prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
+            {
                 if (_config.Get().BlacklistedGuilds.Any(x => x == context.Guild.Id))
                     return;
 
@@ -85,26 +125,11 @@ namespace Sanakan.Services.Commands
                             break;
                     }
                 }
-                else await ProcessResultAsync(res.Result, context, argPos);
-
-                using (var proc = System.Diagnostics.Process.GetCurrentProcess())
-                {
-                    _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
-                    using (var dba = new Database.AnalyticsContext(_config))
-                    {
-                        dba.SystemData.Add(new Database.Models.Analytics.SystemAnalytics
-                        {
-                            MeasureDate = DateTime.Now,
-                            Value = proc.WorkingSet64 / 1048576,
-                            Type = Database.Models.Analytics.SystemAnalyticsEventType.Ram
-                        });
-                        dba.SaveChanges();
-                    }
-                }
+                else await ProcessResultAsync(res.Result, context, argPos, prefix);
             }
         }
 
-        private async Task ProcessResultAsync(IResult result, SocketCommandContext context, int argPos)
+        private async Task ProcessResultAsync(IResult result, SocketCommandContext context, int argPos, string prefix)
         {
             if (result == null) return;
 
@@ -121,7 +146,9 @@ namespace Sanakan.Services.Commands
                 case CommandError.BadArgCount:
                     var cmd = _cmd.Search(context, argPos);
                     if (cmd.Commands.Count > 0)
-                        await context.Channel.SendMessageAsync(_helper.GetCommandInfo(cmd.Commands.First().Command));
+                    {
+                        await context.Channel.SendMessageAsync(_helper.GetCommandInfo(cmd.Commands.First().Command, prefix));
+                    }
                     break;
 
                 case CommandError.UnmetPrecondition:

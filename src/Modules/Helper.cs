@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Sanakan.Config;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
@@ -17,11 +18,13 @@ namespace Sanakan.Modules
     {
         private Services.Helper _helper;
         private ILogger _logger;
+        private IConfig _config;
 
-        public Helper(Services.Helper helper, ILogger logger)
+        public Helper(Services.Helper helper, ILogger logger, IConfig config)
         {
             _helper = helper;
             _logger = logger;
+            _config = config;
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]
@@ -34,7 +37,17 @@ namespace Sanakan.Modules
             {
                 try
                 {
-                    await ReplyAsync(_helper.GiveHelpAboutPublicCmd(command));
+                    string prefix = _config.Get().Prefix;
+                    if (Context.Guild != null)
+                    {
+                        using (var db = new Database.GuildConfigContext(_config))
+                        {
+                            var gConfig = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                            if (gConfig?.Prefix != null) prefix = gConfig.Prefix;
+                        }
+                    }
+
+                    await ReplyAsync(_helper.GiveHelpAboutPublicCmd(command, prefix));
                 }
                 catch (Exception ex)
                 {

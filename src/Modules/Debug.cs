@@ -25,14 +25,16 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
+        private IConfig _config;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img)
+        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img, IConfig config)
         {
             _shClient = shClient;
             _helper = helper;
+            _config = config;
             _waifu = waifu;
             _img = img;
         }
@@ -440,7 +442,17 @@ namespace Sanakan.Modules
             {
                 try
                 {
-                    await ReplyAsync(_helper.GiveHelpAboutPrivateCmd("Debug", command));
+                    string prefix = _config.Get().Prefix;
+                    if (Context.Guild != null)
+                    {
+                        using (var db = new Database.GuildConfigContext(_config))
+                        {
+                            var gConfig = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                            if (gConfig?.Prefix != null) prefix = gConfig.Prefix;
+                        }
+                    }
+
+                    await ReplyAsync(_helper.GiveHelpAboutPrivateCmd("Debug", command, prefix));
                 }
                 catch (Exception ex)
                 {

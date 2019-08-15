@@ -38,6 +38,7 @@ namespace Sanakan
         private Helper _helper;
         private Waifu _waifu;
         private Spawn _spawn;
+        private Chaos _chaos;
 
         public static void Main() => new Sanakan().MainAsync().GetAwaiter().GetResult();
 
@@ -92,6 +93,7 @@ namespace Sanakan
                 tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
 
             _helper = new Helper(_config);
+            _chaos = new Chaos(_client, _config);
             _img = new ImageProcessing(_shindenClient);
             _deleted = new DeletedLog(_client, _config);
             _executor = new SynchronizedExecutor(_logger);
@@ -141,6 +143,7 @@ namespace Sanakan
                 .AddSingleton(_logger)
                 .AddSingleton(_client)
                 .AddSingleton(_helper)
+                .AddSingleton(_chaos)
                 .AddSingleton(_waifu)
                 .AddSingleton(_spawn)
                 .AddSingleton(_mod)

@@ -1832,17 +1832,20 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
 
-                using (var cdb = new Database.GuildConfigContext(Config))
+                _ = Task.Run(async () =>
                 {
-                    var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-
-                    try
+                    using (var cdb = new Database.GuildConfigContext(Config))
                     {
-                        embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
+                        var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+
+                        try
+                        {
+                            embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
+                        }
+                        catch (Exception) { }
+                        await ReplyAsync("", embed: embed.Build());
                     }
-                    catch (Exception) { }
-                    await ReplyAsync("", embed: embed.Build());
-                }
+                });
             }
         }
 
