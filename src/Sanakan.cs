@@ -93,9 +93,9 @@ namespace Sanakan
                 tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
 
             _helper = new Helper(_config);
-            _chaos = new Chaos(_client, _config);
             _img = new ImageProcessing(_shindenClient);
             _deleted = new DeletedLog(_client, _config);
+            _chaos = new Chaos(_client, _config, _logger);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
             _waifu = new Waifu(_img, _shindenClient, _config);
