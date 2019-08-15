@@ -20,6 +20,7 @@ namespace Sanakan.Database.Models
         RandomNormalBoosterPackSS,
         AffectionRecoveryGreat,
         BetterIncreaseUpgradeCnt,
+        CheckAffection,
     }
 
     public class Item

@@ -39,6 +39,8 @@ namespace Sanakan.Extensions
                     return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości S.\n\nWykluczone jakości to: SS.";
                 case ItemType.RandomNormalBoosterPackSS:
                     return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości SS.";
+                case ItemType.CheckAffection:
+                    return "Pozwala sprawdzić dokładny poziom relacji z kartą.";
 
                 default:
                     return "Brak opisu.";
@@ -77,6 +79,8 @@ namespace Sanakan.Extensions
                     return "Złoty pakiet losowych kart";
                 case ItemType.RandomNormalBoosterPackSS:
                     return "Różowy pakiet losowych kart";
+                case ItemType.CheckAffection:
+                    return "Kryształowa kula";
 
                 default:
                     return "Brak";

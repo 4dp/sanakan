@@ -222,7 +222,12 @@ namespace Sanakan.Services.Session.Models
         }
 
         public string BuildProposition(PlayerInfo player)
-            => $"{player.User.Mention} oferuje:\n{string.Join("\n", player.Cards.Select(x => x.GetString(false, false, true)))}";
+        {
+            if (player.Cards.Count > 12)
+                return $"{player.User.Mention} oferuje:\n\n**[{player.Cards.Count}]** kart";
+
+            return $"{player.User.Mention} oferuje:\n{string.Join("\n", player.Cards.Select(x => x.GetString(false, false, true)))}";
+        }
 
         private async Task<bool> HandleReactionAsync(SessionContext context)
         {
@@ -315,6 +320,7 @@ namespace Sanakan.Services.Session.Models
                                 {
                                     card.Tags = null;
                                     card.Active = false;
+                                    card.Affection -= 1.5;
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
 
@@ -340,6 +346,7 @@ namespace Sanakan.Services.Session.Models
                                 {
                                     card.Tags = null;
                                     card.Active = false;
+                                    card.Affection -= 1.5;
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);
 

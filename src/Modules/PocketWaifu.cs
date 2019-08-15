@@ -465,6 +465,12 @@ namespace Sanakan.Modules
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 
+                    case ItemType.CheckAffection:
+                        affectionInc = 0.2;
+                        bUser.GameDeck.Karma -= 0.01;
+                        embed.Description += $"Relacja wynosi: `{card.Affection.ToString("F")}`";
+                        break;
+
                     default:
                         await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie powinno tutaj być!".ToEmbedMessage(EMType.Error).Build());
                         return;
@@ -1392,6 +1398,68 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} wyzwolił kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("wymień na kule")]
+        [Alias("wymien na kule", "crystal")]
+        [Summary("zmienia naszyjnik i bukiet kwiatów na kryształową kule (10 CT)")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task ExchangeToCrystalBallAsync()
+        {
+            int cost = 10;
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
+
+                var item1 = itemList.FirstOrDefault(x => x.Type == ItemType.CardParamsReRoll);
+                if (item1 == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby {ItemType.CardParamsReRoll.ToItem().Name}.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var item2 = itemList.FirstOrDefault(x => x.Type == ItemType.DereReRoll);
+                if (item2 == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby {ItemType.DereReRoll.ToItem().Name}.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.CTCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (item1.Count == 1)
+                {
+                    bUser.GameDeck.Items.Remove(item1);
+                }
+                else item1.Count--;
+
+                if (item2.Count == 1)
+                {
+                    bUser.GameDeck.Items.Remove(item2);
+                }
+                else item2.Count--;
+
+                var item3 = itemList.FirstOrDefault(x => x.Type == ItemType.CheckAffection);
+                if (item3 == null)
+                {
+                    item3 = ItemType.CheckAffection.ToItem();
+                    bUser.GameDeck.Items.Add(item3);
+                }
+                else item3.Count++;
+
+                bUser.GameDeck.CTCnt -= cost;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} uzyskał {item3.Name}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
