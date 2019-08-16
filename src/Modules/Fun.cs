@@ -21,10 +21,12 @@ namespace Sanakan.Modules
     public class Fun : SanakanModuleBase<SocketCommandContext>
     {
         private Services.Fun _fun;
+        private Moderator _moderation;
 
-        public Fun(Services.Fun fun)
+        public Fun(Services.Fun fun, Moderator moderation)
         {
             _fun = fun;
+            _moderation = moderation;
         }
 
         [Command("drobne")]
@@ -63,6 +65,51 @@ namespace Sanakan.Modules
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} łap drobne na waciki!".ToEmbedMessage(EMType.Success).Build());
             }
+        }
+
+        [Command("chce muta")]
+        [Alias("mute me", "chce mute")]
+        [Summary("odbierasz darmowego muta od bota")]
+        [Remarks("")]
+        public async Task GiveMuteAsync()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
+
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (config == null)
+                {
+                    await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                var notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+                var userRole = Context.Guild.GetRole(config.UserRole);
+                var muteRole = Context.Guild.GetRole(config.MuteRole);
+
+                if (muteRole == null)
+                {
+                    await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                if (user.Roles.Contains(muteRole))
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} już jest wyciszony.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                using (var mdb = new Database.ManagmentContext(Config))
+                {
+                    var usr = Context.Client.CurrentUser;
+                    var info = await _moderation.MuteUserAysnc(user, muteRole, null, userRole, mdb, (Services.Fun.GetRandomValue(666) * 24) + 24, "Chciał to dostał :)");
+                    await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Username}");
+                }
+            }
+
+            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("zaskórniaki")]

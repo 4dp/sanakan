@@ -386,7 +386,7 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.AffectionRecoverySmall:
-                        affectionInc = 0.03 * itemCnt;
+                        affectionInc = 0.02 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
                         break;
@@ -1071,7 +1071,10 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {totalExp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
+                if (cardsToSac.Count > broken.Count)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ulepszył kartę: {cardToUp.GetString(false, false, true)} o {totalExp.ToString("F")} exp.".ToEmbedMessage(EMType.Success).Build());
+                }
 
                 if (broken.Count > 0)
                 {
@@ -1459,7 +1462,7 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} uzyskał {item3.Name}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} uzyskał *{item3.Name}*".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -2275,7 +2278,7 @@ namespace Sanakan.Modules
                 if (prev != null)
                 {
                     var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Id == prev.Id);
-                    foreach (var card in allPrevWaifus) card.Affection -= 2;
+                    foreach (var card in allPrevWaifus) card.Affection -= 5;
                 }
 
                 bUser.GameDeck.Waifu = thisCard.Character;

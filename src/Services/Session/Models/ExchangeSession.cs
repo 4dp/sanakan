@@ -89,7 +89,7 @@ namespace Sanakan.Services.Session.Models
             var cmd = context.Message?.Content?.ToLower();
             if (cmd == null) return;
 
-            var splitedCmd = cmd.Split(" ");
+            var splitedCmd = cmd.Replace("\n", " ").Split(" ");
             if (splitedCmd.Length < 2) return;
 
             var cmdType = splitedCmd[0];
