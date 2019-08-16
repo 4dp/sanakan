@@ -2265,6 +2265,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (bUser.GameDeck.Waifu == thisCard.Character)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} masz już ustawioną tą postać!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 var prev = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
                 if (prev != null)
                 {
