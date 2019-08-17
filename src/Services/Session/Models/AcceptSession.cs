@@ -21,10 +21,12 @@ namespace Sanakan.Services.Session.Models
         public AcceptSession(IUser owner, IUser challenger, IUser bot) : base(owner)
         {
             Event = ExecuteOn.AllReactions;
-            AddParticipant(challenger);
             RunMode = RunMode.Sync;
             TimeoutMs = 120000;
             Bot = bot;
+
+            if (challenger != null)
+                AddParticipant(challenger);
 
             Message = null;
             Actions = null;

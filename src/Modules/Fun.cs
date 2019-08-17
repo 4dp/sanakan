@@ -8,6 +8,8 @@ using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services;
 using Sanakan.Services.Commands;
+using Sanakan.Services.Session.Models;
+using Sanakan.Services.Session;
 using Sanakan.Services.SlotMachine;
 using System;
 using System.Collections.Generic;
@@ -22,10 +24,12 @@ namespace Sanakan.Modules
     {
         private Services.Fun _fun;
         private Moderator _moderation;
+        private SessionManager _session;
 
-        public Fun(Services.Fun fun, Moderator moderation)
+        public Fun(Services.Fun fun, Moderator moderation, SessionManager session)
         {
             _fun = fun;
+            _session = session;
             _moderation = moderation;
         }
 
@@ -67,9 +71,9 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("chce muta")]
+        [Command("chce muta", RunMode = RunMode.Async)]
         [Alias("mute me", "chce mute")]
-        [Summary("odbierasz darmowego muta od bota")]
+        [Summary("odbierasz darmowego muta od bota - na serio i nawet nie proś o odmutowanie")]
         [Remarks("")]
         public async Task GiveMuteAsync()
         {
@@ -101,15 +105,24 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                using (var mdb = new Database.ManagmentContext(Config))
-                {
-                    var usr = Context.Client.CurrentUser;
-                    var info = await _moderation.MuteUserAysnc(user, muteRole, null, userRole, mdb, (Services.Fun.GetRandomValue(666) * 24) + 24, "Chciał to dostał :)");
-                    await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Username}");
-                }
-            }
+                var session = new AcceptSession(user, null, Context.Client.CurrentUser);
+                await _session.KillSessionIfExistAsync(session);
 
-            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
+                var msg = await ReplyAsync("", embed: $"{user.Mention} na pewno chcesz muta?".ToEmbedMessage(EMType.Error).Build());
+                await msg.AddReactionsAsync(session.StartReactions);
+                session.Actions = new AcceptMute(Config)
+                {
+                    NotifChannel = notifChannel,
+                    Moderation = _moderation,
+                    MuteRole = muteRole,
+                    UserRole = userRole,
+                    Message = msg,
+                    User = user,
+                };
+                session.Message = msg;
+
+                await _session.TryAddSession(session);
+            }
         }
 
         [Command("zaskórniaki")]

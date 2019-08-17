@@ -114,7 +114,11 @@ namespace Sanakan.Services
                     var fakeu = db.GetUserOrCreateAsync(1).Result;
 
                     foreach (var card in duser.GameDeck.Cards)
+                    {
+                        card.Tags = null;
+                        card.InCage = false;
                         fakeu.GameDeck.Cards.Add(card);
+                    }
 
                     duser.GameDeck.Cards.Clear();
                     db.Users.Remove(duser);

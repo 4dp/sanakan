@@ -9,7 +9,6 @@ using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
 using Sanakan.Services.PocketWaifu;
-using Sanakan.Services.Session;
 using Shinden;
 using System;
 using System.Collections.Generic;

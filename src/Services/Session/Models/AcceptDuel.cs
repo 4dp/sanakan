@@ -6,7 +6,6 @@ using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.PocketWaifu;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
 
