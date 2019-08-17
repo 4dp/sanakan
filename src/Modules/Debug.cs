@@ -8,10 +8,12 @@ using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
+using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
 using Shinden;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -25,13 +27,15 @@ namespace Sanakan.Modules
     {
         private Waifu _waifu;
         private IConfig _config;
+        private IExecutor _executor;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img, IConfig config)
+        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img, IConfig config, IExecutor executor)
         {
             _shClient = shClient;
+            _executor = executor;
             _helper = helper;
             _config = config;
             _waifu = waifu;
@@ -88,6 +92,103 @@ namespace Sanakan.Modules
 
                 await ReplyAsync("", embed: $"{user.Mention} - blacklist: {targetUser.IsBlacklisted}".ToEmbedMessage(EMType.Success).Build());
             }
+        }
+
+        [Command("rozdaj", RunMode = RunMode.Async)]
+        [Summary("rozdaje karty")]
+        [Remarks("1 10 5")]
+        public async Task TransferCardAsync([Summary("id z bazy")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
+        {
+            var emote = new Emoji("🎰");
+            var time = DateTime.Now.AddMinutes(duration);
+            var msg = await ReplyAsync("", embed: $"Loteria kart. Zareaguj {emote} aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+            await msg.AddReactionAsync(emote);
+
+            await Task.Delay(TimeSpan.FromMinutes(duration));
+            await msg.RemoveReactionAsync(emote, Context.Client.CurrentUser);
+
+            var reactions = await msg.GetReactionUsersAsync(emote, 300).FlattenAsync();
+            var users = reactions.ToList();
+
+            IUser winner = null;
+            using (var db = new Database.UserContext(_config))
+            {
+                var watch = Stopwatch.StartNew();
+                while (winner == null)
+                {
+                    if (watch.ElapsedMilliseconds > 60000)
+                        throw new Exception("Timeout");
+
+                    if (users.Count < 1)
+                    {
+                        await msg.ModifyAsync(x => x.Embed = "Na loterie nie stawił się żaden użytkownik!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var selected = Services.Fun.GetOneRandomFrom(users);
+                    var dUser = await db.GetCachedFullUserAsync(selected.Id);
+
+                    if (dUser != null)
+                    {
+                        if (!dUser.IsBlacklisted)
+                            winner = selected;
+                    }
+                    else users.Remove(selected);
+                }
+            }
+
+            var exe = new Executable("lotery", new Task(async () =>
+            {
+                using (var db = new Database.UserContext(Config))
+                {
+                    var user = await db.GetUserOrCreateAsync(id);
+                    if (user == null)
+                    {
+                        await msg.ModifyAsync(x => x.Embed = "Nie odnaleziono kart do rozdania!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var loteryCards = user.GameDeck.Cards.ToList();
+                    if (loteryCards.Count < 1)
+                    {
+                        await msg.ModifyAsync(x => x.Embed = "Nie odnaleziono kart do rozdania!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var winnerUser = await db.GetUserOrCreateAsync(winner.Id);
+                    if (winnerUser == null)
+                    {
+                        await msg.ModifyAsync(x => x.Embed = "Nie odnaleziono docelowego użytkownika!".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    int counter = 0;
+                    var cardsIds = new List<ulong>();
+                    foreach (var thisCard in loteryCards)
+                    {
+                        cardsIds.Add(thisCard.Id);
+
+                        thisCard.Active = false;
+                        thisCard.InCage = false;
+                        thisCard.Tags = null;
+
+                        user.GameDeck.Cards.Remove(thisCard);
+                        winnerUser.GameDeck.Cards.Add(thisCard);
+
+                        if (++counter == count)
+                            break;
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
+
+                    await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join(" ", cardsIds)}".ToEmbedMessage(EMType.Success).Build());
+                }
+            }));
+
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await msg.RemoveAllReactionsAsync();
         }
 
         [Command("tranc")]
