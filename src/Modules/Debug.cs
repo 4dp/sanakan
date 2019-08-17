@@ -163,10 +163,10 @@ namespace Sanakan.Modules
                     }
 
                     int counter = 0;
-                    var cardsIds = new List<ulong>();
+                    var cardsIds = new List<string>();
                     foreach (var thisCard in loteryCards)
                     {
-                        cardsIds.Add(thisCard.Id);
+                        cardsIds.Add(thisCard.GetString(false, false, true));
 
                         thisCard.Active = false;
                         thisCard.InCage = false;
@@ -183,7 +183,7 @@ namespace Sanakan.Modules
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
-                    await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join(" ", cardsIds)}".ToEmbedMessage(EMType.Success).Build());
+                    await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
                 }
             }));
 
