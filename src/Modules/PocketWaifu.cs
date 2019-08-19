@@ -2188,7 +2188,6 @@ namespace Sanakan.Modules
                 var duser1 = await db.GetCachedFullUserAsync(user1.Id);
                 var duser2 = await db.GetCachedFullUserAsync(user2.Id);
 
-
                 if (!duser1.GameDeck.CanFightPvP())
                 {
                     await ReplyAsync("", embed: $"{user1.Mention} ma zbyt silną talie ({duser1.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());

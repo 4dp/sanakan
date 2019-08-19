@@ -214,7 +214,6 @@ namespace Sanakan.Services.PocketWaifu
                 ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, trashChannel)
             };
 
-
             var msg = await spawnChannel.SendMessageAsync(mention, embed: embed.Build());
             RunSafari(embed, msg, newCard, pokeImage, character, trashChannel);
             await msg.AddReactionAsync(ClaimEmote);

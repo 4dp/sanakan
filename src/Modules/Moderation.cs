@@ -39,7 +39,7 @@ namespace Sanakan.Modules
         [Command("kasuj", RunMode = RunMode.Async)]
         [Alias("prune")]
         [Summary("usuwa x ostatnich wiadomości")]
-        [Remarks("12"), RequireAdminRole]
+        [Remarks("12"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageMessages)]
         public async Task DeleteMesegesAsync([Summary("liczba wiadomości")]int count)
         {
             if (count < 1)
@@ -58,7 +58,7 @@ namespace Sanakan.Modules
         [Command("kasuju", RunMode = RunMode.Async)]
         [Alias("pruneu")]
         [Summary("usuwa wiadomości danego użytkownika")]
-        [Remarks("karna"), RequireAdminRole]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageMessages)]
         public async Task DeleteUserMesegesAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             await Context.Message.DeleteAsync();
@@ -103,7 +103,7 @@ namespace Sanakan.Modules
 
         [Command("mute")]
         [Summary("wycisza użytkownika")]
-        [Remarks("karna"), RequireAdminRole]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
         public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
@@ -196,7 +196,7 @@ namespace Sanakan.Modules
 
         [Command("unmute")]
         [Summary("zdejmuje wyciszenie z użytkownika")]
-        [Remarks("karna"), RequireAdminRole]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
         public async Task UnmuteUserAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             using (var db = new Database.GuildConfigContext(Config))
@@ -234,7 +234,7 @@ namespace Sanakan.Modules
         [Command("wyciszeni", RunMode = RunMode.Async)]
         [Alias("show muted")]
         [Summary("wyświetla wyciszonych użytkowników")]
-        [Remarks(""), RequireAdminRole]
+        [Remarks(""), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
         public async Task ShowMutedUsersAsync()
         {
             using (var mdb = new Database.ManagmentContext(Config))
@@ -353,7 +353,7 @@ namespace Sanakan.Modules
 
         [Command("role", RunMode = RunMode.Async)]
         [Summary("wyświetla role serwera")]
-        [Remarks(""), RequireAdminRole]
+        [Remarks(""), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
         public async Task ShowRolesAsync()
         {
             string tmg = "";
@@ -1230,6 +1230,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                await Context.Message.AddReactionAsync(new Emoji("👌"));
                 await todoChannel.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
             }
         }
