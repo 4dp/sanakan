@@ -49,7 +49,15 @@ namespace Sanakan.Modules
             if (Context.Channel is ITextChannel channel)
             {
                 var enumerable = await channel.GetMessagesAsync(count).FlattenAsync();
-                await channel.DeleteMessagesAsync(enumerable).ConfigureAwait(false);
+                try
+                {
+                    await channel.DeleteMessagesAsync(enumerable).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"Wiadomości są zbyt stare.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
                 await ReplyAsync("", embed: $"Usunięto {count} ostatnich wiadomości.".ToEmbedMessage(EMType.Bot).Build());
             }
@@ -66,7 +74,15 @@ namespace Sanakan.Modules
             {
                 var enumerable = await channel.GetMessagesAsync().FlattenAsync();
                 var userMessages = enumerable.Where(x => x.Author == user);
-                await channel.DeleteMessagesAsync(userMessages).ConfigureAwait(false);
+                try
+                {
+                    await channel.DeleteMessagesAsync(userMessages).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"Wiadomości są zbyt stare.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
 
                 await ReplyAsync("", embed: $"Usunięto wiadomości {user.Mention}.".ToEmbedMessage(EMType.Bot).Build());
             }

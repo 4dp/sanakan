@@ -1278,7 +1278,7 @@ namespace Sanakan.Modules
         }
 
         [Command("na życzeniach", RunMode = RunMode.Async)]
-        [Alias("on wishlist", "na zyczenia")]
+        [Alias("on wishlist", "na zyczeniach")]
         [Summary("wyświetla obiekty dodane do listy życzeń")]
         [Remarks(""), RequireWaifuCommandChannel]
         public async Task ShowThingsOnWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null)
