@@ -103,7 +103,7 @@ namespace Sanakan.Modules
 
         [Command("mute")]
         [Summary("wycisza użytkownika")]
-        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
         public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
@@ -196,7 +196,7 @@ namespace Sanakan.Modules
 
         [Command("unmute")]
         [Summary("zdejmuje wyciszenie z użytkownika")]
-        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
         public async Task UnmuteUserAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             using (var db = new Database.GuildConfigContext(Config))
@@ -234,7 +234,7 @@ namespace Sanakan.Modules
         [Command("wyciszeni", RunMode = RunMode.Async)]
         [Alias("show muted")]
         [Summary("wyświetla wyciszonych użytkowników")]
-        [Remarks(""), RequireAdminRoleOrChannelPermission(ChannelPermission.MuteMembers)]
+        [Remarks(""), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
         public async Task ShowMutedUsersAsync()
         {
             using (var mdb = new Database.ManagmentContext(Config))
