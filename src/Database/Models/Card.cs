@@ -44,6 +44,7 @@ namespace Sanakan.Database.Models
         public CardSource Source { get; set; }
         public string Title { get; set; }
         public string Tags { get; set; }
+        public string Image { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

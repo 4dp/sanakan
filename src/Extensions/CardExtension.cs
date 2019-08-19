@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Sanakan.Database.Models;
 using Sanakan.Services.PocketWaifu;
@@ -39,6 +40,8 @@ namespace Sanakan.Extensions
                 case Rarity.E: return 1;
             }
         }
+
+        public static bool HasImage(this Card card) => card.Image != null;
 
         public static double GetCardPower(this Card card)
         {
@@ -419,6 +422,17 @@ namespace Sanakan.Extensions
                 case Rarity.E:
                 default: return 38;
             }
+        }
+
+        public static async Task Update(this Card card, Shinden.ShindenClient client)
+        {
+            var response = await client.GetCharacterInfoAsync(card.Character);
+            if (!response.IsSuccessStatusCode())
+                throw new Exception($"Couldn't get card info!");
+
+            card.Name = response.Body.ToString();
+            card.Image = response.Body.HasImage ? response.Body.PictureUrl : null;
+            card.Title = response.Body?.Relations?.OrderBy(x => x.Id).FirstOrDefault()?.Title ?? "????";
         }
 
         public static async Task<CardInfo> GetCardInfoAsync(this Card card, Shinden.ShindenClient client)
