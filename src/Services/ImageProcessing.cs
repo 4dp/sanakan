@@ -204,18 +204,14 @@ namespace Sanakan.Services
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
                 if (tChar != null)
                 {
-                    var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
-                    if (response.IsSuccessStatusCode())
+                    using (var cardImage = await GetWaifuCardNoStatsAsync(tChar))
                     {
-                        using (var cardImage = await GetWaifuCardNoStatsAsync(response.Body, tChar))
+                        cardImage.Mutate(x => x.Resize(new ResizeOptions
                         {
-                            cardImage.Mutate(x => x.Resize(new ResizeOptions
-                            {
-                                Mode = ResizeMode.Max,
-                                Size = new Size(105, 0)
-                            }));
-                            profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 350), 1));
-                        }
+                            Mode = ResizeMode.Max,
+                            Size = new Size(105, 0)
+                        }));
+                        profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 350), 1));
                     }
                 }
             }
@@ -678,11 +674,11 @@ namespace Sanakan.Services
             return imgBase;
         }
 
-        private async Task<Image<Rgba32>> GetCharacterPictureAsync(ICharacterInfo character)
+        private async Task<Image<Rgba32>> GetCharacterPictureAsync(string characterUrl)
         {
             var characterImg = Image.Load($"./Pictures/PW/empty.png");
 
-            using (var stream = await GetImageFromUrlAsync(character.PictureUrl, true))
+            using (var stream = await GetImageFromUrlAsync(characterUrl ?? "http://cdn.shinden.eu/cdn1/other/placeholders/title/225x350.jpg", true))
             {
                 if (stream == null)
                     return characterImg;
@@ -765,11 +761,11 @@ namespace Sanakan.Services
             }
         }
 
-        public async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(ICharacterInfo character, Card card)
+        public async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(Card card)
         {
             var image = new Image<Rgba32>(475, 667);
 
-            using (var chara = await GetCharacterPictureAsync(character))
+            using (var chara = await GetCharacterPictureAsync(card.Image))
             {
                 image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
             }
@@ -817,8 +813,8 @@ namespace Sanakan.Services
             img.Mutate(x => x.DrawImage(los, new Point(Xil, Yi), 1));
 
             var options = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Center, WrapTextWidth = win.Width };
-            img.Mutate(x => x.DrawText(options, info.Winner.Card.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xiw, Yt)));
-            img.Mutate(x => x.DrawText(options, info.Loser.Card.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xil, Yt)));
+            img.Mutate(x => x.DrawText(options, info.Winner.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xiw, Yt)));
+            img.Mutate(x => x.DrawText(options, info.Loser.Name, nameFont, Rgba32.FromHex(image != null ? image.Color : DuelImage.DefaultColor()), new Point(Xil, Yt)));
 
             return img;
         }
@@ -830,19 +826,19 @@ namespace Sanakan.Services
             return image;
         }
 
-        public async Task<Image<Rgba32>> GetWaifuCardAsync(string url, ICharacterInfo character, Card card)
+        public async Task<Image<Rgba32>> GetWaifuCardAsync(string url, Card card)
         {
             if (url == null)
-                return await GetWaifuCardAsync(character, card);
+                return await GetWaifuCardAsync(card);
 
             return Image.Load(url);
         }
 
-        public async Task<Image<Rgba32>> GetWaifuCardAsync(ICharacterInfo character, Card card)
+        public async Task<Image<Rgba32>> GetWaifuCardAsync(Card card)
         {
-            var image = await GetWaifuCardNoStatsAsync(character, card);
+            var image = await GetWaifuCardNoStatsAsync(card);
 
-            ApplyStats(image, card, !character.HasImage);
+            ApplyStats(image, card, !card.HasImage());
 
             return image;
         }

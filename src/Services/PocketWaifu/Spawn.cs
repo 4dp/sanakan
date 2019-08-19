@@ -169,7 +169,7 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     try
                     {
-                        embed.ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, character, newCard, trashChannel);
+                        embed.ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, newCard, trashChannel);
                         embed.Description = $"{winner.Mention} zdobył na polowaniu i wsadził do klatki:\n"
                                         + $"{newCard.GetString(false, false, true)}\n({newCard.Title})";
                         await msg.ModifyAsync(x => x.Embed = embed.Build());

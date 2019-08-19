@@ -278,13 +278,13 @@ namespace Sanakan.Services.PocketWaifu
             return rExp;
         }
 
-        public FightWinner GetFightWinner(CardInfo card1, CardInfo card2)
+        public FightWinner GetFightWinner(Card card1, Card card2)
         {
             var FAcard1 = GetFA(card1, card2);
             var FAcard2 = GetFA(card2, card1);
 
-            var c1Health = card1.Card.GetHealthWithPenalty();
-            var c2Health = card2.Card.GetHealthWithPenalty();
+            var c1Health = card1.GetHealthWithPenalty();
+            var c2Health = card2.GetHealthWithPenalty();
             var atkTk1 = c1Health / FAcard2;
             var atkTk2 = c2Health / FAcard1;
 
@@ -295,20 +295,20 @@ namespace Sanakan.Services.PocketWaifu
             return winner;
         }
 
-        public double GetFA(CardInfo target, CardInfo enemy)
+        public double GetFA(Card target, Card enemy)
         {
-            double atk1 = target.Card.GetAttackWithBonus();
-            if (!target.Info.HasImage) atk1 -= atk1 * 20 / 100;
+            double atk1 = target.GetAttackWithBonus();
+            if (!target.HasImage()) atk1 -= atk1 * 20 / 100;
             if (atk1 < 1) atk1 = 1;
 
-            double def2 = enemy.Card.GetDefenceWithBonus();
-            if (!enemy.Info.HasImage) def2 -= def2 * 20 / 100;
+            double def2 = enemy.GetDefenceWithBonus();
+            if (!enemy.HasImage()) def2 -= def2 * 20 / 100;
             if (def2 < 1) def2 = 1;
             if (def2 > 99) def2 = 99;
 
             var realAtk1 = atk1 * (100 - def2) / 100;
-            if (enemy.Card.IsWeakTo(target.Card.Dere)) realAtk1 *= 2;
-            if (enemy.Card.IsResistTo(target.Card.Dere)) realAtk1 /= 2;
+            if (enemy.IsWeakTo(target.Dere)) realAtk1 *= 2;
+            if (enemy.IsResistTo(target.Dere)) realAtk1 /= 2;
             if (realAtk1 < 1) realAtk1 = 1;
 
             return realAtk1;
@@ -359,10 +359,14 @@ namespace Sanakan.Services.PocketWaifu
                 RestartCnt = 0,
                 Active = false,
                 Affection = 0,
+                Image = null,
                 Tags = null,
                 Health = 0,
                 ExpCnt = 0,
             };
+
+            if (character.HasImage)
+                card.Image = character.PictureUrl;
 
             card.Health = RandomizeHealth(card);
             return card;
@@ -424,7 +428,7 @@ namespace Sanakan.Services.PocketWaifu
             return nDef;
         }
 
-        private int GetDmgDeal(CardInfo c1, CardInfo c2)
+        private int GetDmgDeal(Card c1, Card c2)
         {
             var dmg = GetFA(c1, c2);
             if (dmg < 1) dmg = 1;
@@ -484,14 +488,15 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)
         {
-            var totalCards = new List<CardInfo>();
+            var totalCards = new List<Card>();
+            await Task.CompletedTask;
 
             foreach (var player in players)
             {
                 foreach (var card in player.Cards)
                 {
                     card.Health = card.GetHealthWithPenalty();
-                    totalCards.Add(await card.GetCardInfoAsync(_shClient));
+                    totalCards.Add(card);
                 }
             }
 
@@ -505,32 +510,32 @@ namespace Sanakan.Services.PocketWaifu
 
                 foreach (var card in totalCards)
                 {
-                    if (card.Card.Health <= 0)
+                    if (card.Health <= 0)
                         continue;
 
-                    var enemies = totalCards.Where(x => x.Card.Health > 0 && x.Card.GameDeckId != card.Card.GameDeckId);
+                    var enemies = totalCards.Where(x => x.Health > 0 && x.GameDeckId != card.GameDeckId);
                     if (enemies.Count() > 0)
                     {
                         var target = Fun.GetOneRandomFrom(enemies);
                         var dmg = GetDmgDeal(card, target);
-                        target.Card.Health -= dmg;
+                        target.Health -= dmg;
 
-                        var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Card.Id);
+                        var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Id);
                         if (hpSnap == null)
                         {
                             round.Cards.Add(new HpSnapshot
                             {
-                                CardId = target.Card.Id,
-                                Hp = target.Card.Health
+                                CardId = target.Id,
+                                Hp = target.Health
                             });
                         }
-                        else hpSnap.Hp = target.Card.Health;
+                        else hpSnap.Hp = target.Health;
 
                         round.Fights.Add(new AttackInfo
                         {
                             Dmg = dmg,
-                            AtkCardId = card.Card.Id,
-                            DefCardId = target.Card.Id
+                            AtkCardId = card.Id,
+                            DefCardId = target.Id
                         });
                     }
                 }
@@ -539,23 +544,23 @@ namespace Sanakan.Services.PocketWaifu
 
                 if (oneCard)
                 {
-                    fight = totalCards.Count(x => x.Card.Health > 0) > 1;
+                    fight = totalCards.Count(x => x.Health > 0) > 1;
                 }
                 else
                 {
-                    var alive = totalCards.Where(x => x.Card.Health > 0);
+                    var alive = totalCards.Where(x => x.Health > 0);
                     var one = alive.FirstOrDefault();
                     if (one == null) break;
 
-                    fight = alive.Any(x => x.Card.GameDeckId != one.Card.GameDeckId);
+                    fight = alive.Any(x => x.GameDeckId != one.GameDeckId);
                 }
             }
 
             PlayerInfo winner = null;
-            var win = totalCards.Where(x => x.Card.Health > 0).FirstOrDefault();
+            var win = totalCards.Where(x => x.Health > 0).FirstOrDefault();
 
             if (win != null)
-                winner = players.FirstOrDefault(x => x.Cards.Any(c => c.GameDeckId == win.Card.GameDeckId));
+                winner = players.FirstOrDefault(x => x.Cards.Any(c => c.GameDeckId == win.GameDeckId));
 
             return new FightHistory(winner) { Rounds = rounds };
         }
@@ -602,9 +607,9 @@ namespace Sanakan.Services.PocketWaifu
             return response.Body;
         }
 
-        public async Task<string> GetWaifuProfileImageAsync(Card card, ICharacterInfo character, ITextChannel trashCh)
+        public async Task<string> GetWaifuProfileImageAsync(Card card, ITextChannel trashCh)
         {
-            using (var cardImage = await _img.GetWaifuCardNoStatsAsync(character, card))
+            using (var cardImage = await _img.GetWaifuCardNoStatsAsync(card))
             {
                 cardImage.SaveToPath($"./GOut/Profile/P{card.Id}.png");
 
@@ -757,14 +762,16 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GenerateAndSaveCardAsync(Card card, bool small = false)
         {
-            var response = await _shClient.GetCharacterInfoAsync(card.Character);
-            if (response.Code == System.Net.HttpStatusCode.NotFound) throw new Exception("Character don't exist!");
-            if (!response.IsSuccessStatusCode()) throw new Exception("Shinden not responding!");
+            try
+            {
+                await card.Update(_shClient);
+            }
+            catch (Exception) { }
 
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
 
-            using (var image = await _img.GetWaifuCardAsync(response.Body, card))
+            using (var image = await _img.GetWaifuCardAsync(card))
             {
                 image.SaveToPath(imageLocation);
                 image.SaveToPath(sImageLocation, 133, 0);
@@ -803,7 +810,7 @@ namespace Sanakan.Services.PocketWaifu
             else
             {
                 imageUrl = imageLocation;
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 8)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 
@@ -824,12 +831,12 @@ namespace Sanakan.Services.PocketWaifu
             return dImg;
         }
 
-        public async Task<string> GetSafariViewAsync(SafariImage info, ICharacterInfo character, Card card, ITextChannel trashChannel)
+        public async Task<string> GetSafariViewAsync(SafariImage info, Card card, ITextChannel trashChannel)
         {
             string uri = info != null ? info.Uri(SafariImage.Type.Truth) : SafariImage.DefaultUri(SafariImage.Type.Truth);
             var cardUri = await GetCardUrlIfExistAsync(card);
 
-            using (var cardImage = await _img.GetWaifuCardAsync(cardUri, character, card))
+            using (var cardImage = await _img.GetWaifuCardAsync(cardUri, card))
             {
                 int posX = info != null ? info.GetX() : SafariImage.DefaultX();
                 int posY = info != null ? info.GetY() : SafariImage.DefaultY();
@@ -854,8 +861,8 @@ namespace Sanakan.Services.PocketWaifu
         public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
         {
             string url = null;
-            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner.Card, force: true);
-            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser.Card, force: true);
+            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner, force: true);
+            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser, force: true);
 
             DuelImage dImg = null;
             var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");
@@ -866,9 +873,9 @@ namespace Sanakan.Services.PocketWaifu
             }
             catch (Exception) { }
 
-            using (var winner = await _img.GetWaifuCardAsync(imageUrlWinner, info.Winner.Info, info.Winner.Card))
+            using (var winner = await _img.GetWaifuCardAsync(imageUrlWinner, info.Winner))
             {
-                using (var looser = await _img.GetWaifuCardAsync(imageUrlLooser, info.Loser.Info, info.Loser.Card))
+                using (var looser = await _img.GetWaifuCardAsync(imageUrlLooser, info.Loser))
                 {
                     using (var img = _img.GetDuelCardImage(info, dImg, winner, looser))
                     {

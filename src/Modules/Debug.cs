@@ -55,7 +55,7 @@ namespace Sanakan.Modules
                 var character = (await _shClient.GetCharacterInfoAsync(2)).Body;
                 var channel = Context.Channel as ITextChannel;
 
-                _ = await _waifu.GetSafariViewAsync(images[index], character, _waifu.GenerateNewCard(character), channel);
+                _ = await _waifu.GetSafariViewAsync(images[index], _waifu.GenerateNewCard(character), channel);
             }
             catch (Exception ex)
             {

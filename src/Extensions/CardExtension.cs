@@ -29,12 +29,12 @@ namespace Sanakan.Extensions
             switch (card.Rarity)
             {
                 case Rarity.SSS: return 50;
-                case Rarity.SS:  return 25;
-                case Rarity.S:   return 15;
-                case Rarity.A:   return 10;
-                case Rarity.B:   return 7;
-                case Rarity.C:   return 5;
-                case Rarity.D:   return 3;
+                case Rarity.SS: return 25;
+                case Rarity.S: return 15;
+                case Rarity.A: return 10;
+                case Rarity.B: return 7;
+                case Rarity.C: return 5;
+                case Rarity.D: return 3;
 
                 default:
                 case Rarity.E: return 1;
@@ -115,7 +115,7 @@ namespace Sanakan.Extensions
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)
         {
             var percent = card.Affection * 5d / 100d;
-            var newHealth = (int) (card.Health + (card.Health * percent));
+            var newHealth = (int)(card.Health + (card.Health * percent));
             if (newHealth > 999) newHealth = 999;
 
             if (allowZero)
@@ -150,14 +150,14 @@ namespace Sanakan.Extensions
         {
             switch (source)
             {
-                case CardSource.Activity:        return "Aktywność";
-                case CardSource.Safari:          return "Safari";
-                case CardSource.Shop:            return "Sklepik";
+                case CardSource.Activity: return "Aktywność";
+                case CardSource.Safari: return "Safari";
+                case CardSource.Shop: return "Sklepik";
                 case CardSource.GodIntervention: return "Czity";
-                case CardSource.Api:             return "Nieznane";
-                case CardSource.Migration:       return "Stara baza";
-                case CardSource.PvE:             return "Walki na boty";
-                case CardSource.Daily:           return "Karta+";
+                case CardSource.Api: return "Nieznane";
+                case CardSource.Migration: return "Stara baza";
+                case CardSource.PvE: return "Walki na boty";
+                case CardSource.Daily: return "Karta+";
 
                 default:
                 case CardSource.Other: return "Inne";
@@ -180,17 +180,17 @@ namespace Sanakan.Extensions
         public static string GetAffectionString(this Card card)
         {
             if (card.Affection <= -50) return "Pogarda";
-            if (card.Affection <= -5)  return "Nienawiść";
-            if (card.Affection <= -4)  return "Zawiść";
-            if (card.Affection <= -3)  return "Wrogość";
-            if (card.Affection <= -2)  return "Złośliwość";
-            if (card.Affection <= -1)  return "Chłodność";
-            if (card.Affection >= 50)  return "Obsesyjna miłość";
-            if (card.Affection >= 5)   return "Miłość";
-            if (card.Affection >= 4)   return "Zauroczenie";
-            if (card.Affection >= 3)   return "Przyjaźń";
-            if (card.Affection >= 2)   return "Fascynacja";
-            if (card.Affection >= 1)   return "Zaciekawienie";
+            if (card.Affection <= -5) return "Nienawiść";
+            if (card.Affection <= -4) return "Zawiść";
+            if (card.Affection <= -3) return "Wrogość";
+            if (card.Affection <= -2) return "Złośliwość";
+            if (card.Affection <= -1) return "Chłodność";
+            if (card.Affection >= 50) return "Obsesyjna miłość";
+            if (card.Affection >= 5) return "Miłość";
+            if (card.Affection >= 4) return "Zauroczenie";
+            if (card.Affection >= 3) return "Przyjaźń";
+            if (card.Affection >= 2) return "Fascynacja";
+            if (card.Affection >= 1) return "Zaciekawienie";
             return "Obojętność";
         }
 
@@ -339,12 +339,12 @@ namespace Sanakan.Extensions
             switch (rarity)
             {
                 case Rarity.SSS: return 100;
-                case Rarity.SS:  return 90;
-                case Rarity.S:   return 80;
-                case Rarity.A:   return 65;
-                case Rarity.B:   return 50;
-                case Rarity.C:   return 32;
-                case Rarity.D:   return 20;
+                case Rarity.SS: return 90;
+                case Rarity.S: return 80;
+                case Rarity.A: return 65;
+                case Rarity.B: return 50;
+                case Rarity.C: return 32;
+                case Rarity.D: return 20;
 
                 case Rarity.E:
                 default: return 1;
@@ -356,12 +356,12 @@ namespace Sanakan.Extensions
             switch (rarity)
             {
                 case Rarity.SSS: return 88;
-                case Rarity.SS:  return 77;
-                case Rarity.S:   return 68;
-                case Rarity.A:   return 60;
-                case Rarity.B:   return 50;
-                case Rarity.C:   return 32;
-                case Rarity.D:   return 15;
+                case Rarity.SS: return 77;
+                case Rarity.S: return 68;
+                case Rarity.A: return 60;
+                case Rarity.B: return 50;
+                case Rarity.C: return 32;
+                case Rarity.D: return 15;
 
                 case Rarity.E:
                 default: return 1;
@@ -373,12 +373,12 @@ namespace Sanakan.Extensions
             switch (rarity)
             {
                 case Rarity.SSS: return 100;
-                case Rarity.SS:  return 90;
-                case Rarity.S:   return 80;
-                case Rarity.A:   return 70;
-                case Rarity.B:   return 60;
-                case Rarity.C:   return 50;
-                case Rarity.D:   return 40;
+                case Rarity.SS: return 90;
+                case Rarity.S: return 80;
+                case Rarity.A: return 70;
+                case Rarity.B: return 60;
+                case Rarity.C: return 50;
+                case Rarity.D: return 40;
 
                 case Rarity.E:
                 default: return 30;
@@ -395,12 +395,12 @@ namespace Sanakan.Extensions
             switch (rarity)
             {
                 case Rarity.SSS: return 130;
-                case Rarity.SS:  return 100;
-                case Rarity.S:   return 96;
-                case Rarity.A:   return 87;
-                case Rarity.B:   return 84;
-                case Rarity.C:   return 68;
-                case Rarity.D:   return 50;
+                case Rarity.SS: return 100;
+                case Rarity.S: return 96;
+                case Rarity.A: return 87;
+                case Rarity.B: return 84;
+                case Rarity.C: return 68;
+                case Rarity.D: return 50;
 
                 case Rarity.E:
                 default: return 35;
@@ -412,12 +412,12 @@ namespace Sanakan.Extensions
             switch (rarity)
             {
                 case Rarity.SSS: return 96;
-                case Rarity.SS:  return 91;
-                case Rarity.S:   return 79;
-                case Rarity.A:   return 75;
-                case Rarity.B:   return 70;
-                case Rarity.C:   return 65;
-                case Rarity.D:   return 53;
+                case Rarity.SS: return 91;
+                case Rarity.S: return 79;
+                case Rarity.A: return 75;
+                case Rarity.B: return 70;
+                case Rarity.C: return 65;
+                case Rarity.D: return 53;
 
                 case Rarity.E:
                 default: return 38;
@@ -433,19 +433,6 @@ namespace Sanakan.Extensions
             card.Name = response.Body.ToString();
             card.Image = response.Body.HasImage ? response.Body.PictureUrl : null;
             card.Title = response.Body?.Relations?.OrderBy(x => x.Id).FirstOrDefault()?.Title ?? "????";
-        }
-
-        public static async Task<CardInfo> GetCardInfoAsync(this Card card, Shinden.ShindenClient client)
-        {
-            var response = await client.GetCharacterInfoAsync(card.Character);
-            if (!response.IsSuccessStatusCode())
-                throw new Exception($"Couldn't get card info!");
-
-            return new CardInfo
-            {
-                Info = response.Body,
-                Card = card
-            };
         }
     }
 }

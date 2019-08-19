@@ -122,25 +122,42 @@ namespace Sanakan.Api.Controllers
         [HttpPost("users/make/character/{id}"), Authorize]
         public async Task GenerateCharacterCardAsync(ulong id)
         {
-            using (var db = new Database.UserContext(_config))
+            var response = await _shClient.GetCharacterInfoAsync(id);
+            if (!response.IsSuccessStatusCode())
             {
-                var cards = await db.Cards.Where(x => x.Character == id).ToListAsync();
-                if (cards.Count < 1)
-                {
-                    await "Cards not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                    return;
-                }
-
-                _ = Task.Run(async () =>
-                {
-                    foreach (var card in cards)
-                    {
-                        _ = await _waifu.GenerateAndSaveCardAsync(card);
-                    }
-                });
-
-                await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+                await "Character ID is invalid!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                return;
             }
+
+            if (!response.Body.HasImage)
+            {
+                await "There is no character image!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                return;
+            }
+
+            var exe = new Executable($"update cards{id}", new Task(() =>
+                {
+                    using (var db = new Database.UserContext(_config))
+                    {
+                        var cards = db.Cards.Where(x => x.Character == id);
+                        foreach (var card in cards)
+                        {
+                            card.Image = response.Body.PictureUrl;
+
+                            _ = Task.Run(async () =>
+                            {
+                                _ = await _waifu.GenerateAndSaveCardAsync(card);
+                            });
+                        }
+
+                        db.SaveChanges();
+
+                        QueryCacheManager.ExpireTag(new string[] { "users" });
+                    }
+                }));
+
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);
         }
 
         /// <summary>

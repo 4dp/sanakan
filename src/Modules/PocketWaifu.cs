@@ -625,6 +625,41 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("aktualizuj")]
+        [Alias("update")]
+        [Summary("pobiera dane na tamat karty z shindena")]
+        [Remarks("5412"), RequireWaifuCommandChannel]
+        public async Task UpdateCardAsync([Summary("WID")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                try
+                {
+                    await card.Update(_shclient);
+
+                    await db.SaveChangesAsync();
+                    _waifu.DeleteCardImageIfExist(card);
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                    await ReplyAsync("", embed: $"{Context.User.Mention} zaktualizował kartę: {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception ex)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention}: {ex.Message}".ToEmbedMessage(EMType.Error).Build());
+                }
+            }
+        }
+
         [Command("ulepsz")]
         [Alias("upgrade")]
         [Summary("ulepsza kartę na lepszą jakość (min. 30 exp)")]
@@ -1822,8 +1857,7 @@ namespace Sanakan.Modules
                 }
 
                 var enemyCharacter = await _waifu.GetRandomCharacterAsync();
-                var playerCharacter = (await _shclient.GetCharacterInfoAsync(thisCard.Character)).Body;
-                if (enemyCharacter == null || playerCharacter == null)
+                if (enemyCharacter == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się pobrać informacji z shindena.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1836,20 +1870,8 @@ namespace Sanakan.Modules
                     Author = new EmbedAuthorBuilder().WithUser(Context.User)
                 };
 
-                var p1 = new CardInfo
-                {
-                    Card = thisCard,
-                    Info = playerCharacter
-                };
-
-                var p2 = new CardInfo
-                {
-                    Card = enemyCard,
-                    Info = enemyCharacter
-                };
-
-                var result = _waifu.GetFightWinner(p1, p2);
-                thisCard.Affection -= playerCharacter.HasImage ? 0.05 : 0.2;
+                var result = _waifu.GetFightWinner(thisCard, enemyCard);
+                thisCard.Affection -= thisCard.HasImage() ? 0.05 : 0.2;
                 var dInfo = new DuelInfo();
 
                 switch (result)
@@ -1861,8 +1883,8 @@ namespace Sanakan.Modules
                         thisCard.ExpCnt += exp;
 
                         dInfo.Side = DuelInfo.WinnerSide.Left;
-                        dInfo.Winner = p1;
-                        dInfo.Loser = p2;
+                        dInfo.Winner = thisCard;
+                        dInfo.Loser = enemyCard;
 
                         if (Services.Fun.TakeATry(4))
                         {
@@ -1880,12 +1902,12 @@ namespace Sanakan.Modules
                         break;
 
                     case FightWinner.Card2:
-                        thisCard.Affection -= playerCharacter.HasImage ? 0.1 : 0.5;
+                        thisCard.Affection -= thisCard.HasImage() ? 0.1 : 0.5;
                         ++thisCard.ArenaStats.Loses;
 
                         dInfo.Side = DuelInfo.WinnerSide.Right;
-                        dInfo.Winner = p2;
-                        dInfo.Loser = p1;
+                        dInfo.Winner = enemyCard;
+                        dInfo.Loser = thisCard;
                         break;
 
                     default:
@@ -1893,8 +1915,8 @@ namespace Sanakan.Modules
                         ++thisCard.ArenaStats.Draws;
 
                         dInfo.Side = DuelInfo.WinnerSide.Draw;
-                        dInfo.Winner = p1;
-                        dInfo.Loser = p2;
+                        dInfo.Winner = thisCard;
+                        dInfo.Loser = enemyCard;
                         break;
                 }
 
@@ -2010,12 +2032,10 @@ namespace Sanakan.Modules
                 };
 
                 bool userWonPack = Services.Fun.TakeATry(10);
-                var thisCharacter = (await thisCard.GetCardInfoAsync(_shclient)).Info;
-
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
                 double exp = 0.22 * blowsDeal;
 
-                double affection = thisCharacter.HasImage ? 0.15 : 0.5;
+                double affection = thisCard.HasImage() ? 0.15 : 0.5;
                 affection *= blowsDeal;
 
                 if (!userWon)
@@ -2439,18 +2459,13 @@ namespace Sanakan.Modules
                     var tChar = bUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
                     if (tChar != null)
                     {
-                        var response = await _shclient.GetCharacterInfoAsync(tChar.Character);
-                        if (response.IsSuccessStatusCode())
+                        using (var cdb = new Database.GuildConfigContext(Config))
                         {
-                            using (var cdb = new Database.GuildConfigContext(Config))
-                            {
-                                var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-                                var channel = Context.Guild.GetTextChannel(config.WaifuConfig.TrashCommandsChannel);
+                            var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                            var channel = Context.Guild.GetTextChannel(config.WaifuConfig.TrashCommandsChannel);
 
-                                embed.WithImageUrl(await _waifu.GetWaifuProfileImageAsync(tChar, response.Body, channel));
-                                string wfi = (response.Body.Gender == Sden.Models.Sex.Male) ? "Husbando" : "Waifu";
-                                embed.WithFooter(new EmbedFooterBuilder().WithText($"{wfi}: {response.Body}"));
-                            }
+                            embed.WithImageUrl(await _waifu.GetWaifuProfileImageAsync(tChar, channel));
+                            embed.WithFooter(new EmbedFooterBuilder().WithText($"{tChar.Name}"));
                         }
                     }
                 }
