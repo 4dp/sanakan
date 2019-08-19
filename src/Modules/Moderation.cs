@@ -545,6 +545,35 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("waifur")]
+        [Summary("ustawia role waifu")]
+        [Remarks("34125343243432"), RequireAdminRole]
+        public async Task SetWaifuRoleAsync([Summary("id roli")]SocketRole role)
+        {
+            if (role == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono roli na serwerze.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+                if (config.WaifuRole == role.Id)
+                {
+                    await ReplyAsync("", embed: $"Rola {role.Mention} już jest ustawiona jako rola waifu.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                config.WaifuRole = role.Id;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                await ReplyAsync("", embed: $"Ustawiono {role.Mention} jako role waifu.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("modr")]
         [Summary("ustawia role moderatora")]
         [Remarks("34125343243432"), RequireAdminRole]

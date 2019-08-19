@@ -45,7 +45,7 @@ namespace Sanakan.Services.PocketWaifu
 #endif
         }
 
-        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily)
+        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention)
         {
             if (!ServerCounter.Any(x => x.Key == spawnChannel.GuildId))
             {
@@ -69,7 +69,7 @@ namespace Sanakan.Services.PocketWaifu
             ServerCounter[spawnChannel.GuildId] += 1;
             _ = Task.Run(async () =>
             {
-                await SpawnCardAsync(spawnChannel, trashChannel);
+                await SpawnCardAsync(spawnChannel, trashChannel, mention);
             });
         }
 
@@ -191,7 +191,7 @@ namespace Sanakan.Services.PocketWaifu
             }));
         }
 
-        private async Task SpawnCardAsync(ITextChannel spawnChannel, ITextChannel trashChannel)
+        private async Task SpawnCardAsync(ITextChannel spawnChannel, ITextChannel trashChannel, string mention)
         {
             var character = await _waifu.GetRandomCharacterAsync();
             if (character == null)
@@ -214,7 +214,8 @@ namespace Sanakan.Services.PocketWaifu
                 ImageUrl = await _waifu.GetSafariViewAsync(pokeImage, trashChannel)
             };
 
-            var msg = await spawnChannel.SendMessageAsync("", embed: embed.Build());
+
+            var msg = await spawnChannel.SendMessageAsync(mention, embed: embed.Build());
             RunSafari(embed, msg, newCard, pokeImage, character, trashChannel);
             await msg.AddReactionAsync(ClaimEmote);
         }
@@ -317,7 +318,11 @@ namespace Sanakan.Services.PocketWaifu
                 var tch = user.Guild.GetTextChannel(config.WaifuConfig.TrashSpawnChannel);
                 if (sch == null || tch == null) return;
 
-                HandleGuildAsync(sch, tch, config.SafariLimit);
+                string mention = "";
+                var wRole = user.Guild.GetRole(config.WaifuRole);
+                if (wRole != null) mention = wRole.Mention;
+
+                HandleGuildAsync(sch, tch, config.SafariLimit, mention);
             }
         }
     }

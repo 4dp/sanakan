@@ -43,6 +43,7 @@ namespace Sanakan.Services.Session.Models
 
         public async Task<bool> OnDecline(SessionContext context)
         {
+            await Task.CompletedTask;
             return true;
         }
     }

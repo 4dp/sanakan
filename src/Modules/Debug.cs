@@ -101,7 +101,19 @@ namespace Sanakan.Modules
         {
             var emote = new Emoji("🎰");
             var time = DateTime.Now.AddMinutes(duration);
-            var msg = await ReplyAsync("", embed: $"Loteria kart. Zareaguj {emote} aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+
+            var mention = "";
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (config != null)
+                {
+                    var wRole = Context.Guild.GetRole(config.WaifuRole);
+                    if (wRole != null) mention = wRole.Mention;
+                }
+            }
+
+            var msg = await ReplyAsync(mention, embed: $"Loteria kart. Zareaguj {emote} aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
             await msg.AddReactionAsync(emote);
 
             await Task.Delay(TimeSpan.FromMinutes(duration));

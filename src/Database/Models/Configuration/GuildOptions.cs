@@ -12,6 +12,7 @@ namespace Sanakan.Database.Models.Configuration
         public ulong UserRole { get; set; }
         public ulong AdminRole { get; set; }
         public ulong GlobalEmotesRole { get; set; }
+        public ulong WaifuRole { get; set; }
         public ulong NotificationChannel { get; set; }
         public ulong RaportChannel { get; set; }
         public ulong QuizChannel { get; set; }
