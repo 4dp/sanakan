@@ -765,7 +765,7 @@ namespace Sanakan.Services
         {
             var image = new Image<Rgba32>(475, 667);
 
-            using (var chara = await GetCharacterPictureAsync(card.Image))
+            using (var chara = await GetCharacterPictureAsync(card.GetImage()))
             {
                 image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
             }

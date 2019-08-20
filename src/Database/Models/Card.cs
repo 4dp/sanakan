@@ -45,6 +45,7 @@ namespace Sanakan.Database.Models
         public string Title { get; set; }
         public string Tags { get; set; }
         public string Image { get; set; }
+        public string CustomImage { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

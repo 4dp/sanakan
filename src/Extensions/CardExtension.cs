@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Sanakan.Database.Models;
-using Sanakan.Services.PocketWaifu;
 
 namespace Sanakan.Extensions
 {
@@ -41,7 +40,7 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static bool HasImage(this Card card) => card.Image != null;
+        public static bool HasImage(this Card card) => card.GetImage() != null;
 
         public static double GetCardPower(this Card card)
         {
@@ -423,6 +422,8 @@ namespace Sanakan.Extensions
                 default: return 38;
             }
         }
+
+        public static string GetImage(this Card card) => card.CustomImage ?? card.Image;
 
         public static async Task Update(this Card card, Shinden.ShindenClient client)
         {

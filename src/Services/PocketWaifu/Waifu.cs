@@ -352,6 +352,7 @@ namespace Sanakan.Services.PocketWaifu
                 Character = character.Id,
                 Dere = RandomizeDere(),
                 RarityOnStart = rarity,
+                CustomImage = null,
                 IsTradable = true,
                 UpgradesCnt = 2,
                 Rarity = rarity,
@@ -622,12 +623,12 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public Embed GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, SocketGuild guild)
+        public Embed GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client)
         {
             string contentString = "";
             foreach (var card in cards)
             {
-                var thU = guild.GetUser(card.GameDeck.UserId);
+                var thU = client.GetUser(card.GameDeck.UserId);
                 contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
             }
 
