@@ -97,7 +97,7 @@ namespace Sanakan.Modules
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
-        public async Task TransferCardAsync([Summary("id z bazy")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
+        public async Task TransferCardAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
         {
             var emote = new Emoji("🎰");
             var time = DateTime.Now.AddMinutes(duration);
@@ -277,7 +277,17 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
+                var fakeu = await db.GetUserOrCreateAsync(1);
                 var user = await db.GetUserOrCreateAsync(id);
+
+                foreach (var card in user.GameDeck.Cards)
+                {
+                    card.Tags = null;
+                    card.InCage = false;
+                    fakeu.GameDeck.Cards.Add(card);
+                }
+                user.GameDeck.Cards.Clear();
+
                 db.Users.Remove(user);
                 await db.SaveChangesAsync();
 
