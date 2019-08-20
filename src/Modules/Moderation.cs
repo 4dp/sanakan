@@ -1221,18 +1221,44 @@ namespace Sanakan.Modules
         [Command("todo")]
         [Summary("dodaje wiadomość do todo")]
         [Remarks("2342123444212"), RequireAdminOrModRole]
-        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId)
+        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId, [Summary("nazwa serwera(opcjonalne)")]string serverName = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
-                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                var guild = Context.Guild;
+                if (serverName != null)
+                {
+                    var customGuild = Context.Client.Guilds.FirstOrDefault(x => x.Name.Equals(serverName, StringComparison.CurrentCultureIgnoreCase));
+                    if (customGuild == null)
+                    {
+                        await ReplyAsync("", embed: "Nie odnaleziono serwera.".ToEmbedMessage(EMType.Bot).Build());
+                        return;
+                    }
+
+                    var thisUser = customGuild.Users.FirstOrDefault(x => x.Id == Context.User.Id);
+                    if (thisUser == null)
+                    {
+                        await ReplyAsync("", embed: "Nie znajdujesz się na docelowym serwerze.".ToEmbedMessage(EMType.Bot).Build());
+                        return;
+                    }
+
+                    if (!thisUser.GuildPermissions.Administrator)
+                    {
+                        await ReplyAsync("", embed: "Nie posiadasz wystarczających uprawnień na docelowym serwerze.".ToEmbedMessage(EMType.Bot).Build());
+                        return;
+                    }
+
+                    guild = customGuild;
+                }
+
+                var config = await db.GetCachedGuildFullConfigAsync(guild.Id);
                 if (config == null)
                 {
                     await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
-                var todoChannel = Context.Guild.GetTextChannel(config.ToDoChannel);
+                var todoChannel = guild.GetTextChannel(config.ToDoChannel);
                 if (todoChannel == null)
                 {
                     await ReplyAsync("", embed: "Kanał todo nie jest ustawiony.".ToEmbedMessage(EMType.Bot).Build());
