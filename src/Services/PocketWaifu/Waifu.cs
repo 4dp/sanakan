@@ -628,7 +628,7 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var card in cards)
             {
                 var thU = guild.GetUser(card.GameDeck.UserId);
-                if (thU != null) contentString += $"{thU.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
+                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
             }
 
             return new EmbedBuilder()
