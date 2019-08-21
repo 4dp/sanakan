@@ -273,20 +273,23 @@ namespace Sanakan.Modules
         [Command("duser")]
         [Summary("usuwa użytkownika o podanym id z bazy")]
         [Remarks("845155646123")]
-        public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id)
+        public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id, [Summary("czy usunąć karty?")]bool cards = false)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var fakeu = await db.GetUserOrCreateAsync(1);
                 var user = await db.GetUserOrCreateAsync(id);
 
-                foreach (var card in user.GameDeck.Cards)
+                if (!cards)
                 {
-                    card.Tags = null;
-                    card.InCage = false;
-                    fakeu.GameDeck.Cards.Add(card);
+                    foreach (var card in user.GameDeck.Cards)
+                    {
+                        card.Tags = null;
+                        card.InCage = false;
+                        fakeu.GameDeck.Cards.Add(card);
+                    }
+                    user.GameDeck.Cards.Clear();
                 }
-                user.GameDeck.Cards.Clear();
 
                 db.Users.Remove(user);
                 await db.SaveChangesAsync();

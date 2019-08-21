@@ -1078,7 +1078,7 @@ namespace Sanakan.Modules
         }
 
         [Command("poświęć")]
-        [Alias("kill", "sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
+        [Alias("sacrifice", "poswiec", "poświec", "poświeć", "poswięć", "poswieć")]
         [Summary("dodaje exp do karty, poświęcając kilka innych")]
         [Remarks("5412 5411 5410"), RequireWaifuCommandChannel]
         public async Task SacraficeCardMultiAsync([Summary("WID(do ulepszenia)")]ulong idToUp, [Summary("WID kart(do poświęcenia)")]params ulong[] idsToSac)
