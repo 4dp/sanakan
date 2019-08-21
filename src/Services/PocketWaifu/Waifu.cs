@@ -773,12 +773,6 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GenerateAndSaveCardAsync(Card card, bool small = false)
         {
-            try
-            {
-                await card.Update(_shClient);
-            }
-            catch (Exception) { }
-
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
 
@@ -821,7 +815,7 @@ namespace Sanakan.Services.PocketWaifu
             else
             {
                 imageUrl = imageLocation;
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 24)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 4)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 
