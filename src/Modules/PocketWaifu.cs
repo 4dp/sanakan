@@ -401,6 +401,11 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
+                        if (card.Image == null)
+                        {
+                            await ReplyAsync("", embed: "Aby ustawić własny obrazek, karta musi posiadać wcześniej ustawiony główny(na stronie)!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
                         card.CustomImage = detail;
                         affectionInc = 0.5 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
