@@ -89,7 +89,7 @@ namespace Sanakan.Services.PocketWaifu
                     return list.Where(x => x.HasImage()).ToList();
 
                 case HaremType.NoPicture:
-                    return list.Where(x => x.Image != null).ToList();
+                    return list.Where(x => x.Image == null).ToList();
 
                 case HaremType.CustomPicture:
                     return list.Where(x => x.CustomImage != null).ToList();
@@ -249,17 +249,18 @@ namespace Sanakan.Services.PocketWaifu
             return new ItemWithCost[]
             {
                 new ItemWithCost(5,     ItemType.AffectionRecoverySmall.ToItem()),
-                new ItemWithCost(20,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(150,   ItemType.AffectionRecoveryBig.ToItem()),
-                new ItemWithCost(40,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(100,   ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(2500,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(19,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(139,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(39,    ItemType.DereReRoll.ToItem()),
+                new ItemWithCost(99,   ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(2000,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(1000,  ItemType.SetCustomImage.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1200,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(600,   ItemType.RandomNormalBoosterPackB.ToItem()),
-                new ItemWithCost(1200,  ItemType.RandomNormalBoosterPackA.ToItem()),
-                new ItemWithCost(1800,  ItemType.RandomNormalBoosterPackS.ToItem()),
-                new ItemWithCost(2400,  ItemType.RandomNormalBoosterPackSS.ToItem()),
+                new ItemWithCost(1299,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
+                new ItemWithCost(299,   ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(999,  ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(1499,  ItemType.RandomNormalBoosterPackS.ToItem()),
+                new ItemWithCost(1999,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
         }
 
@@ -820,7 +821,7 @@ namespace Sanakan.Services.PocketWaifu
             else
             {
                 imageUrl = imageLocation;
-                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 8)
+                if ((DateTime.Now - File.GetCreationTime(imageLocation)).TotalHours > 24)
                     imageUrl = await GenerateAndSaveCardAsync(card);
             }
 

@@ -41,6 +41,8 @@ namespace Sanakan.Extensions
                     return "Dodaje nowy pakiet z trzema losowymi kartami, w tym jedną o gwarantowanej jakości SS.";
                 case ItemType.CheckAffection:
                     return "Pozwala sprawdzić dokładny poziom relacji z kartą.";
+                case ItemType.SetCustomImage:
+                    return "Pozwala ustawić własny obrazek karcie. Zalecany wymiary 448x650.";
 
                 default:
                     return "Brak opisu.";
@@ -81,6 +83,8 @@ namespace Sanakan.Extensions
                     return "Różowy pakiet losowych kart";
                 case ItemType.CheckAffection:
                     return "Kryształowa kula";
+                case ItemType.SetCustomImage:
+                    return "Skalpel";
 
                 default:
                     return "Brak";

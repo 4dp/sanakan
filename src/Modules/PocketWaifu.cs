@@ -189,7 +189,7 @@ namespace Sanakan.Modules
         [Alias("shop", "p2w")]
         [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
         [Remarks("1 info"), RequireWaifuCommandChannel]
-        public async Task BuyItemAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4(jako liczba przedmiotów do zakupu/lub id)")]string info = "0")
+        public async Task BuyItemAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4(liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
         {
             var itemsToBuy = _waifu.GetItemsWithCost();
             if (itemNumber <= 0)
@@ -306,10 +306,11 @@ namespace Sanakan.Modules
         [Alias("uzyj", "use")]
         [Summary("używa przedmiot na karcie")]
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
-        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów")]int itemCnt = 1)
+        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka")]string detail = "1")
         {
             using (var db = new Database.UserContext(Config))
             {
+                var itemCnt = 1;
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
 
@@ -324,6 +325,9 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aż tylu przedmiotów.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                int.TryParse(detail, out itemCnt);
+                if (itemCnt < 1) itemCnt = 1;
 
                 var item = itemList[itemNumber - 1];
                 if (item.Count < itemCnt)
@@ -389,6 +393,18 @@ namespace Sanakan.Modules
                         affectionInc = 0.02 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
+                        break;
+
+                    case ItemType.SetCustomImage:
+                        if (!detail.IsURLToImage())
+                        {
+                            await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        card.CustomImage = detail;
+                        affectionInc = 0.5 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Ustawiono nowy obrazek. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
                         break;
 
                     case ItemType.BetterIncreaseUpgradeCnt:
@@ -716,6 +732,17 @@ namespace Sanakan.Modules
                 card.Rarity = --card.Rarity;
                 card.Affection += 1;
                 card.ExpCnt = 0;
+
+                if (card.Rarity == Rarity.SSS)
+                {
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                    if (inUserItem == null)
+                    {
+                        inUserItem = ItemType.SetCustomImage.ToItem();
+                        bUser.GameDeck.Items.Add(inUserItem);
+                    }
+                    else inUserItem.Count++;
+                }
 
                 await db.SaveChangesAsync();
                 _waifu.DeleteCardImageIfExist(card);
