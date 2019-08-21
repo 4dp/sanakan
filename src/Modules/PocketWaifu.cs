@@ -258,6 +258,11 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (bUser.Level < 10)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} sklepik jest dostępny od 10 poziomu.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
                 if (bUser.TcCnt < realCost)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());

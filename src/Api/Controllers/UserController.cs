@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sanakan.Api.Models;
 using Sanakan.Config;
@@ -65,7 +64,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = db.Users.AsNoTracking().FirstOrDefault(x => x.Shinden == id);
+                var user = await db.GetCachedFullUserByShindenIdAsync(id);
                 if (user == null)
                 {
                     await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
@@ -81,9 +80,9 @@ namespace Sanakan.Api.Controllers
 
                 return new UserWithToken()
                 {
-                    Token = tokenData?.Token,
                     Expire = tokenData?.Expire,
-                    User = await db.GetCachedFullUserAsync(user.Id),
+                    Token = tokenData?.Token,
+                    User = user,
                 };
             }
         }
