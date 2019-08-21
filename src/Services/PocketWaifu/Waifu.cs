@@ -25,7 +25,7 @@ namespace Sanakan.Services.PocketWaifu
 
     public enum HaremType
     {
-        Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken
+        Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken, Picture, NoPicture, CustomPicture
     }
 
     public enum WishlistObjectType
@@ -84,6 +84,15 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.NoTag:
                     return list.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
+
+                case HaremType.Picture:
+                    return list.Where(x => x.HasImage()).ToList();
+
+                case HaremType.NoPicture:
+                    return list.Where(x => x.Image != null).ToList();
+
+                case HaremType.CustomPicture:
+                    return list.Where(x => x.CustomImage != null).ToList();
 
                 default:
                 case HaremType.Rarity:

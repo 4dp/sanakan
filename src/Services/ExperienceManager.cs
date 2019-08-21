@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Extensions;
 using Sanakan.Services.Executor;
@@ -108,7 +109,7 @@ namespace Sanakan.Services
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    if (!db.Users.Any(x => x.Id == user.Id))
+                    if (!db.Users.AsNoTracking().Any(x => x.Id == user.Id))
                     {
                         var task = CreateUserTask(user);
                         await _executor.TryAdd(new Executable("add user", task), TimeSpan.FromSeconds(1));

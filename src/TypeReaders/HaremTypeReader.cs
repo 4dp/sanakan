@@ -60,6 +60,21 @@ namespace Sanakan.TypeReaders
                 case "uszkodzone":
                     return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Broken));
 
+                case "image":
+                case "obrazek":
+                case "picture":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Picture));
+
+                case "image-":
+                case "obrazek-":
+                case "picture-":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.NoPicture));
+
+                case "imagec":
+                case "obrazekc":
+                case "picturec":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.CustomPicture));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu haremu!"));
             }

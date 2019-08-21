@@ -48,7 +48,7 @@ namespace Sanakan.Modules
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
         [Remarks("tag konie"), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag/uszkodzone/niewymienialne)")]HaremType type = HaremType.Rarity, [Summary("tag)")][Remainder]string tag = null)
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag(-)/uszkodzone/niewymienialne/obrazki(-/c))")]HaremType type = HaremType.Rarity, [Summary("tag)")][Remainder]string tag = null)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
