@@ -45,7 +45,7 @@ namespace Sanakan.Services.PocketWaifu
 #endif
         }
 
-        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention)
+        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention, bool noExp)
         {
             if (!ServerCounter.Any(x => x.Key == spawnChannel.GuildId))
             {
@@ -62,9 +62,10 @@ namespace Sanakan.Services.PocketWaifu
                 });
             }
 
+            int chance = noExp ? 185 : 55;
             if (daily > 0 && ServerCounter[spawnChannel.GuildId] >= daily) return;
             if (!_config.Get().SafariEnabled) return;
-            if (!Fun.TakeATry(55)) return;
+            if (!Fun.TakeATry(chance)) return;
 
             ServerCounter[spawnChannel.GuildId] += 1;
             _ = Task.Run(async () =>
@@ -308,20 +309,19 @@ namespace Sanakan.Services.PocketWaifu
                 var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
                 if (config == null) return;
 
-                if (config.ChannelsWithoutExp.Any(x => x.Channel == msg.Channel.Id))
-                    return;
-
-                HandleUserAsync(msg);
+                var noExp = config.ChannelsWithoutExp.Any(x => x.Channel == msg.Channel.Id);
+                if (!noExp) HandleUserAsync(msg);
 
                 var sch = user.Guild.GetTextChannel(config.WaifuConfig.SpawnChannel);
                 var tch = user.Guild.GetTextChannel(config.WaifuConfig.TrashSpawnChannel);
-                if (sch == null || tch == null) return;
+                if (sch != null && tch != null)
+                {
+                    string mention = "";
+                    var wRole = user.Guild.GetRole(config.WaifuRole);
+                    if (wRole != null) mention = wRole.Mention;
 
-                string mention = "";
-                var wRole = user.Guild.GetRole(config.WaifuRole);
-                if (wRole != null) mention = wRole.Mention;
-
-                HandleGuildAsync(sch, tch, config.SafariLimit, mention);
+                    HandleGuildAsync(sch, tch, config.SafariLimit, mention, noExp);
+                }
             }
         }
     }
