@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sanakan.Api.Models;
 using Sanakan.Config;
@@ -64,7 +65,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = db.Users.FirstOrDefault(x => x.Shinden == id);
+                var user = db.Users.AsNoTracking().FirstOrDefault(x => x.Shinden == id);
                 if (user == null)
                 {
                     await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);

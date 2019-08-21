@@ -46,7 +46,7 @@ namespace Sanakan.Api.Controllers
             using (var db = new Database.UserContext(_config))
             {
                 var shindenIds = await db.Cards.Include(x => x.GameDeck).ThenInclude(x => x.User)
-                    .Where(x => x.Character == id && x.GameDeck.User.Shinden != 0).Select(x => x.GameDeck.User.Shinden).Distinct().ToListAsync();
+                    .Where(x => x.Character == id && x.GameDeck.User.Shinden != 0).AsNoTracking().Select(x => x.GameDeck.User.Shinden).Distinct().ToListAsync();
 
                 if (shindenIds.Count > 0)
                     return shindenIds;
@@ -67,7 +67,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).FirstOrDefaultAsync(x => x.Shinden == id);
+                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).AsNoTracking().FirstOrDefaultAsync(x => x.Shinden == id);
                 if (user == null)
                 {
                     await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
@@ -201,7 +201,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).FirstOrDefaultAsync(x => x.Shinden == id);
+                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).AsNoTracking().FirstOrDefaultAsync(x => x.Shinden == id);
                 if (user == null)
                 {
                     await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
@@ -231,7 +231,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                return await db.Cards.Include(x => x.ArenaStats).Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).ToListAsync();
+                return await db.Cards.Include(x => x.ArenaStats).Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).AsNoTracking().ToListAsync();
             }
         }
 
@@ -248,7 +248,7 @@ namespace Sanakan.Api.Controllers
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    var card = await db.Cards.FirstOrDefaultAsync(x => x.Id == id);
+                    var card = await db.Cards.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
                     if (card == null)
                     {
                         await "Card not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);

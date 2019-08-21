@@ -143,7 +143,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).FromCacheAsync(new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync(new[] { "users" })).FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -166,7 +166,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card  = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card  = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -1688,7 +1688,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
@@ -1722,7 +1722,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character));
+                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (!showFavs)
                     cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
@@ -1756,7 +1756,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character));
+                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
