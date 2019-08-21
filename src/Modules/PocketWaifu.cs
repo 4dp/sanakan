@@ -1367,10 +1367,19 @@ namespace Sanakan.Modules
                 var t = bUser.GameDeck.GetTitlesWishList();
                 var c = bUser.GameDeck.GetCardsWishList();
 
-                foreach (var emb in await _waifu.GetContentOfWishlist(c, p, t))
+                try
                 {
-                    await ReplyAsync("", embed: emb);
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in await _waifu.GetContentOfWishlist(c, p, t))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
                 }
             }
         }
@@ -1415,10 +1424,19 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                try
                 {
-                    await ReplyAsync("", embed: emb);
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
                 }
             }
         }
@@ -1760,10 +1778,19 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                try
                 {
-                    await ReplyAsync("", embed: emb);
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
                 }
             }
         }
@@ -1791,10 +1818,19 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                try
                 {
-                    await ReplyAsync("", embed: emb);
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
                 }
             }
         }

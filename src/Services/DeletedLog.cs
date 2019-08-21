@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace Sanakan.Services
             if (!oldMessage.HasValue) return;
 
             if (newMessage.Author.IsBot || newMessage.Author.IsWebhook) return;
+
+            if (oldMessage.Value.Content.Equals(newMessage.Content, StringComparison.CurrentCultureIgnoreCase)) return;
 
             if (newMessage.Channel is SocketGuildChannel gChannel)
             {
