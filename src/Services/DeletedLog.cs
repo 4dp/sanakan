@@ -21,12 +21,33 @@ namespace Sanakan.Services
             _config = config;
 
             _client.MessageDeleted += HandleDeletedMsgAsync;
+            _client.MessageUpdated += HandleUpdatedMsgAsync;
+        }
+
+        private async Task HandleUpdatedMsgAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage newMessage, ISocketMessageChannel channel)
+        {
+            if (!oldMessage.HasValue) return;
+
+            if (newMessage.Author.IsBot || newMessage.Author.IsWebhook) return;
+
+            if (newMessage.Channel is SocketGuildChannel gChannel)
+            {
+                if (_config.Get().BlacklistedGuilds.Any(x => x == gChannel.Guild.Id))
+                    return;
+
+                _ = Task.Run(async () =>
+                {
+                    await LogMessageAsync(gChannel, oldMessage.Value, newMessage);
+                });
+            }
+
+            await Task.CompletedTask;
         }
 
         private async Task HandleDeletedMsgAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
             if (!message.HasValue) return;
-            
+
             if (message.Value.Author.IsBot || message.Value.Author.IsWebhook) return;
 
             if (message.Value.Content.Length < 4 && message.Value.Attachments.Count < 1) return;
@@ -45,9 +66,9 @@ namespace Sanakan.Services
             await Task.CompletedTask;
         }
 
-        private async Task LogMessageAsync(SocketGuildChannel channel, IMessage message)
+        private async Task LogMessageAsync(SocketGuildChannel channel, IMessage oldMessage, IMessage newMessage = null)
         {
-            if (message.Content.IsEmotikunEmote()) return;
+            if (oldMessage.Content.IsEmotikunEmote() && newMessage == null) return;
 
             using (var db = new Database.GuildConfigContext(_config))
             {
@@ -57,29 +78,33 @@ namespace Sanakan.Services
                 var ch = channel.Guild.GetTextChannel(config.LogChannel);
                 if (ch == null) return;
 
-                await ch.SendMessageAsync("", embed: BuildMessage(message));
+                var jump = (newMessage == null) ? "" : $"{newMessage.GetJumpUrl()}";
+                await ch.SendMessageAsync(jump, embed: BuildMessage(oldMessage, newMessage));
             }
         }
 
-        private Embed BuildMessage(IMessage message)
+        private Embed BuildMessage(IMessage oldMessage, IMessage newMessage)
         {
+            string content = (newMessage == null) ? oldMessage.Content
+                : $"**Stara:**\n{oldMessage.Content}\n\n**Nowa:**\n{newMessage.Content}";
+
             return new EmbedBuilder
             {
-                Author = new EmbedAuthorBuilder().WithUser(message.Author, true),
-                Description = message.Content.TrimToLength(1800),
-                Color = EMType.Warning.Color(),
-                Fields = GetFields(message)
+                Color = (newMessage == null) ? EMType.Warning.Color() : EMType.Info.Color(),
+                Author = new EmbedAuthorBuilder().WithUser(oldMessage.Author, true),
+                Fields = GetFields(oldMessage, newMessage == null),
+                Description = content.TrimToLength(1800),
             }.Build();
         }
 
-        private List<EmbedFieldBuilder> GetFields(IMessage message)
+        private List<EmbedFieldBuilder> GetFields(IMessage message, bool deleted)
         {
-            return new List<EmbedFieldBuilder>
+            var fields = new List<EmbedFieldBuilder>
             {
                 new EmbedFieldBuilder
                 {
                     IsInline = true,
-                    Name = "Napisano:",
+                    Name = deleted ? "Napisano:" : "Edytowano:",
                     Value = message.GetLocalCreatedAtShortDateTime()
                 },
                 new EmbedFieldBuilder
@@ -87,14 +112,20 @@ namespace Sanakan.Services
                     IsInline = true,
                     Name = "Kanał:",
                     Value = message.Channel.Name
-                },
-                new EmbedFieldBuilder
+                }
+            };
+
+            if (deleted)
+            {
+                fields.Add(new EmbedFieldBuilder
                 {
                     IsInline = true,
                     Name = "Załączniki:",
                     Value = message.Attachments?.Count
-                }
-            };
+                });
+            }
+
+            return fields;
         }
     }
 }
