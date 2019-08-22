@@ -24,7 +24,7 @@ namespace Sanakan.Api.Controllers
         {
             _config = config;
         }
-        
+
         /// <summary>
         /// Zwraca token ważny jeden dzień
         /// </summary>

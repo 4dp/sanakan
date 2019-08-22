@@ -692,11 +692,30 @@ namespace Sanakan.Services.PocketWaifu
             return list;
         }
 
-        public Embed GetBoosterPackList(SocketUser user, IList<BoosterPack> packs)
+        public Embed GetBoosterPackList(SocketUser user, List<BoosterPack> packs)
         {
+            int groupCnt = 0;
+            int startGroup = 1;
+            string groupName = "";
             string packString = "";
-            for (int i = 0; i < packs.Count(); i++)
-                packString += $"**[{i + 1}]** {packs[i].Name}\n";
+            for (int i = 0; i < packs.Count + 1; i++)
+            {
+                if (i == packs.Count || groupName != packs[i].Name)
+                {
+                    if (groupName != "")
+                    {
+                        string count = groupCnt > 0 ? $"{startGroup}-{startGroup+groupCnt}" : $"{startGroup}";
+                        packString += $"**[{count}]** {groupName}\n";
+                    }
+                    if (i != packs.Count)
+                    {
+                        groupName = packs[i].Name;
+                        startGroup = i + 1;
+                        groupCnt = 0;
+                    }
+                }
+                else ++groupCnt;
+            }
 
             return new EmbedBuilder
             {

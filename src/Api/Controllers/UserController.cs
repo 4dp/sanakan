@@ -178,7 +178,7 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-tc u{id}", new Task(() =>
+                var exe = new Executable($"api-tc u{id} ({value})", new Task(() =>
                 {
                     using (var dbs = new Database.UserContext(_config))
                     {
@@ -214,7 +214,7 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-tc su{id}", new Task(() =>
+                var exe = new Executable($"api-tc su{id} ({value})", new Task(() =>
                 {
                     using (var dbs = new Database.UserContext(_config))
                     {
