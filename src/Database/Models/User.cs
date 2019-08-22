@@ -7,7 +7,7 @@ namespace Sanakan.Database.Models
 {
     public enum ProfileType
     {
-        Stats, Img, StatsWithImg
+        Stats, Img, StatsWithImg, Cards
     }
 
     public class User

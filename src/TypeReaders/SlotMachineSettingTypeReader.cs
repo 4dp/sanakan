@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sanakan.TypeReaders
 {
-    public class SlotMachineSettingType : TypeReader
+    public class SlotMachineSettingTypeReader : TypeReader
     {
         public override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {

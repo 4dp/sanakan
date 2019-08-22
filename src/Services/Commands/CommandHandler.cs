@@ -4,6 +4,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Config;
+using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
@@ -69,14 +70,15 @@ namespace Sanakan.Services.Commands
             _helper = helper;
             _provider = provider;
 
+            _cmd.AddTypeReader<SlotMachineSetting>(new TypeReaders.SlotMachineSettingTypeReader());
             _cmd.AddTypeReader<WishlistObjectType>(new TypeReaders.WishlistObjectTypeReader());
-            _cmd.AddTypeReader<SlotMachineSetting>(new TypeReaders.SlotMachineSettingType());
+            _cmd.AddTypeReader<ProfileType>(new TypeReaders.ProfileTypeReader());
             _cmd.AddTypeReader<ConfigType>(new TypeReaders.ConfigTypeReader());
             _cmd.AddTypeReader<CoinSide>(new TypeReaders.CoinSideTypeReader());
             _cmd.AddTypeReader<HaremType>(new TypeReaders.HaremTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
             _cmd.AddTypeReader<bool>(new TypeReaders.BoolTypeReader());
-
+            
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));

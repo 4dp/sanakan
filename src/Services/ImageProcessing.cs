@@ -284,6 +284,15 @@ namespace Sanakan.Services
                     }
                     break;
 
+                case ProfileType.Cards:
+                    {
+                        using (var cardsBg = GetCardsProfileImage(botUser).Result)
+                        {
+                            image.Mutate(x => x.DrawImage(cardsBg, new Point(0, 0), 1));
+                        }
+                    }
+                    break;
+
                 case ProfileType.Img:
                     {
                         using (var userBg = Image.Load(botUser.StatsReplacementProfileUri))
@@ -295,6 +304,89 @@ namespace Sanakan.Services
             }
 
             return image;
+        }
+
+        private async Task<Image<Rgba32>> GetCardsProfileImage(User botUser)
+        {
+            var profilePic = new Image<Rgba32>(325, 272);
+
+            if (botUser.GameDeck.Waifu != 0)
+            {
+                var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
+                if (tChar != null)
+                {
+                    using (var cardImage = await GetWaifuCardNoStatsAsync(tChar))
+                    {
+                        cardImage.Mutate(x => x.Resize(new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(0, 260)
+                        }));
+                        profilePic.Mutate(x => x.DrawImage(cardImage, new Point(10, 6), 1));
+                    }
+                }
+            }
+
+            var sss = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS)}";
+            var ss = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS)}";
+            var s = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.S)}";
+            var a = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.A)}";
+            var b = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.B)}";
+            var c = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.C)}";
+            var d = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.D)}";
+            var e = $"{botUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.E)}";
+
+            int jumpY = 18;
+            int row2X = 45;
+            int startY = 12;
+            int startX = 205;
+            var font1 = GetFontSize(_latoBold, 18, $"SUM", 100);
+            var font2 = GetFontSize(_latoLight, 18, "10000", 130);
+
+            profilePic.Mutate(x => x.DrawText("SSS", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(sss, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("SS", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(ss, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("S", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(s, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("A", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(a, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("B", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(b, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("C", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(c, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("D", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(d, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("E", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(e, font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("SUM", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.GameDeck.Cards.Count}", font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY * 4;
+
+            profilePic.Mutate(x => x.DrawText("CT", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.GameDeck.CTCnt}", font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + row2X, startY)));
+            startY += jumpY;
+
+            profilePic.Mutate(x => x.DrawText("K", font1, Rgba32.FromHex("#A4A4A4"), new Point(startX, startY)));
+            profilePic.Mutate(x => x.DrawText(botUser.GameDeck.Karma.ToString("F"), font2, Rgba32.FromHex("#A4A4A4"), new Point(startX + 15, startY)));
+
+            return profilePic;
         }
 
         private async Task<Image<Rgba32>> GetSiteStatisticUserBadge(string avatarUrl, string name, string color)

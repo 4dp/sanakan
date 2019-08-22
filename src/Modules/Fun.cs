@@ -167,11 +167,11 @@ namespace Sanakan.Modules
         [Alias("beat", "toss")]
         [Summary("bot wykonuje rzut monetą, wygrywasz kwotę o którą się założysz")]
         [Remarks("reszka 10"), RequireCommandChannel]
-        public async Task TossCoinAsync([Summary("strona monety(orzeł/reszka)")]Services.CoinSide side, [Summary("ilość SC (maks. stawka 10000)")]int amount)
+        public async Task TossCoinAsync([Summary("strona monety(orzeł/reszka)")]Services.CoinSide side, [Summary("ilość SC")]int amount)
         {
-            if (amount <= 0 || amount > 10000)
+            if (amount <= 0)
             {
-                await ReplyAsync("", embed: $"{Context.User.Mention} możesz rzucić za maksymalnie 10000 SC!".ToEmbedMessage(EMType.Error).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} na minusie?!".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 

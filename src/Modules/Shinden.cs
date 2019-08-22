@@ -7,7 +7,7 @@ using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
-using Shinden;
+using Shden = Shinden;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,11 +18,11 @@ namespace Sanakan.Modules
     [Name("Shinden"), RequireUserRole]
     public class Shinden : SanakanModuleBase<SocketCommandContext>
     {
-        private ShindenClient _shclient;
+        private Shden.ShindenClient _shclient;
         private SessionManager _session;
         private Services.Shinden _shinden;
 
-        public Shinden(ShindenClient client, SessionManager session, Services.Shinden shinden)
+        public Shinden(Shden.ShindenClient client, SessionManager session, Services.Shinden shinden)
         {
             _shclient = client;
             _session = session;
@@ -71,7 +71,7 @@ namespace Sanakan.Modules
         [Remarks("Soul Eater")]
         public async Task SearchAnimeAsync([Summary("tytuł")][Remainder]string title)
         {
-            await _shinden.SendSearchInfoAsync(Context, title, QuickSearchType.Anime);
+            await _shinden.SendSearchInfoAsync(Context, title, Shden.QuickSearchType.Anime);
         }
 
         [Command("manga", RunMode = RunMode.Async)]
@@ -80,7 +80,7 @@ namespace Sanakan.Modules
         [Remarks("Gintama")]
         public async Task SearchMangaAsync([Summary("tytuł")][Remainder]string title)
         {
-            await _shinden.SendSearchInfoAsync(Context, title, QuickSearchType.Manga);
+            await _shinden.SendSearchInfoAsync(Context, title, Shden.QuickSearchType.Manga);
         }
 
         [Command("postać", RunMode = RunMode.Async)]
@@ -146,7 +146,7 @@ namespace Sanakan.Modules
                         return;
                     }
 
-                    await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
+                    await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png", $"{Shden.API.Url.GetProfileURL(botUser.Shinden)}");
                 }
             }
         }
