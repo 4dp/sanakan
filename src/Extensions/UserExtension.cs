@@ -47,6 +47,7 @@ namespace Sanakan.Extensions
                     Wishlist = null,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
+                    WishlistIsPrivate = false,
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
                 },
@@ -86,8 +87,8 @@ namespace Sanakan.Extensions
 
             user.GameDeck.BoosterPacks.Add(new BoosterPack
             {
-                CardCnt = 3,
-                MinRarity = Rarity.C,
+                CardCnt = 5,
+                MinRarity = Rarity.A,
                 Name = "Startowy pakiet",
                 IsCardFromPackTradable = true
             });
@@ -105,22 +106,24 @@ namespace Sanakan.Extensions
 
         public static string GetUserNameStatus(this GameDeck deck)
         {
-            if (deck.Karma >= 5000) return $"Mocno na +";
             if (deck.Karma >= 2000) return $"Papaj";
             if (deck.Karma >= 1600) return $"Miłościwy kumpel";
+            if (deck.Karma >= 1200) return $"Oślepiony bugiem";
             if (deck.Karma >= 800) return $"Pan pokoiku";
             if (deck.Karma >= 400) return $"Błogosławiony rycerz";
             if (deck.Karma >= 200) return $"Pionek buga";
             if (deck.Karma >= 100) return $"Sługa buga";
+            if (deck.Karma >= 50) return $"Biały koleś";
             if (deck.Karma >= 10) return $"Pantofel";
             if (deck.Karma >= 5) return $"Lizus";
-            if (deck.Karma <= -5000) return $"Mocno na -";
             if (deck.Karma <= -2000) return $"Mroczny panocek";
             if (deck.Karma <= -1600) return $"Nienawistny koleżka";
+            if (deck.Karma <= -1200) return $"Mściwy ślepiec";
             if (deck.Karma <= -800) return $"Pan wojenki";
             if (deck.Karma <= -400) return $"Przeklęty rycerz";
             if (deck.Karma <= -200) return $"Ciemny pionek";
             if (deck.Karma <= -100) return $"Sługa mroku";
+            if (deck.Karma <= -50) return $"Murzynek";
             if (deck.Karma <= -10) return $"Rzezimieszek";
             if (deck.Karma <= -5) return $"Buntownik";
             return "Wieśniak";
@@ -140,7 +143,7 @@ namespace Sanakan.Extensions
 
         public static double AffectionFromKarma(this GameDeck deck)
         {
-            var karmaDif = deck.Karma / 100d;
+            var karmaDif = deck.Karma / 150d;
             if (karmaDif < -6) karmaDif = -6;
             if (karmaDif > 6) karmaDif = 6;
             return karmaDif;

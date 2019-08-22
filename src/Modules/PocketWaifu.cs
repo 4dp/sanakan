@@ -1350,6 +1350,26 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("życzenia widok")]
+        [Alias("wishlist view", "zyczenia widok")]
+        [Summary("pozwala ukryć liste życzeń przed innymi graczami")]
+        [Remarks("tak"), RequireWaifuCommandChannel]
+        public async Task SetWishlistViewAsync([Summary("czy ma być widoczna?(tak/nie)")]bool view)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                bUser.GameDeck.WishlistIsPrivate = !view;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                string response = (!view) ? $"ukrył" : $"udostępnił";
+                await ReplyAsync("", embed: $"{Context.User.Mention} {response} swoją liste życzeń!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("na życzeniach", RunMode = RunMode.Async)]
         [Alias("on wishlist", "na zyczeniach")]
         [Summary("wyświetla obiekty dodane do listy życzeń")]
@@ -1365,6 +1385,12 @@ namespace Sanakan.Modules
                 if (bUser == null)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (Context.User.Id != bUser.Id && bUser.GameDeck.WishlistIsPrivate)
+                {
+                    await ReplyAsync("", embed: "Lista życzeń tej osoby jest prywatna!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -1410,6 +1436,12 @@ namespace Sanakan.Modules
                 if (bUser == null)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (Context.User.Id != bUser.Id && bUser.GameDeck.WishlistIsPrivate)
+                {
+                    await ReplyAsync("", embed: "Lista życzeń tej osoby jest prywatna!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

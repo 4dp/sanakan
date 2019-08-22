@@ -12,6 +12,7 @@ namespace Sanakan.Database.Models
         public ulong Waifu { get; set; }
         public double Karma { get; set; }
         public string Wishlist { get; set; }
+        public bool WishlistIsPrivate { get;set; }
 
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }
