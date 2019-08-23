@@ -294,10 +294,64 @@ namespace Sanakan.Modules
                 db.Users.Remove(user);
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { "users" });
+                QueryCacheManager.ExpireTag(new string[] { "users", $"user-{id}" });
             }
 
             await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został wymazany.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("tc duser")]
+        [Summary("usuwa dane użytkownika o podanym id z bazy i danej wartości tc")]
+        [Remarks("845155646123 5000")]
+        public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id, [Summary("wartość tc")]long value)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var user = await db.GetUserOrCreateAsync(id);
+                foreach (var card in user.GameDeck.Cards.OrderByDescending(x => x.CreationDate).ToList())
+                {
+                    value -= 50;
+                    user.GameDeck.Cards.Remove(card);
+
+                    if (0 >= value)
+                        break;
+                }
+
+                if (value > 0)
+                {
+                    var kct = value / 50;
+                    if (user.GameDeck.Karma > 0)
+                    {
+                        user.GameDeck.Karma -= kct;
+                        if (user.GameDeck.Karma < 0)
+                            user.GameDeck.Karma = 0;
+                    }
+                    else
+                    {
+                        user.GameDeck.Karma += kct;
+                        if (user.GameDeck.Karma > 0)
+                            user.GameDeck.Karma = 0;
+                    }
+
+                    user.GameDeck.CTCnt -= kct;
+                    if (user.GameDeck.CTCnt < 0)
+                    {
+                        user.GameDeck.CTCnt = 0;
+                        kct = 0;
+                    }
+
+                    if (kct > 0)
+                    {
+                        user.GameDeck.Items.Clear();
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { "users", $"user-{id}" });
+            }
+
+            await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został zrównany.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("utitle")]
