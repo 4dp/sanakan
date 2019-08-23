@@ -180,6 +180,20 @@ namespace Sanakan.Api.Controllers
 
                 var exe = new Executable($"api-tc u{id} ({value})", new Task(() =>
                 {
+                    using (var dbc = new Database.AnalyticsContext(_config))
+                    {
+                        dbc.TransferData.Add(new Database.Models.Analytics.TransferAnalytics()
+                        {
+                            Value = value,
+                            DiscordId = user.Id,
+                            Date = DateTime.Now,
+                            ShindenId = user.Shinden,
+                            Source = Database.Models.Analytics.TransferSource.ByDiscordId,
+                        });
+
+                        dbc.SaveChanges();
+                    }
+
                     using (var dbs = new Database.UserContext(_config))
                     {
                         user = dbs.GetUserOrCreateAsync(id).Result;
@@ -216,6 +230,20 @@ namespace Sanakan.Api.Controllers
 
                 var exe = new Executable($"api-tc su{id} ({value})", new Task(() =>
                 {
+                    using (var dbc = new Database.AnalyticsContext(_config))
+                    {
+                        dbc.TransferData.Add(new Database.Models.Analytics.TransferAnalytics()
+                        {
+                            Value = value,
+                            DiscordId = user.Id,
+                            Date = DateTime.Now,
+                            ShindenId = user.Shinden,
+                            Source = Database.Models.Analytics.TransferSource.ByShindenId,
+                        });
+
+                        dbc.SaveChanges();
+                    }
+
                     using (var dbs = new Database.UserContext(_config))
                     {
                         user = dbs.Users.FirstOrDefault(x => x.Shinden == id);

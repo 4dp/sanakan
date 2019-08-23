@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Sanakan.Database.Models;
 
 namespace Sanakan.Extensions
@@ -425,11 +426,17 @@ namespace Sanakan.Extensions
 
         public static string GetImage(this Card card) => card.CustomImage ?? card.Image;
 
-        public static async Task Update(this Card card, Shinden.ShindenClient client)
+        public static async Task Update(this Card card, IUser user, Shinden.ShindenClient client)
         {
             var response = await client.GetCharacterInfoAsync(card.Character);
             if (!response.IsSuccessStatusCode())
                 throw new Exception($"Couldn't get card info!");
+
+            if (user != null)
+            {
+                if (card.FirstIdOwner == 0)
+                    card.FirstIdOwner = user.Id;
+            }
 
             card.Name = response.Body.ToString();
             card.Image = response.Body.HasImage ? response.Body.PictureUrl : null;

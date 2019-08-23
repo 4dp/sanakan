@@ -51,6 +51,8 @@ namespace Sanakan.Database
         public DbSet<OwnedRole> OwnedRoles { get; set; }
         public DbSet<UserAnalytics> UsersData { get; set; }
         public DbSet<SystemAnalytics> SystemData { get; set; }
+        public DbSet<TransferAnalytics> TransferData { get; set; }
+        public DbSet<CommandsAnalytics> CommandsData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -288,6 +290,16 @@ namespace Sanakan.Database
             });
 
             modelBuilder.Entity<SystemAnalytics>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<TransferAnalytics>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<CommandsAnalytics>(entity =>
             {
                 entity.HasKey(e => e.Id);
             });

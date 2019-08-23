@@ -46,6 +46,7 @@ namespace Sanakan.Database.Models
         public string Tags { get; set; }
         public string Image { get; set; }
         public string CustomImage { get; set; }
+        public ulong FirstIdOwner { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

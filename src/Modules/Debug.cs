@@ -55,7 +55,7 @@ namespace Sanakan.Modules
                 var character = (await _shClient.GetCharacterInfoAsync(2)).Body;
                 var channel = Context.Channel as ITextChannel;
 
-                _ = await _waifu.GetSafariViewAsync(images[index], _waifu.GenerateNewCard(character), channel);
+                _ = await _waifu.GetSafariViewAsync(images[index], _waifu.GenerateNewCard(null, character), channel);
             }
             catch (Exception ex)
             {
@@ -473,7 +473,7 @@ namespace Sanakan.Modules
             [Summary("jakość karty(nie podanie - losowo)")]Rarity rarity = Rarity.E)
         {
             var character = (id == 0) ? await _waifu.GetRandomCharacterAsync() : (await _shClient.GetCharacterInfoAsync(id)).Body;
-            var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(character) : _waifu.GenerateNewCard(character, rarity);
+            var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(user, character) : _waifu.GenerateNewCard(user, character, rarity);
 
             card.Source = CardSource.GodIntervention;
             using (var db = new Database.UserContext(Config))

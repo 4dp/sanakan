@@ -321,6 +321,10 @@ namespace Sanakan.Services.Session.Models
                                     card.Tags = null;
                                     card.Active = false;
                                     card.Affection -= 1.5;
+
+                                    if (card.FirstIdOwner == 0)
+                                        card.FirstIdOwner = user1.Id;
+
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
 
@@ -347,6 +351,10 @@ namespace Sanakan.Services.Session.Models
                                     card.Tags = null;
                                     card.Active = false;
                                     card.Affection -= 1.5;
+
+                                    if (card.FirstIdOwner == 0)
+                                        card.FirstIdOwner = user2.Id;
+
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);
 

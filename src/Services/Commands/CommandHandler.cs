@@ -5,6 +5,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Database.Models;
+using Sanakan.Database.Models.Analytics;
 using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
@@ -45,11 +46,11 @@ namespace Sanakan.Services.Commands
                         _logger.Log($"mem usage: {proc.WorkingSet64 / 1048576} MiB");
                         using (var dba = new Database.AnalyticsContext(_config))
                         {
-                            dba.SystemData.Add(new Database.Models.Analytics.SystemAnalytics
+                            dba.SystemData.Add(new SystemAnalytics
                             {
                                 MeasureDate = DateTime.Now,
                                 Value = proc.WorkingSet64 / 1048576,
-                                Type = Database.Models.Analytics.SystemAnalyticsEventType.Ram
+                                Type = SystemAnalyticsEventType.Ram,
                             });
                             await dba.SaveChangesAsync();
                         }
@@ -78,7 +79,7 @@ namespace Sanakan.Services.Commands
             _cmd.AddTypeReader<HaremType>(new TypeReaders.HaremTypeReader());
             _cmd.AddTypeReader<TopType>(new TypeReaders.TopTypeReader());
             _cmd.AddTypeReader<bool>(new TypeReaders.BoolTypeReader());
-            
+
             _helper.PublicModulesInfo = await _cmd.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
             _helper.PrivateModulesInfo.Add("Moderacja", await _cmd.AddModuleAsync<Modules.Moderation>(_provider));
@@ -108,13 +109,26 @@ namespace Sanakan.Services.Commands
             int argPos = 0;
             if (msg.HasStringPrefix(prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
             {
-                if (_config.Get().BlacklistedGuilds.Any(x => x == context.Guild.Id))
+                if (_config.Get().BlacklistedGuilds.Any(x => x == (context.Guild?.Id ?? 0)))
                     return;
 
                 var res = await _cmd.GetExecutableCommandAsync(context, argPos, _provider);
                 if (res.IsSuccess())
                 {
                     _logger.Log($"Run cmd: u{msg.Author.Id} {res.Command.Match.Command.Name}");
+                    using (var dbc = new Database.AnalyticsContext(_config))
+                    {
+                        dbc.CommandsData.Add(new CommandsAnalytics()
+                        {
+                            CmdParams = string.Join(" ", res.Command.Result.ParamValues),
+                            CmdName = res.Command.Match.Command.Name,
+                            GuildId = context.Guild?.Id ?? 0,
+                            UserId = context.User.Id,
+                            Date = DateTime.Now,
+                        });
+                        await dbc.SaveChangesAsync();
+                    }
+
                     switch (res.Command.Match.Command.RunMode)
                     {
                         case RunMode.Async:

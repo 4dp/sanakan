@@ -17,6 +17,8 @@ namespace Sanakan.Database
 
         public DbSet<UserAnalytics> UsersData { get; set; }
         public DbSet<SystemAnalytics> SystemData { get; set; }
+        public DbSet<TransferAnalytics> TransferData { get; set; }
+        public DbSet<CommandsAnalytics> CommandsData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

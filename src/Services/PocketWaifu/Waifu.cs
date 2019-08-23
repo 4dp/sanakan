@@ -214,8 +214,8 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 15) return ItemType.IncreaseUpgradeCnt;
             if (num < 40) return ItemType.AffectionRecoveryGreat;
             if (num < 95) return ItemType.AffectionRecoveryBig;
-            if (num < 165) return ItemType.CardParamsReRoll;
-            if (num < 255) return ItemType.DereReRoll;
+            if (num < 150) return ItemType.CardParamsReRoll;
+            if (num < 225) return ItemType.DereReRoll;
             if (num < 475) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
@@ -227,9 +227,9 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 20) return ItemType.IncreaseUpgradeCnt;
             if (num < 60) return ItemType.AffectionRecoveryGreat;
             if (num < 110) return ItemType.AffectionRecoveryBig;
-            if (num < 165) return ItemType.CardParamsReRoll;
-            if (num < 255) return ItemType.DereReRoll;
-            if (num < 800) return ItemType.AffectionRecoveryNormal;
+            if (num < 150) return ItemType.CardParamsReRoll;
+            if (num < 210) return ItemType.DereReRoll;
+            if (num < 780) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -238,8 +238,8 @@ namespace Sanakan.Services.PocketWaifu
             var num = Fun.GetRandomValue(1000);
             if (num < 10) return ItemType.IncreaseUpgradeCnt;
             if (num < 75) return ItemType.AffectionRecoveryBig;
-            if (num < 165) return ItemType.CardParamsReRoll;
-            if (num < 255) return ItemType.DereReRoll;
+            if (num < 140) return ItemType.CardParamsReRoll;
+            if (num < 225) return ItemType.DereReRoll;
             if (num < 475) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
@@ -348,7 +348,7 @@ namespace Sanakan.Services.PocketWaifu
             });
         }
 
-        public Card GenerateNewCard(ICharacterInfo character, Rarity rarity)
+        public Card GenerateNewCard(IUser user, ICharacterInfo character, Rarity rarity)
         {
             var card = new Card
             {
@@ -364,6 +364,7 @@ namespace Sanakan.Services.PocketWaifu
                 RarityOnStart = rarity,
                 CustomImage = null,
                 IsTradable = true,
+                FirstIdOwner = 1,
                 UpgradesCnt = 2,
                 Rarity = rarity,
                 InCage = false,
@@ -376,6 +377,9 @@ namespace Sanakan.Services.PocketWaifu
                 ExpCnt = 0,
             };
 
+            if (user != null)
+                card.FirstIdOwner = user.Id;
+
             if (character.HasImage)
                 card.Image = character.PictureUrl;
 
@@ -383,11 +387,11 @@ namespace Sanakan.Services.PocketWaifu
             return card;
         }
 
-        public Card GenerateNewCard(ICharacterInfo character)
-            => GenerateNewCard(character, RandomizeRarity());
+        public Card GenerateNewCard(IUser user, ICharacterInfo character)
+            => GenerateNewCard(user, character, RandomizeRarity());
 
-        public Card GenerateNewCard(ICharacterInfo character, List<Rarity> rarityExcluded)
-            => GenerateNewCard(character, RandomizeRarity(rarityExcluded));
+        public Card GenerateNewCard(IUser user, ICharacterInfo character, List<Rarity> rarityExcluded)
+            => GenerateNewCard(user, character, RandomizeRarity(rarityExcluded));
 
         private int ScaleNumber(int oMin, int oMax, int nMin, int nMax, int value)
         {
@@ -737,7 +741,7 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
-        public async Task<List<Card>> OpenBoosterPackAsync(BoosterPack pack)
+        public async Task<List<Card>> OpenBoosterPackAsync(IUser user, BoosterPack pack)
         {
             var cardsFromPack = new List<Card>();
 
@@ -776,9 +780,9 @@ namespace Sanakan.Services.PocketWaifu
 
                 if (chara != null)
                 {
-                    var newCard = GenerateNewCard(chara, pack.RarityExcludedFromPack.Select(x => x.Rarity).ToList());
+                    var newCard = GenerateNewCard(user, chara, pack.RarityExcludedFromPack.Select(x => x.Rarity).ToList());
                     if (pack.MinRarity != Rarity.E && i == pack.CardCnt - 1)
-                        newCard = GenerateNewCard(chara, pack.MinRarity);
+                        newCard = GenerateNewCard(user, chara, pack.MinRarity);
 
                     newCard.IsTradable = pack.IsCardFromPackTradable;
                     newCard.Source = pack.CardSourceFromPack;

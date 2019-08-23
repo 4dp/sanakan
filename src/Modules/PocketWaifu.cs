@@ -563,7 +563,7 @@ namespace Sanakan.Modules
                 }
 
                 var pack = bUser.GameDeck.BoosterPacks.ToArray()[numberOfPack - 1];
-                var cards = await _waifu.OpenBoosterPackAsync(pack);
+                var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
                 if (cards.Count < pack.CardCnt)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
@@ -671,7 +671,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    await card.Update(_shclient);
+                    await card.Update(Context.User, _shclient);
 
                     await db.SaveChangesAsync();
                     _waifu.DeleteCardImageIfExist(card);
@@ -896,7 +896,9 @@ namespace Sanakan.Modules
 
                 freeCard.EndsAt = DateTime.Now.AddHours(22);
 
-                var card = _waifu.GenerateNewCard(await _waifu.GetRandomCharacterAsync(), new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
+                var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
+                    new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
+
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
 
@@ -1969,7 +1971,9 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var enemyCard = _waifu.GenerateNewCard(enemyCharacter, _waifu.RandomizeRarity(_waifu.GetExcludedArenaRarity(thisCard.Rarity)));
+                var enemyCard = _waifu.GenerateNewCard(Context.User, enemyCharacter,
+                    _waifu.RandomizeRarity(_waifu.GetExcludedArenaRarity(thisCard.Rarity)));
+
                 var embed = new EmbedBuilder
                 {
                     Color = EMType.Bot.Color(),
@@ -2094,7 +2098,7 @@ namespace Sanakan.Modules
                 for (int i = 0; i < cardsCnt; i++)
                 {
                     var character = await _waifu.GetRandomCharacterAsync();
-                    var botCard = _waifu.GenerateNewCard(character, thisCard.Rarity);
+                    var botCard = _waifu.GenerateNewCard(null, character, thisCard.Rarity);
                     characters.Add(new BoosterPackCharacter { Character = character.Id });
 
                     botCard.GameDeckId = (ulong)i;

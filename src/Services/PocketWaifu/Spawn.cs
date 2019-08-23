@@ -135,6 +135,8 @@ namespace Sanakan.Services.PocketWaifu
                 using (var db = new Database.UserContext(_config))
                 {
                     var botUser = db.GetUserOrCreateAsync(winner.Id).Result;
+
+                    newCard.FirstIdOwner = winner.Id;
                     newCard.Affection += botUser.GameDeck.AffectionFromKarma();
 
                     if (botUser.GameDeck.Wishlist != null)
@@ -201,7 +203,7 @@ namespace Sanakan.Services.PocketWaifu
                 return;
             }
 
-            var newCard = _waifu.GenerateNewCard(character);
+            var newCard = _waifu.GenerateNewCard(null, character);
             newCard.Source = CardSource.Safari;
             newCard.Affection -= 1.8;
             newCard.InCage = true;
