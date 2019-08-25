@@ -118,13 +118,22 @@ namespace Sanakan.Services.Commands
                     _logger.Log($"Run cmd: u{msg.Author.Id} {res.Command.Match.Command.Name}");
                     using (var dbc = new Database.AnalyticsContext(_config))
                     {
+                        string param = null;
+                        try
+                        {
+                            var paramStart = argPos + res.Command.Match.Command.Name.Length;
+                            var textBigger = context.Message.Content.Length > paramStart;
+                            param = textBigger ? context.Message.Content.Substring(paramStart) : null;
+                        }
+                        catch (Exception) { }
+
                         dbc.CommandsData.Add(new CommandsAnalytics()
                         {
-                            CmdParams = string.Join(" ", res.Command.Result.ParamValues),
                             CmdName = res.Command.Match.Command.Name,
                             GuildId = context.Guild?.Id ?? 0,
                             UserId = context.User.Id,
                             Date = DateTime.Now,
+                            CmdParams = param,
                         });
                         await dbc.SaveChangesAsync();
                     }
