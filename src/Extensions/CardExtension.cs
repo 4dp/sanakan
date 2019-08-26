@@ -11,13 +11,14 @@ namespace Sanakan.Extensions
 {
     public static class CardExtension
     {
-        public static string GetString(this Card card, bool withoutId = false, bool withUpgrades = false, bool nameAsUrl = false, bool allowZero = false)
+        public static string GetString(this Card card, bool withoutId = false, bool withUpgrades = false, bool nameAsUrl = false, bool allowZero = false, bool showBaseHp = false)
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
-            string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
             string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
+            string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
+            string hp = showBaseHp ? $"**({card.Health})**{card.GetHealthWithPenalty(allowZero)}" : $"{card.GetHealthWithPenalty(allowZero)}";
 
-            return $"{idStr} {name} **{card.Rarity}** ❤{card.GetHealthWithPenalty(allowZero)} 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()} {upgCnt}";
+            return $"{idStr} {name} **{card.Rarity}** ❤{hp} 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()} {upgCnt}";
         }
 
         public static string GetNameWithUrl(this Card card) => $"[{card.Name}]({card.GetCharacterUrl()})";
@@ -96,9 +97,21 @@ namespace Sanakan.Extensions
             return string.Join(" ", icons);
         }
 
+        public static string GetDescSmall(this Card card)
+        {
+            return $"**[{card.Id}]** *({card.Character})*\n"
+                + $"{card.GetString(true, true, true, false, true)}\n"
+                + $"_{card.Title}_\n\n"
+                + $"{card.GetAffectionString()}\n"
+                + $"{card.ExpCnt.ToString("F")} exp\n\n"
+                + $"{card.Tags ?? "---"}\n"
+                + $"{card.GetStatusIcons()}";
+        }
+
         public static string GetDesc(this Card card)
         {
-            return $"*{card.Title ?? "????"}*\n\n"
+            return $"{card.GetString(true, true, false, false, true)}\n"
+                + $"*{card.Title ?? "????"}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
@@ -106,7 +119,7 @@ namespace Sanakan.Extensions
                 + $"**Aktywna:** {card.Active.GetYesNo()}\n"
                 + $"**Możliwość wymiany:** {card.IsTradable.GetYesNo()}\n\n"
                 + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
-                + $"**WID:** {card.Id}\n"
+                + $"**WID:** {card.Id} *({card.Character})*\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n"
                 + $"**Tagi:** {card.Tags ?? "---"}\n\n";

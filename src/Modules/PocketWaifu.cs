@@ -153,8 +153,7 @@ namespace Sanakan.Modules
                 SocketUser user = Context.Guild.GetUser(card.GameDeck.UserId);
                 if (user == null) user = Context.Client.GetUser(card.GameDeck.UserId);
 
-                await ReplyAsync("", embed: $"**[{card.Id}]** *({card.Character})*\n{card.GetString(true, true, true)}\n_{card.Title}_\n\n{card.GetAffectionString()}\n{card.ExpCnt.ToString("F")} exp\n\n{card.Tags ?? "---"}\n{card.GetStatusIcons()}".TrimToLength(2000)
-                    .ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(user)).Build());
+                await ReplyAsync("", embed: card.GetDescSmall().TrimToLength(2000).ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(user)).Build());
             }
         }
 
@@ -366,6 +365,7 @@ namespace Sanakan.Modules
                 }
 
                 double affectionInc = 0;
+                var textRelation = card.GetAffectionString();
                 string cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
                 var embed = new EmbedBuilder
                 {
@@ -522,6 +522,10 @@ namespace Sanakan.Modules
 
                 item.Count -= itemCnt;
                 card.Affection += affectionInc;
+
+                var newTextRelation = card.GetAffectionString();
+                if (textRelation != newTextRelation)
+                    embed.Description += $"\nNowa relacja to *{newTextRelation}*!";
 
                 if (item.Count <= 0)
                     bUser.GameDeck.Items.Remove(item);

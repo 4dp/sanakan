@@ -935,11 +935,6 @@ namespace Sanakan.Services.PocketWaifu
             {
                 ImageUrl = imageUrl,
                 Color = EMType.Info.Color(),
-                Author = new EmbedAuthorBuilder
-                {
-                    Name = card.Name,
-                    Url = card.GetCharacterUrl()
-                },
                 Footer = new EmbedFooterBuilder
                 {
                     Text = $"Należy do: {ownerString}"
