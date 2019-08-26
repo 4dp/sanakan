@@ -110,7 +110,7 @@ namespace Sanakan.Extensions
 
         public static string GetDesc(this Card card)
         {
-            return $"{card.GetString(true, true, false, false, true)}\n"
+            return $"{card.GetString(true, false, true, false, true)}\n"
                 + $"*{card.Title ?? "????"}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"

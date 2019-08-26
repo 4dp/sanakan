@@ -730,14 +730,10 @@ namespace Sanakan.Services.PocketWaifu
 
         public Embed GetItemList(SocketUser user, List<Item> items)
         {
-            string packString = "";
-            for (int i = 0; i < items.Count(); i++)
-                packString += $"**[{i + 1}]** {items[i].Name} x{items[i].Count}\n";
-
             return new EmbedBuilder
             {
                 Color = EMType.Info.Color(),
-                Description = $"{user.Mention} twoje przedmioty:\n\n{packString.TrimToLength(1900)}"
+                Description = $"{user.Mention} twoje przedmioty:\n\n{items.ToItemList().TrimToLength(1900)}"
             }.Build();
         }
 

@@ -11,6 +11,7 @@ namespace Sanakan.Services.PocketWaifu
         public SocketGuildUser User { get; set; }
         public string CustomString { get; set; }
         public List<Card> Cards { get; set; }
+        public List<Item> Items { get; set; }
         public bool Accepted { get; set; }
         public User Dbuser { get; set; }
     }

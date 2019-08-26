@@ -59,7 +59,7 @@ namespace Sanakan.Services.Session.Models
 
         private async Task<bool> ExecuteAction(SessionContext context, Session session)
         {
-            if (P1 == null || P1 == null || Message == null)
+            if (P1 == null || P2 == null || Message == null)
                 return true;
 
             await HandleMessageAsync(context);

@@ -228,5 +228,14 @@ namespace Sanakan.Extensions
                 RarityExcludedFromPack = type.RarityExcluded(),
             };
         }
+
+        public static string ToItemList(this List<Item> list)
+        {
+            string packString = "";
+            for (int i = 0; i < list.Count; i++)
+                packString += $"**[{i + 1}]** {list[i].Name} x{list[i].Count}\n";
+
+            return packString;
+        }
     }
 }

@@ -95,7 +95,7 @@ namespace Sanakan.Modules
         }
 
         [Command("przedmioty", RunMode = RunMode.Async)]
-        [Alias("items")]
+        [Alias("items", "item", "przedmiot")]
         [Summary("wypisuje posiadane przedmioty(informacje o przedmiocie gdy podany jego numer)")]
         [Remarks("1"), RequireWaifuCommandChannel]
         public async Task ShowItemsAsync([Summary("nr przedmiotu")]int numberOfItem = 0)
@@ -312,6 +312,13 @@ namespace Sanakan.Modules
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
         public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka")]string detail = "1")
         {
+            var session = new CraftingSession(Context.User, _config);
+            if (_session.SessionExist(session))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz używać przedmotów gdy masz otwarte menu tworzenia kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 var itemCnt = 1;
@@ -1937,6 +1944,51 @@ namespace Sanakan.Modules
                 session.Name = "🔄 **Wymiana:**";
                 session.Tips = $"Polecenia: `dodaj [WID]`, `usuń [WID]`.\n\n\u0031\u20E3 "
                     + $"- zakończenie dodawania {user1.Mention}\n\u0032\u20E3 - zakończenie dodawania {user2.Mention}";
+
+                var msg = await ReplyAsync("", embed: session.BuildEmbed());
+                await msg.AddReactionsAsync(session.StartReactions);
+                session.Message = msg;
+
+                await _session.TryAddSession(session);
+            }
+        }
+
+        [Command("tworzenie")]
+        [Alias("crafting")]
+        [Summary("tworzy karte z przedmiotów")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task CraftCardAsync()
+        {
+            var user1 = Context.User as SocketGuildUser;
+            if (user1 == null) return;
+
+            var session = new CraftingSession(user1, _config);
+            if (_session.SessionExist(session))
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} już masz otwarte menu tworzenia kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var duser1 = await db.GetCachedFullUserAsync(user1.Id);
+                if (duser1 == null)
+                {
+                    await ReplyAsync("", embed: "Jeden z graczy nie posiada profilu!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                session.P1 = new PlayerInfo
+                {
+                    User = user1,
+                    Dbuser = duser1,
+                    Accepted = false,
+                    CustomString = "",
+                    Items = new List<Item>()
+                };
+
+                session.Name = "⚒ **Tworzenie:**";
+                session.Tips = $"Polecenia: `dodaj/usuń [nr przedmiotu] [liczba]`.";
 
                 var msg = await ReplyAsync("", embed: session.BuildEmbed());
                 await msg.AddReactionsAsync(session.StartReactions);
