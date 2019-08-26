@@ -68,7 +68,13 @@ namespace Sanakan.Services.Session.Models
             var owned = P1.Dbuser.GameDeck.Items.ToList().ToItemList();
             var used = P1.Items.ToItemList();
 
-            return $"**Posiadane:**\n{owned}\n**Użyte:**\n{used}";
+            return $"**Posiadane:**\n{owned}\n**Użyte:**\n{used}\n**Karta:** {GetCardClassFromItems()}";
+        }
+
+        private string GetCardClassFromItems()
+        {
+            //TODO: check card and accept
+            return "---";
         }
 
         private async Task HandleMessageAsync(SessionContext context)
@@ -204,7 +210,24 @@ namespace Sanakan.Services.Session.Models
                 var reaction = context.ReactionAdded ?? context.ReactionRemoved;
                 if (reaction == null) return false;
 
-                //TODO: accept/decline crafting
+                if (reaction.Emote.Equals(DeclineEmote))
+                {
+                    await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nOdrzucono tworzenie karty.".ToEmbedMessage(EMType.Bot).Build());
+                    return true;
+                }
+
+                if (reaction.Emote.Equals(AcceptEmote))
+                {
+                    if (P1.Accepted)
+                    {
+                        //TODO: save changes
+                    }
+                    else
+                    {
+                        await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nBrakuje przedmiotów, tworzenie karty nie powiodło się.".ToEmbedMessage(EMType.Bot).Build());
+                    }
+                    return true;
+                }
 
                 try
                 {
