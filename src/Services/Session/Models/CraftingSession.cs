@@ -8,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Sanakan.Config;
+using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.PocketWaifu;
 using Z.EntityFramework.Plus;
@@ -17,6 +18,7 @@ namespace Sanakan.Services.Session.Models
     public class CraftingSession : Session
     {
         public IMessage Message { get; set; }
+        public List<Item> Items { get; set; }
         public PlayerInfo P1 { get; set; }
         public string Name { get; set; }
         public string Tips { get; set; }
@@ -65,7 +67,7 @@ namespace Sanakan.Services.Session.Models
 
         private string GetCraftingView()
         {
-            var owned = P1.Dbuser.GameDeck.Items.ToList().ToItemList();
+            var owned = Items.ToItemList();
             var used = P1.Items.ToItemList();
 
             return $"**Posiadane:**\n{owned}\n**Użyte:**\n{used}\n**Karta:** {GetCardClassFromItems()}";
@@ -137,17 +139,17 @@ namespace Sanakan.Services.Session.Models
 
         private async Task HandleAddAsync(int number, long count, SocketUserMessage message)
         {
-            if (number >= P1.Dbuser.GameDeck.Items.Count)
+            if (number >= Items.Count)
             {
                 await message.AddReactionAsync(ErrEmote);
                 return;
             }
 
-            var thisItem = P1.Dbuser.GameDeck.Items.ToList()[number];
+            var thisItem = Items[number];
             if (thisItem.Count <= count)
             {
                 count = thisItem.Count;
-                P1.Dbuser.GameDeck.Items.Remove(thisItem);
+                Items.Remove(thisItem);
             }
             else thisItem.Count -= count;
 
@@ -183,11 +185,11 @@ namespace Sanakan.Services.Session.Models
             }
             else thisItem.Count -= count;
 
-            var thisItem2 = P1.Dbuser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Type);
+            var thisItem2 = Items.FirstOrDefault(x => x.Type == thisItem.Type);
             if (thisItem2 == null)
             {
                 thisItem2 = thisItem.Type.ToItem(count);
-                P1.Dbuser.GameDeck.Items.Add(thisItem2);
+                Items.Add(thisItem2);
             }
             else thisItem2.Count += count;
 
@@ -213,6 +215,9 @@ namespace Sanakan.Services.Session.Models
                 if (reaction.Emote.Equals(DeclineEmote))
                 {
                     await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nOdrzucono tworzenie karty.".ToEmbedMessage(EMType.Bot).Build());
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
                     return true;
                 }
 
@@ -226,6 +231,9 @@ namespace Sanakan.Services.Session.Models
                     {
                         await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nBrakuje przedmiotów, tworzenie karty nie powiodło się.".ToEmbedMessage(EMType.Bot).Build());
                     }
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
                     return true;
                 }
 

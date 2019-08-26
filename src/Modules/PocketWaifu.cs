@@ -1989,6 +1989,7 @@ namespace Sanakan.Modules
 
                 session.Name = "⚒ **Tworzenie:**";
                 session.Tips = $"Polecenia: `dodaj/usuń [nr przedmiotu] [liczba]`.";
+                session.Items = duser1.GameDeck.Items.ToList();
 
                 var msg = await ReplyAsync("", embed: session.BuildEmbed());
                 await msg.AddReactionsAsync(session.StartReactions);
