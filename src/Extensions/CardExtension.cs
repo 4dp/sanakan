@@ -16,9 +16,16 @@ namespace Sanakan.Extensions
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
             string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
-            string hp = showBaseHp ? $"**({card.Health})**{card.GetHealthWithPenalty(allowZero)}" : $"{card.GetHealthWithPenalty(allowZero)}";
 
-            return $"{idStr} {name} **{card.Rarity}** ❤{hp} 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()} {upgCnt}";
+            return $"{idStr} {name} **{card.Rarity}** {card.GetCardParams(showBaseHp, allowZero)} {upgCnt}";
+        }
+
+        public static string GetCardParams(this Card card, bool showBaseHp = false, bool allowZero = false, bool inNewLine = false)
+        {
+            string hp = showBaseHp ? $"**({card.Health})**{card.GetHealthWithPenalty(allowZero)}" : $"{card.GetHealthWithPenalty(allowZero)}";
+            var param = new string[] { $"❤{hp}", $"🔥{card.GetAttackWithBonus()}", $"🛡{card.GetDefenceWithBonus()}" };
+
+            return string.Join(inNewLine ? "\n" : " ", param);
         }
 
         public static string GetNameWithUrl(this Card card) => $"[{card.Name}]({card.GetCharacterUrl()})";
@@ -110,8 +117,9 @@ namespace Sanakan.Extensions
 
         public static string GetDesc(this Card card)
         {
-            return $"{card.GetString(true, false, true, false, true)}\n"
+            return $"{card.GetNameWithUrl()} **{card.Rarity}**\n"
                 + $"*{card.Title ?? "????"}*\n\n"
+                + $"*{card.GetCardParams(true, false, true)}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
                 + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
@@ -171,6 +179,7 @@ namespace Sanakan.Extensions
                 case CardSource.Migration: return "Stara baza";
                 case CardSource.PvE: return "Walki na boty";
                 case CardSource.Daily: return "Karta+";
+                case CardSource.Crafting: return "Tworzenie";
 
                 default:
                 case CardSource.Other: return "Inne";

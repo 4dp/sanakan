@@ -24,6 +24,7 @@ namespace Sanakan.Services.Session.Models
         public string Tips { get; set; }
 
         private IConfig _config;
+        private Waifu _waifu;
 
         private readonly Emoji AcceptEmote = new Emoji("✅");
         private readonly Emote DeclineEmote = Emote.Parse("<:redcross:581152766655856660>");
@@ -34,12 +35,13 @@ namespace Sanakan.Services.Session.Models
 
         public IEmote[] StartReactions => new IEmote[] { AcceptEmote, DeclineEmote };
 
-        public CraftingSession(IUser owner, IConfig config) : base(owner)
+        public CraftingSession(IUser owner, Waifu waifu, IConfig config) : base(owner)
         {
             Event = ExecuteOn.AllEvents;
             RunMode = RunMode.Sync;
             TimeoutMs = 120000;
             _config = config;
+            _waifu = waifu;
 
             Message = null;
 
@@ -75,8 +77,28 @@ namespace Sanakan.Services.Session.Models
 
         private string GetCardClassFromItems()
         {
-            //TODO: check card and accept
+            var value = GetValue();
+            if (value > 1000)
+            {
+                P1.Accepted = true;
+                return GetRarityFromValue(value).ToString();
+            }
+            else P1.Accepted = false;
+
             return "---";
+        }
+
+        private long GetValue() => P1.Items.Sum(x => x.Type.CValue() * x.Count);
+
+        private Rarity GetRarityFromValue(long value)
+        {
+            if (value > 100000) return Rarity.SS;
+            if (value > 10000) return Rarity.S;
+            if (value > 8000) return Rarity.A;
+            if (value > 6000) return Rarity.B;
+            if (value > 4000) return Rarity.C;
+            if (value > 2000) return Rarity.D;
+            return Rarity.E;
         }
 
         private async Task HandleMessageAsync(SessionContext context)
@@ -223,14 +245,46 @@ namespace Sanakan.Services.Session.Models
 
                 if (reaction.Emote.Equals(AcceptEmote))
                 {
+                    bool error = true;
+
                     if (P1.Accepted)
                     {
-                        //TODO: save changes
+                        error = false;
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var user = await db.GetUserOrCreateAsync(P1.User.Id);
+                            var newCard = _waifu.GenerateNewCard(P1.User, await _waifu.GetRandomCharacterAsync(), GetRarityFromValue(GetValue()));
+
+                            newCard.Source = CardSource.Crafting;
+                            newCard.Affection = user.GameDeck.AffectionFromKarma();
+
+                            foreach (var item in P1.Items)
+                            {
+                                var thisItem = user.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                                if (thisItem == null)
+                                {
+                                    error = true;
+                                    break;
+                                }
+
+                                if (thisItem.Count < item.Count)
+                                {
+                                    error = true;
+                                    break;
+                                }
+                                thisItem.Count -= item.Count;
+                                if (thisItem.Count < 1) user.GameDeck.Items.Remove(thisItem);
+                            }
+
+                            user.GameDeck.Cards.Add(newCard);
+
+                            await db.SaveChangesAsync();
+
+                            await msg.ModifyAsync(x => x.Embed = $"{Name}\n\n**Utworzono:** {newCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                        }
                     }
-                    else
-                    {
-                        await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nBrakuje przedmiotów, tworzenie karty nie powiodło się.".ToEmbedMessage(EMType.Bot).Build());
-                    }
+
+                    if (error) await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nBrakuje przedmiotów, tworzenie karty nie powiodło się.".ToEmbedMessage(EMType.Bot).Build());
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
 

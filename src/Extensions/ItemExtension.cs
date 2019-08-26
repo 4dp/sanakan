@@ -91,6 +91,34 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static long CValue(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.AffectionRecoveryGreat:
+                    return 180;
+                case ItemType.AffectionRecoveryBig:
+                    return 140;
+                case ItemType.AffectionRecoveryNormal:
+                    return 15;
+                case ItemType.BetterIncreaseUpgradeCnt:
+                    return 280;
+                case ItemType.IncreaseUpgradeCnt:
+                    return 200;
+                case ItemType.DereReRoll:
+                    return 5;
+                case ItemType.CardParamsReRoll:
+                    return 5;
+                case ItemType.CheckAffection:
+                    return 10;
+                case ItemType.SetCustomImage:
+                    return 300;
+
+                default:
+                    return 1;
+            }
+        }
+
         public static bool IsBoosterPack(this ItemType type)
         {
             switch (type)

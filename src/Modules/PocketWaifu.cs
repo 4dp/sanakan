@@ -312,7 +312,7 @@ namespace Sanakan.Modules
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
         public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka")]string detail = "1")
         {
-            var session = new CraftingSession(Context.User, _config);
+            var session = new CraftingSession(Context.User, _waifu, _config);
             if (_session.SessionExist(session))
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz używać przedmotów gdy masz otwarte menu tworzenia kart.".ToEmbedMessage(EMType.Error).Build());
@@ -1962,7 +1962,7 @@ namespace Sanakan.Modules
             var user1 = Context.User as SocketGuildUser;
             if (user1 == null) return;
 
-            var session = new CraftingSession(user1, _config);
+            var session = new CraftingSession(user1, _waifu, _config);
             if (_session.SessionExist(session))
             {
                 await ReplyAsync("", embed: $"{user1.Mention} już masz otwarte menu tworzenia kart.".ToEmbedMessage(EMType.Error).Build());
