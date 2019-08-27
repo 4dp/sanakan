@@ -205,33 +205,67 @@ namespace Sanakan.Modules
 
         [Command("tranc")]
         [Summary("przenosi kartę między użytkownikami")]
-        [Remarks("41231 Sniku")]
-        public async Task TransferCardAsync([Summary("WID")]ulong wid, [Summary("użytkownik")]SocketGuildUser user)
+        [Remarks("Sniku 41231 41232")]
+        public async Task TransferCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("WIDs")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
             {
-                var thisCard = db.Cards.FirstOrDefault(x => x.Id == wid);
-                if (thisCard == null)
+                var thisCards = db.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+                if (thisCards.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"Karta o WID: `{wid}` nie istnieje.".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
-                var oldOwnerId = thisCard.GameDeckId;
-                var targetUser = await db.GetUserOrCreateAsync(user.Id);
-                var fromUser = await db.GetUserOrCreateAsync(oldOwnerId);
+                string reply = $"Karta {thisCards.First().GetString(false, false, true)} została przeniesiona.";
+                if (thisCards.Count > 1) reply = $"Przeniesiono {thisCards.Count} kart.";
 
-                thisCard.Active = false;
-                thisCard.InCage = false;
-                thisCard.Tags = null;
+                foreach (var thisCard in thisCards)
+                {
+                    thisCard.Tags = null;
+                    thisCard.Active = false;
+                    thisCard.InCage = false;
+                    thisCard.GameDeckId = user.Id;
+                }
 
-                fromUser.GameDeck.Cards.Remove(thisCard);
-                targetUser.GameDeck.Cards.Add(thisCard);
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{oldOwnerId}" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
 
-                await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} została przeniesiona.".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: reply.ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("restore")]
+        [Summary("przenosi kartę na nowo do użytkownika")]
+        [Remarks("Sniku")]
+        public async Task RestoreCardsAsync([Summary("użytkownik")]SocketGuildUser user)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var thisCards = db.Cards.Where(x => (x.LastIdOwner == user.Id || (x.FirstIdOwner == user.Id && x.LastIdOwner == 0)) && x.GameDeckId == 1).ToList();
+                if (thisCards.Count < 1)
+                {
+                    await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                string reply = $"Karta {thisCards.First().GetString(false, false, true)} została przeniesiona.";
+                if (thisCards.Count > 1) reply = $"Przeniesiono {thisCards.Count} kart.";
+
+                foreach (var thisCard in thisCards)
+                {
+                    thisCard.Tags = null;
+                    thisCard.Active = false;
+                    thisCard.InCage = false;
+                    thisCard.GameDeckId = user.Id;
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+
+                await ReplyAsync("", embed: reply.ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -286,6 +320,7 @@ namespace Sanakan.Modules
                     {
                         card.Tags = null;
                         card.InCage = false;
+                        card.LastIdOwner = id;
                         fakeu.GameDeck.Cards.Add(card);
                     }
                     user.GameDeck.Cards.Clear();

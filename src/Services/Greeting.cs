@@ -117,6 +117,7 @@ namespace Sanakan.Services
                     {
                         card.Tags = null;
                         card.InCage = false;
+                        card.LastIdOwner = user.Id;
                         fakeu.GameDeck.Cards.Add(card);
                     }
 
