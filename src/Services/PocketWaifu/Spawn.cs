@@ -231,8 +231,11 @@ namespace Sanakan.Services.PocketWaifu
                 return;
             }
 
+            var charNeeded = _config.Get().CharPerPacket;
+            if (charNeeded <= 0) charNeeded = 3250;
+
             UserCounter[author.Id] += GetMessageRealLenght(message);
-            if (UserCounter[author.Id] > 3250)
+            if (UserCounter[author.Id] > charNeeded)
             {
                 UserCounter[author.Id] = 0;
                 _ = Task.Run(async () =>

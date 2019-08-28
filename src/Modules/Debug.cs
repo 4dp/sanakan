@@ -424,6 +424,18 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("chpp")]
+        [Summary("ustawia liczbę znaków na pakiet")]
+        [Remarks("true")]
+        public async Task SetCharCntPerPacketAsync([Summary("liczba znaków")]long count, [Summary("true/false - czy zapisać")]bool save = false)
+        {
+            var config = Config.Get();
+            config.CharPerPacket = count;
+            if (save) Config.Save();
+
+            await ReplyAsync("", embed: $"Ustawiono próg `{count}` znaków na pakiet. `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("tsafari")]
         [Summary("wyłącza/załącza safari")]
         [Remarks("true")]
