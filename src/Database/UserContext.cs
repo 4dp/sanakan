@@ -32,20 +32,19 @@ namespace Sanakan.Database
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
 
-        public DbSet<GuildOptions> Guilds { get; set; }
-
         public DbSet<TowerProfile> TProfiles { get; set; }
         public DbSet<TowerItem> TItems { get; set; }
         public DbSet<Effect> TEffects { get; set; }
         public DbSet<Enemy> TEnemies { get; set; }
         public DbSet<Spell> TSpells { get; set; }
-        public DbSet<Enemy> TBosses { get; set; }
         public DbSet<Floor> TFloors { get; set; }
         public DbSet<Room> TRooms { get; set; }
 
         public DbSet<EffectInProfile> TProfileEffects { get; set; }
         public DbSet<SpellInProfile> TProfileSpells { get; set; }
         public DbSet<ItemInProfile> TProfileItems { get; set; }
+        public DbSet<RoomConnection> TConnections { get; set; }
+        public DbSet<SpellInEnemy> TEnemySpells { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -59,12 +59,13 @@ namespace Sanakan.Database
         public DbSet<Effect> TEffects { get; set; }
         public DbSet<Enemy> TEnemies { get; set; }
         public DbSet<Spell> TSpells { get; set; }
-        public DbSet<Boss> TBosses { get; set; }
         public DbSet<Floor> TFloors { get; set; }
         public DbSet<Room> TRooms { get; set; }
         public DbSet<EffectInProfile> TProfileEffects { get; set; }
         public DbSet<SpellInProfile> TProfileSpells { get; set; }
         public DbSet<ItemInProfile> TProfileItems { get; set; }
+        public DbSet<RoomConnection> TConnections { get; set; }
+        public DbSet<SpellInEnemy> TEnemySpells { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -190,6 +191,7 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.Card)
                     .WithOne(c => c.Profile);
+                entity.HasOne(e => e.CurrentRoom).WithMany();
             });
 
             modelBuilder.Entity<TowerItem>(entity =>
@@ -233,18 +235,20 @@ namespace Sanakan.Database
                     .WithMany(p => p.Spells);
             });
 
+            modelBuilder.Entity<SpellInEnemy>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Spell).WithMany();
+                entity.HasOne(e => e.Enemy)
+                    .WithMany(p => p.Spells);
+            });
+
             modelBuilder.Entity<Floor>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
                 entity.HasOne(e => e.Boss).WithMany();
-                entity.HasOne(e => e.StartRoom)
-                    .WithOne(p => p.Floor);
-            });
-
-            modelBuilder.Entity<Boss>(entity =>
-            {
-                entity.HasKey(e => e.Id);
             });
 
             modelBuilder.Entity<Enemy>(entity =>
@@ -255,13 +259,16 @@ namespace Sanakan.Database
                     .WithMany(p => p.Enemies);
             });
 
-            modelBuilder.Entity<Floor>(entity =>
+            modelBuilder.Entity<RoomConnection>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.Boss).WithMany();
-                entity.HasOne(e => e.StartRoom)
-                    .WithOne(p => p.Floor);
+                entity.HasOne(e => e.MainRoom)
+                    .WithMany(p => p.ConnectedRooms)
+                    .HasForeignKey(c => c.MainRoomId);
+                entity.HasOne(e => e.ConnectedRoom)
+                    .WithMany(p => p.RetConnectedRooms)
+                    .HasForeignKey(c => c.ConnectedRoomId);
             });
 
             modelBuilder.Entity<Room>(entity =>
@@ -271,8 +278,6 @@ namespace Sanakan.Database
                 entity.HasOne(e => e.ItemToOpen).WithMany();
                 entity.HasOne(e => e.Floor)
                     .WithMany(p => p.Rooms);
-                entity.HasOne(e => e.ConnectedRoom)
-                    .WithMany(p => p.ConnectedRooms);
             });
 
             // GuildConfig

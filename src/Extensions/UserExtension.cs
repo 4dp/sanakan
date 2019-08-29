@@ -45,6 +45,7 @@ namespace Sanakan.Extensions
                     CTCnt = 0,
                     Karma = 0,
                     Wishlist = null,
+                    MaxTowerFloor = 0,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,

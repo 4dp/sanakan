@@ -12,12 +12,9 @@ namespace Sanakan.Database.Models.Tower
 
         public virtual ICollection<Room> Rooms { get; set; }
 
-        public ulong StartRoomId { get; set;}
         public ulong BossId { get; set; }
 
         [JsonIgnore]
-        public virtual Boss Boss { get; set; }
-        [JsonIgnore]
-        public virtual Room StartRoom { get; set; }
+        public virtual Enemy Boss { get; set; }
     }
 }

@@ -17,7 +17,7 @@ namespace Sanakan.Database.Models.Tower
         public int Energy { get; set; }
 
         public ulong MaxFloor { get; set; }
-        public ulong CurrentRoomId { get; set; }
+        public string ConqueredRoomsFromFloor { get; set; }
 
         public virtual ICollection<Enemy> Enemies { get; set; }
         public virtual ICollection<ItemInProfile> Items { get; set; }
@@ -25,7 +25,10 @@ namespace Sanakan.Database.Models.Tower
         public virtual ICollection<EffectInProfile> ActiveEffects { get; set; }
 
         public ulong CardId { get; set; }
+        public ulong CurrentRoomId { get; set; }
         [JsonIgnore]
         public virtual Card Card { get; set; }
+        [JsonIgnore]
+        public virtual Room CurrentRoom { get; set; }
     }
 }
