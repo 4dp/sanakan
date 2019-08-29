@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using Sanakan.Database.Models.Tower;
 using Sanakan.Extensions;
 
 namespace Sanakan.Database.Models
@@ -50,6 +51,7 @@ namespace Sanakan.Database.Models
         public ulong LastIdOwner { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
+        public virtual TowerProfile Profile { get; set; }
 
         public ulong GameDeckId { get; set; }
         [JsonIgnore]

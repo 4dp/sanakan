@@ -13,6 +13,7 @@ namespace Sanakan.Database.Models
         public double Karma { get; set; }
         public string Wishlist { get; set; }
         public bool WishlistIsPrivate { get;set; }
+        public ulong MaxTowerFloor { get; set; }
 
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }

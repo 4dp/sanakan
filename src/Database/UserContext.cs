@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Configuration;
+using Sanakan.Database.Models.Tower;
 
 namespace Sanakan.Database
 {
@@ -32,6 +33,19 @@ namespace Sanakan.Database
         public DbSet<Answer> Answers { get; set; }
 
         public DbSet<GuildOptions> Guilds { get; set; }
+
+        public DbSet<TowerProfile> TProfiles { get; set; }
+        public DbSet<TowerItem> TItems { get; set; }
+        public DbSet<Effect> TEffects { get; set; }
+        public DbSet<Enemy> TEnemies { get; set; }
+        public DbSet<Spell> TSpells { get; set; }
+        public DbSet<Enemy> TBosses { get; set; }
+        public DbSet<Floor> TFloors { get; set; }
+        public DbSet<Room> TRooms { get; set; }
+
+        public DbSet<EffectInProfile> TProfileEffects { get; set; }
+        public DbSet<SpellInProfile> TProfileSpells { get; set; }
+        public DbSet<ItemInProfile> TProfileItems { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

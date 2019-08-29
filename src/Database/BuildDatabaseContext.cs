@@ -7,6 +7,7 @@ using Sanakan.Database.Models;
 using Sanakan.Database.Models.Analytics;
 using Sanakan.Database.Models.Configuration;
 using Sanakan.Database.Models.Management;
+using Sanakan.Database.Models.Tower;
 using System;
 using Z.EntityFramework.Plus;
 
@@ -53,6 +54,17 @@ namespace Sanakan.Database
         public DbSet<SystemAnalytics> SystemData { get; set; }
         public DbSet<TransferAnalytics> TransferData { get; set; }
         public DbSet<CommandsAnalytics> CommandsData { get; set; }
+        public DbSet<TowerProfile> TProfiles { get; set; }
+        public DbSet<TowerItem> TItems { get; set; }
+        public DbSet<Effect> TEffects { get; set; }
+        public DbSet<Enemy> TEnemies { get; set; }
+        public DbSet<Spell> TSpells { get; set; }
+        public DbSet<Boss> TBosses { get; set; }
+        public DbSet<Floor> TFloors { get; set; }
+        public DbSet<Room> TRooms { get; set; }
+        public DbSet<EffectInProfile> TProfileEffects { get; set; }
+        public DbSet<SpellInProfile> TProfileSpells { get; set; }
+        public DbSet<ItemInProfile> TProfileItems { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -169,6 +181,98 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.BoosterPack)
                     .WithMany(p => p.RarityExcludedFromPack);
+            });
+
+            // User - Tower
+            modelBuilder.Entity<TowerProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Card)
+                    .WithOne(c => c.Profile);
+            });
+
+            modelBuilder.Entity<TowerItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Effect).WithMany();
+            });
+
+            modelBuilder.Entity<Spell>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Effect).WithMany();
+            });
+
+            modelBuilder.Entity<EffectInProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Effect).WithMany();
+                entity.HasOne(e => e.Profile)
+                    .WithMany(p => p.ActiveEffects);
+            });
+
+            modelBuilder.Entity<ItemInProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Item).WithMany();
+                entity.HasOne(e => e.Profile)
+                    .WithMany(p => p.Items);
+            });
+
+            modelBuilder.Entity<SpellInProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Spell).WithMany();
+                entity.HasOne(e => e.Profile)
+                    .WithMany(p => p.Spells);
+            });
+
+            modelBuilder.Entity<Floor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Boss).WithMany();
+                entity.HasOne(e => e.StartRoom)
+                    .WithOne(p => p.Floor);
+            });
+
+            modelBuilder.Entity<Boss>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<Enemy>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Profile)
+                    .WithMany(p => p.Enemies);
+            });
+
+            modelBuilder.Entity<Floor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Boss).WithMany();
+                entity.HasOne(e => e.StartRoom)
+                    .WithOne(p => p.Floor);
+            });
+
+            modelBuilder.Entity<Room>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.ItemToOpen).WithMany();
+                entity.HasOne(e => e.Floor)
+                    .WithMany(p => p.Rooms);
+                entity.HasOne(e => e.ConnectedRoom)
+                    .WithMany(p => p.ConnectedRooms);
             });
 
             // GuildConfig
