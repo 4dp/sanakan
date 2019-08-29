@@ -2046,8 +2046,8 @@ namespace Sanakan.Modules
                     case FightWinner.Card1:
                         ++thisCard.ArenaStats.Wins;
                         var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
-                        embed.Description = $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
                         thisCard.ExpCnt += exp;
+                        embed.Description = $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
 
                         dInfo.Side = DuelInfo.WinnerSide.Left;
                         dInfo.Winner = thisCard;
