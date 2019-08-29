@@ -532,7 +532,7 @@ namespace Sanakan.Modules
 
                 var newTextRelation = card.GetAffectionString();
                 if (textRelation != newTextRelation)
-                    embed.Description += $"\nNowa relacja to *{newTextRelation}*!";
+                    embed.Description += $"\nNowa relacja to *{newTextRelation}*.";
 
                 if (item.Count <= 0)
                     bUser.GameDeck.Items.Remove(item);
@@ -2046,7 +2046,7 @@ namespace Sanakan.Modules
                     case FightWinner.Card1:
                         ++thisCard.ArenaStats.Wins;
                         var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
-                        embed.Description = $"+{exp.ToString("F")} exp\n";
+                        embed.Description = $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
                         thisCard.ExpCnt += exp;
 
                         dInfo.Side = DuelInfo.WinnerSide.Left;
@@ -2229,7 +2229,7 @@ namespace Sanakan.Modules
                     foreach (var item in items)
                         resultString += $"+{item.Name}\n";
                 }
-                resultString += $"+{exp.ToString("F")} exp\n";
+                resultString += $"+{exp.ToString("F")} exp *({(thisCard.ExpCnt + exp).ToString("F")})*\n";
 
                 if (userWonPack && userWon)
                     resultString += $"+{boosterPack.Name}";
@@ -2485,7 +2485,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (!bUser.GameDeck.CanCreateDemon() || !bUser.GameDeck.CanCreateAngel())
+                if (!bUser.GameDeck.CanCreateDemon() && !bUser.GameDeck.CanCreateAngel())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie jesteś zły, ani dobry - po prostu nijaki.".ToEmbedMessage(EMType.Error).Build());
                     return;
