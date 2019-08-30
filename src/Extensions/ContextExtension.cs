@@ -70,6 +70,24 @@ namespace Sanakan.Extensions
                 .AsNoTracking().Where(x => x.Id == userId).FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
         }
 
+        public static async Task<Card> GetCachedFullCardAsync(this Database.UserContext context, ulong wid)
+        {
+            return (await context.Cards.Include(x => x.ArenaStats)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.MainRoom).ThenInclude(x => x.Item)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.MainRoom)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.Floor).ThenInclude(x => x.Rooms)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.Floor).ThenInclude(x => x.Boss)
+                .Include(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.Item)
+
+                .Include(x => x.Profile).ThenInclude(x => x.Enemies).ThenInclude(x => x.Spells).ThenInclude(x => x.Spell)
+                .Include(x => x.Profile).ThenInclude(x => x.Spells).ThenInclude(x => x.Spell).ThenInclude(x => x.Effect)
+                .Include(x => x.Profile).ThenInclude(x => x.Items).ThenInclude(x => x.Item).ThenInclude(x => x.Effect)
+                .Include(x => x.Profile).ThenInclude(x => x.ActiveEffects).ThenInclude(x => x.Effect)
+                .AsNoTracking().Where(x => x.Id == wid).FromCacheAsync(new string[] { "users" })).FirstOrDefault();
+        }
+
         public static async Task<Floor> GetOrCreateFloorAsync(this Database.UserContext context, ulong floorLevel)
         {
             var floor = (await context.TFloors.Include(x => x.Boss).ThenInclude(x => x.Spells).ThenInclude(x => x.Spell).ThenInclude(x => x.Effect).Include(x => x.Rooms)
