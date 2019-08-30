@@ -40,6 +40,9 @@ namespace Sanakan.Database
         public DbSet<Floor> TFloors { get; set; }
         public DbSet<Room> TRooms { get; set; }
 
+        public DbSet<Event> TEvent { get; set; }
+        public DbSet<EventRoute> TEventRoute { get; set; }
+
         public DbSet<EffectInProfile> TProfileEffects { get; set; }
         public DbSet<SpellInProfile> TProfileSpells { get; set; }
         public DbSet<ItemInProfile> TProfileItems { get; set; }

@@ -7,6 +7,7 @@ namespace Sanakan.Database.Models.Tower
     public class SpellInEnemy
     {
         public ulong Id { get; set; }
+        public int Chance { get; set; }
 
         public ulong SpellId { get; set; }
         public ulong EnemyId { get; set; }

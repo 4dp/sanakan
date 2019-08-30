@@ -16,6 +16,7 @@ namespace Sanakan.Database.Models.Tower
     public class Spell
     {
         public ulong Id { get; set; }
+        public ulong Level { get; set; }
         public string Name { get; set; }
         public SpellTarget Target { get; set; }
         public int EnergyCost { get; set; }

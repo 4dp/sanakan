@@ -8,6 +8,7 @@ namespace Sanakan.Database.Models.Tower
     {
         public ulong Id { get; set; }
         public long Remaining { get; set; }
+        public int Multiplier { get; set; }
 
         public ulong EffectId { get; set; }
         public ulong TowerProfileId { get; set; }

@@ -61,6 +61,8 @@ namespace Sanakan.Database
         public DbSet<Spell> TSpells { get; set; }
         public DbSet<Floor> TFloors { get; set; }
         public DbSet<Room> TRooms { get; set; }
+        public DbSet<Event> TEvent { get; set; }
+        public DbSet<EventRoute> TEventRoute { get; set; }
         public DbSet<EffectInProfile> TProfileEffects { get; set; }
         public DbSet<SpellInProfile> TProfileSpells { get; set; }
         public DbSet<ItemInProfile> TProfileItems { get; set; }
@@ -275,9 +277,22 @@ namespace Sanakan.Database
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.ItemToOpen).WithMany();
+                entity.HasOne(e => e.Item).WithMany();
                 entity.HasOne(e => e.Floor)
                     .WithMany(p => p.Rooms);
+            });
+
+            modelBuilder.Entity<Event>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<EventRoute>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Event)
+                    .WithMany(p => p.Routes);
             });
 
             // GuildConfig

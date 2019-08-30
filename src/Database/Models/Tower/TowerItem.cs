@@ -35,6 +35,7 @@ namespace Sanakan.Database.Models.Tower
     public class TowerItem
     {
         public ulong Id { get; set; }
+        public ulong Level { get; set; }
         public string Name { get; set; }
         public ItemType Type { get; set; }
         public ItemRairty Rarity { get; set; }

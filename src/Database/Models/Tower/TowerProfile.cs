@@ -15,6 +15,7 @@ namespace Sanakan.Database.Models.Tower
         public int Attack { get; set; }
         public int Health { get; set; }
         public int Energy { get; set; }
+        public int Luck { get; set; }
 
         public ulong MaxFloor { get; set; }
         public string ConqueredRoomsFromFloor { get; set; }
