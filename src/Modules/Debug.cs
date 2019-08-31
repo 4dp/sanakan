@@ -236,6 +236,26 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("level")]
+        [Summary("ustawia podany poziom użytkownikowi")]
+        [Remarks("Karna 1")]
+        public async Task RestoreCardsAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("poziom")]long level)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(user.Id);
+
+                bUser.Level = level;
+                bUser.ExpCnt = Services.ExperienceManager.CalculateExpForLevel(level);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ustawiono {level} poziom.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("restore")]
         [Summary("przenosi kartę na nowo do użytkownika")]
         [Remarks("Sniku")]
@@ -243,6 +263,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
+                var bUser = await db.GetUserOrCreateAsync(user.Id);
                 var thisCards = db.Cards.Where(x => (x.LastIdOwner == user.Id || (x.FirstIdOwner == user.Id && x.LastIdOwner == 0)) && x.GameDeckId == 1).ToList();
                 if (thisCards.Count < 1)
                 {
