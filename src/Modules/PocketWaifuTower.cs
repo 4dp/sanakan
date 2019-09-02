@@ -51,7 +51,6 @@ namespace Sanakan.Modules
         [Remarks("1"), RequireWaifuCommandChannel]
         public async Task SetCardProfileAsync([Summary("WID")]ulong wid)
         {
-            //TODO: only cards with images
             using (var db = new Database.UserContext(Config))
             {
                 var floorOne = await db.GetOrCreateFloorAsync(1);
@@ -62,6 +61,12 @@ namespace Sanakan.Modules
                 if (thisCard.Profile != null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta znajduje się już w wieży.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (!thisCard.HasImage())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} karta musi posiadać obrazek.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -81,6 +86,67 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} wybrał się do więży kartą: {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("wieża")]
+        [Alias("tower", "wieza")]
+        [Summary("wyświetla status karty w wieży")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task ShowStatusInTowerAsync([Summary("WID")]ulong wid = 0)
+        {
+            var user = Context.User as SocketGuildUser;
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetCachedFullUserAsync(user.Id);
+                if (bUser == null && wid == 0)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var session = new TowerSession(user, _config);
+                if (_session.SessionExist(session))
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} już masz otwartą sesje wieży.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var towerCards = bUser.GameDeck.Cards.Where(x => x.Profile != null).ToList();
+                if (towerCards.Count > 1)
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} posiadasz więcej jak jedną kartę w więży, sprezycuj jej WID.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (towerCards.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} żadna z twoich kart nie znajduje się w wieży.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                var thisCard = towerCards.FirstOrDefault();
+                if (wid != 0) thisCard = towerCards.FirstOrDefault(x => x.Id == wid);
+
+                if (thisCard == null)
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} ta karta nie istnieje lub nie znajduje się w wieży.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                session.PlayingCard = thisCard;
+                session.P1 = new PlayerInfo
+                {
+                    User = user,
+                    Dbuser = bUser,
+                    Accepted = false,
+                    Cards = new List<Card>(),
+                    Items = new List<Item>()
+                };
+
+                var msg = await ReplyAsync("", embed: session.BuildEmbed());
+                await msg.AddReactionsAsync(session.StartReactions);
+                session.Message = msg;
+
+                await _session.TryAddSession(session);
             }
         }
 
@@ -124,7 +190,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var embed = new EmbedBuilder().WithDescription(thisCard.GetTowerProfile());
+                var embed = new EmbedBuilder().WithColor(EMType.Info.Color()).WithDescription(thisCard.GetTowerProfile());
                 using (var cdb = new Database.GuildConfigContext(Config))
                 {
                     var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);

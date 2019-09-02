@@ -124,5 +124,26 @@ namespace Sanakan.Extensions
                 Level = 0
             };
         }
+
+        public static string GetRoomContent(this Room room)
+        {
+            switch (room.Type)
+            {
+                case RoomType.Empty:
+                    return $"Wchodzisz do pustego pokoju, chyba nic tutaj nie zdziałasz. Chcesz chwilę odpocząć przed wyruszeniem w dalszą drogę?";
+                case RoomType.Campfire:
+                    return $"Znajdujesz pomieszczenie z rozpalonym ogniskiem, to chyba dobry moment na chwię odpoczynku. Chcesz zostać tu na chwilę?";
+                case RoomType.BossBattle:
+                    return $"Wkraczasz do areny z bosem, teraz nie ma już odwrotu.";
+                case RoomType.Fight:
+                    return $"Spotykasz przeciwników na swojej drodze, chcesz rozpocząć walkę, czy może sprówobać uciec?";
+                case RoomType.Event:
+                    return $"";
+
+                default:
+                case RoomType.Start:
+                    return $"Nowe piętro - nowa przygoda!";
+            }
+        }
     }
 }
