@@ -135,7 +135,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable($"update cards{id}", new Task(() =>
+            var exe = new Executable($"update cards-{id}", new Task(() =>
                 {
                     using (var db = new Database.UserContext(_config))
                     {
@@ -144,10 +144,12 @@ namespace Sanakan.Api.Controllers
                         {
                             card.Image = response.Body.PictureUrl;
 
-                            _ = Task.Run(async () =>
+                            try
                             {
-                                _ = await _waifu.GenerateAndSaveCardAsync(card);
-                            });
+                                _waifu.DeleteCardImageIfExist(card);
+                                _ = _waifu.GenerateAndSaveCardAsync(card).Result;
+                            }
+                            catch (Exception) { }
                         }
 
                         db.SaveChanges();
