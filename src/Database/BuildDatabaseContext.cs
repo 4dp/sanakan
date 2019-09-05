@@ -194,6 +194,7 @@ namespace Sanakan.Database
                 entity.HasOne(e => e.Card)
                     .WithOne(c => c.Profile);
                 entity.HasOne(e => e.CurrentRoom).WithMany();
+                entity.HasOne(e => e.CurrentEvent).WithMany();
             });
 
             modelBuilder.Entity<TowerItem>(entity =>
