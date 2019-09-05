@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Tower;
@@ -52,22 +51,54 @@ namespace Sanakan.Services.Session.Models
             return await HandleReactionAsync(context);
         }
 
-        public Embed BuildEmbed()
+        public Embed BuildEmbed(string additionalNote = "")
         {
             return new EmbedBuilder
             {
                 Color = EMType.Error.Color(),
-                Description = $"{GetName()}\n\n{GetContent()}"
+                Description = $"{GetName()}\n\n**Ty: **{PlayingCard.GetTowerBaseStats()}\n\n{GetContent()}\n\n{additionalNote}"
             }.Build();
         }
 
-        private string GetName() => $"🗼 **Wieża wyzwań - piętro {PlayingCard.Profile.CurrentRoom.FloorId}**:";
+        private async Task UpdateOriginalMsgAsync(Embed embed = null, string additionalNote = "")
+        {
+            if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
+            {
+                await msg.ModifyAsync(x => x.Embed = embed ?? BuildEmbed(additionalNote));
+            }
+        }
+
+        private string GetName() => $"🗼 **Wieża wyzwań - piętro {PlayingCard.Profile.CurrentRoom.FloorId}**:\n*Pokój: {PlayingCard.Profile.CurrentRoom.Type} [{PlayingCard.Profile.CurrentRoomId}]*";
 
         private string GetContent()
         {
-            var conqueredRooms = PlayingCard.Profile.ConqueredRoomsFromFloor.Split(";").Select(x => ulong.Parse(x));
-            if (conqueredRooms.Any(x => x == PlayingCard.Profile.CurrentRoomId)) return GetConqueredRoomContent();
+            if (IsCurrentRoomCleared()) return GetConqueredRoomContent();
             return GetNotConqueredRoomContent();
+        }
+
+        private bool IsCurrentRoomCleared()
+        {
+            bool cnq = IsCurrentRoomConquered();
+            switch (PlayingCard.Profile.CurrentRoom.Type)
+            {
+                case RoomType.BossBattle:
+                case RoomType.Fight:
+                    return PlayingCard.Profile.Enemies?.Count < 1 && cnq;
+
+                case RoomType.Event:
+                    return PlayingCard.Profile.CurrentEvent == null && cnq;
+
+                default:
+                    return cnq;
+            }
+        }
+
+        private bool IsCurrentRoomConquered() => IsRoomConquered(PlayingCard.Profile.CurrentRoomId);
+
+        private bool IsRoomConquered(ulong id)
+        {
+            var conqueredRooms = PlayingCard.Profile.ConqueredRoomsFromFloor.Split(";").Select(x => ulong.Parse(x));
+            return conqueredRooms.Any(x => x == id);
         }
 
         private string GetNotConqueredRoomContent()
@@ -77,20 +108,33 @@ namespace Sanakan.Services.Session.Models
 
         private string GetConqueredRoomContent()
         {
-            int path = 1;
             var routes = new List<string>();
-            foreach (var cn in PlayingCard.Profile.CurrentRoom.ConnectedRooms)
+            var rooms = new List<Room>();
+
+            if (PlayingCard.Profile.CurrentRoom.ConnectedRooms?.Count > 0)
+                rooms.AddRange(PlayingCard.Profile.CurrentRoom.ConnectedRooms.Select(x => x.ConnectedRoom));
+
+            if (PlayingCard.Profile.CurrentRoom.RetConnectedRooms?.Count > 0)
+                rooms.AddRange(PlayingCard.Profile.CurrentRoom.RetConnectedRooms.Select(x => x.MainRoom));
+
+            for (int i = 0; i < rooms.Count; i++)
             {
-                if (cn.ConnectedRoom.ItemType == ItemInRoomType.ToOpen)
+                var number = $"{i+1}[{rooms[i].Id}]";
+                var prefix = IsRoomConquered(rooms[i].Id) ? "!" : "";
+                if (rooms[i].ItemType == ItemInRoomType.ToOpen)
                 {
-                    var hasItem = PlayingCard.Profile.Items.Any(x => x.ItemId == cn.ConnectedRoom.ItemId);
-                    if (cn.ConnectedRoom.IsHidden)
+                    var hasItem = PlayingCard.Profile.Items.Any(x => x.ItemId == rooms[i].ItemId);
+                    if (!hasItem) prefix = "?";
+                    if (rooms[i].IsHidden)
                     {
-                        if (hasItem) routes.Add($"`{path++}`");
+                        if (hasItem)
+                        {
+                            routes.Add($"`{prefix}{number}`");
+                            continue;
+                        }
                     }
-                    else routes.Add(hasItem ? $"`{path++}`" : $"`?-{path++}`");
                 }
-                else routes.Add($"`{path++}`");
+                routes.Add($"`{prefix}{number}`");
             }
 
             return $"**Dostępne przejścia**:\n{string.Join(",", routes)}";
@@ -111,24 +155,62 @@ namespace Sanakan.Services.Session.Models
             var cmdType = splitedCmd[0];
             if (cmdType == null) return;
 
-            if (cmdType.Contains("idź") || cmdType.Contains("idz"))
+            if (cmdType.Contains("idź") || cmdType.Contains("idz") && IsCurrentRoomCleared())
             {
-                if (splitedCmd.Length >= 2)
+                if (splitedCmd.Length >= 2 && PlayingCard.Profile.ActionPoints > 0)
                 {
                     if (uint.TryParse(splitedCmd[1], out var roomNr))
                     {
-
-                        RestartTimer();
-                        await context.Message.DeleteAsync();
-                        return;
+                        if (await MoveToRoomAsync((int) roomNr - 1))
+                        {
+                            await context.Message.DeleteAsync();
+                            await UpdateOriginalMsgAsync();
+                            return;
+                        }
                     }
                 }
+                RestartTimer();
                 await context.Message.AddReactionAsync(ErrEmote);
             }
 
-            //TODO: command handler, move to room, fight, use spell...
+            //TODO: command handler, fight, use spell, use item, choose answer of event...
         }
 
+        private async Task<bool> MoveToRoomAsync(int roomNr)
+        {
+            var rooms = new List<Room>();
+
+            if (PlayingCard.Profile.CurrentRoom.ConnectedRooms?.Count > 0)
+                rooms.AddRange(PlayingCard.Profile.CurrentRoom.ConnectedRooms.Select(x => x.ConnectedRoom));
+
+            if (PlayingCard.Profile.CurrentRoom.RetConnectedRooms?.Count > 0)
+                rooms.AddRange(PlayingCard.Profile.CurrentRoom.RetConnectedRooms.Select(x => x.MainRoom));
+
+            if (roomNr >= rooms.Count) return false;
+
+            var room = rooms[roomNr];
+            if (room.ItemType == ItemInRoomType.ToOpen)
+            {
+                if (!PlayingCard.Profile.Items.Any(x => x.ItemId == room.ItemId))
+                    return false;
+            }
+
+            using (var db = new Database.UserContext(_config))
+            {
+                var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+                thisCard.Profile.CurrentRoomId = room.Id;
+                thisCard.Profile.ActionPoints -= 1;
+
+                //TODO: select event or boss, get item
+
+                await db.SaveChangesAsync();
+                QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+            }
+            return true;
+        }
 
         private async Task<bool> HandleReactionAsync(SessionContext context)
         {
@@ -147,8 +229,10 @@ namespace Sanakan.Services.Session.Models
                 }
                 catch (Exception) { }
 
-                if (!reaction.Emote.Equals(DeclineEmote) || !reaction.Emote.Equals(AcceptEmote))
+                if (!reaction.Emote.Equals(DeclineEmote) && !reaction.Emote.Equals(AcceptEmote))
                     return false;
+
+                if (IsCurrentRoomConquered()) return false;
 
                 bool accepted = reaction.Emote.Equals(AcceptEmote);
                 switch (PlayingCard.Profile.CurrentRoom.Type)
@@ -161,23 +245,84 @@ namespace Sanakan.Services.Session.Models
 
                     case RoomType.Campfire:
                     {
-                        //TODO: yes/no recover
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                            var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+
+                            if (accepted) thisCard.RecoverFromRest(true);
+                            else thisCard.Profile.ActionPoints += 1;
+                            thisCard.MarkCurrentRoomAsConquered();
+
+                            await db.SaveChangesAsync();
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                            PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+                            await UpdateOriginalMsgAsync(null, accepted ? "Odzyskano część punktów życia." : "Otrzymano dodatkowy punkt akcji.");
+                        }
                     }
                     break;
 
                     case RoomType.Empty:
                     {
-                        //TODO: yes/no recover
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                            var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+
+                            thisCard.MarkCurrentRoomAsConquered();
+                            if (accepted)
+                            {
+                                if (thisCard.Profile.ActionPoints > 0)
+                                {
+                                    thisCard.RecoverFromRest();
+                                    thisCard.Profile.ActionPoints -= 1;
+                                }
+                                else
+                                {
+                                    await UpdateOriginalMsgAsync(null, "Brakuje Ci punktów akcji aby tutaj odpocząć.");
+                                    break;
+                                }
+                            }
+
+                            await db.SaveChangesAsync();
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                            PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+                            await UpdateOriginalMsgAsync(null, accepted ? "Odzyskano trochę punktów życia." : "");
+                        }
                     }
                     break;
 
                     case RoomType.Fight:
                     {
-                        //TODO: yes/no fight
+                        if (PlayingCard.Profile.Enemies?.Count > 0)
+                            return false;
+
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                            var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+
+                            thisCard.MarkCurrentRoomAsConquered();
+                            var ext = thisCard.CheckLuck(100);
+
+                            if (accepted || !ext)
+                            {
+                                foreach (var enemy in thisCard.Profile.CurrentRoom.GetTowerNewEnemies())
+                                    thisCard.Profile.Enemies.Add(enemy);
+                            }
+
+                            await db.SaveChangesAsync();
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                            PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : "Nie udało Ci się uciec.");
+                            //TODO: list enemies
+                        }
                     }
                     break;
                 }
-
                 RestartTimer();
             }
 

@@ -27,9 +27,12 @@ namespace Sanakan.Database.Models.Tower
 
         public ulong CardId { get; set; }
         public ulong CurrentRoomId { get; set; }
+        public ulong? CurrentEventId { get; set; }
         [JsonIgnore]
         public virtual Card Card { get; set; }
         [JsonIgnore]
         public virtual Room CurrentRoom { get; set; }
+        [JsonIgnore]
+        public virtual Event CurrentEvent { get; set; }
     }
 }

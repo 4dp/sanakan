@@ -26,6 +26,8 @@ namespace Sanakan.Extensions
                 + $"**Efekty**: {string.Join("\n", card.Profile.ActiveEffects.Where(x => x.Remaining > 0).Select(x => x.GetTowerEffectString()))}";
         }
 
+        public static string GetTowerBaseStats(this Card card) => $"⚡ {card.Profile.ActionPoints} ❤ {card.Profile.Health} 🔋 {card.Profile.Energy}";
+
         public static string ToTowerParamIcon(this EffectTarget target)
         {
             switch (target)
@@ -118,6 +120,7 @@ namespace Sanakan.Extensions
                 Spells = new List<SpellInProfile>(),
                 Items = new List<ItemInProfile>(),
                 Enemies = new List<Enemy>(),
+                CurrentEvent = null,
                 Id = card.Id,
                 MaxFloor = 0,
                 ExpCnt = 0,
@@ -136,13 +139,52 @@ namespace Sanakan.Extensions
                 case RoomType.BossBattle:
                     return $"Wkraczasz do areny z bosem, teraz nie ma już odwrotu.";
                 case RoomType.Fight:
-                    return $"Spotykasz przeciwników na swojej drodze, chcesz rozpocząć walkę, czy może sprówobać uciec?";
+                    return $"Spotykasz przeciwników na swojej drodze, chcesz rozpocząć walkę?";
                 case RoomType.Event:
                     return $"";
 
                 default:
                 case RoomType.Start:
                     return $"Nowe piętro - nowa przygoda!";
+            }
+        }
+
+        public static List<Enemy> GetTowerNewEnemies(this Room room)
+        {
+            //TODO: generate enemies according to room
+            return new List<Enemy>();
+        }
+
+        public static void RecoverFromRest(this Card card, bool big = false)
+        {
+            var prc = big ? 20 : 5;
+            var max = card.GetTowerRealMaxHealth();
+
+            var recValue = max * prc / 100;
+            if ((card.Health + recValue) > max)
+                recValue = max - card.Health;
+
+            card.Health += recValue;
+        }
+
+        public static bool CheckLuck(this Card card, int chanceToWinInPromiles)
+        {
+            var realChance = chanceToWinInPromiles + card.GetTowerRealLuck();
+            if (realChance > 1000) return true;
+            if (realChance < 1) return false;
+
+            return Services.Fun.TakeATry(1000 / realChance);
+        }
+
+        public static void MarkCurrentRoomAsConquered(this Card card)
+        {
+            var crr = $"{card.Profile.CurrentRoomId}";
+            var cnq = card.Profile.ConqueredRoomsFromFloor.Split(";").ToList();
+
+            if (!cnq.Any(x => x == crr))
+            {
+                cnq.Add(crr);
+                card.Profile.ConqueredRoomsFromFloor = string.Join(";", cnq);
             }
         }
     }
