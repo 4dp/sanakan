@@ -98,15 +98,18 @@ namespace Sanakan.Api.Controllers
             {
                 using (var db = new Database.UserContext(_config))
                 {
+                    var userRelease = new List<string>() { "users" };
                     var cards = db.Cards.Where(x => x.Character == oldId);
+
                     foreach (var card in cards)
                     {
                         card.Character = newId;
+                        userRelease.Add($"user-{card.GameDeckId}");
                     }
 
                     db.SaveChanges();
 
-                    QueryCacheManager.ExpireTag(new string[] { "users" });
+                    QueryCacheManager.ExpireTag(userRelease.ToArray());
                 }
             }));
 
@@ -139,7 +142,9 @@ namespace Sanakan.Api.Controllers
                 {
                     using (var db = new Database.UserContext(_config))
                     {
+                        var userRelease = new List<string>() { "users" };
                         var cards = db.Cards.Where(x => x.Character == id);
+
                         foreach (var card in cards)
                         {
                             card.Image = response.Body.PictureUrl;
@@ -150,11 +155,13 @@ namespace Sanakan.Api.Controllers
                                 _ = _waifu.GenerateAndSaveCardAsync(card).Result;
                             }
                             catch (Exception) { }
+
+                            userRelease.Add($"user-{card.GameDeckId}");
                         }
 
                         db.SaveChanges();
 
-                        QueryCacheManager.ExpireTag(new string[] { "users" });
+                        QueryCacheManager.ExpireTag(userRelease.ToArray());
                     }
                 }));
 
