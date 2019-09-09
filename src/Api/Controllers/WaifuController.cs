@@ -118,7 +118,7 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
-        /// Podmienia obrazek karty
+        /// Podmienia dane na karcie danej postaci
         /// </summary>
         /// <param name="id">id postaci z bazy shindena</param>
         /// <param name="newData">nowe dane karty</param>
@@ -167,7 +167,8 @@ namespace Sanakan.Api.Controllers
         /// Generuje na nowo karty danej postaci
         /// </summary>
         /// <param name="id">id postaci z bazy shindena</param>
-        /// <response code="404">Cards not found</response>
+        /// <response code="404">Character not found</response>
+        /// <response code="405">Image in character date not found</response>
         [HttpPost("users/make/character/{id}"), Authorize]
         public async Task GenerateCharacterCardAsync(ulong id)
         {
