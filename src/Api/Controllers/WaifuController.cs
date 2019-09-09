@@ -118,6 +118,52 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Podmienia obrazek karty
+        /// </summary>
+        /// <param name="id">id postaci z bazy shindena</param>
+        /// <param name="newData">nowe dane karty</param>
+        [HttpPost("cards/character/{id}/update"), Authorize]
+        public async Task UpdateCardInfoAsync(ulong id, [FromBody]Models.CharacterCardInfoUpdate newData)
+        {
+            var exe = new Executable($"update cards-{id} img", new Task(() =>
+            {
+                using (var db = new Database.UserContext(_config))
+                {
+                    var userRelease = new List<string>() { "users" };
+                    var cards = db.Cards.Where(x => x.Character == id);
+
+                    foreach (var card in cards)
+                    {
+                        if (newData?.ImageUrl != null)
+                            card.Image = newData.ImageUrl;
+
+                        if (newData?.CharacterName != null)
+                            card.Name = newData.CharacterName;
+
+                        if (newData?.CardSeriesTitle != null)
+                            card.Title = newData.CardSeriesTitle;
+
+                        try
+                        {
+                            _waifu.DeleteCardImageIfExist(card);
+                            _ = _waifu.GenerateAndSaveCardAsync(card).Result;
+                        }
+                        catch (Exception) { }
+
+                        userRelease.Add($"user-{card.GameDeckId}");
+                    }
+
+                    db.SaveChanges();
+
+                    QueryCacheManager.ExpireTag(userRelease.ToArray());
+                }
+            }));
+
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+        }
+
+        /// <summary>
         /// Generuje na nowo karty danej postaci
         /// </summary>
         /// <param name="id">id postaci z bazy shindena</param>
@@ -128,13 +174,13 @@ namespace Sanakan.Api.Controllers
             var response = await _shClient.GetCharacterInfoAsync(id);
             if (!response.IsSuccessStatusCode())
             {
-                await "Character ID is invalid!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                await "Character not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
                 return;
             }
 
             if (!response.Body.HasImage)
             {
-                await "There is no character image!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                await "There is no character image!".ToResponse(405).ExecuteResultAsync(ControllerContext);
                 return;
             }
 
