@@ -13,7 +13,8 @@ namespace Sanakan.Database.Models.Tower
         Campfire,
         Fight,
         Event,
-        BossBattle
+        BossBattle,
+        Treasure
     }
 
     public enum ItemInRoomType

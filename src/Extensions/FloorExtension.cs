@@ -24,6 +24,24 @@ namespace Sanakan.Extensions
             };
         }
 
+        public static Enemy GetBossOfFloor(this Floor u)
+        {
+            return new Enemy
+            {
+                Dere = u.Boss.Dere,
+                Loot = u.Boss.Loot,
+                Name = u.Boss.Name,
+                Level = u.Boss.Level,
+                Type = EnemyType.Boss,
+                Attack = u.Boss.Attack,
+                Energy = u.Boss.Energy,
+                Health = u.Boss.Health,
+                Spells = u.Boss.Spells,
+                Defence = u.Boss.Defence,
+                LootType = u.Boss.LootType,
+            };
+        }
+
         private static List<Room> GenerateFloorRooms(ulong floorLevel)
         {
             //TODO: generate rooms to floor

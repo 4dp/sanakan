@@ -130,22 +130,39 @@ namespace Sanakan.Extensions
 
         public static string GetRoomContent(this Room room)
         {
+            var itemString = room.GetRoomItemString();
+
             switch (room.Type)
             {
                 case RoomType.Empty:
-                    return $"Wchodzisz do pustego pokoju, chyba nic tutaj nie zdziałasz. Chcesz chwilę odpocząć przed wyruszeniem w dalszą drogę?";
+                    return $"Wchodzisz do pustego pokoju, chyba nic tutaj nie zdziałasz. Chcesz chwilę odpocząć przed wyruszeniem w dalszą drogę?{itemString}";
                 case RoomType.Campfire:
-                    return $"Znajdujesz pomieszczenie z rozpalonym ogniskiem, to chyba dobry moment na chwię odpoczynku. Chcesz zostać tu na chwilę?";
+                    return $"Znajdujesz pomieszczenie z rozpalonym ogniskiem, to chyba dobry moment na chwię odpoczynku. Chcesz zostać tu na chwilę?{itemString}";
                 case RoomType.BossBattle:
+                    //TODO: list enemies
                     return $"Wkraczasz do areny z bosem, teraz nie ma już odwrotu.";
                 case RoomType.Fight:
                     return $"Spotykasz przeciwników na swojej drodze, chcesz rozpocząć walkę?";
+                case RoomType.Treasure:
+                    return $"Udało Ci się odnaleźć pokój z skarbem, chcesz spróbować otworzyć skrzynię?";
                 case RoomType.Event:
+                    //TODO: show event
                     return $"";
 
                 default:
                 case RoomType.Start:
-                    return $"Nowe piętro - nowa przygoda!";
+                    return $"Nowe piętro - nowa przygoda!{itemString}";
+            }
+        }
+
+        private static string GetRoomItemString(this Room room)
+        {
+            switch (room.ItemType)
+            {
+                case ItemInRoomType.Loot:
+                    return $"\nOtrzymałeś przedmiot: *{room.Item.Name}*";
+
+                default: return "";
             }
         }
 
@@ -155,16 +172,22 @@ namespace Sanakan.Extensions
             return new List<Enemy>();
         }
 
+        public static Event GetTowerEvent(this Room room, IEnumerable<Event> events)
+        {
+            //TODO: randomize event
+            return null;
+        }
+
         public static void RecoverFromRest(this Card card, bool big = false)
         {
             var prc = big ? 20 : 5;
             var max = card.GetTowerRealMaxHealth();
 
             var recValue = max * prc / 100;
-            if ((card.Health + recValue) > max)
-                recValue = max - card.Health;
+            if ((card.Profile.Health + recValue) > max)
+                recValue = max - card.Profile.Health;
 
-            card.Health += recValue;
+            card.Profile.Health += recValue;
         }
 
         public static bool CheckLuck(this Card card, int chanceToWinInPromiles)

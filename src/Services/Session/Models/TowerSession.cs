@@ -199,10 +199,45 @@ namespace Sanakan.Services.Session.Models
             {
                 var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
                 var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+
                 thisCard.Profile.CurrentRoomId = room.Id;
                 thisCard.Profile.ActionPoints -= 1;
 
-                //TODO: select event or boss, get item
+                switch (room.Type)
+                {
+                    case RoomType.BossBattle:
+                        thisCard.Profile.Enemies.Add(room.Floor.GetBossOfFloor());
+
+                        if (room.Count > 0)
+                            foreach (var en in room.GetTowerNewEnemies())
+                                thisCard.Profile.Enemies.Add(en);
+                    break;
+
+                    case RoomType.Event:
+                        thisCard.Profile.CurrentEvent = room.GetTowerEvent(db.TEvent);
+                    break;
+
+                    case RoomType.Treasure:
+                    case RoomType.Fight:
+                    break;
+
+                    default:
+                        if (room.ItemType == ItemInRoomType.Loot)
+                        {
+                            var thisItem = thisCard.Profile.Items.FirstOrDefault(x => x.ItemId == room.ItemId);
+                            if (thisItem == null)
+                            {
+                                thisItem = new ItemInProfile
+                                {
+                                    Count = room.Count,
+                                    Item = room.Item,
+                                };
+                                thisCard.Profile.Items.Add(thisItem);
+                            }
+                            else thisItem.Count += room.Count;
+                        }
+                    break;
+                }
 
                 await db.SaveChangesAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
@@ -259,6 +294,41 @@ namespace Sanakan.Services.Session.Models
 
                             PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
                             await UpdateOriginalMsgAsync(null, accepted ? "Odzyskano część punktów życia." : "Otrzymano dodatkowy punkt akcji.");
+                        }
+                    }
+                    break;
+
+                    case RoomType.Treasure:
+                    {
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                            var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+
+                            string message = "Skrzynia okazała się mimikiem, tracisz punkty życia.";
+                            thisCard.MarkCurrentRoomAsConquered();
+                            if (accepted)
+                            {
+                                if (thisCard.CheckLuck(100))
+                                {
+                                    thisCard.Profile.Health -= 10 + (int) (10 * (thisCard.Profile.CurrentRoom.FloorId / 15));
+                                    if (thisCard.Profile.Health < 1)
+                                    {
+                                        message += "\nUmarłeś.";
+                                        //TODO: restart level
+                                    }
+                                }
+                                else
+                                {
+                                    //TODO: generate or randomize items
+                                }
+                            }
+
+                            await db.SaveChangesAsync();
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                            PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+                            await UpdateOriginalMsgAsync(null, accepted ? message : "");
                         }
                     }
                     break;
