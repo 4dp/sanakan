@@ -2439,6 +2439,9 @@ namespace Sanakan.Modules
                 {
                     if (bUser.GameDeck.Waifu != 0)
                     {
+                        var prevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
+                        foreach (var card in prevWaifus) card.Affection -= 5;
+
                         bUser.GameDeck.Waifu = 0;
                         await db.SaveChangesAsync();
                     }
@@ -2460,12 +2463,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var prev = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
-                if (prev != null)
-                {
-                    var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Id == prev.Id);
-                    foreach (var card in allPrevWaifus) card.Affection -= 5;
-                }
+                var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
+                foreach (var card in allPrevWaifus) card.Affection -= 5;
 
                 bUser.GameDeck.Waifu = thisCard.Character;
                 await db.SaveChangesAsync();
