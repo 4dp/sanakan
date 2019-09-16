@@ -216,63 +216,63 @@ namespace Sanakan.Extensions
             return "Obojętność";
         }
 
-        public static bool IsWeakTo(this Card card, Dere dere)
+        public static bool IsWeakTo(this Dere dere1, Dere dere2)
         {
-            if (dere == Dere.Yato && card.Dere != Dere.Yato)
+            if (dere2 == Dere.Yato && dere1 != Dere.Yato)
                 return true;
 
-            if (dere == Dere.Yami && (card.Dere != Dere.Yato && card.Dere != Dere.Raito && card.Dere != Dere.Yami))
+            if (dere2 == Dere.Yami && (dere1 != Dere.Yato && dere1 != Dere.Raito && dere1 != Dere.Yami))
                 return true;
 
-            switch (card.Dere)
+            switch (dere1)
             {
                 case Dere.Tsundere:
-                    if (dere != Dere.Tsundere)
+                    if (dere2 != Dere.Tsundere)
                         return true;
                     return false;
 
                 case Dere.Kamidere:
-                    if (dere == Dere.Deredere)
+                    if (dere2 == Dere.Deredere)
                         return true;
                     return false;
 
                 case Dere.Deredere:
-                    if (dere == Dere.Yandere)
+                    if (dere2 == Dere.Yandere)
                         return true;
                     return false;
 
                 case Dere.Yandere:
-                    if (dere == Dere.Dandere)
+                    if (dere2 == Dere.Dandere)
                         return true;
                     return false;
 
                 case Dere.Dandere:
-                    if (dere == Dere.Kuudere)
+                    if (dere2 == Dere.Kuudere)
                         return true;
                     return false;
 
                 case Dere.Kuudere:
-                    if (dere == Dere.Mayadere)
+                    if (dere2 == Dere.Mayadere)
                         return true;
                     return false;
 
                 case Dere.Mayadere:
-                    if (dere == Dere.Bodere)
+                    if (dere2 == Dere.Bodere)
                         return true;
                     return false;
 
                 case Dere.Bodere:
-                    if (dere == Dere.Kamidere)
+                    if (dere2 == Dere.Kamidere)
                         return true;
                     return false;
 
                 case Dere.Yami:
-                    if (dere == Dere.Raito)
+                    if (dere2 == Dere.Raito)
                         return true;
                     return false;
 
                 case Dere.Raito:
-                    if (dere == Dere.Yami)
+                    if (dere2 == Dere.Yami)
                         return true;
                     return false;
 
@@ -284,48 +284,48 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static bool IsResistTo(this Card card, Dere dere)
+        public static bool IsResistTo(this Dere dere1, Dere dere2)
         {
-            if (card.Dere == dere && dere != Dere.Yato)
+            if (dere1 == dere2 && dere2 != Dere.Yato)
                 return true;
 
-            switch (card.Dere)
+            switch (dere1)
             {
                 case Dere.Tsundere:
                     return false;
 
                 case Dere.Kamidere:
-                    if (dere == Dere.Yandere)
+                    if (dere2 == Dere.Yandere)
                         return true;
                     return false;
 
                 case Dere.Deredere:
-                    if (dere == Dere.Dandere)
+                    if (dere2 == Dere.Dandere)
                         return true;
                     return false;
 
                 case Dere.Yandere:
-                    if (dere == Dere.Kuudere)
+                    if (dere2 == Dere.Kuudere)
                         return true;
                     return false;
 
                 case Dere.Dandere:
-                    if (dere == Dere.Mayadere)
+                    if (dere2 == Dere.Mayadere)
                         return true;
                     return false;
 
                 case Dere.Kuudere:
-                    if (dere == Dere.Bodere)
+                    if (dere2 == Dere.Bodere)
                         return true;
                     return false;
 
                 case Dere.Mayadere:
-                    if (dere == Dere.Kamidere)
+                    if (dere2 == Dere.Kamidere)
                         return true;
                     return false;
 
                 case Dere.Bodere:
-                    if (dere == Dere.Deredere)
+                    if (dere2 == Dere.Deredere)
                         return true;
                     return false;
 
@@ -333,7 +333,7 @@ namespace Sanakan.Extensions
                     return false;
 
                 case Dere.Raito:
-                    if (dere != Dere.Yami)
+                    if (dere2 != Dere.Yami)
                         return true;
                     return false;
 

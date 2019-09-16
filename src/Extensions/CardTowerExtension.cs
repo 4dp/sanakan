@@ -128,7 +128,19 @@ namespace Sanakan.Extensions
             };
         }
 
-        public static string GetRoomContent(this Room room)
+        public static string GetTowerEnemiesString(this Card card)
+        {
+            var enemies = card.Profile.Enemies;
+            if (enemies.Count < 1) return null;
+
+            string toReturn = "";
+            foreach (var enemy in enemies)
+                toReturn += $"**[{enemy.Id}]** *{enemy.Name}* ❤{enemy.Health} 🔥{enemy.Attack} 🛡{enemy.Defence} 🔋{enemy.Energy}\n";
+
+            return toReturn;
+        }
+
+        public static string GetRoomContent(this Room room, string more = null)
         {
             var itemString = room.GetRoomItemString();
 
@@ -139,15 +151,13 @@ namespace Sanakan.Extensions
                 case RoomType.Campfire:
                     return $"Znajdujesz pomieszczenie z rozpalonym ogniskiem, to chyba dobry moment na chwię odpoczynku. Chcesz zostać tu na chwilę?{itemString}";
                 case RoomType.BossBattle:
-                    //TODO: list enemies
-                    return $"Wkraczasz do areny z bosem, teraz nie ma już odwrotu.";
+                    return $"Wkraczasz do areny z bosem, teraz nie ma już odwrotu.\n{more}";
                 case RoomType.Fight:
                     return $"Spotykasz przeciwników na swojej drodze, chcesz rozpocząć walkę?";
                 case RoomType.Treasure:
                     return $"Udało Ci się odnaleźć pokój z skarbem, chcesz spróbować otworzyć skrzynię?";
                 case RoomType.Event:
-                    //TODO: show event
-                    return $"";
+                    return $"{more}";
 
                 default:
                 case RoomType.Start:
@@ -168,8 +178,26 @@ namespace Sanakan.Extensions
 
         public static List<Enemy> GetTowerNewEnemies(this Room room)
         {
+            var list = new List<Enemy>()
+            {
+                new Enemy
+                {
+                    Level = 1,
+                    Attack = 10,
+                    Defence = 30,
+                    Energy = 100,
+                    Health = 100,
+                    Loot = "2-50;3-50",
+                    Dere = Dere.Bodere,
+                    Type = EnemyType.Normall,
+                    Name = "Jakiś przeciwnik",
+                    LootType = LootType.TowerItem,
+                    Spells = new List<SpellInEnemy>(),
+                }
+            };
+
             //TODO: generate enemies according to room
-            return new List<Enemy>();
+            return list;
         }
 
         public static Event GetTowerEvent(this Room room, IEnumerable<Event> events)
@@ -209,6 +237,45 @@ namespace Sanakan.Extensions
                 cnq.Add(crr);
                 card.Profile.ConqueredRoomsFromFloor = string.Join(";", cnq);
             }
+        }
+
+        public static int DealDmgToEnemy(this Card card, Enemy enemy, int? customDmg = null)
+        {
+            var dmg = customDmg ?? card.GetTowerRealMaxAttack();
+            dmg -= enemy.Defence;
+
+            if (enemy.Dere.IsWeakTo(card.Dere))
+                dmg *= 2;
+
+            if (enemy.Dere.IsResistTo(card.Dere))
+                dmg /= 2;
+
+            if (dmg < 1)
+                dmg = 1;
+
+            if (customDmg == null)
+                dmg += card.GetTowerRealTrueDmg();
+
+            enemy.Health -= dmg;
+            return dmg;
+        }
+
+        public static int ReciveDmgFromEnemy(this Card card, Enemy enemy)
+        {
+            var dmg = enemy.Attack;
+            dmg -= card.GetTowerRealMaxDefence();
+
+            if (card.Dere.IsWeakTo(enemy.Dere))
+                dmg *= 2;
+
+            if (card.Dere.IsResistTo(enemy.Dere))
+                dmg /= 2;
+
+            if (dmg < 1)
+                dmg = 1;
+
+            card.Profile.Health -= dmg;
+            return dmg;
         }
     }
 }

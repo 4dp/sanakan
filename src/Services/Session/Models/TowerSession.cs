@@ -103,7 +103,7 @@ namespace Sanakan.Services.Session.Models
 
         private string GetNotConqueredRoomContent()
         {
-            return PlayingCard.Profile.CurrentRoom.GetRoomContent();
+            return PlayingCard.Profile.CurrentRoom.GetRoomContent(PlayingCard.GetTowerEnemiesString());
         }
 
         private string GetConqueredRoomContent()
@@ -155,7 +155,7 @@ namespace Sanakan.Services.Session.Models
             var cmdType = splitedCmd[0];
             if (cmdType == null) return;
 
-            if (cmdType.Contains("idź") || cmdType.Contains("idz") && IsCurrentRoomCleared())
+            if ((cmdType.Contains("idź") || cmdType.Contains("idz")) && IsCurrentRoomCleared())
             {
                 if (splitedCmd.Length >= 2 && PlayingCard.Profile.ActionPoints > 0)
                 {
@@ -172,8 +172,65 @@ namespace Sanakan.Services.Session.Models
                 RestartTimer();
                 await context.Message.AddReactionAsync(ErrEmote);
             }
+            else if (cmdType.Contains("atakuj") && PlayingCard.Profile.Enemies?.Count > 0)
+            {
+                if (splitedCmd.Length >= 2 && PlayingCard.Profile.ActionPoints > 0)
+                {
+                    if (ulong.TryParse(splitedCmd[1], out var enemyId))
+                    {
+                        var enemy = PlayingCard.Profile.Enemies.FirstOrDefault(x => x.Id == enemyId);
+                        if (enemy != null)
+                        {
+                            await context.Message.DeleteAsync();
+                            await UpdateOriginalMsgAsync(null, await AttackEnemy(enemyId));
+                            return;
+                        }
+                    }
+                    RestartTimer();
+                    await context.Message.AddReactionAsync(ErrEmote);
+                }
+            }
 
-            //TODO: command handler, fight, use spell, use item, choose answer of event...
+            //TODO: command handler - use spell, use item, choose answer of event...
+        }
+
+        private async Task<string> AttackEnemy(ulong enemyId, int? customDmg = null)
+        {
+            string msg = "";
+            using (var db = new Database.UserContext(_config))
+            {
+                var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+                var thisEnemy = thisCard.Profile.Enemies.FirstOrDefault(x => x.Id == enemyId);
+
+                thisCard.Profile.ActionPoints -= 1;
+
+                msg = $"Zadałeś {thisCard.DealDmgToEnemy(thisEnemy)} obrażeń! **[{thisEnemy.Id}]**\n";
+                if (thisEnemy.Health < 1)
+                {
+                    msg += $"Przeciwnik umiera! **[{thisEnemy.Id}]**\n\n";
+                    thisCard.Profile.Enemies.Remove(thisEnemy);
+                    //TODO: loot enemy
+                }
+
+                foreach (var enemy in thisCard.Profile.Enemies)
+                {
+                    //TODO: check if can use skill
+                    msg += $"Otrzymałeś {thisCard.ReciveDmgFromEnemy(enemy)} obrażeń! **[{enemy.Id}]**\n";
+                }
+
+                if (thisCard.Profile.Health < 1)
+                {
+                    msg += "Umarłeś!";
+                    //TODO: reset level
+                }
+
+                await db.SaveChangesAsync();
+                QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+            }
+            return msg;
         }
 
         private async Task<bool> MoveToRoomAsync(int roomNr)
@@ -387,8 +444,7 @@ namespace Sanakan.Services.Session.Models
                             QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
 
                             PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
-                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : "Nie udało Ci się uciec.");
-                            //TODO: list enemies
+                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : $"Nie udało Ci się uciec.\n{thisCard.GetTowerEnemiesString()}");
                         }
                     }
                     break;
