@@ -88,7 +88,7 @@ namespace Sanakan.Extensions
 
             var room3 = new Room
             {
-                Count = 0,
+                Count = 2,
                 Item = item,
                 IsHidden = false,
                 Type = RoomType.Fight,

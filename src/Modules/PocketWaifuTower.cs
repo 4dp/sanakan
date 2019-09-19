@@ -105,7 +105,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var session = new TowerSession(user, _config);
+                var session = new TowerSession(user, _config, _waifu);
                 if (_session.SessionExist(session))
                 {
                     await ReplyAsync("", embed: $"{user.Mention} już masz otwartą sesje wieży.".ToEmbedMessage(EMType.Error).Build());

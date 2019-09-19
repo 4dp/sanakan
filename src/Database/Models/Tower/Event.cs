@@ -14,6 +14,7 @@ namespace Sanakan.Database.Models.Tower
     public class Event
     {
         public ulong Id { get; set; }
+        public bool Start { get; set; }
         public string Text { get; set; }
         public EventType Type { get; set; }
 

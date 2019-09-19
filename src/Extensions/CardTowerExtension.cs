@@ -1,10 +1,11 @@
 ﻿#pragma warning disable 1591
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Tower;
+using Sanakan.Services;
+using Sanakan.Services.PocketWaifu;
 
 namespace Sanakan.Extensions
 {
@@ -176,34 +177,50 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static List<Enemy> GetTowerNewEnemies(this Room room)
+        public static List<Enemy> GetTowerNewEnemies(this Room room, Waifu waifuService, IEnumerable<string> names)
         {
-            var list = new List<Enemy>()
-            {
-                new Enemy
-                {
-                    Level = 1,
-                    Attack = 10,
-                    Defence = 30,
-                    Energy = 100,
-                    Health = 100,
-                    Loot = "2-50;3-50",
-                    Dere = Dere.Bodere,
-                    Type = EnemyType.Normall,
-                    Name = "Jakiś przeciwnik",
-                    LootType = LootType.TowerItem,
-                    Spells = new List<SpellInEnemy>(),
-                }
-            };
+            var list = new List<Enemy>();
 
-            //TODO: generate enemies according to room
+            int baseEng = 25;
+            int baseAtk = 10 + (int)(room.FloorId / 2);
+            int baseDef = 5 + (int)(room.FloorId / 6);
+            int baseHp = 40 + (int)((room.FloorId / 4) * 3);
+
+            int maxEng = baseEng + (int)(room.FloorId / 2);
+            int maxAtk = baseAtk + (int)(room.FloorId * 4);
+            int maxDef = baseDef + (int)(room.FloorId * 2);
+            int maxHp = baseHp + (int)(room.FloorId * 6);
+
+            for (int i = 0; i < room.Count; i++)
+            {
+                list.Add(new Enemy
+                {
+                    Loot = null,
+                    Level = room.FloorId,
+                    LootType = LootType.None,
+                    Type = EnemyType.Normall,
+                    Spells = new List<SpellInEnemy>(),
+                    Name = Fun.GetOneRandomFrom(names),
+                    Dere = waifuService.RandomizeDere(),
+                    Health = Fun.GetRandomValue(baseHp, maxHp),
+                    Attack = Fun.GetRandomValue(baseAtk, maxAtk),
+                    Energy = Fun.GetRandomValue(baseEng, maxEng),
+                    Defence = Fun.GetRandomValue(baseDef, maxDef),
+                });
+
+                //TODO: add skills after some point
+            }
+
             return list;
         }
 
         public static Event GetTowerEvent(this Room room, IEnumerable<Event> events)
         {
-            //TODO: randomize event
-            return null;
+            var viable = events.Where(x => x.Start);
+            if (viable.Count() < 1)
+                return null;
+
+            return Fun.GetOneRandomFrom(viable);
         }
 
         public static void RecoverFromRest(this Card card, bool big = false)
@@ -237,6 +254,19 @@ namespace Sanakan.Extensions
                 cnq.Add(crr);
                 card.Profile.ConqueredRoomsFromFloor = string.Join(";", cnq);
             }
+        }
+
+        public static void RestartTowerFloor(this Card card)
+        {
+            var start = card.Profile.CurrentRoom.Floor.Rooms.FirstOrDefault(x => x.Type == RoomType.Start);
+
+            card.Profile.Enemies.Clear();
+            card.Profile.CurrentEvent = null;
+            card.Profile.CurrentRoomId = start.Id;
+            card.Profile.ConqueredRoomsFromFloor = $"{start.Id}";
+            card.Profile.Health = card.GetTowerBaseValueOfParam(EffectTarget.Health);
+            card.Profile.Energy = card.GetTowerBaseValueOfParam(EffectTarget.Energy);
+            card.Profile.Defence = card.GetTowerBaseValueOfParam(EffectTarget.Defence);
         }
 
         public static int DealDmgToEnemy(this Card card, Enemy enemy, int? customDmg = null)

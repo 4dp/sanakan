@@ -21,20 +21,23 @@ namespace Sanakan.Services.Session.Models
         public Card PlayingCard { get; set; }
         public PlayerInfo P1 { get; set; }
 
+        private Waifu _waifu;
         private IConfig _config;
 
         private readonly Emoji ErrEmote = new Emoji("❌");
         private readonly Emoji AcceptEmote = new Emoji("✅");
         private readonly Emote DeclineEmote = Emote.Parse("<:redcross:581152766655856660>");
 
+        private List<string> Nicknames = new List<string>();
         public IEmote[] StartReactions => new IEmote[] { AcceptEmote, DeclineEmote };
 
-        public TowerSession(IUser owner, IConfig config) : base(owner)
+        public TowerSession(IUser owner, IConfig config, Waifu waifu) : base(owner)
         {
             Event = ExecuteOn.AllEvents;
             RunMode = RunMode.Sync;
             TimeoutMs = 120000;
             _config = config;
+            _waifu = waifu;
 
             Message = null;
 
@@ -46,6 +49,9 @@ namespace Sanakan.Services.Session.Models
         {
             if (P1 == null || Message == null)
                 return true;
+
+            if (Nicknames.Count() < 1)
+                Nicknames = context.Client.Guilds.SelectMany(x => x.Users).Select(x => x.Nickname ?? x.Username).ToList();
 
             await HandleMessageAsync(context);
             return await HandleReactionAsync(context);
@@ -73,6 +79,7 @@ namespace Sanakan.Services.Session.Models
         private string GetContent()
         {
             if (IsCurrentRoomCleared()) return GetConqueredRoomContent();
+            if (IsCurrentRoomConquered()) return GetNotClearedRoomContent();
             return GetNotConqueredRoomContent();
         }
 
@@ -104,6 +111,23 @@ namespace Sanakan.Services.Session.Models
         private string GetNotConqueredRoomContent()
         {
             return PlayingCard.Profile.CurrentRoom.GetRoomContent(PlayingCard.GetTowerEnemiesString());
+        }
+
+        private string GetNotClearedRoomContent()
+        {
+            switch (PlayingCard.Profile.CurrentRoom.Type)
+            {
+                case RoomType.BossBattle:
+                case RoomType.Fight:
+                    return PlayingCard.GetTowerEnemiesString();
+
+                case RoomType.Event:
+                    //TODO: build event view
+                    return "";
+
+                default:
+                    return GetNotConqueredRoomContent();
+            }
         }
 
         private string GetConqueredRoomContent()
@@ -210,7 +234,34 @@ namespace Sanakan.Services.Session.Models
                 {
                     msg += $"Przeciwnik umiera! **[{thisEnemy.Id}]**\n\n";
                     thisCard.Profile.Enemies.Remove(thisEnemy);
-                    //TODO: loot enemy
+
+                    //TODO: loot enemy, add exp
+                }
+
+                if (thisCard.Profile.Enemies.Count < 1)
+                {
+                    if (thisCard.Profile.CurrentRoom.ItemType == ItemInRoomType.Loot)
+                    {
+                        var thisItem = thisCard.Profile.Items.FirstOrDefault(x => x.ItemId == thisCard.Profile.CurrentRoom.ItemId);
+                        if (thisItem == null)
+                        {
+                            thisItem = new ItemInProfile
+                            {
+                                Count = thisCard.Profile.CurrentRoom.Count,
+                                Item = thisCard.Profile.CurrentRoom.Item,
+                            };
+                            thisCard.Profile.Items.Add(thisItem);
+                        }
+                        else thisItem.Count += thisCard.Profile.CurrentRoom.Count;
+
+                        msg += $"Otrzymałeś przedmiot: *{thisItem.Item.Name}*\n";
+                    }
+
+                    if (thisCard.Profile.CurrentRoom.Type == RoomType.BossBattle)
+                    {
+                        //TODO:  advance to next floor
+                        msg += $"Przechodzisz na następne piętro!\n";
+                    }
                 }
 
                 foreach (var enemy in thisCard.Profile.Enemies)
@@ -222,7 +273,7 @@ namespace Sanakan.Services.Session.Models
                 if (thisCard.Profile.Health < 1)
                 {
                     msg += "Umarłeś!";
-                    //TODO: reset level
+                    thisCard.RestartTowerFloor();
                 }
 
                 await db.SaveChangesAsync();
@@ -260,40 +311,44 @@ namespace Sanakan.Services.Session.Models
                 thisCard.Profile.CurrentRoomId = room.Id;
                 thisCard.Profile.ActionPoints -= 1;
 
-                switch (room.Type)
+                if (!IsRoomConquered(room.Id))
                 {
-                    case RoomType.BossBattle:
-                        thisCard.Profile.Enemies.Add(room.Floor.GetBossOfFloor());
+                    switch (room.Type)
+                    {
+                        case RoomType.BossBattle:
+                            thisCard.Profile.Enemies.Add(room.Floor.GetBossOfFloor());
 
-                        if (room.Count > 0)
-                            foreach (var en in room.GetTowerNewEnemies())
-                                thisCard.Profile.Enemies.Add(en);
-                    break;
+                            if (room.Count > 0)
+                                foreach (var en in room.GetTowerNewEnemies(_waifu, Nicknames))
+                                    thisCard.Profile.Enemies.Add(en);
+                        break;
 
-                    case RoomType.Event:
-                        thisCard.Profile.CurrentEvent = room.GetTowerEvent(db.TEvent);
-                    break;
+                        case RoomType.Event:
+                            thisCard.Profile.CurrentEvent = room.GetTowerEvent(db.TEvent);
+                            if (thisCard.Profile.CurrentEvent == null) thisCard.MarkCurrentRoomAsConquered();
+                        break;
 
-                    case RoomType.Treasure:
-                    case RoomType.Fight:
-                    break;
+                        case RoomType.Treasure:
+                        case RoomType.Fight:
+                        break;
 
-                    default:
-                        if (room.ItemType == ItemInRoomType.Loot)
-                        {
-                            var thisItem = thisCard.Profile.Items.FirstOrDefault(x => x.ItemId == room.ItemId);
-                            if (thisItem == null)
+                        default:
+                            if (room.ItemType == ItemInRoomType.Loot)
                             {
-                                thisItem = new ItemInProfile
+                                var thisItem = thisCard.Profile.Items.FirstOrDefault(x => x.ItemId == room.ItemId);
+                                if (thisItem == null)
                                 {
-                                    Count = room.Count,
-                                    Item = room.Item,
-                                };
-                                thisCard.Profile.Items.Add(thisItem);
+                                    thisItem = new ItemInProfile
+                                    {
+                                        Count = room.Count,
+                                        Item = room.Item,
+                                    };
+                                    thisCard.Profile.Items.Add(thisItem);
+                                }
+                                else thisItem.Count += room.Count;
                             }
-                            else thisItem.Count += room.Count;
-                        }
-                    break;
+                        break;
+                    }
                 }
 
                 await db.SaveChangesAsync();
@@ -372,7 +427,7 @@ namespace Sanakan.Services.Session.Models
                                     if (thisCard.Profile.Health < 1)
                                     {
                                         message += "\nUmarłeś.";
-                                        //TODO: restart level
+                                        thisCard.RestartTowerFloor();
                                     }
                                 }
                                 else
@@ -436,7 +491,7 @@ namespace Sanakan.Services.Session.Models
 
                             if (accepted || !ext)
                             {
-                                foreach (var enemy in thisCard.Profile.CurrentRoom.GetTowerNewEnemies())
+                                foreach (var enemy in thisCard.Profile.CurrentRoom.GetTowerNewEnemies(_waifu, Nicknames))
                                     thisCard.Profile.Enemies.Add(enemy);
                             }
 
@@ -444,7 +499,7 @@ namespace Sanakan.Services.Session.Models
                             QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
 
                             PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
-                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : $"Nie udało Ci się uciec.\n{thisCard.GetTowerEnemiesString()}");
+                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : (accepted ? thisCard.GetTowerEnemiesString() : $"Nie udało Ci się uciec.\n{thisCard.GetTowerEnemiesString()}"));
                         }
                     }
                     break;
