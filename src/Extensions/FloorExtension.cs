@@ -2,10 +2,8 @@
 
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Tower;
-using Sanakan.Services;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sanakan.Extensions
 {
@@ -41,6 +39,32 @@ namespace Sanakan.Extensions
                 LootType = u.Boss.LootType,
             };
         }
+
+        public static int GetTowerMinEnergy(this Floor floor) => GetTowerMinEnergy(floor.Id);
+        public static int GetTowerMaxEnergy(this Floor floor) => GetTowerMaxEnergy(floor.Id);
+        public static int GetTowerMinAttack(this Floor floor) => GetTowerMinAttack(floor.Id);
+        public static int GetTowerMaxAttack(this Floor floor) => GetTowerMaxAttack(floor.Id);
+        public static int GetTowerMinDefence(this Floor floor) => GetTowerMinDefence(floor.Id);
+        public static int GetTowerMaxDefence(this Floor floor) => GetTowerMaxDefence(floor.Id);
+        public static int GetTowerMinHp(this Floor floor) => GetTowerMinHp(floor.Id);
+        public static int GetTowerMaxHp(this Floor floor) => GetTowerMaxHp(floor.Id);
+
+        internal static int GetTowerMinEnergy(ulong floor) => 25 + (int)(floor / 35);
+        internal static int GetTowerMaxEnergy(ulong floor) => GetTowerMinEnergy(floor) + (int)(floor / 10);
+
+        internal static int GetTowerMinAttack(ulong floor) => 10 + (int)(floor * 2);
+        internal static int GetTowerMaxAttack(ulong floor) => GetTowerMinAttack(floor) + (int)(floor * 2);
+
+        internal static int GetTowerMinDefence(ulong floor) => 5 + (int)(floor / 2);
+        internal static int GetTowerMaxDefence(ulong floor) => GetTowerMinDefence(floor) + (int)(floor * 2);
+
+        internal static int GetTowerMinHp(ulong floor) => 40 + (int)(floor * 8);
+        internal static int GetTowerMaxHp(ulong floor) => GetTowerMinHp(floor) + (int)(floor * 6);
+
+        internal static int GetTowerBossEnergy(ulong floor) => GetTowerMaxEnergy(floor) * 2;
+        internal static int GetTowerBossAttack(ulong floor) => GetTowerMaxAttack(floor) * 2;
+        internal static int GetTowerBossDefence(ulong floor) => GetTowerMaxDefence(floor) * 2;
+        internal static int GetTowerBossHp(ulong floor) => GetTowerMaxHp(floor) * 3;
 
         private static List<Room> GenerateFloorRooms(ulong floorLevel)
         {
@@ -180,10 +204,6 @@ namespace Sanakan.Extensions
 
             var boss = new Enemy
             {
-                Attack = 68,
-                Energy = 80,
-                Health = 120,
-                Defence = 66,
                 Profile = null,
                 Loot = $"1|100",
                 Level = floorLevel,
@@ -191,7 +211,11 @@ namespace Sanakan.Extensions
                 Type = EnemyType.Boss,
                 Name = "Pomniejszy bosik",
                 LootType = LootType.TowerItem,
-                Spells = new List<SpellInEnemy>()
+                Spells = new List<SpellInEnemy>(),
+                Health = GetTowerBossHp(floorLevel),
+                Energy = GetTowerBossEnergy(floorLevel),
+                Attack = GetTowerBossAttack(floorLevel),
+                Defence = GetTowerBossDefence(floorLevel),
             };
 
             boss.Spells.Add(new SpellInEnemy

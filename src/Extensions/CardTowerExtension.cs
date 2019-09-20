@@ -181,18 +181,19 @@ namespace Sanakan.Extensions
 
         public static List<Enemy> GetTowerNewEnemies(this Room room, Waifu waifuService, IEnumerable<string> names)
         {
+            int baseEng = room.Floor.GetTowerMinEnergy();
+            int maxEng = room.Floor.GetTowerMaxEnergy();
+
+            int baseAtk = room.Floor.GetTowerMinAttack();
+            int maxAtk = room.Floor.GetTowerMaxAttack();
+
+            int baseDef = room.Floor.GetTowerMinDefence();
+            int maxDef = room.Floor.GetTowerMaxDefence();
+
+            int baseHp = room.Floor.GetTowerMinHp();
+            int maxHp = room.Floor.GetTowerMaxHp();
+
             var list = new List<Enemy>();
-
-            int baseEng = 25;
-            int baseAtk = 10 + (int)(room.FloorId / 2);
-            int baseDef = 5 + (int)(room.FloorId / 6);
-            int baseHp = 40 + (int)((room.FloorId / 4) * 3);
-
-            int maxEng = baseEng + (int)(room.FloorId / 2);
-            int maxAtk = baseAtk + (int)(room.FloorId * 4);
-            int maxDef = baseDef + (int)(room.FloorId * 2);
-            int maxHp = baseHp + (int)(room.FloorId * 6);
-
             for (int i = 0; i < room.Count; i++)
             {
                 list.Add(new Enemy

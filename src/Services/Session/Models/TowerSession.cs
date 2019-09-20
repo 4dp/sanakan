@@ -287,11 +287,9 @@ namespace Sanakan.Services.Session.Models
 
                 msg += thisCard.InflictEffect(thisSpell.Spell.Effect) + "\n";
 
+                msg += InflictChangesFromActiveEffects(thisCard, thisCard.Profile.Enemies.Count < 1);
                 if (thisCard.Profile.Enemies.Count > 0)
-                {
-                    msg += InflictChangesFromActiveEffects(thisCard);
                     msg += MakeEnemiesMove(thisCard);
-                }
 
                 await db.SaveChangesAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
@@ -322,7 +320,7 @@ namespace Sanakan.Services.Session.Models
                 foreach (var thisEnemy in enemies)
                 {
                     int? cDmg = null;
-                    bool done = true;
+                    bool done = false;
                     if (customDmg != null)
                     {
                         switch (customDmg.Effect.ValueType)
@@ -342,6 +340,7 @@ namespace Sanakan.Services.Session.Models
                             {
                                 msg = $"Obniżyłeś atak przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
                                 thisEnemy.Attack -= cDmg.Value;
+                                done = true;
 
                                 if (thisEnemy.Attack < 1)
                                     thisEnemy.Attack = 1;
@@ -352,6 +351,7 @@ namespace Sanakan.Services.Session.Models
                             {
                                 msg = $"Obniżyłeś energię przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
                                 thisEnemy.Energy -= cDmg.Value;
+                                done = true;
 
                                 if (thisEnemy.Energy < 0)
                                     thisEnemy.Energy = 0;
@@ -362,6 +362,7 @@ namespace Sanakan.Services.Session.Models
                             {
                                 msg = $"Obniżyłeś obronę przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
                                 thisEnemy.Defence -= cDmg.Value;
+                                done = true;
 
                                 if (thisEnemy.Defence < 0)
                                     thisEnemy.Defence = 0;
@@ -369,7 +370,6 @@ namespace Sanakan.Services.Session.Models
                             break;
 
                             default:
-                                done = false;
                             break;
                         }
                     }
@@ -411,8 +411,18 @@ namespace Sanakan.Services.Session.Models
 
                     if (thisCard.Profile.CurrentRoom.Type == RoomType.BossBattle)
                     {
-                        //TODO:  advance to next floor
                         msg += $"Przechodzisz na następne piętro!\n";
+                        if (thisCard.Profile.CurrentRoom.Floor.UserIdFirstToBeat < 1)
+                            thisCard.Profile.CurrentRoom.Floor.UserIdFirstToBeat = thisCard.GameDeckId;
+
+                        if (thisUser.GameDeck.MaxTowerFloor < thisCard.Profile.CurrentRoom.FloorId)
+                            thisUser.GameDeck.MaxTowerFloor = thisCard.Profile.CurrentRoom.FloorId;
+
+                        var nextFloor = await db.GetOrCreateFloorAsync(thisCard.Profile.CurrentRoom.FloorId + 1);
+                        var startRoom = nextFloor.Rooms.FirstOrDefault(x => x.Type == RoomType.Start);
+
+                        thisCard.Profile.ConqueredRoomsFromFloor = $"{startRoom.Id}";
+                        thisCard.Profile.CurrentRoom = startRoom;
                     }
                 }
 
@@ -531,6 +541,8 @@ namespace Sanakan.Services.Session.Models
                         break;
                     }
                 }
+
+                _ = InflictChangesFromActiveEffects(thisCard);
 
                 await db.SaveChangesAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
