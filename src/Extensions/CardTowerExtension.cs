@@ -22,12 +22,14 @@ namespace Sanakan.Extensions
                 + $"🎲 {card.GetTowerRealLuck()}\n\n"
                 + $"Dere: **{card.Dere}**\n"
                 + $"Piętro: **{card.Profile.CurrentRoom.Floor.Id}**\n\n"
-                + $"**Umiejętności/Zaklęcia**: {card.Profile.Spells.Count}\n\n"
+                + $"**Zaklęcia**: {string.Join("\n", card.Profile.Spells.Select(x => x.GetTowerSpellString()))}\n\n"
                 + $"**Przedmioty**: {string.Join("\n", card.Profile.Items.Where(x => x.Active).Select(x => x.GetTowerItemString()))}\n\n"
-                + $"**Efekty**: {string.Join("\n", card.Profile.ActiveEffects.Where(x => x.Remaining > 0).Select(x => x.GetTowerEffectString()))}";
+                + $"**Efekty**: {string.Join("\n", card.Profile.ActiveEffects.Where(x => x.Remaining > 0).Select(x => x.GetTowerEffectString()))}"
+                .TrimToLength(2000);
         }
 
-        public static string GetTowerBaseStats(this Card card) => $"⚡ {card.Profile.ActionPoints} ❤ {card.Profile.Health} 🔋 {card.Profile.Energy}";
+        public static string GetTowerBaseStats(this Card card)
+            => $"⚡ {card.Profile.ActionPoints} ❤ {card.Profile.Health} 🔋 {card.Profile.Energy} 🔥 {card.GetTowerRealMaxAttack()} 🛡 {card.GetTowerRealMaxDefence()}";
 
         public static string ToTowerParamIcon(this EffectTarget target)
         {
@@ -225,14 +227,128 @@ namespace Sanakan.Extensions
 
         public static void RecoverFromRest(this Card card, bool big = false)
         {
-            var prc = big ? 20 : 5;
-            var max = card.GetTowerRealMaxHealth();
+            var prc = big ? 18 : 4;
+            var maxH = card.GetTowerRealMaxHealth();
+            var maxE = card.GetTowerRealMaxEnergy();
 
-            var recValue = max * prc / 100;
-            if ((card.Profile.Health + recValue) > max)
-                recValue = max - card.Profile.Health;
+            var recValueH = maxH * prc / 100;
+            if ((card.Profile.Health + recValueH) > maxH)
+                recValueH = maxH - card.Profile.Health;
 
-            card.Profile.Health += recValue;
+            card.Profile.Health += recValueH;
+
+            var recValueE = maxE * prc / 100;
+            if ((card.Profile.Energy + recValueE) > maxE)
+                recValueE = maxE - card.Profile.Energy;
+
+            card.Profile.Energy += recValueE;
+        }
+
+        private static int GetRealMaxValueOfParam(this Effect effect, Card card)
+        {
+            switch (effect.Target)
+            {
+                case EffectTarget.AP:
+                    return card.GetTowerRealMaxAP();
+                case EffectTarget.Attack:
+                    return card.GetTowerRealMaxAttack();
+                case EffectTarget.Defence:
+                    return card.GetTowerRealMaxDefence();
+                case EffectTarget.Energy:
+                    return card.GetTowerRealMaxEnergy();
+                case EffectTarget.Health:
+                    return card.GetTowerRealMaxHealth();
+                case EffectTarget.Luck:
+                    return card.GetTowerRealLuck();
+                case EffectTarget.TrueDmg:
+                    return card.GetTowerRealTrueDmg();
+
+                default:
+                    return 0;
+            }
+        }
+
+        private static int GetRealEffectChangeValue(this Effect effect, Card card)
+        {
+            int maxValue = effect.GetRealMaxValueOfParam(card);
+            if (maxValue <= 0) return 0;
+
+            int realValue = effect.Value;
+            if (effect.ValueType == ValueType.Percent)
+                realValue = maxValue * effect.Value / 100;
+
+            return realValue;
+        }
+
+        private static string InflictStaticEffect(this Card card, Effect effect)
+        {
+            var thisEffect = card.Profile.ActiveEffects.FirstOrDefault(x => x.EffectId == effect.Id);
+            if (thisEffect == null)
+            {
+                thisEffect = new EffectInProfile
+                {
+                    Multiplier = 1,
+                    Effect = effect,
+                    Remaining = effect.Duration,
+                };
+                card.Profile.ActiveEffects.Add(thisEffect);
+            }
+            else thisEffect.Remaining = effect.Duration;
+            return $"Nałożono efekt: {effect.Name} na {effect.Duration} tur.";
+        }
+
+        private static string InflictInstantEffect(this Card card, Effect effect, int multiplier = 1)
+        {
+            var change = effect.GetRealEffectChangeValue(card) * multiplier;
+            var maxValue = effect.GetRealMaxValueOfParam(card);
+
+            switch (effect.Target)
+            {
+                case EffectTarget.AP:
+                    card.Profile.ActionPoints += change;
+                    if (card.Profile.ActionPoints < 0)
+                        card.Profile.ActionPoints = 0;
+
+                    if (card.Profile.ActionPoints > maxValue)
+                        card.Profile.ActionPoints = maxValue;
+                    return $"Liczba punktów akcji zmieniła się o {change}";
+
+                case EffectTarget.Energy:
+                    card.Profile.Energy += change;
+                    if (card.Profile.Energy < 0)
+                        card.Profile.Energy = 0;
+
+                    if (card.Profile.Energy > maxValue)
+                        card.Profile.Energy = maxValue;
+                    return $"Liczba punktów energii zmieniła się o {change}";
+
+                case EffectTarget.Health:
+                    card.Profile.Health += change;
+                    if (card.Profile.Health < 0)
+                        card.Profile.Health = 0;
+
+                    if (card.Profile.Health > maxValue)
+                        card.Profile.Health = maxValue;
+                    return $"Liczba punktów życia zmieniła się o {change}";
+
+                default: return "";
+            }
+        }
+
+        public static string InflictEffect(this Card card, Effect effect, bool onlyActive = false, int multiplier = 1)
+        {
+            switch (effect.Change)
+            {
+                case ChangeType.ChangeMax:
+                    if (onlyActive) return "";
+                    return card.InflictStaticEffect(effect);
+
+                default:
+                    if (effect.Duration > 1 && !onlyActive)
+                        return card.InflictStaticEffect(effect);
+
+                    return card.InflictInstantEffect(effect, multiplier);
+            }
         }
 
         public static bool CheckLuck(this Card card, int chanceToWinInPromiles)

@@ -196,7 +196,7 @@ namespace Sanakan.Services.Session.Models
                 RestartTimer();
                 await context.Message.AddReactionAsync(ErrEmote);
             }
-            else if (cmdType.Contains("atakuj") && PlayingCard.Profile.Enemies?.Count > 0)
+            else if ((cmdType.Contains("atakuj") || cmdType.Contains("atak")) && PlayingCard.Profile.Enemies?.Count > 0)
             {
                 if (splitedCmd.Length >= 2 && PlayingCard.Profile.ActionPoints > 0)
                 {
@@ -214,28 +214,177 @@ namespace Sanakan.Services.Session.Models
                     await context.Message.AddReactionAsync(ErrEmote);
                 }
             }
+            else if ((cmdType.Contains("czar") || cmdType.Contains("spell")))
+            {
+                if (splitedCmd.Length >= 2 && PlayingCard.Profile.ActionPoints > 0 && PlayingCard.Profile.Energy > 0)
+                {
+                    if (ulong.TryParse(splitedCmd[1], out var spellId))
+                    {
+                        var spell = PlayingCard.Profile.Spells.FirstOrDefault(x => x.Id == spellId);
+                        if (spell != null)
+                        {
+                            if (PlayingCard.Profile.Energy >= spell.Spell.EnergyCost)
+                            {
+                                switch (spell.Spell.Target)
+                                {
+                                    case SpellTarget.Ally:
+                                    case SpellTarget.Self:
+                                    case SpellTarget.AllyGroup:
+                                    {
+                                        await context.Message.DeleteAsync();
+                                        await UpdateOriginalMsgAsync(null, await UseSpellOnSelf(spellId));
+                                        return;
+                                    }
 
-            //TODO: command handler - use spell, use item, choose answer of event...
+                                    case SpellTarget.Enemy:
+                                    {
+                                        if (splitedCmd.Length >= 3)
+                                        {
+                                            if (ulong.TryParse(splitedCmd[2], out var enemyId))
+                                            {
+                                                var enemy = PlayingCard.Profile.Enemies.FirstOrDefault(x => x.Id == enemyId);
+                                                if (enemy != null)
+                                                {
+                                                    await context.Message.DeleteAsync();
+                                                    await UpdateOriginalMsgAsync(null, await AttackEnemy(enemyId, spell.Spell));
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+
+                                    case SpellTarget.EnemyGroup:
+                                    {
+                                        await context.Message.DeleteAsync();
+                                        await UpdateOriginalMsgAsync(null, await AttackEnemy(0, spell.Spell));
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                RestartTimer();
+                await context.Message.AddReactionAsync(ErrEmote);
+            }
+
+            //TODO: command handler - use item, choose answer of event...
         }
 
-        private async Task<string> AttackEnemy(ulong enemyId, int? customDmg = null)
+        private async Task<string> UseSpellOnSelf(ulong spellId)
         {
             string msg = "";
             using (var db = new Database.UserContext(_config))
             {
                 var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
                 var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
-                var thisEnemy = thisCard.Profile.Enemies.FirstOrDefault(x => x.Id == enemyId);
+                var thisSpell = thisCard.Profile.Spells.FirstOrDefault(x => x.Id == spellId);
+
+                thisCard.Profile.ActionPoints -= 1;
+                thisCard.Profile.Energy -= thisSpell.Spell.EnergyCost;
+                if (thisSpell.UsesCount < 100000) thisSpell.UsesCount++;
+
+                msg += thisCard.InflictEffect(thisSpell.Spell.Effect) + "\n";
+
+                if (thisCard.Profile.Enemies.Count > 0)
+                {
+                    msg += InflictChangesFromActiveEffects(thisCard);
+                    msg += MakeEnemiesMove(thisCard);
+                }
+
+                await db.SaveChangesAsync();
+                QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
+
+                PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
+            }
+            return msg;
+        }
+
+        private async Task<string> AttackEnemy(ulong enemyId, Spell customDmg = null)
+        {
+            string msg = "";
+            using (var db = new Database.UserContext(_config))
+            {
+                var thisUser = await db.GetUserOrCreateAsync(P1.User.Id);
+                var thisCard = thisUser.GameDeck.Cards.FirstOrDefault(x => x.Id == PlayingCard.Id);
+                var enemies = (enemyId == 0) ? thisCard.Profile.Enemies.ToList() : thisCard.Profile.Enemies.Where(x => x.Id == enemyId).ToList();
 
                 thisCard.Profile.ActionPoints -= 1;
 
-                msg = $"Zadałeś {thisCard.DealDmgToEnemy(thisEnemy)} obrażeń! **[{thisEnemy.Id}]**\n";
-                if (thisEnemy.Health < 1)
+                if (customDmg != null)
                 {
-                    msg += $"Przeciwnik umiera! **[{thisEnemy.Id}]**\n\n";
-                    thisCard.Profile.Enemies.Remove(thisEnemy);
+                    thisCard.Profile.Energy -= customDmg.EnergyCost;
+                    var thisSpell = thisCard.Profile.Spells.FirstOrDefault(x => x.Id == customDmg.Id);
+                    if (thisSpell.UsesCount < 100000) thisSpell.UsesCount++;
+                }
 
-                    //TODO: loot enemy, add exp
+                foreach (var thisEnemy in enemies)
+                {
+                    int? cDmg = null;
+                    bool done = true;
+                    if (customDmg != null)
+                    {
+                        switch (customDmg.Effect.ValueType)
+                        {
+                            case Database.Models.Tower.ValueType.Percent:
+                                cDmg = thisEnemy.Health * customDmg.Effect.Value / 100;
+                                break;
+
+                            default:
+                                cDmg = customDmg.Effect.Value;
+                                break;
+                        }
+
+                        switch (customDmg.Effect.Target)
+                        {
+                            case EffectTarget.Attack:
+                            {
+                                msg = $"Obniżyłeś atak przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
+                                thisEnemy.Attack -= cDmg.Value;
+
+                                if (thisEnemy.Attack < 1)
+                                    thisEnemy.Attack = 1;
+                            }
+                            break;
+
+                            case EffectTarget.Energy:
+                            {
+                                msg = $"Obniżyłeś energię przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
+                                thisEnemy.Energy -= cDmg.Value;
+
+                                if (thisEnemy.Energy < 0)
+                                    thisEnemy.Energy = 0;
+                            }
+                            break;
+
+                            case EffectTarget.Defence:
+                            {
+                                msg = $"Obniżyłeś obronę przeciwnika o {cDmg}! **[{thisEnemy.Id}]**\n";
+                                thisEnemy.Defence -= cDmg.Value;
+
+                                if (thisEnemy.Defence < 0)
+                                    thisEnemy.Defence = 0;
+                            }
+                            break;
+
+                            default:
+                                done = false;
+                            break;
+                        }
+                    }
+
+                    if (!done)
+                    {
+                        msg = $"Zadałeś {thisCard.DealDmgToEnemy(thisEnemy, cDmg)} obrażeń! **[{thisEnemy.Id}]**\n";
+                        if (thisEnemy.Health < 1)
+                        {
+                            msg += $"Przeciwnik umiera! **[{thisEnemy.Id}]**\n\n";
+                            thisCard.Profile.Enemies.Remove(thisEnemy);
+
+                            //TODO: loot enemy, add exp
+                        }
+                    }
                 }
 
                 if (thisCard.Profile.Enemies.Count < 1)
@@ -251,10 +400,13 @@ namespace Sanakan.Services.Session.Models
                                 Item = thisCard.Profile.CurrentRoom.Item,
                             };
                             thisCard.Profile.Items.Add(thisItem);
+                            msg += $"Otrzymałeś przedmiot: *{thisItem.Item.Name}*\n";
                         }
-                        else thisItem.Count += thisCard.Profile.CurrentRoom.Count;
-
-                        msg += $"Otrzymałeś przedmiot: *{thisItem.Item.Name}*\n";
+                        else if (thisItem.Item.UseType == ItemUseType.Usable)
+                        {
+                            thisItem.Count += thisCard.Profile.CurrentRoom.Count;
+                            msg += $"Otrzymałeś przedmiot: *{thisItem.Item.Name}*\n";
+                        }
                     }
 
                     if (thisCard.Profile.CurrentRoom.Type == RoomType.BossBattle)
@@ -264,23 +416,51 @@ namespace Sanakan.Services.Session.Models
                     }
                 }
 
-                foreach (var enemy in thisCard.Profile.Enemies)
-                {
-                    //TODO: check if can use skill
-                    msg += $"Otrzymałeś {thisCard.ReciveDmgFromEnemy(enemy)} obrażeń! **[{enemy.Id}]**\n";
-                }
-
-                if (thisCard.Profile.Health < 1)
-                {
-                    msg += "Umarłeś!";
-                    thisCard.RestartTowerFloor();
-                }
+                msg += InflictChangesFromActiveEffects(thisCard);
+                msg += MakeEnemiesMove(thisCard);
 
                 await db.SaveChangesAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
 
                 PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
             }
+            return msg;
+        }
+
+        private string MakeEnemiesMove(Card card)
+        {
+            string msg = "";
+            foreach (var enemy in card.Profile.Enemies)
+            {
+                //TODO: check if can use skill
+                msg += $"Otrzymałeś {card.ReciveDmgFromEnemy(enemy)} obrażeń! **[{enemy.Id}]**\n";
+            }
+
+            if (card.Profile.Health < 1)
+            {
+                msg += "Umarłeś!";
+                card.RestartTowerFloor();
+            }
+
+            return msg;
+        }
+
+        private string InflictChangesFromActiveEffects(Card card, bool checkDeath = false)
+        {
+            string msg = "";
+            foreach (var effect in card.Profile.ActiveEffects.Where(x => x.Remaining > 0).ToList())
+            {
+                msg += $"{card.InflictEffect(effect.Effect, true, effect.Multiplier)}\n";
+                if (--effect.Remaining < 1)
+                    card.Profile.ActiveEffects.Remove(effect);
+            }
+
+            if (card.Profile.Health < 1 && checkDeath)
+            {
+                msg += "Umarłeś!";
+                card.RestartTowerFloor();
+            }
+
             return msg;
         }
 
@@ -345,7 +525,8 @@ namespace Sanakan.Services.Session.Models
                                     };
                                     thisCard.Profile.Items.Add(thisItem);
                                 }
-                                else thisItem.Count += room.Count;
+                                else if (thisItem.Item.UseType == ItemUseType.Usable)
+                                    thisItem.Count += room.Count;
                             }
                         break;
                     }
@@ -421,7 +602,7 @@ namespace Sanakan.Services.Session.Models
                             thisCard.MarkCurrentRoomAsConquered();
                             if (accepted)
                             {
-                                if (thisCard.CheckLuck(100))
+                                if (!thisCard.CheckLuck(900))
                                 {
                                     thisCard.Profile.Health -= 10 + (int) (10 * (thisCard.Profile.CurrentRoom.FloorId / 15));
                                     if (thisCard.Profile.Health < 1)
@@ -499,7 +680,7 @@ namespace Sanakan.Services.Session.Models
                             QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", "users" });
 
                             PlayingCard = await db.GetCachedFullCardAsync(PlayingCard.Id);
-                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : (accepted ? thisCard.GetTowerEnemiesString() : $"Nie udało Ci się uciec.\n{thisCard.GetTowerEnemiesString()}"));
+                            await UpdateOriginalMsgAsync(null, (!accepted && ext) ? "Udało Ci się uciec." : (accepted ? "" : $"Nie udało Ci się uciec.\n{thisCard.GetTowerEnemiesString()}"));
                         }
                     }
                     break;

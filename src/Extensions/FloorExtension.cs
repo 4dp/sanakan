@@ -130,6 +130,17 @@ namespace Sanakan.Extensions
                 RetConnectedRooms = new List<RoomConnection>()
             };
 
+            var room7 = new Room
+            {
+                Count = 1,
+                Item = null,
+                IsHidden = true,
+                Type = RoomType.Treasure,
+                ItemType = ItemInRoomType.None,
+                ConnectedRooms = new List<RoomConnection>(),
+                RetConnectedRooms = new List<RoomConnection>()
+            };
+
             room1.ConnectedRooms.Add(new RoomConnection
             {
                 ConnectedRoom = room3
@@ -152,10 +163,15 @@ namespace Sanakan.Extensions
 
             room5.ConnectedRooms.Add(new RoomConnection
             {
+                ConnectedRoom = room7
+            });
+
+            room5.ConnectedRooms.Add(new RoomConnection
+            {
                 ConnectedRoom = room2
             });
 
-            return new List<Room>() { room1, room2, room3, room4, room5, room6 };;
+            return new List<Room>() { room1, room2, room3, room4, room5, room6, room7 };
         }
 
         private static Enemy NewBoss(ulong floorLevel)
@@ -164,10 +180,10 @@ namespace Sanakan.Extensions
 
             var boss = new Enemy
             {
-                Attack = 100,
-                Energy = 100,
-                Health = 100,
-                Defence = 100,
+                Attack = 68,
+                Energy = 80,
+                Health = 120,
+                Defence = 66,
                 Profile = null,
                 Loot = $"1|100",
                 Level = floorLevel,
@@ -186,10 +202,10 @@ namespace Sanakan.Extensions
                     EnergyCost = 10,
                     Level = floorLevel,
                     Name = $"Pierdnięcie",
-                    Target = SpellTarget.AllyGroup,
+                    Target = SpellTarget.EnemyGroup,
                     Effect = new Effect
                     {
-                        Value = -30,
+                        Value = 30,
                         Duration = 3,
                         Name = $"Smród",
                         Level = floorLevel,
