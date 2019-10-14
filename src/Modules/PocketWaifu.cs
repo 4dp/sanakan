@@ -1514,7 +1514,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var bUser1 = await db.GetCachedFullUserAsync(user2.Id);
+                var bUser1 = await db.GetCachedFullUserAsync(user1.Id);
                 var bUser2 = await db.GetCachedFullUserAsync(user2.Id);
                 if (bUser2 == null)
                 {
@@ -1528,7 +1528,7 @@ namespace Sanakan.Modules
 
                 var cards = await _waifu.GetCardsFromWishlist(c, p, t, db, bUser1.GameDeck.Cards);
                 cards = cards.Where(x => x.GameDeckId != bUser1.Id);
-                var cardsByUser = cards.Where(x => x.LastIdOwner == bUser2.Id);
+                var cardsByUser = cards.Where(x => x.GameDeckId == bUser2.Id);
 
                 if (!showFavs)
                     cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
