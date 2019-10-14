@@ -1497,6 +1497,71 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("życzeniaużytkownik", RunMode = RunMode.Async)]
+        [Alias("wishlistuser", "wishlistu", "zyczeniauztykownik", "życzeniau", "zyczeniau")]
+        [Summary("wyświetla karty na liste życzeń użytkownika posiadane przez konkretnego gracza")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task ShowWishlistByUserAsync([Summary("użytkownik")]SocketGuildUser user2, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte")]bool showFavs = false)
+        {
+            var user1 = Context.User as SocketGuildUser;
+            if (user1 == null) return;
+
+            if (user1.Id == user2.Id)
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} na liście życzeń nie znajdziesz swoich kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser1 = await db.GetCachedFullUserAsync(user2.Id);
+                var bUser2 = await db.GetCachedFullUserAsync(user2.Id);
+                if (bUser2 == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var p = bUser1.GameDeck.GetCharactersWishList();
+                var t = bUser1.GameDeck.GetTitlesWishList();
+                var c = bUser1.GameDeck.GetCardsWishList();
+
+                var cards = await _waifu.GetCardsFromWishlist(c, p, t, db, bUser1.GameDeck.Cards);
+                cards = cards.Where(x => x.GameDeckId != bUser1.Id);
+                var cardsByUser = cards.Where(x => x.LastIdOwner == bUser2.Id);
+
+                if (!showFavs)
+                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+
+                if (cards.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if(cardsByUser.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Gracz {user2.Mention} nie posiada kart z twojej listy życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                try
+                {
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cardsByUser, Context.Client))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
+                }
+            }
+        }
+
         [Command("wyzwól")]
         [Alias("unleash", "wyzwol")]
         [Summary("zmienia karte niewymienialną na wymienialną (300 CT)")]
