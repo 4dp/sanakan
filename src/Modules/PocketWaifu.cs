@@ -1497,8 +1497,8 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("życzeniaużytkownik", RunMode = RunMode.Async)]
-        [Alias("wishlistuser", "wishlistu", "zyczeniauztykownik", "życzeniau", "zyczeniau")]
+        [Command("życzenia użytkownik", RunMode = RunMode.Async)]
+        [Alias("wishlist user", "wishlistu", "zyczenia uzytkownik", "życzeniau", "zyczeniau","życzenia uzytkownik","zyczenia użytkownik")]
         [Summary("wyświetla karty na liste życzeń użytkownika posiadane przez konkretnego gracza")]
         [Remarks(""), RequireWaifuCommandChannel]
         public async Task ShowWishlistByUserAsync([Summary("użytkownik")]SocketGuildUser user2, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte")]bool showFavs = false)
@@ -1527,8 +1527,8 @@ namespace Sanakan.Modules
                 var c = bUser1.GameDeck.GetCardsWishList();
 
                 var cards = await _waifu.GetCardsFromWishlist(c, p, t, db, bUser1.GameDeck.Cards);
-                cards = cards.Where(x => x.GameDeckId != bUser1.Id);
-                var cardsByUser = cards.Where(x => x.GameDeckId == bUser2.Id);
+                cards = cards.Where(x => x.GameDeckId != bUser1.Id && x.GameDeckId == bUser2.Id);
+
                 if (!showFavs)
                     cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
 
@@ -1538,16 +1538,10 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (cardsByUser.Count() < 1)
-                {
-                    await ReplyAsync("", embed: $"Gracz {user2.Mention} nie posiada kart z twojej listy życzeń.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cardsByUser, Context.Client))
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
