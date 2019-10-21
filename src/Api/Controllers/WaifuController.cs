@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
+using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.Executor;
 using Sanakan.Services.PocketWaifu;
@@ -368,6 +369,93 @@ namespace Sanakan.Api.Controllers
                 }
             }
             await "The appropriate claim was not found".ToResponse(403).ExecuteResultAsync(ControllerContext);
+        }
+
+        /// <summary>
+        /// Otwiera pakiet użytkownika (wymagany Bearer od użytkownika)
+        /// </summary>
+        /// <param name="packNumber">numer pakietu</param>
+        /// <response code="403">The appropriate claim was not found</response>
+        /// <response code="404">User not found</response>
+        [HttpPost("boosterpack/open/{packNumber}"), Authorize(Policy = "Player")]
+        public async Task<List<Card>> OpenAPackAsync(int packNumber)
+        {
+            var currUser = ControllerContext.HttpContext.User;
+            if (currUser.HasClaim(x => x.Type == "DiscordId"))
+            {
+                if (ulong.TryParse(currUser.Claims.First(x => x.Type == "DiscordId").Value, out var discordId))
+                {
+                    var cards = new List<Card>();
+                    using (var db = new Database.UserContext(_config))
+                    {
+                        var botUserCh = await db.GetCachedFullUserAsync(discordId);
+                        if (botUserCh == null)
+                        {
+                            await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                            return null;
+                        }
+
+                        if (botUserCh.GameDeck.BoosterPacks.Count < packNumber || packNumber <= 0)
+                        {
+                            await "Boosterpack not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                            return null;
+                        }
+
+                        var pack = botUserCh.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
+                        cards = await _waifu.OpenBoosterPackAsync(null, pack);
+                    }
+
+                    var exe = new Executable($"api-packet-open u{discordId}", new Task(() =>
+                    {
+                        using (var db = new Database.UserContext(_config))
+                        {
+                            var botUser = db.GetUserOrCreateAsync(discordId).Result;
+
+                            var bPack = botUser.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
+                            botUser.GameDeck.BoosterPacks.Remove(bPack);
+
+                            if (bPack.CardSourceFromPack == CardSource.Activity || bPack.CardSourceFromPack == CardSource.Migration)
+                            {
+                                botUser.Stats.OpenedBoosterPacksActivity += 1;
+                            }
+                            else
+                            {
+                                botUser.Stats.OpenedBoosterPacks += 1;
+                            }
+
+                            var sp = new List<string>();
+                            if (botUser.GameDeck.Wishlist != null)
+                                sp = botUser.GameDeck.Wishlist.Split(";").ToList();
+
+                            foreach (var card in cards)
+                            {
+                                card.Affection += botUser.GameDeck.AffectionFromKarma();
+                                card.FirstIdOwner = botUser.Id;
+
+                                botUser.GameDeck.Cards.Add(card);
+
+                                if (sp.Contains($"p{card.Character}"))
+                                    sp.Remove($"p{card.Character}");
+                            }
+
+                            if (sp.Count > 0)
+                                botUser.GameDeck.Wishlist = string.Join(";", sp);
+
+                            db.SaveChanges();
+
+                            QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+
+                            Ok(cards).ExecuteResultAsync(ControllerContext);
+                        }
+                    }));
+
+                    await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                    await Task.Delay(5000);
+                    return cards;
+                }
+            }
+            await "The appropriate claim was not found".ToResponse(403).ExecuteResultAsync(ControllerContext);
+            return null;
         }
 
         /// <summary>
