@@ -360,10 +360,13 @@ namespace Sanakan.Api.Controllers
                             db.SaveChanges();
 
                             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+                            Ok(botUser.GameDeck.BoosterPacks.Count).ExecuteResultAsync(ControllerContext);
                         }
                     }));
 
                     await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                    await Task.Delay(5000);
+
                     await "Booster pack added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
                     return;
                 }
