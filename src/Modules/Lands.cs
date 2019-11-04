@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Sanakan.Preconditions;
 using Discord.WebSocket;
 using System.Linq;
+using System;
 
 namespace Sanakan.Modules
 {
@@ -37,7 +38,11 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: _manager.GetMembersList(land, Context.Guild).Build());
+                foreach (var emb in _manager.GetMembersList(land, Context.Guild))
+                {
+                    await ReplyAsync("", embed: emb);
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
             }
         }
 

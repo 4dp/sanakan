@@ -398,7 +398,10 @@ namespace Sanakan.Services
                 foreach (var penalty in list)
                 {
                     var endDate = penalty.StartDate.AddHours(penalty.DurationInHours);
-                    mutedList += $"{context.Guild.GetUser(penalty.User)?.Mention} [DO: {endDate.ToShortDateString()} {endDate.ToShortTimeString()}] - {penalty.Reason}\n";
+                    var name = context.Guild.GetUser(penalty.User)?.Mention;
+                    if (name is null) continue;
+
+                    mutedList += $"{name} [DO: {endDate.ToShortDateString()} {endDate.ToShortTimeString()}] - {penalty.Reason}\n";
                 }
             }
 
