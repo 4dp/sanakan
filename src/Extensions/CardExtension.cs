@@ -109,6 +109,7 @@ namespace Sanakan.Extensions
             return $"**[{card.Id}]** *({card.Character})*\n"
                 + $"{card.GetString(true, true, true, false, true)}\n"
                 + $"_{card.Title}_\n\n"
+                + $"{card.Dere}\n"
                 + $"{card.GetAffectionString()}\n"
                 + $"{card.ExpCnt.ToString("F")} exp\n\n"
                 + $"{card.Tags ?? "---"}\n"

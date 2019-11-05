@@ -643,7 +643,7 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var card in cards)
             {
                 var thU = client.GetUser(card.GameDeck.UserId);
-                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
+                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
             }
 
             return new EmbedBuilder()
@@ -667,7 +667,7 @@ namespace Sanakan.Services.PocketWaifu
                     var user = client.GetUser(card.GameDeckId);
                     var uString = user?.Mention ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]** {card.GetStatusIcons()}\n";
+                    tempContentString += $"{uString}: **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)
