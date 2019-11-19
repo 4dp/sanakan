@@ -21,7 +21,7 @@ using Z.EntityFramework.Plus;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController, Authorize]
+    [ApiController, Authorize(Policy = "Site")]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
@@ -75,7 +75,7 @@ namespace Sanakan.Api.Controllers
                 var currUser = ControllerContext.HttpContext.User;
                 if (currUser.HasClaim(x => x.Type == ClaimTypes.Webpage))
                 {
-                    tokenData = BuildUserToken(user);
+                    tokenData = UserTokenBuilder.BuildUserToken(_config, user);
                 }
 
                 return new UserWithToken()
@@ -258,32 +258,6 @@ namespace Sanakan.Api.Controllers
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                 await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
             }
-        }
-
-        private TokenData BuildUserToken(Database.Models.User user)
-        {
-            var config = _config.Get();
-
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("DiscordId", user.Id.ToString()),
-                new Claim("Player", "waifu_player"),
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Jwt.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(config.Jwt.Issuer,
-              config.Jwt.Issuer,
-              claims,
-              expires: DateTime.Now.AddMinutes(30),
-              signingCredentials: creds);
-
-            return new TokenData()
-            {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expire = token.ValidTo
-            };
         }
     }
 }
