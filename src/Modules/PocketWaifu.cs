@@ -1497,6 +1497,32 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("kto chce", RunMode = RunMode.Async)]
+        [Alias("who wants", "kc", "ww")]
+        [Summary("wyszukuje na wishlistach danej karty, pomija tytuły")]
+        [Remarks("51545"), RequireWaifuCommandChannel]
+        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var thisCards = db.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCards == null)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && (x.Wishlist.Contains($"p{thisCards.Character}") || x.Wishlist.Contains($"c{thisCards.Id}"))).ToList();
+                if (wishlists.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
         [Command("życzenia użytkownik", RunMode = RunMode.Async)]
         [Alias("wishlist user", "wishlistu", "zyczenia uzytkownik", "życzeniau", "zyczeniau","życzenia uzytkownik","zyczenia użytkownik")]
         [Summary("wyświetla karty na liste życzeń użytkownika posiadane przez konkretnego gracza")]
