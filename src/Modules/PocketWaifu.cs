@@ -1512,7 +1512,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && (x.Wishlist.Contains($"p{thisCards.Character}") || x.Wishlist.Contains($"c{thisCards.Id}"))).ToList();
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && (x.Wishlist.Contains($"p{thisCards.Character};") || x.Wishlist.Contains($"c{thisCards.Id};"))).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
@@ -1538,7 +1538,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && x.Wishlist.Contains($"t{id}")).ToList();
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && x.Wishlist.Contains($"t{id};")).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());
