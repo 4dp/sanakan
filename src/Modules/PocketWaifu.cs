@@ -1523,6 +1523,32 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("kto chce anime", RunMode = RunMode.Async)]
+        [Alias("who wants anime", "kca", "wwa")]
+        [Summary("wyszukuje na wishlistach danego anime")]
+        [Remarks("21"), RequireWaifuCommandChannel]
+        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id)
+        {
+            var response = await _shclient.Title.GetInfoAsync(id);
+            if (!response.IsSuccessStatusCode())
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono tytułu!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && x.Wishlist.Contains($"t{id}")).ToList();
+                if (wishlists.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"**Karty z {response.Body.Title} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
         [Command("życzenia użytkownik", RunMode = RunMode.Async)]
         [Alias("wishlist user", "wishlistu", "zyczenia uzytkownik", "życzeniau", "zyczeniau","życzenia uzytkownik","zyczenia użytkownik")]
         [Summary("wyświetla karty na liste życzeń użytkownika posiadane przez konkretnego gracza")]
