@@ -2144,7 +2144,8 @@ namespace Sanakan.Modules
                 var embed = new EmbedBuilder
                 {
                     Color = EMType.Bot.Color(),
-                    Author = new EmbedAuthorBuilder().WithUser(Context.User)
+                    Author = new EmbedAuthorBuilder().WithUser(Context.User),
+                    Description = $"{thisCard.GetString(false, false, true)} **vs** {enemyCard.GetString(true, false, true)}\n\n",
                 };
 
                 var result = _waifu.GetFightWinner(thisCard, enemyCard);
@@ -2157,7 +2158,8 @@ namespace Sanakan.Modules
                         ++thisCard.ArenaStats.Wins;
                         var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
                         thisCard.ExpCnt += exp;
-                        embed.Description = $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
+                        embed.Description += "Twoja karta zwycięża!\n";
+                        embed.Description += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
 
                         dInfo.Side = DuelInfo.WinnerSide.Left;
                         dInfo.Winner = thisCard;
@@ -2179,6 +2181,7 @@ namespace Sanakan.Modules
                         break;
 
                     case FightWinner.Card2:
+                        embed.Description += "Twoja karta przegrywa!\n";
                         thisCard.Affection -= thisCard.HasImage() ? 0.1 : 0.5;
                         ++thisCard.ArenaStats.Loses;
 
@@ -2189,6 +2192,7 @@ namespace Sanakan.Modules
 
                     default:
                     case FightWinner.Draw:
+                        embed.Description += "Twoja karta remisuje!\n";
                         ++thisCard.ArenaStats.Draws;
 
                         dInfo.Side = DuelInfo.WinnerSide.Draw;
@@ -2204,17 +2208,7 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    using (var cdb = new Database.GuildConfigContext(Config))
-                    {
-                        var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-
-                        try
-                        {
-                            embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
-                        }
-                        catch (Exception) { }
-                        await ReplyAsync("", embed: embed.Build());
-                    }
+                    await ReplyAsync("", embed: embed.Build());
                 });
             }
         }
