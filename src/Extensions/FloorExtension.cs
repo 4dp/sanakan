@@ -68,140 +68,185 @@ namespace Sanakan.Extensions
 
         private static List<Room> GenerateFloorRooms(ulong floorLevel)
         {
-            //TODO: generate rooms to floor
+            var minRooms = 20 + (int) floorLevel / 20;
+            var maxRooms = 35 + (int) floorLevel / 10;
+            if (minRooms < 20 || minRooms > 100) minRooms = 100;
+            if (maxRooms < 35 || maxRooms > 200) maxRooms = 200;
+            var roomsCount = Services.Fun.GetRandomValue(minRooms, maxRooms);
+
+            // create unique item for hidden room
             var item = new TowerItem
             {
                 Level = floorLevel,
-                Name = $"Mieczyk blasku",
-                Rarity = ItemRairty.Magickal,
+                Rarity = ItemRairty.Legendary,
                 UseType = ItemUseType.Wearable,
-                Type = Database.Models.Tower.ItemType.Weapon,
+                Type = Database.Models.Tower.ItemType.Ring,
+                Name = $"Pierścień szczęścia #{floorLevel}",
                 Effect = new Effect
                 {
-                    Value = 60,
                     Duration = 0,
                     Level = floorLevel,
-                    Name = $"Atak blasku",
-                    Target = EffectTarget.Attack,
-                    Change = ChangeType.ChangeMax,
-                    ValueType = Database.Models.Tower.ValueType.Normal
+                    Target = EffectTarget.Luck,
+                    Change = ChangeType.ChangeNow,
+                    Value = 10 + (int) floorLevel,
+                    ValueType = Database.Models.Tower.ValueType.Normal,
+                    Name = $"Blask pierścienia szczęścia #{floorLevel}",
                 }
             };
 
-            var room1 = new Room
+            // create list with predefined special rooms
+            // index 0: start room
+            // index 1: boss room
+            // index 2: hidden room
+            var rooms = new List<Room>()
             {
-                Count = 0,
-                Item = null,
-                IsHidden = false,
-                Type = RoomType.Start,
-                ItemType = ItemInRoomType.None,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
+                new Room
+                {
+                    Count = 0,
+                    Item = null,
+                    IsHidden = false,
+                    Type = RoomType.Start,
+                    ItemType = ItemInRoomType.None,
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>()
+                },
+                new Room
+                {
+                    Item = null,
+                    IsHidden = false,
+                    Type = RoomType.BossBattle,
+                    ItemType = ItemInRoomType.None,
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>(),
+                    Count = floorLevel > 100 ? Services.Fun.GetRandomValue(0, 4): 0,
+                },
+                new Room
+                {
+                    Count = 5,
+                    Item = item,
+                    IsHidden = true,
+                    Type = RoomType.Treasure,
+                    ItemType = ItemInRoomType.ToOpen,
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>()
+                }
             };
 
-            var room2 = new Room
+            var campfires = roomsCount / 15;
+            for (int i = 0; i < campfires; i++)
             {
-                Count = 0,
-                Item = null,
-                IsHidden = false,
-                Type = RoomType.BossBattle,
-                ItemType = ItemInRoomType.None,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+                rooms.Add(new Room
+                {
+                    Count = 0,
+                    Item = null,
+                    IsHidden = false,
+                    Type = RoomType.Campfire,
+                    ItemType = ItemInRoomType.None,
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>()
+                });
+            }
 
-            var room3 = new Room
+            var treasures = roomsCount / 20;
+            for (int i = 0; i < treasures; i++)
             {
-                Count = 2,
-                Item = item,
-                IsHidden = false,
-                Type = RoomType.Fight,
-                ItemType = ItemInRoomType.Loot,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+                rooms.Add(new Room
+                {
+                    Item = null,
+                    IsHidden = false,
+                    Type = RoomType.Treasure,
+                    ItemType = ItemInRoomType.None,
+                    Count = Services.Fun.GetRandomValue(1, 3),
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>()
+                });
+            }
 
-            var room4 = new Room
+            var events = roomsCount / 30;
+            for (int i = 0; i < events; i++)
             {
-                Count = 0,
-                Item = null,
-                IsHidden = false,
-                Type = RoomType.Campfire,
-                ItemType = ItemInRoomType.None,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+                //TODO: generate event rooms
+                // rooms.Add(new Room
+                // {
+                //     Count = 0,
+                //     Item = null,
+                //     IsHidden = false,
+                //     Type = RoomType.Event,
+                //     ItemType = ItemInRoomType.None,
+                //     ConnectedRooms = new List<RoomConnection>(),
+                //     RetConnectedRooms = new List<RoomConnection>()
+                // });
+            }
 
-            var room5 = new Room
+            var leftRooms = roomsCount - 3 - campfires - treasures - events;
+            for (int i = 0; i < leftRooms; i++)
             {
-                Count = 0,
-                Item = null,
-                IsHidden = false,
-                Type = RoomType.Event,
-                ItemType = ItemInRoomType.None,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+                if (Services.Fun.TakeATry(3))
+                {
+                    rooms.Add(new Room
+                    {
+                        Count = 0,
+                        Item = null,
+                        IsHidden = false,
+                        Type = RoomType.Empty,
+                        ItemType = ItemInRoomType.None,
+                        ConnectedRooms = new List<RoomConnection>(),
+                        RetConnectedRooms = new List<RoomConnection>()
+                    });
+                }
+                else
+                {
+                    rooms.Add(new Room
+                    {
+                        Item = null,
+                        IsHidden = false,
+                        Type = RoomType.Fight,
+                        ItemType = ItemInRoomType.None,
+                        Count = Services.Fun.GetRandomValue(1, 5),
+                        ConnectedRooms = new List<RoomConnection>(),
+                        RetConnectedRooms = new List<RoomConnection>()
+                    });
+                }
+            }
 
-            var room6 = new Room
-            {
-                Count = 0,
-                Item = item,
-                IsHidden = true,
-                Type = RoomType.Empty,
-                ItemType = ItemInRoomType.ToOpen,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+            // generate maze
+            //TODO: generate connections
+            // room1.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room3
+            // });
 
-            var room7 = new Room
-            {
-                Count = 1,
-                Item = null,
-                IsHidden = true,
-                Type = RoomType.Treasure,
-                ItemType = ItemInRoomType.None,
-                ConnectedRooms = new List<RoomConnection>(),
-                RetConnectedRooms = new List<RoomConnection>()
-            };
+            // room1.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room4
+            // });
 
-            room1.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room3
-            });
+            // room4.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room5
+            // });
 
-            room1.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room4
-            });
+            // room5.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room6
+            // });
 
-            room4.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room5
-            });
+            // room5.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room7
+            // });
 
-            room5.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room6
-            });
+            // room5.ConnectedRooms.Add(new RoomConnection
+            // {
+            //     ConnectedRoom = room2
+            // });
 
-            room5.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room7
-            });
-
-            room5.ConnectedRooms.Add(new RoomConnection
-            {
-                ConnectedRoom = room2
-            });
-
-            return new List<Room>() { room1, room2, room3, room4, room5, room6, room7 };
+            return rooms;
         }
 
         private static Enemy NewBoss(ulong floorLevel)
         {
             //TODO: generate boss/enemy to floor
-
             var boss = new Enemy
             {
                 Profile = null,

@@ -200,6 +200,8 @@ namespace Sanakan.Modules
 
                 await ReplyAsync("", embed: embed.Build());
             }
+
+            //TODO: equip items, restore action points
         }
     }
 }
