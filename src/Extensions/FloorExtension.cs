@@ -69,9 +69,9 @@ namespace Sanakan.Extensions
 
         private static List<Room> GenerateFloorRooms(ulong floorLevel)
         {
-            var minRooms = 20 + (int) floorLevel / 20;
+            var minRooms = 25 + (int) floorLevel / 20;
             var maxRooms = 35 + (int) floorLevel / 10;
-            if (minRooms < 20 || minRooms > 100) minRooms = 100;
+            if (minRooms < 25 || minRooms > 100) minRooms = 100;
             if (maxRooms < 35 || maxRooms > 200) maxRooms = 200;
             var roomsCount = Services.Fun.GetRandomValue(minRooms, maxRooms);
 
@@ -167,23 +167,22 @@ namespace Sanakan.Extensions
             var events = roomsCount / 30;
             for (int i = 0; i < events; i++)
             {
-                //TODO: generate event rooms
-                // randRooms.Add(new Room
-                // {
-                //     Count = 0,
-                //     Item = null,
-                //     IsHidden = false,
-                //     Type = RoomType.Event,
-                //     ItemType = ItemInRoomType.None,
-                //     ConnectedRooms = new List<RoomConnection>(),
-                //     RetConnectedRooms = new List<RoomConnection>()
-                // });
+                randRooms.Add(new Room
+                {
+                    Count = 0,
+                    Item = null,
+                    IsHidden = false,
+                    Type = RoomType.Event,
+                    ItemType = ItemInRoomType.None,
+                    ConnectedRooms = new List<RoomConnection>(),
+                    RetConnectedRooms = new List<RoomConnection>()
+                });
             }
 
             var leftRooms = roomsCount - 3 - campfires - treasures - events;
             for (int i = 0; i < leftRooms; i++)
             {
-                if (Services.Fun.TakeATry(3))
+                if (Services.Fun.TakeATry(2))
                 {
                     randRooms.Add(new Room
                     {
@@ -247,7 +246,7 @@ namespace Sanakan.Extensions
 
             } while (randRooms.Count > 0);
 
-            // add special rooms
+            // connect special rooms
             var randRoom = Services.Fun.GetOneRandomFrom(rooms);
             rooms[2].ConnectedRooms.Add(new RoomConnection { ConnectedRoom = randRoom });
             randRoom.ConnectedRooms.Add(new RoomConnection { ConnectedRoom = rooms[2] });
@@ -261,7 +260,6 @@ namespace Sanakan.Extensions
 
         private static Enemy NewBoss(ulong floorLevel)
         {
-            //TODO: generate boss/enemy to floor
             var boss = new Enemy
             {
                 Profile = null,
@@ -269,7 +267,7 @@ namespace Sanakan.Extensions
                 Level = floorLevel,
                 Dere = Dere.Kuudere,
                 Type = EnemyType.Boss,
-                Name = "Pomniejszy bosik",
+                Name = $"Bosik #{floorLevel}",
                 LootType = LootType.TowerItem,
                 Spells = new List<SpellInEnemy>(),
                 Health = GetTowerBossHp(floorLevel),
@@ -278,6 +276,7 @@ namespace Sanakan.Extensions
                 Defence = GetTowerBossDefence(floorLevel),
             };
 
+            //TODO: generate boss skills
             boss.Spells.Add(new SpellInEnemy
             {
                 Chance = 50,
