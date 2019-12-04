@@ -4,6 +4,7 @@ using Sanakan.Database.Models;
 using Sanakan.Database.Models.Tower;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sanakan.Extensions
 {
@@ -132,10 +133,11 @@ namespace Sanakan.Extensions
                 }
             };
 
+            var randRooms = new List<Room>();
             var campfires = roomsCount / 15;
             for (int i = 0; i < campfires; i++)
             {
-                rooms.Add(new Room
+                randRooms.Add(new Room
                 {
                     Count = 0,
                     Item = null,
@@ -150,7 +152,7 @@ namespace Sanakan.Extensions
             var treasures = roomsCount / 20;
             for (int i = 0; i < treasures; i++)
             {
-                rooms.Add(new Room
+                randRooms.Add(new Room
                 {
                     Item = null,
                     IsHidden = false,
@@ -166,7 +168,7 @@ namespace Sanakan.Extensions
             for (int i = 0; i < events; i++)
             {
                 //TODO: generate event rooms
-                // rooms.Add(new Room
+                // randRooms.Add(new Room
                 // {
                 //     Count = 0,
                 //     Item = null,
@@ -183,7 +185,7 @@ namespace Sanakan.Extensions
             {
                 if (Services.Fun.TakeATry(3))
                 {
-                    rooms.Add(new Room
+                    randRooms.Add(new Room
                     {
                         Count = 0,
                         Item = null,
@@ -196,7 +198,7 @@ namespace Sanakan.Extensions
                 }
                 else
                 {
-                    rooms.Add(new Room
+                    randRooms.Add(new Room
                     {
                         Item = null,
                         IsHidden = false,
@@ -210,36 +212,49 @@ namespace Sanakan.Extensions
             }
 
             // generate maze
-            //TODO: generate connections
-            // room1.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room3
-            // });
+            randRooms.Shuffle();
+            var nextRooms = new List<Room>() { rooms[0] };
 
-            // room1.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room4
-            // });
+            do
+            {
+                var futureRooms = new List<Room>();
+                for (int j = nextRooms.Count; j > 0; j--)
+                {
+                    var startRoom = nextRooms[j - 1];
+                    nextRooms.Remove(startRoom);
 
-            // room4.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room5
-            // });
+                    var connectionsCnt = Services.Fun.GetRandomValue(1, 4);
+                    if (nextRooms.Count == 0 || !Services.Fun.TakeATry(5))
+                    {
+                        for (int i = 0; i < connectionsCnt; i++)
+                        {
+                            if (randRooms.Count > 0)
+                            {
+                                var rN = Services.Fun.GetOneRandomFrom(randRooms);
+                                randRooms.Remove(rN);
+                                futureRooms.Add(rN);
+                                rooms.Add(rN);
 
-            // room5.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room6
-            // });
+                                startRoom.ConnectedRooms.Add(new RoomConnection { ConnectedRoom = rN });
+                                rN.ConnectedRooms.Add(new RoomConnection { ConnectedRoom = startRoom });
+                            }
+                        }
+                    }
+                }
 
-            // room5.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room7
-            // });
+                nextRooms.AddRange(futureRooms);
+                futureRooms.Clear();
 
-            // room5.ConnectedRooms.Add(new RoomConnection
-            // {
-            //     ConnectedRoom = room2
-            // });
+            } while (randRooms.Count > 0);
+
+            // add special rooms
+            var randRoom = Services.Fun.GetOneRandomFrom(rooms);
+            rooms[2].ConnectedRooms.Add(new RoomConnection { ConnectedRoom = randRoom });
+            randRoom.ConnectedRooms.Add(new RoomConnection { ConnectedRoom = rooms[2] });
+
+            var lastRoom = rooms.Last();
+            rooms[1].ConnectedRooms.Add(new RoomConnection { ConnectedRoom = lastRoom });
+            lastRoom.ConnectedRooms.Add(new RoomConnection { ConnectedRoom = rooms[1] });
 
             return rooms;
         }
