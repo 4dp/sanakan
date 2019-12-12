@@ -122,8 +122,7 @@ namespace Sanakan.Services.Session.Models
                     return PlayingCard.GetTowerEnemiesString();
 
                 case RoomType.Event:
-                    //TODO: build event view
-                    return "";
+                    return PlayingCard.GetTowerEventString();
 
                 default:
                     return GetNotConqueredRoomContent();
@@ -379,10 +378,9 @@ namespace Sanakan.Services.Session.Models
                         msg = $"Zadałeś {thisCard.DealDmgToEnemy(thisEnemy, cDmg)} obrażeń! **[{thisEnemy.Id}]**\n";
                         if (thisEnemy.Health < 1)
                         {
-                            msg += $"Przeciwnik umiera! **[{thisEnemy.Id}]**\n\n";
+                            var exp = thisCard.TowerGrantExpAndLoot(thisEnemy);
+                            msg += $"Przeciwnik umiera! (+{exp}exp) **[{thisEnemy.Id}]**\n\n";
                             thisCard.Profile.Enemies.Remove(thisEnemy);
-
-                            //TODO: loot enemy, add exp
                         }
                     }
                 }

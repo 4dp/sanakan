@@ -143,6 +143,18 @@ namespace Sanakan.Extensions
             return toReturn;
         }
 
+        public static string GetTowerEventString(this Card card)
+        {
+            if (card.Profile.CurrentEvent == null)
+                return null;
+
+            string toReturn = $"{card.Profile.CurrentEvent.Text}\n\n";
+            foreach (var route in card.Profile.CurrentEvent.Routes)
+                toReturn += $"{route.Id}: {route.Text}\n";
+
+            return toReturn;
+        }
+
         public static string GetRoomContent(this Room room, string more = null)
         {
             var itemString = room.GetRoomItemString();
@@ -166,6 +178,39 @@ namespace Sanakan.Extensions
                 case RoomType.Start:
                     return $"Nowe piętro - nowa przygoda!{itemString}";
             }
+        }
+
+        public static long TowerGrantExpAndLoot(this Card card, Enemy enemy)
+        {
+            long exp = (long) enemy.Level / 10;
+            if (exp < 1) exp = 1;
+
+            if (enemy.Type == EnemyType.Boss)
+                exp *= 50;
+
+            card.Profile.ExpCnt += exp;
+            var newLevel = Services.ExperienceManager.CalculateLevel(card.Profile.ExpCnt);
+            if (newLevel != card.Profile.Level)
+            {
+                card.Profile.PointsFormLvlUp += 2;
+                card.Profile.Level = newLevel;
+            }
+
+            //TODO: loot
+            switch (enemy.LootType)
+            {
+                case LootType.Title:
+                case LootType.Character:
+                case LootType.TowerItem:
+                case LootType.WaifuItem:
+                break;
+
+                default:
+                case LootType.None:
+                break;
+            }
+
+            return exp;
         }
 
         private static string GetRoomItemString(this Room room)

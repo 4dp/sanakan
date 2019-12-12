@@ -17,6 +17,8 @@ namespace Sanakan.Database.Models.Tower
         public int Energy { get; set; }
         public int Luck { get; set; }
 
+        public int PointsFormLvlUp { get; set; }
+
         public ulong MaxFloor { get; set; }
         public string ConqueredRoomsFromFloor { get; set; }
 
