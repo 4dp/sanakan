@@ -1470,7 +1470,12 @@ namespace Sanakan.Modules
                     {
                         try
                         {
-                            reason = reportMsg?.Embeds?.FirstOrDefault()?.Fields.FirstOrDefault(x => x.Name == "Powód:").Value ?? reason;
+                            var rEmbedBuilder = reportMsg?.Embeds?.FirstOrDefault().ToEmbedBuilder();
+                            reason = rEmbedBuilder?.Fields.FirstOrDefault(x => x.Name == "Powód:").Value.ToString() ?? reason;
+
+                            rEmbedBuilder.Color = EMType.Bot.Color();
+                            rEmbedBuilder.Fields.FirstOrDefault(x => x.Name == "Id zgloszenia:").Value = "Rozpatrzone!";
+                            await ReplyAsync("", embed: rEmbedBuilder.Build());
                         }
                         catch (Exception) { }
                     }
