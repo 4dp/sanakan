@@ -256,6 +256,46 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("mkick", RunMode = RunMode.Async)]
+        [Summary("wyrzuca użytkowników z serwera")]
+        [Remarks("Jupson Moe")]
+        public async Task MultiKickAsync([Summary("użytkownicy")]params SocketGuildUser[] users)
+        {
+            var count = 0;
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    await user.KickAsync("Multi kick - łamanie regulaminu");
+                    ++count;
+                }
+                catch (Exception) {}
+            }
+
+            await ReplyAsync("", embed: $"Wyrzucono {count} użytkowników.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("mban", RunMode = RunMode.Async)]
+        [Summary("banuje użytkowników z serwera")]
+        [Remarks("Jupson Moe")]
+        public async Task MultiBankAsync([Summary("użytkownicy")]params SocketGuildUser[] users)
+        {
+            var count = 0;
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    await Context.Guild.AddBanAsync(user, 0, "Multi ban - łamanie regulaminu");
+                    ++count;
+                }
+                catch (Exception) {}
+            }
+
+            await ReplyAsync("", embed: $"Zbanowano {count} użytkowników.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("restore")]
         [Summary("przenosi kartę na nowo do użytkownika")]
         [Remarks("Sniku")]
