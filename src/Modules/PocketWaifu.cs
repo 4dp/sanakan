@@ -143,7 +143,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync(new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -165,7 +165,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card  = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
