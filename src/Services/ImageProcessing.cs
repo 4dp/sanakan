@@ -833,7 +833,7 @@ namespace Sanakan.Services
             var starCnt = (card.RestartCnt - (25 * starType)) / 5;
             if (starCnt > 5) starCnt = 5;
 
-            var starX = 144;
+            var starX = 149;
             for (int i = 0; i < starCnt; i++)
             {
                 using (var fire = Image.Load($"./Pictures/PW/star_{starType}.png"))
