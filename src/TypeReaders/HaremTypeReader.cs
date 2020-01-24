@@ -75,6 +75,10 @@ namespace Sanakan.TypeReaders
                 case "picturec":
                     return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.CustomPicture));
 
+                case "unikat":
+                case "unique":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(HaremType.Unique));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu haremu!"));
             }

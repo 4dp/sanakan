@@ -48,6 +48,7 @@ namespace Sanakan.Database.Models
         public string CustomImage { get; set; }
         public ulong FirstIdOwner { get; set; }
         public ulong LastIdOwner { get; set; }
+        public bool Unique { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 
@@ -59,6 +60,7 @@ namespace Sanakan.Database.Models
         {
             var marks = new[]
             {
+                Unique ? "[U]" : "",
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),

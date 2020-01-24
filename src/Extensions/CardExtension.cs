@@ -85,6 +85,7 @@ namespace Sanakan.Extensions
         public static string GetStatusIcons(this Card card)
         {
             var icons = new List<string>();
+            if (card.Unique) icons.Add("💠");
             if (!card.IsTradable) icons.Add("⛔");
             if (card.IsBroken()) icons.Add("💔");
             if (card.InCage) icons.Add("🔒");
@@ -456,7 +457,10 @@ namespace Sanakan.Extensions
         {
             var response = await client.GetCharacterInfoAsync(card.Character);
             if (!response.IsSuccessStatusCode())
+            {
+                card.Unique = true;
                 throw new Exception($"Couldn't get card info!");
+            }
 
             if (user != null)
             {
@@ -464,6 +468,7 @@ namespace Sanakan.Extensions
                     card.FirstIdOwner = user.Id;
             }
 
+            card.Unique = false;
             card.Name = response.Body.ToString();
             card.Image = response.Body.HasImage ? response.Body.PictureUrl : null;
             card.Title = response.Body?.Relations?.OrderBy(x => x.Id).FirstOrDefault()?.Title ?? "????";

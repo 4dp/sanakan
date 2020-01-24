@@ -697,6 +697,24 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("exp")]
+        [Summary("zmienia punkty doświadczenia użytkownika o podaną wartość")]
+        [Remarks("Sniku 10000")]
+        public async Task ChangeUserExpAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba punktów doświadczenia")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.ExpCnt += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ExpCnt} punktów doświadczenia.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("kill", RunMode = RunMode.Async)]
         [Summary("wyłącza bota")]
         [Remarks("")]
