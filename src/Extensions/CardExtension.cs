@@ -160,7 +160,7 @@ namespace Sanakan.Extensions
             var starBonus = card.RestartCnt / 5;
             if (starBonus > 20) starBonus = 20;
 
-            var newAttack = card.Attack + (card.RestartCnt * 2) + (starBonus * 15);
+            var newAttack = card.Attack + (card.RestartCnt * 2) + (starBonus * 21);
             if (newAttack > 990) newAttack = 999;
             return newAttack;
         }
