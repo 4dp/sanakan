@@ -171,7 +171,7 @@ namespace Sanakan.Extensions
         public static int GetCardStarCount(this Card card)
         {
             var max = card.GetMaxStarsPerType();
-            var starCnt = (card.RestartCnt - card.GetMaxCardsOnStarType()) / max;
+            var starCnt = (card.RestartCnt - card.GetMaxCardsOnStarType()) / card.GetRestartCntPerStar();
             if (starCnt > max) starCnt = max;
             return starCnt;
         }
