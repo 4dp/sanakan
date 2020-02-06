@@ -827,11 +827,8 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(fire, new Point(0, 0), 1));
             }
 
-            var starType = (card.RestartCnt - 1) / 25;
-            if (starType > 3) starType = 3;
-
-            var starCnt = (card.RestartCnt - (25 * starType)) / 5;
-            if (starCnt > 5) starCnt = 5;
+            var starType = card.GetCardStarType();
+            var starCnt = card.GetCardStarCount();
 
             var starX = 239 - (18 * starCnt);
             for (int i = 0; i < starCnt; i++)

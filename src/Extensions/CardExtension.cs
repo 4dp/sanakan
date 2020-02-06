@@ -155,12 +155,44 @@ namespace Sanakan.Extensions
             return newHealth;
         }
 
+        public static int GetCardStarType(this Card card)
+        {
+            var max = card.MaxStarType();
+            var type = (card.RestartCnt - 1) / (card.GetMaxStarsPerType() * card.GetRestartCntPerStar());
+            if (type > max) type = max;
+            return type;
+        }
+
+        public static int GetMaxCardsOnStarType(this Card card)
+        {
+            return card.GetMaxStarsPerType() * card.GetRestartCntPerStar() * card.GetCardStarType();
+        }
+
+        public static int GetCardStarCount(this Card card)
+        {
+            var max = card.GetMaxStarsPerType();
+            var starCnt = (card.RestartCnt - card.GetMaxCardsOnStarType()) / max;
+            if (starCnt > max) starCnt = max;
+            return starCnt;
+        }
+
+        public static int GetTotalCardStarCount(this Card card)
+        {
+            var max = card.GetMaxStarsPerType() * card.MaxStarType();
+            var stars = card.RestartCnt / card.GetRestartCntPerStar();
+            if (stars > max) stars = max;
+            return stars;
+        }
+
+        public static int MaxStarType(this Card _) => 9;
+
+        public static int GetRestartCntPerStar(this Card _) => 2;
+
+        public static int GetMaxStarsPerType(this Card _) => 5;
+
         public static int GetAttackWithBonus(this Card card)
         {
-            var starBonus = card.RestartCnt / 5;
-            if (starBonus > 20) starBonus = 20;
-
-            var newAttack = card.Attack + (card.RestartCnt * 2) + (starBonus * 21);
+            var newAttack = card.Attack + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 8);
             if (newAttack > 990) newAttack = 999;
             return newAttack;
         }
