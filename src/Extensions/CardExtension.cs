@@ -158,20 +158,27 @@ namespace Sanakan.Extensions
         public static int GetCardStarType(this Card card)
         {
             var max = card.MaxStarType();
-            var type = (card.RestartCnt - 1) / (card.GetMaxStarsPerType() * card.GetRestartCntPerStar());
+            var maxRestartsPerType = card.GetMaxStarsPerType() * card.GetRestartCntPerStar();
+            var type = (card.RestartCnt - 1) / maxRestartsPerType;
+            if (type > 0)
+            {
+                var ths = card.RestartCnt - (maxRestartsPerType + ((type - 1) * maxRestartsPerType));
+                if (ths < card.GetRestartCntPerStar()) --type;
+            }
+
             if (type > max) type = max;
             return type;
         }
 
-        public static int GetMaxCardsOnStarType(this Card card)
+        public static int GetMaxCardsRestartsOnStarType(this Card card)
         {
-            return card.GetMaxStarsPerType() * card.GetRestartCntPerStar() * card.GetCardStarType();
+            return  card.GetMaxStarsPerType() * card.GetRestartCntPerStar() * card.GetCardStarType();
         }
 
         public static int GetCardStarCount(this Card card)
         {
             var max = card.GetMaxStarsPerType();
-            var starCnt = (card.RestartCnt - card.GetMaxCardsOnStarType()) / card.GetRestartCntPerStar();
+            var starCnt = (card.RestartCnt - card.GetMaxCardsRestartsOnStarType()) / card.GetRestartCntPerStar();
             if (starCnt > max) starCnt = max;
             return starCnt;
         }
