@@ -654,6 +654,21 @@ namespace Sanakan.Modules
                 card.Affection = 0;
                 card.ExpCnt = 0;
 
+                if (card.RestartCnt == 20 ||
+                    card.RestartCnt == 40 ||
+                    card.RestartCnt == 60 ||
+                    card.RestartCnt == 80 ||
+                    card.RestartCnt == 100)
+                {
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                    if (inUserItem == null)
+                    {
+                        inUserItem = ItemType.SetCustomImage.ToItem();
+                        bUser.GameDeck.Items.Add(inUserItem);
+                    }
+                    else inUserItem.Count++;
+                }
+
                 await db.SaveChangesAsync();
                 _waifu.DeleteCardImageIfExist(card);
 
@@ -667,7 +682,7 @@ namespace Sanakan.Modules
         [Alias("update")]
         [Summary("pobiera dane na tamat karty z shindena")]
         [Remarks("5412"), RequireWaifuCommandChannel]
-        public async Task UpdateCardAsync([Summary("WID")]ulong id)
+        public async Task UpdateCardAsync([Summary("WID")]ulong id, [Summary("czy przywrócić obrazek ze strony")]bool defaultImage = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -679,6 +694,9 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                if (defaultImage)
+                    card.CustomImage = null;
 
                 try
                 {
@@ -749,6 +767,8 @@ namespace Sanakan.Modules
                 ++bUser.Stats.UpgaredCards;
                 bUser.GameDeck.Karma += 1;
 
+                bool hasAlreadySSS = bUser.GameDeck.Cards.Any(x => x.Rarity == Rarity.SSS || x.RestartCnt > 0);
+
                 card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
                 card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
                 card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 5 : 1);
@@ -756,7 +776,7 @@ namespace Sanakan.Modules
                 card.Affection += 1;
                 card.ExpCnt = 0;
 
-                if (card.Rarity == Rarity.SSS)
+                if (card.Rarity == Rarity.SSS && card.RestartCnt < 1 && !hasAlreadySSS)
                 {
                     var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
                     if (inUserItem == null)
