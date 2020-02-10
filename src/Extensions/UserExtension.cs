@@ -67,6 +67,7 @@ namespace Sanakan.Extensions
                     RaitoUpgrades = 0,
                     ReleasedCards = 0,
                     TurnamentsWon = 0,
+                    UpgradedToSSS = 0,
                     UnleashedCards = 0,
                     SacraficeCards = 0,
                     DestroyedCards = 0,

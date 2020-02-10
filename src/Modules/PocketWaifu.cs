@@ -767,8 +767,6 @@ namespace Sanakan.Modules
                 ++bUser.Stats.UpgaredCards;
                 bUser.GameDeck.Karma += 1;
 
-                bool hasAlreadySSS = bUser.GameDeck.Cards.Any(x => x.Rarity == Rarity.SSS || x.RestartCnt > 0);
-
                 card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
                 card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
                 card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 5 : 1);
@@ -776,15 +774,20 @@ namespace Sanakan.Modules
                 card.Affection += 1;
                 card.ExpCnt = 0;
 
-                if (card.Rarity == Rarity.SSS && card.RestartCnt < 1 && !hasAlreadySSS)
+                if (card.Rarity == Rarity.SSS)
                 {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
-                    if (inUserItem == null)
+                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS < 1)
                     {
-                        inUserItem = ItemType.SetCustomImage.ToItem();
-                        bUser.GameDeck.Items.Add(inUserItem);
+                        var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                        if (inUserItem == null)
+                        {
+                            inUserItem = ItemType.SetCustomImage.ToItem();
+                            bUser.GameDeck.Items.Add(inUserItem);
+                        }
+                        else inUserItem.Count++;
                     }
-                    else inUserItem.Count++;
+
+                    ++bUser.Stats.UpgradedToSSS;
                 }
 
                 await db.SaveChangesAsync();

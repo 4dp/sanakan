@@ -530,7 +530,7 @@ namespace Sanakan.Api.Controllers
 
                             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
 
-                            Ok(cards).ExecuteResultAsync(ControllerContext);
+                            Newtonsoft.Json.JsonConvert.SerializeObject(cards).ToResponse().ExecuteResultAsync(ControllerContext);
                         }
                     }));
 
