@@ -219,7 +219,7 @@ namespace Sanakan.Extensions
                 case CardSource.Safari: return "Safari";
                 case CardSource.Shop: return "Sklepik";
                 case CardSource.GodIntervention: return "Czity";
-                case CardSource.Api: return "Nieznane";
+                case CardSource.Api: return "Strona";
                 case CardSource.Migration: return "Stara baza";
                 case CardSource.PvE: return "Walki na boty";
                 case CardSource.Daily: return "Karta+";

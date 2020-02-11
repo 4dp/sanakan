@@ -43,6 +43,12 @@ namespace Sanakan.Extensions
                     return "Pozwala sprawdzić dokładny poziom relacji z kartą.";
                 case ItemType.SetCustomImage:
                     return "Pozwala ustawić własny obrazek karcie. Zalecany wymiary 448x650.";
+                case ItemType.IncreaseExpSmall:
+                    return "Dodaje odrobinę punktów doświadczenia do karty.";
+                case ItemType.IncreaseExpBig:
+                    return "Dodaje punkty doświadczenia do karty.";
+                case ItemType.ExpContainer:
+                    return "Pozwala przechowywać punkty doświadczenia z kart, po opróżnieniu ulega zniszczeniu.";
 
                 default:
                     return "Brak opisu.";
@@ -85,6 +91,12 @@ namespace Sanakan.Extensions
                     return "Kryształowa kula";
                 case ItemType.SetCustomImage:
                     return "Skalpel";
+                case ItemType.IncreaseExpSmall:
+                    return "Mleko truskawkowe";
+                case ItemType.IncreaseExpBig:
+                    return "Gorąca czekolada";
+                case ItemType.ExpContainer:
+                    return "Skrzynia doświadczenia";
 
                 default:
                     return "Brak";
@@ -113,6 +125,10 @@ namespace Sanakan.Extensions
                     return 10;
                 case ItemType.SetCustomImage:
                     return 300;
+                case ItemType.IncreaseExpSmall:
+                    return 100;
+                case ItemType.IncreaseExpBig:
+                    return 500;
 
                 default:
                     return 1;

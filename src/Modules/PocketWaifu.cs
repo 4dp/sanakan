@@ -327,7 +327,7 @@ namespace Sanakan.Modules
 
                 if (itemList.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych pakietów.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych przedmiotów.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -353,6 +353,9 @@ namespace Sanakan.Modules
                     case ItemType.AffectionRecoverySmall:
                     case ItemType.AffectionRecoveryNormal:
                     case ItemType.AffectionRecoveryGreat:
+                    case ItemType.IncreaseExpSmall:
+                    case ItemType.IncreaseExpBig:
+                    case ItemType.ExpContainer:
                         break;
 
                     default:
@@ -405,6 +408,27 @@ namespace Sanakan.Modules
                         affectionInc = 0.02 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
+                        break;
+
+                    case ItemType.IncreaseExpSmall:
+                        card.ExpCnt += 1.5 * itemCnt;
+                        affectionInc = 0.15 * itemCnt;
+                        bUser.GameDeck.Karma += 0.1 * itemCnt;
+                        embed.Description += "Twoja karta otrzymała odrobinę punktów doświadczenia!";
+                        break;
+
+                    case ItemType.IncreaseExpBig:
+                        card.ExpCnt += 5 * itemCnt;
+                        affectionInc = 0.25 * itemCnt;
+                        bUser.GameDeck.Karma += 0.3 * itemCnt;
+                        embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
+                        break;
+
+                    case ItemType.ExpContainer:
+                        card.ExpCnt += 1 * itemCnt;
+                        affectionInc = 0.01 * itemCnt;
+                        bUser.GameDeck.Karma += 0.003 * itemCnt;
+                        embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
                         break;
 
                     case ItemType.SetCustomImage:
@@ -1010,6 +1034,15 @@ namespace Sanakan.Modules
                 if (nextMarket > 22) nextMarket = 22;
                 if (nextMarket < 4) nextMarket = 4;
 
+                if (botuser.GameDeck.Karma >= 3000)
+                {
+                    int tK = (int)(botuser.GameDeck.Karma - 2000) / 1000;
+                    nextMarket -= tK;
+
+                    if (nextMarket < 1)
+                        nextMarket = 1;
+                }
+
                 int itemCnt = 1 + (int)(card.Affection / 15);
                 itemCnt += (int)(botuser.GameDeck.Karma / 180);
                 if (itemCnt > 10) itemCnt = 10;
@@ -1093,6 +1126,15 @@ namespace Sanakan.Modules
                 int nextMarket = 20 + (int)(botuser.GameDeck.Karma / 100);
                 if (nextMarket > 22) nextMarket = 22;
                 if (nextMarket < 4) nextMarket = 4;
+
+                if (botuser.GameDeck.Karma <= -3000)
+                {
+                    int tK = (int)(botuser.GameDeck.Karma + 2000) / 1000;
+                    nextMarket += tK;
+
+                    if (nextMarket < 1)
+                        nextMarket = 1;
+                }
 
                 int itemCnt = 1 + (int)(card.Affection / 15);
                 itemCnt -= (int)(botuser.GameDeck.Karma / 180);
@@ -2192,7 +2234,7 @@ namespace Sanakan.Modules
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        if (Services.Fun.TakeATry(4))
+                        if (Services.Fun.TakeATry(5))
                         {
                             var item = _waifu.RandomizeItemFromFight().ToItem();
                             var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
@@ -2278,7 +2320,7 @@ namespace Sanakan.Modules
                     }
                 };
 
-                var items = new List<Item> { _waifu.RandomizeItemFromFight().ToItem() };
+                var items = new List<Item> { _waifu.RandomizeItemFromMFight().ToItem() };
                 var characters = new List<BoosterPackCharacter>();
 
                 var cardsCnt = Services.Fun.GetRandomValue(4, 9);
@@ -2313,11 +2355,11 @@ namespace Sanakan.Modules
                     {
                         await Task.Delay(15);
                         if (Services.Fun.TakeATry(2))
-                            items.Add(_waifu.RandomizeItemFromFight().ToItem());
+                            items.Add(_waifu.RandomizeItemFromMFight().ToItem());
                     }
                 }
 
-                items.Add(_waifu.RandomizeItemFromFight().ToItem());
+                items.Add(_waifu.RandomizeItemFromMFight().ToItem());
                 var boosterPack = new BoosterPack
                 {
                     RarityExcludedFromPack = new List<RarityExcluded>(),

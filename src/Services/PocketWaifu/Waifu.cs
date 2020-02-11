@@ -213,7 +213,8 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 7) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 8) return ItemType.BetterIncreaseUpgradeCnt;
             if (num < 15) return ItemType.IncreaseUpgradeCnt;
             if (num < 40) return ItemType.AffectionRecoveryGreat;
             if (num < 95) return ItemType.AffectionRecoveryBig;
@@ -223,15 +224,31 @@ namespace Sanakan.Services.PocketWaifu
             return ItemType.AffectionRecoverySmall;
         }
 
+        public ItemType RandomizeItemFromMFight()
+        {
+            var num = Fun.GetRandomValue(1000);
+            if (num < 2) return ItemType.IncreaseExpBig;
+            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 18) return ItemType.IncreaseUpgradeCnt;
+            if (num < 45) return ItemType.AffectionRecoveryGreat;
+            if (num < 100) return ItemType.AffectionRecoveryBig;
+            if (num < 160) return ItemType.CardParamsReRoll;
+            if (num < 230) return ItemType.DereReRoll;
+            if (num < 500) return ItemType.AffectionRecoveryNormal;
+            if (num < 510) return ItemType.IncreaseExpSmall;
+            return ItemType.AffectionRecoverySmall;
+        }
+
         public ItemType RandomizeItemFromBlackMarket()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
-            if (num < 20) return ItemType.IncreaseUpgradeCnt;
-            if (num < 60) return ItemType.AffectionRecoveryGreat;
-            if (num < 110) return ItemType.AffectionRecoveryBig;
-            if (num < 150) return ItemType.CardParamsReRoll;
-            if (num < 210) return ItemType.DereReRoll;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 12) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 25) return ItemType.IncreaseUpgradeCnt;
+            if (num < 70) return ItemType.AffectionRecoveryGreat;
+            if (num < 120) return ItemType.AffectionRecoveryBig;
+            if (num < 180) return ItemType.CardParamsReRoll;
+            if (num < 250) return ItemType.DereReRoll;
             if (num < 780) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
@@ -239,11 +256,12 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromMarket()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 10) return ItemType.IncreaseUpgradeCnt;
-            if (num < 75) return ItemType.AffectionRecoveryBig;
-            if (num < 140) return ItemType.CardParamsReRoll;
-            if (num < 225) return ItemType.DereReRoll;
-            if (num < 475) return ItemType.AffectionRecoveryNormal;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 15) return ItemType.IncreaseUpgradeCnt;
+            if (num < 80) return ItemType.AffectionRecoveryBig;
+            if (num < 145) return ItemType.CardParamsReRoll;
+            if (num < 230) return ItemType.DereReRoll;
+            if (num < 480) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -255,13 +273,13 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(19,    ItemType.AffectionRecoveryNormal.ToItem()),
                 new ItemWithCost(139,   ItemType.AffectionRecoveryBig.ToItem()),
                 new ItemWithCost(39,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(99,   ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(99,    ItemType.CardParamsReRoll.ToItem()),
                 new ItemWithCost(2000,  ItemType.IncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(1000,  ItemType.SetCustomImage.ToItem()),
                 new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
                 new ItemWithCost(1299,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
                 new ItemWithCost(299,   ItemType.RandomNormalBoosterPackB.ToItem()),
-                new ItemWithCost(999,  ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(999,   ItemType.RandomNormalBoosterPackA.ToItem()),
                 new ItemWithCost(1499,  ItemType.RandomNormalBoosterPackS.ToItem()),
                 new ItemWithCost(1999,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
