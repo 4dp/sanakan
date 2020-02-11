@@ -643,7 +643,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                bUser.GameDeck.Karma -= 2;
+                if (card.IsBroken())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt niską relacje aby dało się ją zrestartować.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                bUser.GameDeck.Karma -= 5;
 
                 card.Defence = _waifu.RandomizeDefence(Rarity.E);
                 card.Attack = _waifu.RandomizeAttack(Rarity.E);
@@ -651,14 +657,11 @@ namespace Sanakan.Modules
                 card.Rarity = Rarity.E;
                 card.UpgradesCnt = 2;
                 card.RestartCnt += 1;
-                card.Affection = 0;
                 card.ExpCnt = 0;
 
-                if (card.RestartCnt == 20 ||
-                    card.RestartCnt == 40 ||
-                    card.RestartCnt == 60 ||
-                    card.RestartCnt == 80 ||
-                    card.RestartCnt == 100)
+                card.Affection = card.RestartCnt * -0.2;
+
+                if (card.RestartCnt > 1 && card.RestartCnt % 10 == 0 && card.RestartCnt <= 100)
                 {
                     var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
                     if (inUserItem == null)
@@ -748,7 +751,7 @@ namespace Sanakan.Modules
 
                 if (card.ExpCnt < card.ExpToUpgrade())
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia.".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia. Wymagane {card.ExpToUpgrade().ToString("F")}.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -776,7 +779,7 @@ namespace Sanakan.Modules
 
                 if (card.Rarity == Rarity.SSS)
                 {
-                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS < 1)
+                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS % 15 == 0)
                     {
                         var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
                         if (inUserItem == null)
