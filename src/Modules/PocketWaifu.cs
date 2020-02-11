@@ -667,7 +667,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.IsBroken())
+                if (card.IsUnusable())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt niską relacje aby dało się ją zrestartować.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -843,6 +843,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
+
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -850,6 +852,15 @@ namespace Sanakan.Modules
                     {
                         broken.Add(card);
                         continue;
+                    }
+
+                    if (inUserItem != null)
+                    {
+                        var max = card.GetMaxExp();
+                        var expInCard = (int)card.ExpCnt;
+                        if (expInCard > max) expInCard = max;
+
+                        inUserItem.Count += expInCard;
                     }
 
                     bUser.GameDeck.Karma += 0.7;
@@ -894,6 +905,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
+
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -901,6 +914,15 @@ namespace Sanakan.Modules
                     {
                         broken.Add(card);
                         continue;
+                    }
+
+                    if (inUserItem != null)
+                    {
+                        var max = card.GetMaxExp();
+                        var expInCard = (int)(card.ExpCnt / 2);
+                        if (expInCard > max) expInCard = max;
+
+                        inUserItem.Count += expInCard;
                     }
 
                     bUser.GameDeck.Karma -= 1;

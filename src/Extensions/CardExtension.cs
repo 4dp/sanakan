@@ -49,6 +49,33 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static int GetMaxExp(this Card card)
+        {
+            switch (card.Rarity)
+            {
+                case Rarity.SSS:
+                    return 16;
+
+                case Rarity.SS:
+                    return 8;
+
+                case Rarity.S:
+                    return 4;
+
+                case Rarity.A:
+                case Rarity.B:
+                    return 3;
+
+                case Rarity.C:
+                    return 2;
+
+                default:
+                case Rarity.D:
+                case Rarity.E:
+                    return 1;
+            }
+        }
+
         public static bool HasImage(this Card card) => card.GetImage() != null;
 
         public static double GetCardPower(this Card card)
