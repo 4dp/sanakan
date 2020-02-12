@@ -18,6 +18,8 @@ namespace Sanakan.Services.Executor
 
         public string GetName() => _name;
 
+        public void Wait() => _task.Wait();
+
         public async Task<bool> ExecuteAsync(IServiceProvider provider)
         {
             try

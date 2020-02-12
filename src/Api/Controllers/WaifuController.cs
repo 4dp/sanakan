@@ -490,11 +490,11 @@ namespace Sanakan.Api.Controllers
                         cards = await _waifu.OpenBoosterPackAsync(null, pack);
                     }
 
-                    var exe = new Executable($"api-packet-open u{discordId}", new Task(() =>
+                    var exe = new Executable($"api-packet-open u{discordId}", new Task(async () =>
                     {
                         using (var db = new Database.UserContext(_config))
                         {
-                            var botUser = db.GetUserOrCreateAsync(discordId).Result;
+                            var botUser = await db.GetUserOrCreateAsync(discordId);
 
                             var bPack = botUser.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
                             botUser.GameDeck.BoosterPacks.Remove(bPack);
@@ -526,16 +526,17 @@ namespace Sanakan.Api.Controllers
                             if (sp.Count > 0)
                                 botUser.GameDeck.Wishlist = string.Join(";", sp);
 
-                            db.SaveChanges();
+                            await db.SaveChangesAsync();
 
                             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
-
-                            Newtonsoft.Json.JsonConvert.SerializeObject(cards).ToResponse().ExecuteResultAsync(ControllerContext);
                         }
                     }));
 
                     await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-                    await Task.Delay(5000);
+
+                    exe.Wait();
+                    await Task.Delay(2000);
+
                     return cards;
                 }
             }
