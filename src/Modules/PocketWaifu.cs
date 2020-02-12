@@ -425,9 +425,15 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.ExpContainer:
+                        if (bUser.GameDeck.CTCnt < 15)
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} potrzebujesz 15CT aby to zrobić.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        bUser.GameDeck.CTCnt -= 15;
                         card.ExpCnt += 1 * itemCnt;
                         affectionInc = 0.01 * itemCnt;
-                        bUser.GameDeck.Karma += 0.003 * itemCnt;
+                        bUser.GameDeck.Karma -= 0.003 * itemCnt;
                         embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
                         break;
 
@@ -948,6 +954,66 @@ namespace Sanakan.Modules
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się zniszczyć {broken.Count} kart, najpewniej znajdują się w klatce lub są oznaczone jako ulubione.".ToEmbedMessage(EMType.Error).Build());
                 }
+            }
+        }
+
+        [Command("skrzynia")]
+        [Alias("chest")]
+        [Summary("tworzy skrzynię doświadczenia z karty SSS oraz 10 kropel krwi")]
+        [Remarks("2154"), RequireWaifuCommandChannel]
+        public async Task CreateChestAsync([Summary("WID karty SSS")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var chest = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
+                if (chest != null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} posiadasz już skrzynię doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.Rarity != Rarity.SSS)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie jest kartą SSS.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var blood = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.BetterIncreaseUpgradeCnt);
+                if (blood == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz kropel krwi.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (blood.Count < 10)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                blood.Count -= 10;
+                if (blood.Count <= 0)
+                    bUser.GameDeck.Items.Remove(blood);
+
+                bUser.GameDeck.Cards.Remove(card);
+
+                chest = ItemType.ExpContainer.ToItem();
+                bUser.GameDeck.Items.Add(chest);
+                bUser.GameDeck.Karma -= 5;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś skrzynię doświadczenia.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
