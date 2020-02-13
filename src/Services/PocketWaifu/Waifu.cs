@@ -379,15 +379,19 @@ namespace Sanakan.Services.PocketWaifu
                 Attack = RandomizeAttack(rarity),
                 CreationDate = DateTime.Now,
                 Name = character.ToString(),
+                StarStyle = StarStyle.Full,
                 Source = CardSource.Other,
                 Character = character.Id,
                 Dere = RandomizeDere(),
                 RarityOnStart = rarity,
+                CustomBorder = null,
                 CustomImage = null,
                 IsTradable = true,
                 FirstIdOwner = 1,
                 UpgradesCnt = 2,
+                LastIdOwner = 0,
                 Rarity = rarity,
+                Unique = false,
                 InCage = false,
                 RestartCnt = 0,
                 Active = false,
@@ -645,7 +649,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GetWaifuProfileImageAsync(Card card, ITextChannel trashCh)
         {
-            using (var cardImage = await _img.GetWaifuCardNoStatsAsync(card))
+            using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
                 cardImage.SaveToPath($"./GOut/Profile/P{card.Id}.png");
 

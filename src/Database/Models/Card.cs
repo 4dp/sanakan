@@ -22,6 +22,11 @@ namespace Sanakan.Database.Models
         Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting
     }
 
+    public enum StarStyle
+    {
+        Full, White, Black, Empty
+    }
+
     public class Card
     {
         public ulong Id { get; set; }
@@ -49,6 +54,8 @@ namespace Sanakan.Database.Models
         public ulong FirstIdOwner { get; set; }
         public ulong LastIdOwner { get; set; }
         public bool Unique { get; set; }
+        public StarStyle StarStyle { get; set; }
+        public string CustomBorder { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 
