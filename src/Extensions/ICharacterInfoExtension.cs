@@ -34,25 +34,25 @@ namespace Sanakan.Extensions
                 new EmbedFieldBuilder
                 {
                     Name = "Wiek",
-                    Value = info.Age ?? "??",
+                    Value = info.Age.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Wzrost",
-                    Value = info.Height ?? "??",
+                    Value = info.Height.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Waga",
-                    Value = info.Weight ?? "??",
+                    Value = info.Weight.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Grupa krwii",
-                    Value = string.IsNullOrEmpty(info.Bloodtype) ? "??" : $"{info.Bloodtype}",
+                    Value = info.Bloodtype.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
@@ -68,21 +68,21 @@ namespace Sanakan.Extensions
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Biust",
-                    Value = info.Bust ?? "??",
+                    Value = info.Bust.GetQMarksIfEmpty(),
                     IsInline = true
                 });
 
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Talia",
-                    Value = info.Waist ?? "??",
+                    Value = info.Waist.GetQMarksIfEmpty(),
                     IsInline = true
                 });
 
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Biodra",
-                    Value = info.Hips ?? "??",
+                    Value = info.Hips.GetQMarksIfEmpty(),
                     IsInline = true
                 });
             }

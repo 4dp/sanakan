@@ -64,6 +64,17 @@ namespace Sanakan.Extensions
             return hasHttp && hasRightExt;
         }
         
+        public static string GetQMarksIfEmpty(this string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return "??";
+
+            if (string.IsNullOrWhiteSpace(s))
+                return "??";
+
+            return s;
+        }
+
         public static int CountEmotesTextLenght(this IReadOnlyCollection<Discord.ITag> tags)
         {
             return tags.Where(tag => tag.Type == Discord.TagType.Emoji).Sum(x => x.Value.ToString().Length);

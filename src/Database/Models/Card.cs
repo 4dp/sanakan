@@ -24,7 +24,7 @@ namespace Sanakan.Database.Models
 
     public enum StarStyle
     {
-        Full, White, Black, Empty
+        Full, White, Black, Empty, Pig
     }
 
     public class Card

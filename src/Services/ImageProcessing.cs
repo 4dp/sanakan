@@ -847,7 +847,7 @@ namespace Sanakan.Services
             var starX = 239 - (18 * starCnt);
             for (int i = 0; i < starCnt; i++)
             {
-                using (var fire = Image.Load($"./Pictures/PW/stars/star_{starType}_{card.StarStyle}.png"))
+                using (var fire = Image.Load($"./Pictures/PW/stars/{starType}_{card.StarStyle}.png"))
                 {
                     image.Mutate(x => x.DrawImage(fire, new Point(starX, 30), 1));
                 }
