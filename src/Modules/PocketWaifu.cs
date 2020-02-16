@@ -863,7 +863,7 @@ namespace Sanakan.Modules
                     if (inUserItem != null)
                     {
                         var max = card.GetMaxExp();
-                        var expInCard = (int)card.ExpCnt;
+                        var expInCard = (int)(card.ExpCnt / 2);
                         if (expInCard > max) expInCard = max;
 
                         inUserItem.Count += expInCard;
@@ -925,7 +925,7 @@ namespace Sanakan.Modules
                     if (inUserItem != null)
                     {
                         var max = card.GetMaxExp();
-                        var expInCard = (int)(card.ExpCnt / 2);
+                        var expInCard = (int)card.ExpCnt;
                         if (expInCard > max) expInCard = max;
 
                         inUserItem.Count += expInCard;
