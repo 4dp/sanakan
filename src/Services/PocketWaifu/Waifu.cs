@@ -269,28 +269,30 @@ namespace Sanakan.Services.PocketWaifu
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(5,     ItemType.AffectionRecoverySmall.ToItem()),
-                new ItemWithCost(19,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(139,   ItemType.AffectionRecoveryBig.ToItem()),
-                new ItemWithCost(39,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(99,    ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(2000,  ItemType.IncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(1000,  ItemType.SetCustomImage.ToItem()),
-                new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1299,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(299,   ItemType.RandomNormalBoosterPackB.ToItem()),
-                new ItemWithCost(999,   ItemType.RandomNormalBoosterPackA.ToItem()),
-                new ItemWithCost(1499,  ItemType.RandomNormalBoosterPackS.ToItem()),
-                new ItemWithCost(1999,  ItemType.RandomNormalBoosterPackSS.ToItem()),
+                new ItemWithCost(3,     ItemType.AffectionRecoverySmall.ToItem()),
+                new ItemWithCost(14,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(109,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(29,    ItemType.DereReRoll.ToItem()),
+                new ItemWithCost(79,    ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(1099,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(999,   ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(659,   ItemType.SetCustomBorder.ToItem()),
+                new ItemWithCost(149,   ItemType.ChangeStarType.ToItem()),
+                new ItemWithCost(99,    ItemType.RandomBoosterPackSingleE.ToItem()),
+                new ItemWithCost(1199,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
+                new ItemWithCost(199,   ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(499,   ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(899,   ItemType.RandomNormalBoosterPackS.ToItem()),
+                new ItemWithCost(1299,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
         }
 
         public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
-            double rExp = 30f / (wild ? 100f : 30f);
+            double rExp = 30f / (wild ? 100f : 10f);
 
-            if (toUp.Character == toSac.Character)
-                rExp = 30f / 5f;
+            if (toUp.Character == toSac.Character && !wild)
+                rExp = 30f;
 
             var sacVal = (int) toSac.Rarity;
             var upVal = (int) toUp.Rarity;

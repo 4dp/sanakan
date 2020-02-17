@@ -310,7 +310,7 @@ namespace Sanakan.Modules
         [Alias("uzyj", "use")]
         [Summary("używa przedmiot na karcie")]
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
-        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka")]string detail = "1")
+        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka/typ gwiazdki")]string detail = "1")
         {
             var session = new CraftingSession(Context.User, _waifu, _config);
             if (_session.SessionExist(session))
@@ -353,9 +353,9 @@ namespace Sanakan.Modules
                     case ItemType.AffectionRecoverySmall:
                     case ItemType.AffectionRecoveryNormal:
                     case ItemType.AffectionRecoveryGreat:
+                    case ItemType.IncreaseUpgradeCnt:
                     case ItemType.IncreaseExpSmall:
                     case ItemType.IncreaseExpBig:
-                    case ItemType.ExpContainer:
                         break;
 
                     default:
@@ -424,14 +424,20 @@ namespace Sanakan.Modules
                         embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
                         break;
 
-                    case ItemType.ExpContainer:
-                        if (bUser.GameDeck.ExpContainer.Level == ExpContainerLevel.Disabled)
+                    case ItemType.ChangeStarType:
+                        try
                         {
-                            bUser.GameDeck.ExpContainer.Level = ExpContainerLevel.Max100Exp;
+                            card.StarStyle = new StarStyle().Parse(detail);
                         }
-                        affectionInc = 0.001 * itemCnt;
-                        bUser.GameDeck.ExpContainer.ExpCount = itemCnt;
-                        embed.Description += "Przeniesiono doświadczenie do skrzyni.";
+                        catch (Exception)
+                        {
+                            await ReplyAsync("", embed: "Nie rozpoznano typu gwiazdki!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        affectionInc = 0.3 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Zmieniono typ gwiazdki!";
+                        _waifu.DeleteCardImageIfExist(card);
                         break;
 
                     case ItemType.SetCustomImage:
@@ -449,6 +455,24 @@ namespace Sanakan.Modules
                         affectionInc = 0.5 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.SetCustomBorder:
+                        if (!detail.IsURLToImage())
+                        {
+                            await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (card.Image == null)
+                        {
+                            await ReplyAsync("", embed: "Aby ustawić ramke, karta musi posiadać wcześniej ustawiony obrazek na stronie!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        card.CustomBorder = detail;
+                        affectionInc = 0.4 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Ustawiono nowy obrazek jako ramke. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 
@@ -504,9 +528,10 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: $"{Context.User.Mention} karty **SSS** nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
-                        affectionInc = 0.7;
-                        bUser.GameDeck.Karma += 1;
-                        embed.Description += $"Zwiększono liczbę ulepszeń do {++card.UpgradesCnt}!";
+                        card.UpgradesCnt += itemCnt;
+                        affectionInc = 0.7 * itemCnt;
+                        bUser.GameDeck.Karma += itemCnt;
+                        embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
                         break;
 
                     case ItemType.DereReRoll:
@@ -2937,6 +2962,7 @@ namespace Sanakan.Modules
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
                     Description = $"*{bUser.GameDeck.GetUserNameStatus()}*\n\n"
+                                + $"**Skrzynia({(int)bUser.GameDeck.ExpContainer.Level}):** {bUser.GameDeck.ExpContainer.ExpCount.ToString("F")}\n"
                                 + $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
