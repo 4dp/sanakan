@@ -26,6 +26,7 @@ namespace Sanakan.Database
         public DbSet<TimeStatus> TimeStatuses { get; set; }
         public DbSet<SlotMachineConfig> SlotMachineConfigs { get; set; }
         public DbSet<GameDeck> GameDecks { get; set; }
+        public DbSet<ExpContainer> ExpContainers { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<BoosterPack> BoosterPacks { get; set; }
@@ -113,6 +114,14 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.User)
                     .WithOne(u => u.GameDeck);
+            });
+
+            modelBuilder.Entity<ExpContainer>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GameDeck)
+                    .WithOne(u => u.ExpContainer);
             });
 
             modelBuilder.Entity<Card>(entity =>

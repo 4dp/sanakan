@@ -19,6 +19,8 @@ namespace Sanakan.Database.Models
         public virtual ICollection<BoosterPack> BoosterPacks { get; set; }
         public virtual ICollection<CardPvPStats> PvPStats { get; set; }
 
+        public virtual ExpContainer ExpContainer { get; set; }
+
         public ulong UserId { get; set; }
         [JsonIgnore]
         public virtual User User { get; set; }

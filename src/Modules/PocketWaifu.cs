@@ -425,16 +425,13 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.ExpContainer:
-                        if (bUser.GameDeck.CTCnt < 15)
+                        if (bUser.GameDeck.ExpContainer.Level == ExpContainerLevel.Disabled)
                         {
-                            await ReplyAsync("", embed: $"{Context.User.Mention} potrzebujesz 15CT aby to zrobić.".ToEmbedMessage(EMType.Error).Build());
-                            return;
+                            bUser.GameDeck.ExpContainer.Level = ExpContainerLevel.Max100Exp;
                         }
-                        bUser.GameDeck.CTCnt -= 15;
-                        card.ExpCnt += 1 * itemCnt;
-                        affectionInc = 0.01 * itemCnt;
-                        bUser.GameDeck.Karma -= 0.003 * itemCnt;
-                        embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
+                        affectionInc = 0.001 * itemCnt;
+                        bUser.GameDeck.ExpContainer.ExpCount = itemCnt;
+                        embed.Description += "Przeniesiono doświadczenie do skrzyni.";
                         break;
 
                     case ItemType.SetCustomImage:
@@ -849,8 +846,6 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
-
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -860,14 +855,9 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    if (inUserItem != null)
-                    {
-                        var max = card.GetMaxExp();
-                        var expInCard = (int)(card.ExpCnt / 2);
-                        if (expInCard > max) expInCard = max;
-
-                        inUserItem.Count += expInCard;
-                    }
+                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExp())
+                        ? card.GetMaxExp()
+                        : (card.ExpCnt / 2));
 
                     bUser.GameDeck.Karma += 0.7;
                     bUser.Stats.ReleasedCards += 1;
@@ -911,8 +901,6 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
-
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -922,14 +910,9 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    if (inUserItem != null)
-                    {
-                        var max = card.GetMaxExp();
-                        var expInCard = (int)card.ExpCnt;
-                        if (expInCard > max) expInCard = max;
-
-                        inUserItem.Count += expInCard;
-                    }
+                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExp())
+                        ? card.GetMaxExp()
+                        : card.ExpCnt);
 
                     bUser.GameDeck.Karma -= 1;
                     bUser.Stats.DestroyedCards += 1;
@@ -959,17 +942,16 @@ namespace Sanakan.Modules
 
         [Command("skrzynia")]
         [Alias("chest")]
-        [Summary("tworzy skrzynię doświadczenia z karty SSS oraz 10 kropel krwi")]
+        [Summary("przenosi doświadczenie z skrzyni do karty (20 CT)")]
         [Remarks("2154"), RequireWaifuCommandChannel]
-        public async Task CreateChestAsync([Summary("WID karty SSS")]ulong id)
+        public async Task TransferExpFromChestAsync([Summary("WID")]ulong id, [Summary("liczba doświadczenia")]uint exp)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var chest = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.ExpContainer);
-                if (chest != null)
+                if (bUser.GameDeck.ExpContainer.Level == ExpContainerLevel.Disabled)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} posiadasz już skrzynię doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz jeszcze skrzyni doświadczenia.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -980,9 +962,90 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Rarity != Rarity.SSS)
+                if (bUser.GameDeck.ExpContainer.ExpCount < exp)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie jest kartą SSS.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej ilości doświadczenia".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.CTCnt < 20)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                card.ExpCnt += exp;
+                bUser.GameDeck.ExpContainer.ExpCount -= exp;
+                bUser.GameDeck.CTCnt -= 20;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} przeniesiono doświadczenie na kartę.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("tworzenie skrzyni")]
+        [Alias("make chest")]
+        [Summary("tworzy lub ulepsza skrzynię doświadczenia")]
+        [Remarks("2154"), RequireWaifuCommandChannel]
+        public async Task CreateChestAsync([Summary("WID kart")]params ulong[] ids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardsToSac = bUser.GameDeck.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
+
+                if (cardsToSac.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takich kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cardsToSac)
+                {
+                    if (card.Rarity != Rarity.SSS)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie jest kartą SSS.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                }
+
+                int cardNeeded = 1;
+                int bloodNeeded = 10;
+                ExpContainerLevel next = ExpContainerLevel.Max100Exp;
+                switch (bUser.GameDeck.ExpContainer.Level)
+                {
+                    case ExpContainerLevel.Max500Exp:
+                    {
+                        cardNeeded = 3;
+                        bloodNeeded = 25;
+                        next = ExpContainerLevel.Unlimited;
+                    }
+                    break;
+
+                    case ExpContainerLevel.Max100Exp:
+                    {
+                        bloodNeeded = 15;
+                        next = ExpContainerLevel.Max500Exp;
+                    }
+                    break;
+
+                    case ExpContainerLevel.Disabled:
+                    break;
+
+                    case ExpContainerLevel.Unlimited:
+                    default:
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można bardziej ulepszyć skrzyni.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                }
+
+                if (cardsToSac.Count < cardNeeded)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} podałeś za mało kart SSS. ({cardNeeded})".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -993,21 +1056,21 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (blood.Count < 10)
+                if (blood.Count < bloodNeeded)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi. (${bloodNeeded})".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                blood.Count -= 10;
+                blood.Count -= bloodNeeded;
                 if (blood.Count <= 0)
                     bUser.GameDeck.Items.Remove(blood);
 
-                bUser.GameDeck.Cards.Remove(card);
+                for (int i = 0; i < cardNeeded; i++)
+                    bUser.GameDeck.Cards.Remove(cardsToSac[i]);
 
-                chest = ItemType.ExpContainer.ToItem();
-                bUser.GameDeck.Items.Add(chest);
-                bUser.GameDeck.Karma -= 5;
+                bUser.GameDeck.ExpContainer.Level = next;
+                bUser.GameDeck.Karma -= 15;
 
                 await db.SaveChangesAsync();
 

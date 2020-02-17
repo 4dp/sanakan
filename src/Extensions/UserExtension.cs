@@ -50,6 +50,12 @@ namespace Sanakan.Extensions
                     WishlistIsPrivate = false,
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
+                    ExpContainer = new ExpContainer
+                    {
+                        Id = id,
+                        ExpCount = 0,
+                        Level = ExpContainerLevel.Disabled
+                    }
                 },
                 Stats = new UserStats
                 {
@@ -266,6 +272,38 @@ namespace Sanakan.Extensions
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        public static void StoreExpIfPossible(this User user, double exp)
+        {
+            switch (user.GameDeck.ExpContainer.Level)
+            {
+                case ExpContainerLevel.Max100Exp:
+                {
+                    user.GameDeck.ExpContainer.ExpCount += Math.Floor(exp);
+                    if (user.GameDeck.ExpContainer.ExpCount > 100)
+                        user.GameDeck.ExpContainer.ExpCount = 100;
+                }
+                break;
+
+                case ExpContainerLevel.Max500Exp:
+                {
+                    user.GameDeck.ExpContainer.ExpCount += Math.Floor(exp);
+                    if (user.GameDeck.ExpContainer.ExpCount > 500)
+                        user.GameDeck.ExpContainer.ExpCount = 500;
+                }
+                break;
+
+                case ExpContainerLevel.Unlimited:
+                {
+                    user.GameDeck.ExpContainer.ExpCount += exp;
+                }
+                break;
+
+                case ExpContainerLevel.Disabled:
+                default:
+                break;
             }
         }
     }

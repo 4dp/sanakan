@@ -21,6 +21,7 @@ namespace Sanakan.Database
         public DbSet<TimeStatus> TimeStatuses { get; set; }
         public DbSet<SlotMachineConfig> SlotMachineConfigs { get; set; }
         public DbSet<GameDeck> GameDecks { get; set; }
+        public DbSet<ExpContainer> ExpContainers { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<BoosterPack> BoosterPacks { get; set; }

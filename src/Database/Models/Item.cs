@@ -24,7 +24,7 @@ namespace Sanakan.Database.Models
         SetCustomImage,
         IncreaseExpSmall,
         IncreaseExpBig,
-        ExpContainer
+        ExpContainer,
     }
 
     public class Item
