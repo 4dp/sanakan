@@ -55,6 +55,23 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Wyszukuje id użytkownika
+        /// </summary>
+        /// <param name="name">nazwa użytkownika</param>
+        /// <returns>id discorda użytkownika bota</returns>
+        [HttpGet("find/{name}")]
+        public async Task<IActionResult> GetUserIdByNameAsync(string name)
+        {
+            var users = _client.Guilds.SelectMany(x => x.Users).Where(x => name == (x.Nickname ?? x.Username)).Distinct().ToList();
+            await Task.CompletedTask;
+
+            if (users.Count < 1)
+                return NotFound();
+
+            return Ok(users.Select(x => new {x.Id, x.Username}));
+        }
+
+        /// <summary>
         /// Pobieranie użytkownika bota
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>

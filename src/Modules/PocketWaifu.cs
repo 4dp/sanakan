@@ -143,7 +143,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).Include(x => x.TagList).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -165,7 +165,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).Include(x => x.TagList).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -1674,10 +1674,10 @@ namespace Sanakan.Modules
                 var c = bUser.GameDeck.GetCardsWishList();
 
                 var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db, bUser.GameDeck.Cards);
-                cards = cards.Where(x => x.GameDeckId != bUser.Id);
+                cards = cards.Where(x => x.GameDeckId != bUser.Id).ToList();
 
                 if (!showFavs)
-                    cards = cards.Where(x => !x.HasTag("ulubione"));
+                    cards = cards.Where(x => !x.HasTag("ulubione")).ToList();
 
                 if (cards.Count() < 1)
                 {
@@ -1710,14 +1710,14 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var thisCards = db.Cards.FirstOrDefault(x => x.Id == wid);
+                var thisCards = db.Cards.Include(x => x.TagList).FirstOrDefault(x => x.Id == wid);
                 if (thisCards == null)
                 {
                     await ReplyAsync("", embed: $"Nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
@@ -1743,7 +1743,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());
@@ -2098,7 +2098,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
@@ -2175,7 +2175,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {

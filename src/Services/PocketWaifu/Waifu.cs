@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -1038,7 +1039,7 @@ namespace Sanakan.Services.PocketWaifu
             var cards = new List<Card>();
             if (cardsId != null)
             {
-                var cds = await db.Cards.Where(x => cardsId.Any(c => c == x.Id)).FromCacheAsync( new[] {"users"});
+                var cds = await db.Cards.Include(x => x.TagList).Where(x => cardsId.Any(c => c == x.Id)).AsNoTracking().ToListAsync();
                 cards.AddRange(cds);
             }
 
@@ -1059,11 +1060,11 @@ namespace Sanakan.Services.PocketWaifu
             if (characters.Count > 0)
             {
                 characters = characters.Distinct().Where(c => !userCards.Any(x => x.Character == c)).ToList();
-                var cads = await db.Cards.Where(x => characters.Any(c => c == x.Character)).FromCacheAsync(new[] { "users" });
+                var cads = await db.Cards.Include(x => x.TagList).Where(x => characters.Any(c => c == x.Character)).AsNoTracking().ToListAsync();
                 cards.AddRange(cads);
             }
 
-            return cards.Distinct();
+            return cards.Distinct().ToList();
         }
     }
 }

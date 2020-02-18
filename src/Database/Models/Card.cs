@@ -49,7 +49,6 @@ namespace Sanakan.Database.Models
         public DateTime CreationDate { get; set; }
         public CardSource Source { get; set; }
         public string Title { get; set; }
-        public string Tags { get; set; }
         public string Image { get; set; }
         public string CustomImage { get; set; }
         public ulong FirstIdOwner { get; set; }
