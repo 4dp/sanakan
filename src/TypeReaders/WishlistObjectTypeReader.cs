@@ -1,7 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using Discord.Commands;
-using Sanakan.Services.PocketWaifu;
+using Sanakan.Database.Models;
 using System;
 using System.Threading.Tasks;
 

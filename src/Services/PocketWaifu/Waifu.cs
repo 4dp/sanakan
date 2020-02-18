@@ -28,11 +28,6 @@ namespace Sanakan.Services.PocketWaifu
         Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken, Picture, NoPicture, CustomPicture, Unique
     }
 
-    public enum WishlistObjectType
-    {
-        Card, Title, Character
-    }
-
     public class Waifu
     {
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();

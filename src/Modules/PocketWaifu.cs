@@ -644,21 +644,12 @@ namespace Sanakan.Modules
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
 
-                var sp = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    sp = bUser.GameDeck.Wishlist.Split(";").ToList();
-
                 foreach (var card in cards)
                 {
+                    bUser.GameDeck.RemoveCharacterFromWishList(card.Character);
                     card.Affection += bUser.GameDeck.AffectionFromKarma();
                     bUser.GameDeck.Cards.Add(card);
-
-                    if (sp.Contains($"p{card.Character}"))
-                        sp.Remove($"p{card.Character}");
                 }
-
-                if (sp.Count > 0)
-                    bUser.GameDeck.Wishlist = string.Join(";", sp);
 
                 await db.SaveChangesAsync();
 
@@ -1137,18 +1128,9 @@ namespace Sanakan.Modules
                 var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
+                botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
-
-                var sp = new List<string>();
-                if (botuser.GameDeck.Wishlist != null)
-                    sp = botuser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (sp.Contains($"p{card.Character}"))
-                {
-                    sp.Remove($"p{card.Character}");
-                    botuser.GameDeck.Wishlist = string.Join(";", sp);
-                }
 
                 botuser.GameDeck.Cards.Add(card);
 
@@ -1495,36 +1477,15 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                string toAdd = "";
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-
-                switch (type)
-                {
-                    case WishlistObjectType.Card:
-                        toAdd = $"c{id}";
-                        break;
-
-                    case WishlistObjectType.Title:
-                        toAdd = $"t{id}";
-                        break;
-
-                    case WishlistObjectType.Character:
-                        toAdd = $"p{id}";
-                        break;
-                }
-
-                var arr = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (!arr.Any(x => x == toAdd))
+                var obj = bUser.GameDeck.Wishes.FirstOrDefault(x => x.Type == type && x.ObjectId == id);
+                if (obj == null)
                 {
                     await ReplyAsync("", embed: "Nie posiadasz takiej pozycji na liście życzeń!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                arr.Remove(toAdd);
-                bUser.GameDeck.Wishlist = string.Join(";", arr);
+                bUser.GameDeck.Wishes.Remove(obj);
 
                 await db.SaveChangesAsync();
 
@@ -1542,14 +1503,23 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                string toAdd = "";
                 string response = "";
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (bUser.GameDeck.Wishes.Any(x => x.Type == type && x.ObjectId == id))
+                {
+                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var obj = new WishlistObject
+                {
+                    ObjectId = id,
+                    Type = type
+                };
 
                 switch (type)
                 {
                     case WishlistObjectType.Card:
-                        toAdd = $"c{id}";
                         var card = db.Cards.FirstOrDefault(x => x.Id == id);
                         if (card == null)
                         {
@@ -1562,10 +1532,10 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = card.GetString(false, false, true);
+                        obj.ObjectName = $"{card.Id} - {card.Name}";
                         break;
 
                     case WishlistObjectType.Title:
-                        toAdd = $"t{id}";
                         var res1 = await _shclient.Title.GetInfoAsync(id);
                         if (!res1.IsSuccessStatusCode())
                         {
@@ -1573,10 +1543,10 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = res1.Body.Title;
+                        obj.ObjectName = res1.Body.Title;
                         break;
 
                     case WishlistObjectType.Character:
-                        toAdd = $"p{id}";
                         var res2 = await _shclient.GetCharacterInfoAsync(id);
                         if (!res2.IsSuccessStatusCode())
                         {
@@ -1584,21 +1554,11 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = res2.Body.ToString();
+                        obj.ObjectName = response;
                         break;
                 }
 
-                var arr = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (arr.Any(x => x == toAdd))
-                {
-                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                arr.Add(toAdd);
-                bUser.GameDeck.Wishlist = string.Join(";", arr);
+                bUser.GameDeck.Wishes.Add(obj);
 
                 await db.SaveChangesAsync();
 
@@ -1652,7 +1612,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (bUser.GameDeck.Wishlist == null)
+                if (bUser.GameDeck.Wishes.Count < 1)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1703,7 +1663,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (bUser.GameDeck.Wishlist == null)
+                if (bUser.GameDeck.Wishes.Count < 1)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1757,7 +1717,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && (x.Wishlist.Contains($"p{thisCards.Character};") || x.Wishlist.Contains($"c{thisCards.Id};"))).ToList();
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
@@ -1783,7 +1743,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishlist != null && x.Wishlist.Contains($"t{id};")).ToList();
+                var wishlists = db.GameDecks.Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());

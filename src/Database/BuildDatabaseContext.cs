@@ -33,6 +33,7 @@ namespace Sanakan.Database
         public DbSet<CardPvPStats> CardPvPStats { get; set; }
         public DbSet<CardArenaStats> CardArenaStats { get; set; }
         public DbSet<BoosterPackCharacter> BoosterPackCharacters { get; set; }
+        public DbSet<WishlistObject> Wishes { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<RarityExcluded> RaritysExcludedFromPacks { get; set; }
@@ -138,6 +139,14 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.GameDeck)
                     .WithMany(d => d.Items);
+            });
+
+            modelBuilder.Entity<WishlistObject>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GameDeck)
+                    .WithMany(d => d.Wishes);
             });
 
             modelBuilder.Entity<BoosterPack>(entity =>

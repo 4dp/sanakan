@@ -236,7 +236,7 @@ namespace Sanakan.Api.Controllers
                     return null;
                 }
 
-                if (user.GameDeck.Wishlist == null)
+                if (user.GameDeck.Wishes.Count < 1)
                 {
                     await "Wishlist not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
                     return null;
@@ -267,7 +267,7 @@ namespace Sanakan.Api.Controllers
                     return null;
                 }
 
-                if (user.GameDeck.Wishlist == null)
+                if (user.GameDeck.Wishes.Count < 1)
                 {
                     await "Wishlist not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
                     return null;
@@ -508,23 +508,14 @@ namespace Sanakan.Api.Controllers
                                 botUser.Stats.OpenedBoosterPacks += 1;
                             }
 
-                            var sp = new List<string>();
-                            if (botUser.GameDeck.Wishlist != null)
-                                sp = botUser.GameDeck.Wishlist.Split(";").ToList();
-
                             foreach (var card in cards)
                             {
                                 card.Affection += botUser.GameDeck.AffectionFromKarma();
                                 card.FirstIdOwner = botUser.Id;
 
                                 botUser.GameDeck.Cards.Add(card);
-
-                                if (sp.Contains($"p{card.Character}"))
-                                    sp.Remove($"p{card.Character}");
+                                botUser.GameDeck.RemoveCharacterFromWishList(card.Character);
                             }
-
-                            if (sp.Count > 0)
-                                botUser.GameDeck.Wishlist = string.Join(";", sp);
 
                             await db.SaveChangesAsync();
 
