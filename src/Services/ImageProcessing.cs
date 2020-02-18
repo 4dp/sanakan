@@ -315,7 +315,7 @@ namespace Sanakan.Services
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
                 if (tChar != null)
                 {
-                    using (var cardImage = await GetWaifuCardNoStatsAsync(tChar))
+                    using (var cardImage = await GetWaifuInProfileCardAsync(tChar))
                     {
                         cardImage.Mutate(x => x.Resize(new ResizeOptions
                         {
