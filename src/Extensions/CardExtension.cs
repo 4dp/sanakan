@@ -125,7 +125,7 @@ namespace Sanakan.Extensions
                 if (card.Tags.Contains("rezerwacja", StringComparison.CurrentCultureIgnoreCase))
                     icons.Add("📝");
 
-                if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) && icons.Count == 0)
+                if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase))
                     icons.Add("🔄");
             }
 

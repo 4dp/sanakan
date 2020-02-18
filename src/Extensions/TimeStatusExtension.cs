@@ -56,7 +56,7 @@ namespace Sanakan.Extensions
             if (status.HasEnded())
                 dateValue = "nieaktywne";
 
-            return $"{status.Type.Name()} do `{dateValue}`";   
+            return $"{status.Type.Name()} do `{dateValue}`";
         }
     }
 }

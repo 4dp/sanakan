@@ -94,6 +94,21 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("smsg", RunMode = RunMode.Async)]
+        [Summary("wysyła wiadomość na kanał w danym serwerze")]
+        [Remarks("15188451644 101155483 elo ziomki")]
+        public async Task SendMsgToChannelInGuildAsync([Summary("id serwera")]ulong gId, [Summary("id kanału")]ulong chId, [Summary("treść wiadomości")][Remainder]string msg)
+        {
+            try
+            {
+                await Context.Client.GetGuild(gId).GetTextChannel(chId).SendMessageAsync(msg);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
