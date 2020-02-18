@@ -890,7 +890,7 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
             }
 
-            using (var bord = await LoadCustomBorderAsync(card))
+            using (var bord = GenerateBorder(card))
             {
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
             }
@@ -907,7 +907,7 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
             }
 
-            using (var bord = GenerateBorder(card))
+            using (var bord = await LoadCustomBorderAsync(card))
             {
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
             }

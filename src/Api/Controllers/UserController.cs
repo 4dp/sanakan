@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -60,15 +61,15 @@ namespace Sanakan.Api.Controllers
         /// <param name="name">nazwa użytkownika</param>
         /// <returns>id użytkownika</returns>
         [HttpPost("find")]
-        public async Task<ulong> GetUserIdByNameAsync([FromBody, Required]string name)
+        public async Task<IEnumerable<Shinden.Models.IUserSearch>> GetUserIdByNameAsync([FromBody, Required]string name)
         {
             var res = await _shClient.Search.UserAsync(name);
             if (!res.IsSuccessStatusCode())
             {
                 await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                return 0;
+                return null;
             }
-            return res.Body.FirstOrDefault().Id;
+            return res.Body;
         }
 
         /// <summary>
