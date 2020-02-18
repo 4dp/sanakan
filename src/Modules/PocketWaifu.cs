@@ -865,7 +865,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
@@ -920,7 +920,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
@@ -1362,7 +1362,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.IsBroken() || card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
@@ -1677,7 +1677,7 @@ namespace Sanakan.Modules
                 cards = cards.Where(x => x.GameDeckId != bUser.Id);
 
                 if (!showFavs)
-                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+                    cards = cards.Where(x => !x.HasTag("ulubione"));
 
                 if (cards.Count() < 1)
                 {
@@ -1787,7 +1787,7 @@ namespace Sanakan.Modules
                 cards = cards.Where(x => x.GameDeckId != bUser1.Id && x.GameDeckId == bUser2.Id);
 
                 if (!showFavs)
-                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+                    cards = cards.Where(x => !x.HasTag("ulubione"));
 
                 if (cards.Count() < 1)
                 {
@@ -1934,14 +1934,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (thisCard.Tags == null || tag == null)
+                if (tag == null)
                 {
-                    thisCard.Tags = tag;
+                    thisCard.TagList.Clear();
                 }
                 else
                 {
-                    if (!thisCard.Tags.Contains(tag))
-                        thisCard.Tags += $" {tag}";
+                    if (!thisCard.HasTag(tag))
+                        thisCard.TagList.Add(new CardTag{ Name = tag });
                 }
 
                 await db.SaveChangesAsync();
@@ -1961,7 +1961,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var untaggedCards = bUser.GameDeck.Cards.Where(x => x.Tags == null).ToList();
+                var untaggedCards = bUser.GameDeck.Cards.Where(x => x.TagList.Count < 1).ToList();
 
                 if (untaggedCards.Count < 1)
                 {
@@ -1970,7 +1970,7 @@ namespace Sanakan.Modules
                 }
 
                 foreach (var card in untaggedCards)
-                    card.Tags = tag;
+                    card.TagList.Add(new CardTag{ Name = tag });
 
                 await db.SaveChangesAsync();
 
@@ -1989,7 +1989,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var cards = bUser.GameDeck.Cards.Where(x => x.Tags != null && x.Tags.Contains(oldTag)).ToList();
+                var cards = bUser.GameDeck.Cards.Where(x => x.HasTag(oldTag)).ToList();
 
                 if (cards.Count < 1)
                 {
@@ -1999,19 +1999,13 @@ namespace Sanakan.Modules
 
                 foreach (var card in cards)
                 {
-                    var tags = card.Tags.Split(" ").ToList();
-                    var thisTag = tags.FirstOrDefault(x => x == oldTag);
+                    var thisTag = card.TagList.FirstOrDefault(x => x.Name.Equals(oldTag, StringComparison.CurrentCultureIgnoreCase));
                     if (thisTag != null)
                     {
-                        tags.Remove(thisTag);
+                        card.TagList.Remove(thisTag);
 
-                        if (newTag != "%$-1")
-                            tags.Add(newTag);
-
-                        if (tags.Count > 0)
-                            card.Tags = string.Join(" ", tags);
-                        else
-                            card.Tags = null;
+                        if (!card.HasTag(newTag) && newTag != "%$-1")
+                            card.TagList.Add(new CardTag{ Name = newTag });
                     }
                 }
 
@@ -2141,7 +2135,7 @@ namespace Sanakan.Modules
                 var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (!showFavs)
-                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+                    cards = cards.Where(x => !x.HasTag("ulubione"));
 
                 if (cards.Count() < 1)
                 {

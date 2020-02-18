@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Sanakan.Extensions;
@@ -56,6 +57,8 @@ namespace Sanakan.Database.Models
         public bool Unique { get; set; }
         public StarStyle StarStyle { get; set; }
         public string CustomBorder { get; set; }
+
+        public virtual ICollection<CardTag> TagList { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
 

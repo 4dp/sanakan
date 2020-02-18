@@ -24,6 +24,7 @@ namespace Sanakan.Database
         public DbSet<ExpContainer> ExpContainers { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<CardTag> CardTags { get; set; }
         public DbSet<BoosterPack> BoosterPacks { get; set; }
         public DbSet<CardPvPStats> CardPvPStats { get; set; }
         public DbSet<CardArenaStats> CardArenaStats { get; set; }

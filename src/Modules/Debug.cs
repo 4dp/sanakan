@@ -197,7 +197,7 @@ namespace Sanakan.Modules
 
                         thisCard.Active = false;
                         thisCard.InCage = false;
-                        thisCard.Tags = null;
+                        thisCard.TagList.Clear();
 
                         user.GameDeck.Cards.Remove(thisCard);
                         winnerUser.GameDeck.Cards.Add(thisCard);
@@ -237,9 +237,9 @@ namespace Sanakan.Modules
 
                 foreach (var thisCard in thisCards)
                 {
-                    thisCard.Tags = null;
                     thisCard.Active = false;
                     thisCard.InCage = false;
+                    thisCard.TagList.Clear();
                     thisCard.GameDeckId = user.Id;
                 }
 
@@ -331,9 +331,9 @@ namespace Sanakan.Modules
 
                 foreach (var thisCard in thisCards)
                 {
-                    thisCard.Tags = null;
                     thisCard.Active = false;
                     thisCard.InCage = false;
+                    thisCard.TagList.Clear();
                     thisCard.GameDeckId = user.Id;
                 }
 
@@ -394,8 +394,8 @@ namespace Sanakan.Modules
                 {
                     foreach (var card in user.GameDeck.Cards)
                     {
-                        card.Tags = null;
                         card.InCage = false;
+                        card.TagList.Clear();
                         card.LastIdOwner = id;
                         fakeu.GameDeck.Cards.Add(card);
                     }

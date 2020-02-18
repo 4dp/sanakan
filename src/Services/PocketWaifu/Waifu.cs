@@ -78,10 +78,10 @@ namespace Sanakan.Services.PocketWaifu
                     return list.Where(x => x.IsBroken()).ToList();
 
                 case HaremType.Tag:
-                    return list.Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                    return list.Where(x => x.TagList.Any(c => c.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
 
                 case HaremType.NoTag:
-                    return list.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                    return list.Where(x => !x.TagList.Any(c => c.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
 
                 case HaremType.Picture:
                     return list.Where(x => x.HasImage()).ToList();
@@ -374,6 +374,7 @@ namespace Sanakan.Services.PocketWaifu
                 Defence = RandomizeDefence(rarity),
                 ArenaStats = new CardArenaStats(),
                 Attack = RandomizeAttack(rarity),
+                TagList = new List<CardTag>(),
                 CreationDate = DateTime.Now,
                 Name = character.ToString(),
                 StarStyle = StarStyle.Full,
@@ -394,7 +395,6 @@ namespace Sanakan.Services.PocketWaifu
                 Active = false,
                 Affection = 0,
                 Image = null,
-                Tags = null,
                 Health = 0,
                 ExpCnt = 0,
             };

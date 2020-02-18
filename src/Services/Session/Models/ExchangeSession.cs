@@ -318,8 +318,8 @@ namespace Sanakan.Services.Session.Models
                                 var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = null;
                                     card.Active = false;
+                                    card.TagList.Clear();
                                     card.Affection -= 1.5;
 
                                     if (card.FirstIdOwner == 0)
@@ -338,8 +338,8 @@ namespace Sanakan.Services.Session.Models
                                 var card = user2.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = null;
                                     card.Active = false;
+                                    card.TagList.Clear();
                                     card.Affection -= 1.5;
 
                                     if (card.FirstIdOwner == 0)

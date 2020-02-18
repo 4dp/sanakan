@@ -109,6 +109,11 @@ namespace Sanakan.Extensions
             return cardPower;
         }
 
+        public static bool HasTag(this Card card, string tag)
+        {
+            return card.TagList.Any(x => x.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase));
+        }
+
         public static string GetStatusIcons(this Card card)
         {
             var icons = new List<string>();
@@ -117,35 +122,40 @@ namespace Sanakan.Extensions
             if (card.IsBroken()) icons.Add("💔");
             if (card.InCage) icons.Add("🔒");
 
-            if (card.Tags != null)
+            if (card.TagList.Count > 0)
             {
-                if (card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
+                if (card.TagList.Any(x => x.Name.Equals("ulubione", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("💗");
 
-                if (card.Tags.Contains("rezerwacja", StringComparison.CurrentCultureIgnoreCase))
+                if (card.TagList.Any(x => x.Name.Equals("rezerwacja", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("📝");
 
-                if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase))
+                if (card.TagList.Any(x => x.Name.Equals("wymiana", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("🔄");
             }
-
             return string.Join(" ", icons);
         }
 
         public static string GetDescSmall(this Card card)
         {
+            var tags = string.Join(" ", card.TagList.Select(x => x.Name));
+            if (card.TagList.Count < 1) tags = "---";
+
             return $"**[{card.Id}]** *({card.Character})*\n"
                 + $"{card.GetString(true, true, true, false, true)}\n"
                 + $"_{card.Title}_\n\n"
                 + $"{card.Dere}\n"
                 + $"{card.GetAffectionString()}\n"
                 + $"{card.ExpCnt.ToString("F")} exp\n\n"
-                + $"{card.Tags ?? "---"}\n"
+                + $"{tags}\n"
                 + $"{card.GetStatusIcons()}";
         }
 
         public static string GetDesc(this Card card)
         {
+            var tags = string.Join(" ", card.TagList.Select(x => x.Name));
+            if (card.TagList.Count < 1) tags = "---";
+
             return $"{card.GetNameWithUrl()} **{card.Rarity}**\n"
                 + $"*{card.Title ?? "????"}*\n\n"
                 + $"*{card.GetCardParams(true, false, true)}*\n\n"
@@ -159,7 +169,7 @@ namespace Sanakan.Extensions
                 + $"**WID:** {card.Id} *({card.Character})*\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n"
-                + $"**Tagi:** {card.Tags ?? "---"}\n\n";
+                + $"**Tagi:** {tags}\n\n";
         }
 
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)
