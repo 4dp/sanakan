@@ -1919,26 +1919,22 @@ namespace Sanakan.Modules
 
         [Command("oznacz")]
         [Alias("tag")]
-        [Summary("zmienia tag na karcie")]
-        [Remarks("1 konie"), RequireWaifuCommandChannel]
-        public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")][Remainder]string tag = null)
+        [Summary("zmienia tag na kartach")]
+        [Remarks("konie 231 12341 22"), RequireWaifuCommandChannel]
+        public async Task ChangeCardTagAsync([Summary("tag")]string tag, [Summary("WID kart")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                var cardsSelected = bUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
 
-                if (thisCard == null)
+                if (cardsSelected.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (tag == null)
-                {
-                    thisCard.TagList.Clear();
-                }
-                else
+                foreach (var thisCard in cardsSelected)
                 {
                     if (!thisCard.HasTag(tag))
                         thisCard.TagList.Add(new CardTag{ Name = tag });
@@ -1948,7 +1944,35 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył {cardsSelected.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("oznacz czyść")]
+        [Alias("tag clean", "oznacz czysć", "oznacz czyśc", "oznacz czysc")]
+        [Summary("czyści tagi z kart")]
+        [Remarks("22"), RequireWaifuCommandChannel]
+        public async Task CleanCardTagAsync([Summary("WID kart")]params ulong[] wids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardsSelected = bUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+
+                if (cardsSelected.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var thisCard in cardsSelected)
+                    thisCard.TagList.Clear();
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zdjął tagi z {cardsSelected.Count} kart.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -1956,7 +1980,7 @@ namespace Sanakan.Modules
         [Alias("tag empty")]
         [Summary("zmienia tag na kartach które nie są oznaczone")]
         [Remarks("konie"), RequireWaifuCommandChannel]
-        public async Task ChangeCardsTagAsync([Summary("tag")][Remainder]string tag)
+        public async Task ChangeCardsTagAsync([Summary("tag")]string tag)
         {
             using (var db = new Database.UserContext(Config))
             {

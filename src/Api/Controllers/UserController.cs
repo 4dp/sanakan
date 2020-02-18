@@ -55,20 +55,20 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
-        /// Wyszukuje id użytkownika
+        /// Wyszukuje id użytkownika na shinden
         /// </summary>
         /// <param name="name">nazwa użytkownika</param>
-        /// <returns>id discorda użytkownika bota</returns>
-        [HttpGet("find/{name}")]
-        public async Task<IActionResult> GetUserIdByNameAsync(string name)
+        /// <returns>id użytkownika</returns>
+        [HttpPost("find")]
+        public async Task<ulong> GetUserIdByNameAsync([FromBody, Required]string name)
         {
-            var users = _client.Guilds.SelectMany(x => x.Users).Where(x => name == (x.Nickname ?? x.Username)).Distinct().ToList();
-            await Task.CompletedTask;
-
-            if (users.Count < 1)
-                return NotFound();
-
-            return Ok(users.Select(x => new {x.Id, x.Username}));
+            var res = await _shClient.Search.UserAsync(name);
+            if (!res.IsSuccessStatusCode())
+            {
+                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                return 0;
+            }
+            return res.Body.FirstOrDefault().Id;
         }
 
         /// <summary>
