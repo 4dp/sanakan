@@ -109,6 +109,38 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("cup")]
+        [Summary("wymusza update na kartach")]
+        [Remarks("3123 121")]
+        public async Task ForceUpdateCardsAsync([Summary("WID kart")]params ulong[] ids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var cards = db.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
+                if (cards.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cards)
+                {
+                    try
+                    {
+                        await card.Update(null, _shClient);
+                        _waifu.DeleteCardImageIfExist(card);
+                    }
+                    catch (Exception) { };
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"users" });
+
+                await ReplyAsync("", embed: $"Zaktualizowano {cards.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]

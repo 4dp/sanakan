@@ -52,9 +52,6 @@ namespace Sanakan.Services.PocketWaifu
 
         public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type, string tag)
         {
-            var nList = new List<Card>();
-            var tagList = tag.Split(" ").ToList();
-
             switch (type)
             {
                 case HaremType.Health:
@@ -83,6 +80,8 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.Tag:
                 {
+                    var nList = new List<Card>();
+                    var tagList = tag.Split(" ").ToList();
                     foreach (var t in tagList)
                     {
                         if (t.Length < 1)
@@ -95,6 +94,8 @@ namespace Sanakan.Services.PocketWaifu
 
                 case HaremType.NoTag:
                 {
+                    var nList = new List<Card>();
+                    var tagList = tag.Split(" ").ToList();
                     foreach (var t in tagList)
                     {
                         if (t.Length < 1)

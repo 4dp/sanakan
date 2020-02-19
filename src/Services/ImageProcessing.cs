@@ -708,8 +708,8 @@ namespace Sanakan.Services
         public Image<Rgba32> GetFColorsView(SCurrency currency)
         {
             var message = new Font(_latoRegular, 16);
-            var firstColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
-            var secondColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
+            var firstColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
+            var secondColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
 
             var arrayOfColours = Enum.GetValues(typeof(FColor));
             var inFirstColumn = arrayOfColours.Length / 2;
@@ -739,7 +739,7 @@ namespace Sanakan.Services
             int posY = 5;
             int posX = 0;
             int realWidth = (int)(firstColumnMaxLength.Width + secondColumnMaxLength.Width + 20);
-            int realHeight = (int)(firstColumnMaxLength.Height + 1) * (inFirstColumn + 2);
+            int realHeight = (int)(firstColumnMaxLength.Height + 2) * (inFirstColumn + 1);
 
             var imgBase = new Image<Rgba32>(realWidth, realHeight);
             imgBase.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
