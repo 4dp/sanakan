@@ -52,6 +52,9 @@ namespace Sanakan.Services.PocketWaifu
 
         public List<Card> GetListInRightOrder(IEnumerable<Card> list, HaremType type, string tag)
         {
+            var nList = new List<Card>();
+            var tagList = tag.Split(" ").ToList();
+
             switch (type)
             {
                 case HaremType.Health:
@@ -79,10 +82,28 @@ namespace Sanakan.Services.PocketWaifu
                     return list.Where(x => x.IsBroken()).ToList();
 
                 case HaremType.Tag:
-                    return list.Where(x => x.TagList.Any(c => c.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                {
+                    foreach (var t in tagList)
+                    {
+                        if (t.Length < 1)
+                            continue;
+
+                        nList = list.Where(x => x.TagList.Any(c => c.Name.Equals(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                    }
+                    return nList;
+                }
 
                 case HaremType.NoTag:
-                    return list.Where(x => !x.TagList.Any(c => c.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                {
+                    foreach (var t in tagList)
+                    {
+                        if (t.Length < 1)
+                            continue;
+
+                        nList = list.Where(x => !x.TagList.Any(c => c.Name.Equals(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                    }
+                    return nList;
+                }
 
                 case HaremType.Picture:
                     return list.Where(x => x.HasImage()).ToList();

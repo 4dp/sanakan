@@ -30,7 +30,7 @@ namespace Sanakan.Modules
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("h", "help")]
         [Summary("wyświetla listę poleceń")]
-        [Remarks("odcinki"), RequireCommandChannel]
+        [Remarks("odcinki"), RequireAnyCommandChannel]
         public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)

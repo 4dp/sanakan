@@ -1919,7 +1919,7 @@ namespace Sanakan.Modules
 
         [Command("oznacz")]
         [Alias("tag")]
-        [Summary("zmienia tag na kartach")]
+        [Summary("dodaje tag do kart")]
         [Remarks("konie 231 12341 22"), RequireWaifuCommandChannel]
         public async Task ChangeCardTagAsync([Summary("tag")]string tag, [Summary("WID kart")]params ulong[] wids)
         {
@@ -1978,7 +1978,7 @@ namespace Sanakan.Modules
 
         [Command("oznacz puste")]
         [Alias("tag empty")]
-        [Summary("zmienia tag na kartach które nie są oznaczone")]
+        [Summary("dodaje tag do kart które nie są oznaczone")]
         [Remarks("konie"), RequireWaifuCommandChannel]
         public async Task ChangeCardsTagAsync([Summary("tag")]string tag)
         {

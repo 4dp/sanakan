@@ -153,16 +153,6 @@ namespace Sanakan.Extensions
             var karmaDif = deck.Karma / 150d;
             if (karmaDif < -6) karmaDif = -6;
             if (karmaDif > 6) karmaDif = 6;
-
-            if (deck.Karma < -2000)
-            {
-                var nK = -(deck.Karma + 2000);
-                karmaDif += nK / 300d;
-
-                if (karmaDif > 0)
-                    karmaDif = 0;
-            }
-
             return karmaDif;
         }
 
