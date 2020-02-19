@@ -80,7 +80,7 @@ namespace Sanakan.Extensions
                 case ItemType.RandomTitleBoosterPackSingleE:
                     return "Pakiet losowych kart z tytułu";
                 case ItemType.AffectionRecoverySmall:
-                    return "Banan w czekoladzie";
+                    return "Pączuś z Twoją miłością";
                 case ItemType.RandomNormalBoosterPackB:
                     return "Fioletowy pakiet losowych kart";
                 case ItemType.RandomNormalBoosterPackA:
