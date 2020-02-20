@@ -760,7 +760,7 @@ namespace Sanakan.Services
 
                 posY += (int)firstColumnMaxLength.Height + 2;
                 var tname = $"{thisColor.ToString()} ({thisColor.Price(currency)} {currency.ToString().ToUpper()})";
-                imgBase.Mutate(x => x.DrawText(tname, message, Rgba32.FromHex(val.ToString("X")), new Point(posX, posY)));
+                imgBase.Mutate(x => x.DrawText(tname, message, Rgba32.FromHex(val.ToString("X6")), new Point(posX, posY)));
             }
 
             return imgBase;
