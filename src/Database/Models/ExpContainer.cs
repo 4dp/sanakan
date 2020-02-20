@@ -7,9 +7,9 @@ namespace Sanakan.Database.Models
     public enum ExpContainerLevel
     {
         Disabled,
-        Max100Exp,
-        Max500Exp,
-        Unlimited
+        Level1,
+        Level2,
+        Level3
     }
 
     public class ExpContainer

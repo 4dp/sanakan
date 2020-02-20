@@ -871,8 +871,8 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExp())
-                        ? card.GetMaxExp()
+                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExpToChest())
+                        ? card.GetMaxExpToChest()
                         : (card.ExpCnt / 2));
 
                     bUser.GameDeck.Karma += 0.7;
@@ -926,8 +926,8 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExp())
-                        ? card.GetMaxExp()
+                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExpToChest())
+                        ? card.GetMaxExpToChest()
                         : card.ExpCnt);
 
                     bUser.GameDeck.Karma -= 1;
@@ -958,7 +958,7 @@ namespace Sanakan.Modules
 
         [Command("skrzynia")]
         [Alias("chest")]
-        [Summary("przenosi doświadczenie z skrzyni do karty (20 CT)")]
+        [Summary("przenosi doświadczenie z skrzyni do karty (kosztuje CT)")]
         [Remarks("2154"), RequireWaifuCommandChannel]
         public async Task TransferExpFromChestAsync([Summary("WID")]ulong id, [Summary("liczba doświadczenia")]uint exp)
         {
@@ -978,21 +978,29 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (bUser.GameDeck.ExpContainer.ExpCount < exp)
+                var maxExpInOneTime = bUser.GameDeck.ExpContainer.GetMaxExpTransferToCard();
+                if (exp > maxExpInOneTime)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej ilości doświadczenia".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} na tym poziomie możesz jednorazowo przelać tylko {maxExpInOneTime} doświadczenia.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (bUser.GameDeck.CTCnt < 20)
+                if (bUser.GameDeck.ExpContainer.ExpCount < exp)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej ilości doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var cost = bUser.GameDeck.ExpContainer.GetTransferCTCost();
+                if (bUser.GameDeck.CTCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT. ({cost})".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
                 card.ExpCnt += exp;
                 bUser.GameDeck.ExpContainer.ExpCount -= exp;
-                bUser.GameDeck.CTCnt -= 20;
+                bUser.GameDeck.CTCnt -= cost;
 
                 await db.SaveChangesAsync();
 
@@ -1028,35 +1036,12 @@ namespace Sanakan.Modules
                     }
                 }
 
-                int cardNeeded = 1;
-                int bloodNeeded = 10;
-                ExpContainerLevel next = ExpContainerLevel.Max100Exp;
-                switch (bUser.GameDeck.ExpContainer.Level)
+                var cardNeeded = bUser.GameDeck.ExpContainer.GetChestUpgradeCostInCards();
+                var bloodNeeded = bUser.GameDeck.ExpContainer.GetChestUpgradeCostInBlood();
+                if (cardNeeded == -1 || bloodNeeded == -1)
                 {
-                    case ExpContainerLevel.Max500Exp:
-                    {
-                        cardNeeded = 3;
-                        bloodNeeded = 25;
-                        next = ExpContainerLevel.Unlimited;
-                    }
-                    break;
-
-                    case ExpContainerLevel.Max100Exp:
-                    {
-                        bloodNeeded = 15;
-                        next = ExpContainerLevel.Max500Exp;
-                    }
-                    break;
-
-                    case ExpContainerLevel.Disabled:
-                    break;
-
-                    case ExpContainerLevel.Unlimited:
-                    default:
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można bardziej ulepszyć skrzyni.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można bardziej ulepszyć skrzyni.".ToEmbedMessage(EMType.Error).Build());
+                    return;
                 }
 
                 if (cardsToSac.Count < cardNeeded)
@@ -1074,7 +1059,7 @@ namespace Sanakan.Modules
 
                 if (blood.Count < bloodNeeded)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi. (${bloodNeeded})".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi. ({bloodNeeded})".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -1085,7 +1070,7 @@ namespace Sanakan.Modules
                 for (int i = 0; i < cardNeeded; i++)
                     bUser.GameDeck.Cards.Remove(cardsToSac[i]);
 
-                bUser.GameDeck.ExpContainer.Level = next;
+                ++bUser.GameDeck.ExpContainer.Level;
                 bUser.GameDeck.Karma -= 15;
 
                 await db.SaveChangesAsync();
@@ -1369,10 +1354,10 @@ namespace Sanakan.Modules
                     }
 
                     ++bUser.Stats.SacraficeCards;
-                    bUser.GameDeck.Karma -= 0.18;
+                    bUser.GameDeck.Karma -= 0.28;
 
                     var exp = _waifu.GetExpToUpgrade(cardToUp, card);
-                    cardToUp.Affection += 0.08;
+                    cardToUp.Affection += 0.07;
                     cardToUp.ExpCnt += exp;
                     totalExp += exp;
 

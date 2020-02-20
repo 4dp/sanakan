@@ -286,34 +286,15 @@ namespace Sanakan.Extensions
 
         public static void StoreExpIfPossible(this User user, double exp)
         {
-            switch (user.GameDeck.ExpContainer.Level)
+            var maxToTransfer = user.GameDeck.ExpContainer.GetMaxExpTransferToChest();
+            if (maxToTransfer != -1)
             {
-                case ExpContainerLevel.Max100Exp:
-                {
-                    user.GameDeck.ExpContainer.ExpCount += Math.Floor(exp);
-                    if (user.GameDeck.ExpContainer.ExpCount > 100)
-                        user.GameDeck.ExpContainer.ExpCount = 100;
-                }
-                break;
-
-                case ExpContainerLevel.Max500Exp:
-                {
-                    user.GameDeck.ExpContainer.ExpCount += Math.Floor(exp);
-                    if (user.GameDeck.ExpContainer.ExpCount > 500)
-                        user.GameDeck.ExpContainer.ExpCount = 500;
-                }
-                break;
-
-                case ExpContainerLevel.Unlimited:
-                {
-                    user.GameDeck.ExpContainer.ExpCount += exp;
-                }
-                break;
-
-                case ExpContainerLevel.Disabled:
-                default:
-                break;
+                exp = Math.Floor(exp);
+                var diff = maxToTransfer - user.GameDeck.ExpContainer.ExpCount;
+                if (diff <= exp) exp = Math.Floor(diff);
+                if (exp < 0) exp = 0;
             }
+            user.GameDeck.ExpContainer.ExpCount += exp;
         }
     }
 }

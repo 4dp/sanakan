@@ -49,30 +49,30 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static int GetMaxExp(this Card card)
+        public static double GetMaxExpToChest(this Card card)
         {
             switch (card.Rarity)
             {
                 case Rarity.SSS:
-                    return 16;
+                    return 16d;
 
                 case Rarity.SS:
-                    return 8;
+                    return 8d;
 
                 case Rarity.S:
-                    return 4;
+                    return 4.8;
 
                 case Rarity.A:
                 case Rarity.B:
-                    return 3;
+                    return 3.5;
 
                 case Rarity.C:
-                    return 2;
+                    return 2.5;
 
                 default:
                 case Rarity.D:
                 case Rarity.E:
-                    return 1;
+                    return 1.5;
             }
         }
 
