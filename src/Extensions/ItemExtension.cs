@@ -51,6 +51,8 @@ namespace Sanakan.Extensions
                     return "Pozwala zmienić typ gwiazdek na karcie.";
                 case ItemType.SetCustomBorder:
                     return "Pozwala ustawić ramkę karcie kiedy jest wyświetlana w profilu.";
+                case ItemType.ChangeCardImage:
+                    return "Pozwala wybrać inny obrazek z shindena.";
 
                 default:
                     return "Brak opisu.";
@@ -101,6 +103,8 @@ namespace Sanakan.Extensions
                     return "Stempel";
                 case ItemType.SetCustomBorder:
                     return "Nożyczki";
+                case ItemType.ChangeCardImage:
+                    return "Plastelina";
 
                 default:
                     return "Brak";
@@ -137,6 +141,8 @@ namespace Sanakan.Extensions
                     return 50;
                 case ItemType.SetCustomBorder:
                     return 80;
+                case ItemType.ChangeCardImage:
+                    return 10;
 
                 default:
                     return 1;

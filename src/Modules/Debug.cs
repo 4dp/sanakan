@@ -130,7 +130,7 @@ namespace Sanakan.Modules
                         await card.Update(null, _shClient);
                         _waifu.DeleteCardImageIfExist(card);
                     }
-                    catch (Exception) { };
+                    catch (Exception) { }
                 }
 
                 await db.SaveChangesAsync();
@@ -456,7 +456,7 @@ namespace Sanakan.Modules
                     value -= 50;
                     user.GameDeck.Cards.Remove(card);
 
-                    if (0 >= value)
+                    if (value <= 0)
                         break;
                 }
 

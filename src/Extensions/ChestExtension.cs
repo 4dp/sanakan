@@ -77,7 +77,6 @@ namespace Sanakan.Extensions
                 default:
                 case ExpContainerLevel.Level3:
                     return -1; //can't upgrade
-
             }
         }
 
@@ -97,7 +96,6 @@ namespace Sanakan.Extensions
                 default:
                 case ExpContainerLevel.Level3:
                     return -1; //can't upgrade
-
             }
         }
     }
