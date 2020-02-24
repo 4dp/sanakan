@@ -11,7 +11,7 @@ namespace Sanakan.Extensions
 {
     public static class StringExtension
     {
-        private static readonly string[] _bbCodes = 
+        private static readonly string[] _bbCodes =
         {
             "list", "quote", "code", "spoiler", "chk", "size", "color", "bg", "center", "right",
             "left", "font", "align", "mail", "img", "small", "sub", "sup", "p", "gvideo", "bull",
@@ -60,10 +60,21 @@ namespace Sanakan.Extensions
                 ext = ext.ToLower();
                 hasRightExt = extensions.Any(x => x.Equals(ext));
             }
-            
+
             return hasHttp && hasRightExt;
         }
-        
+
+        public static string GetQMarksIfEmpty(this string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return "??";
+
+            if (string.IsNullOrWhiteSpace(s))
+                return "??";
+
+            return s;
+        }
+
         public static int CountEmotesTextLenght(this IReadOnlyCollection<Discord.ITag> tags)
         {
             return tags.Where(tag => tag.Type == Discord.TagType.Emoji).Sum(x => x.Value.ToString().Length);
@@ -89,7 +100,7 @@ namespace Sanakan.Extensions
         {
             return new ObjectResult(new { message = str, success = (Code == 200) }) { StatusCode = Code };
         }
-        
+
         public static IActionResult ToResponseRich(this string str, ulong msgId)
         {
             return new ObjectResult(new { message = str, success = true, id = msgId }) { StatusCode = 200 };

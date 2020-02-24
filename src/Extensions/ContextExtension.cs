@@ -54,6 +54,7 @@ namespace Sanakan.Extensions
             return (await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
+                .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Wishes).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
 
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
@@ -109,6 +110,7 @@ namespace Sanakan.Extensions
             return (await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
+                .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Wishes).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
 
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
@@ -130,6 +132,7 @@ namespace Sanakan.Extensions
             return (await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
+                .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
 
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
@@ -151,6 +154,7 @@ namespace Sanakan.Extensions
             var user = await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
+                .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
 
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.RetConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.Profile).ThenInclude(x => x.CurrentRoom).ThenInclude(x => x.ConnectedRooms).ThenInclude(x => x.ConnectedRoom).ThenInclude(x => x.Item)

@@ -27,12 +27,15 @@ namespace Sanakan.Database
         public DbSet<TimeStatus> TimeStatuses { get; set; }
         public DbSet<SlotMachineConfig> SlotMachineConfigs { get; set; }
         public DbSet<GameDeck> GameDecks { get; set; }
+        public DbSet<ExpContainer> ExpContainers { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<CardTag> CardTags { get; set; }
         public DbSet<BoosterPack> BoosterPacks { get; set; }
         public DbSet<CardPvPStats> CardPvPStats { get; set; }
         public DbSet<CardArenaStats> CardArenaStats { get; set; }
         public DbSet<BoosterPackCharacter> BoosterPackCharacters { get; set; }
+        public DbSet<WishlistObject> Wishes { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<RarityExcluded> RaritysExcludedFromPacks { get; set; }
@@ -130,6 +133,14 @@ namespace Sanakan.Database
                     .WithOne(u => u.GameDeck);
             });
 
+            modelBuilder.Entity<ExpContainer>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GameDeck)
+                    .WithOne(u => u.ExpContainer);
+            });
+
             modelBuilder.Entity<Card>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -146,6 +157,14 @@ namespace Sanakan.Database
                     .WithMany(d => d.Items);
             });
 
+            modelBuilder.Entity<WishlistObject>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.GameDeck)
+                    .WithMany(d => d.Wishes);
+            });
+
             modelBuilder.Entity<BoosterPack>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -160,6 +179,14 @@ namespace Sanakan.Database
 
                 entity.HasOne(e => e.GameDeck)
                     .WithMany(d => d.PvPStats);
+            });
+
+            modelBuilder.Entity<CardTag>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Card)
+                    .WithMany(d => d.TagList);
             });
 
             modelBuilder.Entity<CardArenaStats>(entity =>

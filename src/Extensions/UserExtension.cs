@@ -44,13 +44,19 @@ namespace Sanakan.Extensions
                     Waifu = 0,
                     CTCnt = 0,
                     Karma = 0,
-                    Wishlist = null,
                     MaxTowerFloor = 0,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
+                    Wishes = new List<WishlistObject>(),
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
+                    ExpContainer = new ExpContainer
+                    {
+                        Id = id,
+                        ExpCount = 0,
+                        Level = ExpContainerLevel.Disabled
+                    }
                 },
                 Stats = new UserStats
                 {
@@ -68,6 +74,7 @@ namespace Sanakan.Extensions
                     RaitoUpgrades = 0,
                     ReleasedCards = 0,
                     TurnamentsWon = 0,
+                    UpgradedToSSS = 0,
                     UnleashedCards = 0,
                     SacraficeCards = 0,
                     DestroyedCards = 0,
@@ -157,20 +164,29 @@ namespace Sanakan.Extensions
 
         public static List<ulong> GetTitlesWishList(this GameDeck deck)
         {
-            var all = deck.Wishlist.Split(";");
-            return all.Where(x => x.StartsWith("t")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+            return deck.Wishes.Where(x => x.Type == WishlistObjectType.Title).Select(x => x.ObjectId).ToList();
         }
 
         public static List<ulong> GetCardsWishList(this GameDeck deck)
         {
-            var all = deck.Wishlist.Split(";");
-            return all.Where(x => x.StartsWith("c")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+            return deck.Wishes.Where(x => x.Type == WishlistObjectType.Card).Select(x => x.ObjectId).ToList();
         }
 
         public static List<ulong> GetCharactersWishList(this GameDeck deck)
         {
-            var all = deck.Wishlist.Split(";");
-            return all.Where(x => x.StartsWith("p")).Select(s => ulong.Parse(new String(s.ToCharArray(), 1, s.Length - 1))).ToList();
+            return deck.Wishes.Where(x => x.Type == WishlistObjectType.Character).Select(x => x.ObjectId).ToList();
+        }
+
+        public static void RemoveCharacterFromWishList(this GameDeck deck, ulong id)
+        {
+            var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Character && x.ObjectId == id);
+            if (en != null) deck.Wishes.Remove(en);
+        }
+
+        public static void RemoveCardFromWishList(this GameDeck deck, ulong id)
+        {
+            var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Card && x.ObjectId == id);
+            if (en != null) deck.Wishes.Remove(en);
         }
 
         public static EmbedBuilder GetStatsView(this User u, IUser user)
@@ -267,6 +283,19 @@ namespace Sanakan.Extensions
             {
                 return false;
             }
+        }
+
+        public static void StoreExpIfPossible(this User user, double exp)
+        {
+            var maxToTransfer = user.GameDeck.ExpContainer.GetMaxExpTransferToChest();
+            if (maxToTransfer != -1)
+            {
+                exp = Math.Floor(exp);
+                var diff = maxToTransfer - user.GameDeck.ExpContainer.ExpCount;
+                if (diff <= exp) exp = Math.Floor(diff);
+                if (exp < 0) exp = 0;
+            }
+            user.GameDeck.ExpContainer.ExpCount += exp;
         }
     }
 }

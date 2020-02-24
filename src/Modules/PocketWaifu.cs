@@ -48,7 +48,7 @@ namespace Sanakan.Modules
         [Alias("cards", "karty")]
         [Summary("wyświetla wszystkie posaidane karty")]
         [Remarks("tag konie"), RequireWaifuCommandChannel]
-        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag(-)/uszkodzone/niewymienialne/obrazek(-/c))")]HaremType type = HaremType.Rarity, [Summary("tag)")][Remainder]string tag = null)
+        public async Task ShowCardsAsync([Summary("typ sortowania(klatka/jakość/atak/obrona/relacja/życie/tag(-)/uszkodzone/niewymienialne/obrazek(-/c)/unikat)")]HaremType type = HaremType.Rarity, [Summary("tag)")][Remainder]string tag = null)
         {
             var session = new ListSession<Card>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -143,7 +143,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync(new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).Include(x => x.TagList).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -165,7 +165,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var card  = (await db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).AsNoTracking().FromCacheAsync( new[] { "users" })).FirstOrDefault(x => x.Id == wid);
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).Include(x => x.TagList).AsNoTracking().FirstOrDefault(x => x.Id == wid);
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
@@ -310,7 +310,7 @@ namespace Sanakan.Modules
         [Alias("uzyj", "use")]
         [Summary("używa przedmiot na karcie")]
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
-        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka")]string detail = "1")
+        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka/typ gwiazdki")]string detail = "1")
         {
             var session = new CraftingSession(Context.User, _waifu, _config);
             if (_session.SessionExist(session))
@@ -327,7 +327,7 @@ namespace Sanakan.Modules
 
                 if (itemList.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych pakietów.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz żadnych przedmiotów.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -353,6 +353,9 @@ namespace Sanakan.Modules
                     case ItemType.AffectionRecoverySmall:
                     case ItemType.AffectionRecoveryNormal:
                     case ItemType.AffectionRecoveryGreat:
+                    case ItemType.IncreaseUpgradeCnt:
+                    case ItemType.IncreaseExpSmall:
+                    case ItemType.IncreaseExpBig:
                         break;
 
                     default:
@@ -407,6 +410,36 @@ namespace Sanakan.Modules
                         embed.Description += "Powiekszyła się trochę relacja z kartą!";
                         break;
 
+                    case ItemType.IncreaseExpSmall:
+                        card.ExpCnt += 1.5 * itemCnt;
+                        affectionInc = 0.15 * itemCnt;
+                        bUser.GameDeck.Karma += 0.1 * itemCnt;
+                        embed.Description += "Twoja karta otrzymała odrobinę punktów doświadczenia!";
+                        break;
+
+                    case ItemType.IncreaseExpBig:
+                        card.ExpCnt += 5 * itemCnt;
+                        affectionInc = 0.25 * itemCnt;
+                        bUser.GameDeck.Karma += 0.3 * itemCnt;
+                        embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
+                        break;
+
+                    case ItemType.ChangeStarType:
+                        try
+                        {
+                            card.StarStyle = new StarStyle().Parse(detail);
+                        }
+                        catch (Exception)
+                        {
+                            await ReplyAsync("", embed: "Nie rozpoznano typu gwiazdki!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        affectionInc = 0.3 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Zmieniono typ gwiazdki!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
                     case ItemType.SetCustomImage:
                         if (!detail.IsURLToImage())
                         {
@@ -422,6 +455,24 @@ namespace Sanakan.Modules
                         affectionInc = 0.5 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.SetCustomBorder:
+                        if (!detail.IsURLToImage())
+                        {
+                            await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (card.Image == null)
+                        {
+                            await ReplyAsync("", embed: "Aby ustawić ramke, karta musi posiadać wcześniej ustawiony obrazek na stronie!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        card.CustomBorder = detail;
+                        affectionInc = 0.4 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Ustawiono nowy obrazek jako ramke. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 
@@ -477,9 +528,10 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: $"{Context.User.Mention} karty **SSS** nie można już ulepszyć!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
-                        affectionInc = 0.7;
-                        bUser.GameDeck.Karma += 1;
-                        embed.Description += $"Zwiększono liczbę ulepszeń do {++card.UpgradesCnt}!";
+                        card.UpgradesCnt += itemCnt;
+                        affectionInc = 0.7 * itemCnt;
+                        bUser.GameDeck.Karma += itemCnt;
+                        embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
                         break;
 
                     case ItemType.DereReRoll:
@@ -592,21 +644,12 @@ namespace Sanakan.Modules
 
                 bUser.GameDeck.BoosterPacks.Remove(pack);
 
-                var sp = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    sp = bUser.GameDeck.Wishlist.Split(";").ToList();
-
                 foreach (var card in cards)
                 {
+                    bUser.GameDeck.RemoveCharacterFromWishList(card.Character);
                     card.Affection += bUser.GameDeck.AffectionFromKarma();
                     bUser.GameDeck.Cards.Add(card);
-
-                    if (sp.Contains($"p{card.Character}"))
-                        sp.Remove($"p{card.Character}");
                 }
-
-                if (sp.Count > 0)
-                    bUser.GameDeck.Wishlist = string.Join(";", sp);
 
                 await db.SaveChangesAsync();
 
@@ -643,7 +686,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                bUser.GameDeck.Karma -= 2;
+                if (card.IsUnusable())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt niską relacje aby dało się ją zrestartować.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                bUser.GameDeck.Karma -= 5;
 
                 card.Defence = _waifu.RandomizeDefence(Rarity.E);
                 card.Attack = _waifu.RandomizeAttack(Rarity.E);
@@ -651,8 +700,20 @@ namespace Sanakan.Modules
                 card.Rarity = Rarity.E;
                 card.UpgradesCnt = 2;
                 card.RestartCnt += 1;
-                card.Affection = 0;
                 card.ExpCnt = 0;
+
+                card.Affection = card.RestartCnt * -0.2;
+
+                if (card.RestartCnt > 1 && card.RestartCnt % 10 == 0 && card.RestartCnt <= 100)
+                {
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                    if (inUserItem == null)
+                    {
+                        inUserItem = ItemType.SetCustomImage.ToItem();
+                        bUser.GameDeck.Items.Add(inUserItem);
+                    }
+                    else inUserItem.Count++;
+                }
 
                 await db.SaveChangesAsync();
                 _waifu.DeleteCardImageIfExist(card);
@@ -667,7 +728,7 @@ namespace Sanakan.Modules
         [Alias("update")]
         [Summary("pobiera dane na tamat karty z shindena")]
         [Remarks("5412"), RequireWaifuCommandChannel]
-        public async Task UpdateCardAsync([Summary("WID")]ulong id)
+        public async Task UpdateCardAsync([Summary("WID")]ulong id, [Summary("czy przywrócić obrazek ze strony")]bool defaultImage = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -679,6 +740,9 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                if (defaultImage)
+                    card.CustomImage = null;
 
                 try
                 {
@@ -693,6 +757,7 @@ namespace Sanakan.Modules
                 }
                 catch (Exception ex)
                 {
+                    await db.SaveChangesAsync();
                     await ReplyAsync("", embed: $"{Context.User.Mention}: {ex.Message}".ToEmbedMessage(EMType.Error).Build());
                 }
             }
@@ -729,7 +794,7 @@ namespace Sanakan.Modules
 
                 if (card.ExpCnt < card.ExpToUpgrade())
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia.".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia. Wymagane {card.ExpToUpgrade().ToString("F")}.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -757,13 +822,18 @@ namespace Sanakan.Modules
 
                 if (card.Rarity == Rarity.SSS)
                 {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
-                    if (inUserItem == null)
+                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS % 15 == 0)
                     {
-                        inUserItem = ItemType.SetCustomImage.ToItem();
-                        bUser.GameDeck.Items.Add(inUserItem);
+                        var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                        if (inUserItem == null)
+                        {
+                            inUserItem = ItemType.SetCustomImage.ToItem();
+                            bUser.GameDeck.Items.Add(inUserItem);
+                        }
+                        else inUserItem.Count++;
                     }
-                    else inUserItem.Count++;
+
+                    ++bUser.Stats.UpgradedToSSS;
                 }
 
                 await db.SaveChangesAsync();
@@ -795,11 +865,15 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
                     }
+
+                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExpToChest())
+                        ? card.GetMaxExpToChest()
+                        : (card.ExpCnt / 2));
 
                     bUser.GameDeck.Karma += 0.7;
                     bUser.Stats.ReleasedCards += 1;
@@ -846,11 +920,15 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
                     }
+
+                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExpToChest())
+                        ? card.GetMaxExpToChest()
+                        : card.ExpCnt);
 
                     bUser.GameDeck.Karma -= 1;
                     bUser.Stats.DestroyedCards += 1;
@@ -875,6 +953,131 @@ namespace Sanakan.Modules
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się zniszczyć {broken.Count} kart, najpewniej znajdują się w klatce lub są oznaczone jako ulubione.".ToEmbedMessage(EMType.Error).Build());
                 }
+            }
+        }
+
+        [Command("skrzynia")]
+        [Alias("chest")]
+        [Summary("przenosi doświadczenie z skrzyni do karty (kosztuje CT)")]
+        [Remarks("2154"), RequireWaifuCommandChannel]
+        public async Task TransferExpFromChestAsync([Summary("WID")]ulong id, [Summary("liczba doświadczenia")]uint exp)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (bUser.GameDeck.ExpContainer.Level == ExpContainerLevel.Disabled)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz jeszcze skrzyni doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var maxExpInOneTime = bUser.GameDeck.ExpContainer.GetMaxExpTransferToCard();
+                if (exp > maxExpInOneTime)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} na tym poziomie możesz jednorazowo przelać tylko {maxExpInOneTime} doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.ExpContainer.ExpCount < exp)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej ilości doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var cost = bUser.GameDeck.ExpContainer.GetTransferCTCost();
+                if (bUser.GameDeck.CTCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby CT. ({cost})".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                card.ExpCnt += exp;
+                bUser.GameDeck.ExpContainer.ExpCount -= exp;
+                bUser.GameDeck.CTCnt -= cost;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} przeniesiono doświadczenie na kartę.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("tworzenie skrzyni")]
+        [Alias("make chest")]
+        [Summary("tworzy lub ulepsza skrzynię doświadczenia")]
+        [Remarks("2154"), RequireWaifuCommandChannel]
+        public async Task CreateChestAsync([Summary("WID kart")]params ulong[] ids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardsToSac = bUser.GameDeck.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
+
+                if (cardsToSac.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takich kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cardsToSac)
+                {
+                    if (card.Rarity != Rarity.SSS)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie jest kartą SSS.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                }
+
+                var cardNeeded = bUser.GameDeck.ExpContainer.GetChestUpgradeCostInCards();
+                var bloodNeeded = bUser.GameDeck.ExpContainer.GetChestUpgradeCostInBlood();
+                if (cardNeeded == -1 || bloodNeeded == -1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można bardziej ulepszyć skrzyni.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (cardsToSac.Count < cardNeeded)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} podałeś za mało kart SSS. ({cardNeeded})".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var blood = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.BetterIncreaseUpgradeCnt);
+                if (blood == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz kropel krwi.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (blood.Count < bloodNeeded)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby kropel krwi. ({bloodNeeded})".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                blood.Count -= bloodNeeded;
+                if (blood.Count <= 0)
+                    bUser.GameDeck.Items.Remove(blood);
+
+                for (int i = 0; i < cardNeeded; i++)
+                    bUser.GameDeck.Cards.Remove(cardsToSac[i]);
+
+                ++bUser.GameDeck.ExpContainer.Level;
+                bUser.GameDeck.Karma -= 15;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś skrzynię doświadczenia.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
@@ -910,18 +1113,9 @@ namespace Sanakan.Modules
                 var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
+                botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
-
-                var sp = new List<string>();
-                if (botuser.GameDeck.Wishlist != null)
-                    sp = botuser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (sp.Contains($"p{card.Character}"))
-                {
-                    sp.Remove($"p{card.Character}");
-                    botuser.GameDeck.Wishlist = string.Join(";", sp);
-                }
 
                 botuser.GameDeck.Cards.Add(card);
 
@@ -982,6 +1176,15 @@ namespace Sanakan.Modules
                 int nextMarket = 20 - (int)(botuser.GameDeck.Karma / 100);
                 if (nextMarket > 22) nextMarket = 22;
                 if (nextMarket < 4) nextMarket = 4;
+
+                if (botuser.GameDeck.Karma >= 3000)
+                {
+                    int tK = (int)(botuser.GameDeck.Karma - 2000) / 1000;
+                    nextMarket -= tK;
+
+                    if (nextMarket < 1)
+                        nextMarket = 1;
+                }
 
                 int itemCnt = 1 + (int)(card.Affection / 15);
                 itemCnt += (int)(botuser.GameDeck.Karma / 180);
@@ -1067,6 +1270,15 @@ namespace Sanakan.Modules
                 if (nextMarket > 22) nextMarket = 22;
                 if (nextMarket < 4) nextMarket = 4;
 
+                if (botuser.GameDeck.Karma <= -3000)
+                {
+                    int tK = (int)(botuser.GameDeck.Karma + 2000) / 1000;
+                    nextMarket += tK;
+
+                    if (nextMarket < 1)
+                        nextMarket = 1;
+                }
+
                 int itemCnt = 1 + (int)(card.Affection / 15);
                 itemCnt -= (int)(botuser.GameDeck.Karma / 180);
                 if (itemCnt > 10) itemCnt = 10;
@@ -1135,17 +1347,17 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.IsBroken() || card.InCage || (card.Tags != null && card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)))
+                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione"))
                     {
                         broken.Add(card);
                         continue;
                     }
 
                     ++bUser.Stats.SacraficeCards;
-                    bUser.GameDeck.Karma -= 0.18;
+                    bUser.GameDeck.Karma -= 0.28;
 
                     var exp = _waifu.GetExpToUpgrade(cardToUp, card);
-                    cardToUp.Affection += 0.08;
+                    cardToUp.Affection += 0.07;
                     cardToUp.ExpCnt += exp;
                     totalExp += exp;
 
@@ -1250,36 +1462,15 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                string toAdd = "";
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-
-                switch (type)
-                {
-                    case WishlistObjectType.Card:
-                        toAdd = $"c{id}";
-                        break;
-
-                    case WishlistObjectType.Title:
-                        toAdd = $"t{id}";
-                        break;
-
-                    case WishlistObjectType.Character:
-                        toAdd = $"p{id}";
-                        break;
-                }
-
-                var arr = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (!arr.Any(x => x == toAdd))
+                var obj = bUser.GameDeck.Wishes.FirstOrDefault(x => x.Type == type && x.ObjectId == id);
+                if (obj == null)
                 {
                     await ReplyAsync("", embed: "Nie posiadasz takiej pozycji na liście życzeń!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                arr.Remove(toAdd);
-                bUser.GameDeck.Wishlist = string.Join(";", arr);
+                bUser.GameDeck.Wishes.Remove(obj);
 
                 await db.SaveChangesAsync();
 
@@ -1297,14 +1488,23 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                string toAdd = "";
                 string response = "";
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (bUser.GameDeck.Wishes.Any(x => x.Type == type && x.ObjectId == id))
+                {
+                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var obj = new WishlistObject
+                {
+                    ObjectId = id,
+                    Type = type
+                };
 
                 switch (type)
                 {
                     case WishlistObjectType.Card:
-                        toAdd = $"c{id}";
                         var card = db.Cards.FirstOrDefault(x => x.Id == id);
                         if (card == null)
                         {
@@ -1317,10 +1517,10 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = card.GetString(false, false, true);
+                        obj.ObjectName = $"{card.Id} - {card.Name}";
                         break;
 
                     case WishlistObjectType.Title:
-                        toAdd = $"t{id}";
                         var res1 = await _shclient.Title.GetInfoAsync(id);
                         if (!res1.IsSuccessStatusCode())
                         {
@@ -1328,10 +1528,10 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = res1.Body.Title;
+                        obj.ObjectName = res1.Body.Title;
                         break;
 
                     case WishlistObjectType.Character:
-                        toAdd = $"p{id}";
                         var res2 = await _shclient.GetCharacterInfoAsync(id);
                         if (!res2.IsSuccessStatusCode())
                         {
@@ -1339,21 +1539,11 @@ namespace Sanakan.Modules
                             return;
                         }
                         response = res2.Body.ToString();
+                        obj.ObjectName = response;
                         break;
                 }
 
-                var arr = new List<string>();
-                if (bUser.GameDeck.Wishlist != null)
-                    arr = bUser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (arr.Any(x => x == toAdd))
-                {
-                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                arr.Add(toAdd);
-                bUser.GameDeck.Wishlist = string.Join(";", arr);
+                bUser.GameDeck.Wishes.Add(obj);
 
                 await db.SaveChangesAsync();
 
@@ -1407,7 +1597,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (bUser.GameDeck.Wishlist == null)
+                if (bUser.GameDeck.Wishes.Count < 1)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1458,7 +1648,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (bUser.GameDeck.Wishlist == null)
+                if (bUser.GameDeck.Wishes.Count < 1)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma nic na liście życzeń.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1469,10 +1659,120 @@ namespace Sanakan.Modules
                 var c = bUser.GameDeck.GetCardsWishList();
 
                 var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db, bUser.GameDeck.Cards);
-                cards = cards.Where(x => x.GameDeckId != bUser.Id);
+                cards = cards.Where(x => x.GameDeckId != bUser.Id).ToList();
 
                 if (!showFavs)
-                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+                    cards = cards.Where(x => !x.HasTag("ulubione")).ToList();
+
+                if (cards.Count() < 1)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                try
+                {
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
+                }
+            }
+        }
+
+        [Command("kto chce", RunMode = RunMode.Async)]
+        [Alias("who wants", "kc", "ww")]
+        [Summary("wyszukuje na wishlistach danej karty, pomija tytuły")]
+        [Remarks("51545"), RequireWaifuCommandChannel]
+        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var thisCards = db.Cards.Include(x => x.TagList).FirstOrDefault(x => x.Id == wid);
+                if (thisCards == null)
+                {
+                    await ReplyAsync("", embed: $"Nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
+                if (wishlists.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
+        [Command("kto chce anime", RunMode = RunMode.Async)]
+        [Alias("who wants anime", "kca", "wwa")]
+        [Summary("wyszukuje na wishlistach danego anime")]
+        [Remarks("21"), RequireWaifuCommandChannel]
+        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id)
+        {
+            var response = await _shclient.Title.GetInfoAsync(id);
+            if (!response.IsSuccessStatusCode())
+            {
+                await ReplyAsync("", embed: $"Nie odnaleziono tytułu!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
+                if (wishlists.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"**Karty z {response.Body.Title} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
+        [Command("życzenia użytkownik", RunMode = RunMode.Async)]
+        [Alias("wishlist user", "wishlistu", "zyczenia uzytkownik", "życzeniau", "zyczeniau","życzenia uzytkownik","zyczenia użytkownik")]
+        [Summary("wyświetla karty na liste życzeń użytkownika posiadane przez konkretnego gracza")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task ShowWishlistByUserAsync([Summary("użytkownik")]SocketGuildUser user2, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte")]bool showFavs = false)
+        {
+            var user1 = Context.User as SocketGuildUser;
+            if (user1 == null) return;
+
+            if (user1.Id == user2.Id)
+            {
+                await ReplyAsync("", embed: $"{user1.Mention} na liście życzeń nie znajdziesz swoich kart.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser1 = await db.GetCachedFullUserAsync(user1.Id);
+                var bUser2 = await db.GetCachedFullUserAsync(user2.Id);
+                if (bUser2 == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var p = bUser1.GameDeck.GetCharactersWishList();
+                var t = bUser1.GameDeck.GetTitlesWishList();
+                var c = bUser1.GameDeck.GetCardsWishList();
+
+                var cards = await _waifu.GetCardsFromWishlist(c, p, t, db, bUser1.GameDeck.Cards);
+                cards = cards.Where(x => x.GameDeckId != bUser1.Id && x.GameDeckId == bUser2.Id);
+
+                if (!showFavs)
+                    cards = cards.Where(x => !x.HasTag("ulubione"));
 
                 if (cards.Count() < 1)
                 {
@@ -1604,49 +1904,73 @@ namespace Sanakan.Modules
 
         [Command("oznacz")]
         [Alias("tag")]
-        [Summary("zmienia tag na karcie")]
-        [Remarks("1 konie"), RequireWaifuCommandChannel]
-        public async Task ChangeCardTagAsync([Summary("WID")]ulong wid, [Summary("tag(nie podanie - kasowanie)")][Remainder]string tag = null)
+        [Summary("dodaje tag do kart")]
+        [Remarks("konie 231 12341 22"), RequireWaifuCommandChannel]
+        public async Task ChangeCardTagAsync([Summary("tag")]string tag, [Summary("WID kart")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                var cardsSelected = bUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
 
-                if (thisCard == null)
+                if (cardsSelected.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (thisCard.Tags == null || tag == null)
+                foreach (var thisCard in cardsSelected)
                 {
-                    thisCard.Tags = tag;
-                }
-                else
-                {
-                    if (!thisCard.Tags.Contains(tag))
-                        thisCard.Tags += $" {tag}";
+                    if (!thisCard.HasTag(tag))
+                        thisCard.TagList.Add(new CardTag{ Name = tag });
                 }
 
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył kartę {thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczył {cardsSelected.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("oznacz czyść")]
+        [Alias("tag clean", "oznacz czysć", "oznacz czyśc", "oznacz czysc")]
+        [Summary("czyści tagi z kart")]
+        [Remarks("22"), RequireWaifuCommandChannel]
+        public async Task CleanCardTagAsync([Summary("WID kart")]params ulong[] wids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardsSelected = bUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+
+                if (cardsSelected.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var thisCard in cardsSelected)
+                    thisCard.TagList.Clear();
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zdjął tagi z {cardsSelected.Count} kart.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
         [Command("oznacz puste")]
         [Alias("tag empty")]
-        [Summary("zmienia tag na kartach które nie są oznaczone")]
+        [Summary("dodaje tag do kart które nie są oznaczone")]
         [Remarks("konie"), RequireWaifuCommandChannel]
-        public async Task ChangeCardsTagAsync([Summary("tag")][Remainder]string tag)
+        public async Task ChangeCardsTagAsync([Summary("tag")]string tag)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var untaggedCards = bUser.GameDeck.Cards.Where(x => x.Tags == null).ToList();
+                var untaggedCards = bUser.GameDeck.Cards.Where(x => x.TagList.Count < 1).ToList();
 
                 if (untaggedCards.Count < 1)
                 {
@@ -1655,7 +1979,7 @@ namespace Sanakan.Modules
                 }
 
                 foreach (var card in untaggedCards)
-                    card.Tags = tag;
+                    card.TagList.Add(new CardTag{ Name = tag });
 
                 await db.SaveChangesAsync();
 
@@ -1674,7 +1998,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var cards = bUser.GameDeck.Cards.Where(x => x.Tags != null && x.Tags.Contains(oldTag)).ToList();
+                var cards = bUser.GameDeck.Cards.Where(x => x.HasTag(oldTag)).ToList();
 
                 if (cards.Count < 1)
                 {
@@ -1684,19 +2008,13 @@ namespace Sanakan.Modules
 
                 foreach (var card in cards)
                 {
-                    var tags = card.Tags.Split(" ").ToList();
-                    var thisTag = tags.FirstOrDefault(x => x == oldTag);
+                    var thisTag = card.TagList.FirstOrDefault(x => x.Name.Equals(oldTag, StringComparison.CurrentCultureIgnoreCase));
                     if (thisTag != null)
                     {
-                        tags.Remove(thisTag);
+                        card.TagList.Remove(thisTag);
 
-                        if (newTag != "%$-1")
-                            tags.Add(newTag);
-
-                        if (tags.Count > 0)
-                            card.Tags = string.Join(" ", tags);
-                        else
-                            card.Tags = null;
+                        if (!card.HasTag(newTag) && newTag != "%$-1")
+                            card.TagList.Add(new CardTag{ Name = newTag });
                     }
                 }
 
@@ -1789,7 +2107,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
@@ -1826,7 +2144,7 @@ namespace Sanakan.Modules
                 var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (!showFavs)
-                    cards = cards.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase)));
+                    cards = cards.Where(x => !x.HasTag("ulubione"));
 
                 if (cards.Count() < 1)
                 {
@@ -1866,7 +2184,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
@@ -2034,7 +2352,8 @@ namespace Sanakan.Modules
                 var embed = new EmbedBuilder
                 {
                     Color = EMType.Bot.Color(),
-                    Author = new EmbedAuthorBuilder().WithUser(Context.User)
+                    Author = new EmbedAuthorBuilder().WithUser(Context.User),
+                    Description = $"{thisCard.GetString(false, false, true)} **vs** {enemyCard.GetString(true, false, true)}\n\n",
                 };
 
                 var result = _waifu.GetFightWinner(thisCard, enemyCard);
@@ -2047,13 +2366,14 @@ namespace Sanakan.Modules
                         ++thisCard.ArenaStats.Wins;
                         var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
                         thisCard.ExpCnt += exp;
-                        embed.Description = $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
+                        embed.Description += "Twoja karta zwycięża!\n";
+                        embed.Description += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
 
                         dInfo.Side = DuelInfo.WinnerSide.Left;
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        if (Services.Fun.TakeATry(4))
+                        if (Services.Fun.TakeATry(5))
                         {
                             var item = _waifu.RandomizeItemFromFight().ToItem();
                             var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
@@ -2069,6 +2389,7 @@ namespace Sanakan.Modules
                         break;
 
                     case FightWinner.Card2:
+                        embed.Description += "Twoja karta przegrywa!\n";
                         thisCard.Affection -= thisCard.HasImage() ? 0.1 : 0.5;
                         ++thisCard.ArenaStats.Loses;
 
@@ -2079,6 +2400,7 @@ namespace Sanakan.Modules
 
                     default:
                     case FightWinner.Draw:
+                        embed.Description += "Twoja karta remisuje!\n";
                         ++thisCard.ArenaStats.Draws;
 
                         dInfo.Side = DuelInfo.WinnerSide.Draw;
@@ -2094,17 +2416,7 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    using (var cdb = new Database.GuildConfigContext(Config))
-                    {
-                        var config = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
-
-                        try
-                        {
-                            embed.ImageUrl = await _waifu.GetArenaViewAsync(dInfo, Context.Guild.GetTextChannel(config.WaifuConfig.TrashFightChannel));
-                        }
-                        catch (Exception) { }
-                        await ReplyAsync("", embed: embed.Build());
-                    }
+                    await ReplyAsync("", embed: embed.Build());
                 });
             }
         }
@@ -2147,7 +2459,7 @@ namespace Sanakan.Modules
                     }
                 };
 
-                var items = new List<Item> { _waifu.RandomizeItemFromFight().ToItem() };
+                var items = new List<Item> { _waifu.RandomizeItemFromMFight().ToItem() };
                 var characters = new List<BoosterPackCharacter>();
 
                 var cardsCnt = Services.Fun.GetRandomValue(4, 9);
@@ -2182,11 +2494,11 @@ namespace Sanakan.Modules
                     {
                         await Task.Delay(15);
                         if (Services.Fun.TakeATry(2))
-                            items.Add(_waifu.RandomizeItemFromFight().ToItem());
+                            items.Add(_waifu.RandomizeItemFromMFight().ToItem());
                     }
                 }
 
-                items.Add(_waifu.RandomizeItemFromFight().ToItem());
+                items.Add(_waifu.RandomizeItemFromMFight().ToItem());
                 var boosterPack = new BoosterPack
                 {
                     RarityExcludedFromPack = new List<RarityExcluded>(),
@@ -2439,6 +2751,9 @@ namespace Sanakan.Modules
                 {
                     if (bUser.GameDeck.Waifu != 0)
                     {
+                        var prevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
+                        foreach (var card in prevWaifus) card.Affection -= 5;
+
                         bUser.GameDeck.Waifu = 0;
                         await db.SaveChangesAsync();
                     }
@@ -2460,12 +2775,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var prev = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
-                if (prev != null)
-                {
-                    var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Id == prev.Id);
-                    foreach (var card in allPrevWaifus) card.Affection -= 5;
-                }
+                var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
+                foreach (var card in allPrevWaifus) card.Affection -= 5;
 
                 bUser.GameDeck.Waifu = thisCard.Character;
                 await db.SaveChangesAsync();
@@ -2614,6 +2925,7 @@ namespace Sanakan.Modules
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
                     Description = $"*{bUser.GameDeck.GetUserNameStatus()}*\n\n"
+                                + $"**Skrzynia({(int)bUser.GameDeck.ExpContainer.Level}):** {bUser.GameDeck.ExpContainer.ExpCount.ToString("F")}\n"
                                 + $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"

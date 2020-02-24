@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Sanakan.Database.Models.Tower;
@@ -21,6 +22,11 @@ namespace Sanakan.Database.Models
     public enum CardSource
     {
         Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting
+    }
+
+    public enum StarStyle
+    {
+        Full, White, Black, Empty, Pig, Snek
     }
 
     public class Card
@@ -44,11 +50,15 @@ namespace Sanakan.Database.Models
         public DateTime CreationDate { get; set; }
         public CardSource Source { get; set; }
         public string Title { get; set; }
-        public string Tags { get; set; }
         public string Image { get; set; }
         public string CustomImage { get; set; }
         public ulong FirstIdOwner { get; set; }
         public ulong LastIdOwner { get; set; }
+        public bool Unique { get; set; }
+        public StarStyle StarStyle { get; set; }
+        public string CustomBorder { get; set; }
+
+        public virtual ICollection<CardTag> TagList { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
         public virtual TowerProfile Profile { get; set; }
@@ -61,6 +71,7 @@ namespace Sanakan.Database.Models
         {
             var marks = new[]
             {
+                Unique ? "[U]" : "",
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),

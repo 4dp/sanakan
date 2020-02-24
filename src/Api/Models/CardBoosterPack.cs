@@ -39,6 +39,7 @@ namespace Sanakan.Api.Models
         {
             var pack = new BoosterPack
             {
+                RarityExcludedFromPack = new List<RarityExcluded>(),
                 Characters = new List<BoosterPackCharacter>(),
                 CardSourceFromPack = CardSource.Api,
                 IsCardFromPackTradable = Tradable,
@@ -55,7 +56,7 @@ namespace Sanakan.Api.Models
                         pack.RarityExcludedFromPack.Add(new RarityExcluded() { Rarity = exc });
                 }
             }
-            
+
             switch (Pool.Type)
             {
                 case CardsPoolType.Title:

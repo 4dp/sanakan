@@ -115,8 +115,8 @@ namespace Sanakan.Services
 
                     foreach (var card in duser.GameDeck.Cards)
                     {
-                        card.Tags = null;
                         card.InCage = false;
+                        card.TagList.Clear();
                         card.LastIdOwner = user.Id;
                         fakeu.GameDeck.Cards.Add(card);
                     }

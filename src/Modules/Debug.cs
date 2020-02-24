@@ -94,6 +94,53 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("smsg", RunMode = RunMode.Async)]
+        [Summary("wysyła wiadomość na kanał w danym serwerze")]
+        [Remarks("15188451644 101155483 elo ziomki")]
+        public async Task SendMsgToChannelInGuildAsync([Summary("id serwera")]ulong gId, [Summary("id kanału")]ulong chId, [Summary("treść wiadomości")][Remainder]string msg)
+        {
+            try
+            {
+                await Context.Client.GetGuild(gId).GetTextChannel(chId).SendMessageAsync(msg);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
+        [Command("cup")]
+        [Summary("wymusza update na kartach")]
+        [Remarks("3123 121")]
+        public async Task ForceUpdateCardsAsync([Summary("WID kart")]params ulong[] ids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var cards = db.Cards.Where(x => ids.Any(c => c == x.Id)).ToList();
+                if (cards.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                foreach (var card in cards)
+                {
+                    try
+                    {
+                        await card.Update(null, _shClient);
+                        _waifu.DeleteCardImageIfExist(card);
+                    }
+                    catch (Exception) { }
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"users" });
+
+                await ReplyAsync("", embed: $"Zaktualizowano {cards.Count} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
@@ -182,7 +229,7 @@ namespace Sanakan.Modules
 
                         thisCard.Active = false;
                         thisCard.InCage = false;
-                        thisCard.Tags = null;
+                        thisCard.TagList.Clear();
 
                         user.GameDeck.Cards.Remove(thisCard);
                         winnerUser.GameDeck.Cards.Add(thisCard);
@@ -222,9 +269,9 @@ namespace Sanakan.Modules
 
                 foreach (var thisCard in thisCards)
                 {
-                    thisCard.Tags = null;
                     thisCard.Active = false;
                     thisCard.InCage = false;
+                    thisCard.TagList.Clear();
                     thisCard.GameDeckId = user.Id;
                 }
 
@@ -236,6 +283,66 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("level")]
+        [Summary("ustawia podany poziom użytkownikowi")]
+        [Remarks("Karna 1")]
+        public async Task RestoreCardsAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("poziom")]long level)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(user.Id);
+
+                bUser.Level = level;
+                bUser.ExpCnt = Services.ExperienceManager.CalculateExpForLevel(level);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ustawiono {level} poziom.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("mkick", RunMode = RunMode.Async)]
+        [Summary("wyrzuca użytkowników z serwera")]
+        [Remarks("Jupson Moe")]
+        public async Task MultiKickAsync([Summary("użytkownicy")]params SocketGuildUser[] users)
+        {
+            var count = 0;
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    await user.KickAsync("Multi kick - łamanie regulaminu");
+                    ++count;
+                }
+                catch (Exception) {}
+            }
+
+            await ReplyAsync("", embed: $"Wyrzucono {count} użytkowników.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("mban", RunMode = RunMode.Async)]
+        [Summary("banuje użytkowników z serwera")]
+        [Remarks("Jupson Moe")]
+        public async Task MultiBankAsync([Summary("użytkownicy")]params SocketGuildUser[] users)
+        {
+            var count = 0;
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    await Context.Guild.AddBanAsync(user, 0, "Multi ban - łamanie regulaminu");
+                    ++count;
+                }
+                catch (Exception) {}
+            }
+
+            await ReplyAsync("", embed: $"Zbanowano {count} użytkowników.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("restore")]
         [Summary("przenosi kartę na nowo do użytkownika")]
         [Remarks("Sniku")]
@@ -243,6 +350,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
+                var bUser = await db.GetUserOrCreateAsync(user.Id);
                 var thisCards = db.Cards.Where(x => (x.LastIdOwner == user.Id || (x.FirstIdOwner == user.Id && x.LastIdOwner == 0)) && x.GameDeckId == 1).ToList();
                 if (thisCards.Count < 1)
                 {
@@ -255,9 +363,9 @@ namespace Sanakan.Modules
 
                 foreach (var thisCard in thisCards)
                 {
-                    thisCard.Tags = null;
                     thisCard.Active = false;
                     thisCard.InCage = false;
+                    thisCard.TagList.Clear();
                     thisCard.GameDeckId = user.Id;
                 }
 
@@ -318,8 +426,8 @@ namespace Sanakan.Modules
                 {
                     foreach (var card in user.GameDeck.Cards)
                     {
-                        card.Tags = null;
                         card.InCage = false;
+                        card.TagList.Clear();
                         card.LastIdOwner = id;
                         fakeu.GameDeck.Cards.Add(card);
                     }
@@ -348,7 +456,7 @@ namespace Sanakan.Modules
                     value -= 50;
                     user.GameDeck.Cards.Remove(card);
 
-                    if (0 >= value)
+                    if (value <= 0)
                         break;
                 }
 
@@ -582,15 +690,7 @@ namespace Sanakan.Modules
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
                 botuser.GameDeck.Cards.Add(card);
 
-                var sp = new List<string>();
-                if (botuser.GameDeck.Wishlist != null)
-                    sp = botuser.GameDeck.Wishlist.Split(";").ToList();
-
-                if (sp.Contains($"p{card.Character}"))
-                    sp.Remove($"p{card.Character}");
-
-                if (sp.Count > 0)
-                    botuser.GameDeck.Wishlist = string.Join(";", sp);
+                botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
 
                 await db.SaveChangesAsync();
 
@@ -633,6 +733,24 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("exp")]
+        [Summary("zmienia punkty doświadczenia użytkownika o podaną wartość")]
+        [Remarks("Sniku 10000")]
+        public async Task ChangeUserExpAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba punktów doświadczenia")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.ExpCnt += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ExpCnt} punktów doświadczenia.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

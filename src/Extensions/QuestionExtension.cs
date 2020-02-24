@@ -11,9 +11,9 @@ namespace Sanakan.Extensions
     {
         public static bool CheckAnswer(this Question q, int ans) => q.Answer == ans;
 
-        public static string GetRightAnswer(this Question q) 
+        public static string GetRightAnswer(this Question q)
             =>  $"Prawidłowa odpowiedź to: **{q.Answer}** - {q.Answers.First(x => x.Number == q.Answer).Content}";
-    
+
         private static Discord.IEmote GetEmote(int i)
         {
             if (i == 0) return new Discord.Emoji("\u0030\u20E3");

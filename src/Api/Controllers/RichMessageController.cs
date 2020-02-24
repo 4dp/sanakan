@@ -14,7 +14,7 @@ using Shinden.Logger;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController, Authorize]
+    [ApiController, Authorize(Policy = "Site")]
     [Route("api/[controller]")]
     public class RichMessageController : ControllerBase
     {
@@ -123,7 +123,7 @@ namespace Sanakan.Api.Controllers
                 {
                     var user = _client.GetUser(rmc.ChannelId);
                     if (user == null) continue;
-                    
+
                     var pwCh = await user.GetOrCreateDMChannelAsync();
                     var pwm = await pwCh.SendMessageAsync("", embed: message.ToEmbed());
 

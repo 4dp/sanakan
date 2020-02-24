@@ -318,8 +318,8 @@ namespace Sanakan.Services.Session.Models
                                 var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = null;
                                     card.Active = false;
+                                    card.TagList.Clear();
                                     card.Affection -= 1.5;
 
                                     if (card.FirstIdOwner == 0)
@@ -328,18 +328,8 @@ namespace Sanakan.Services.Session.Models
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
 
-                                    if (user2.GameDeck.Wishlist != null)
-                                    {
-                                        var sp = user2.GameDeck.Wishlist.Split(";").ToList();
-
-                                        if (sp.Contains($"c{card.Id}"))
-                                            sp.Remove($"c{card.Id}");
-
-                                        if (sp.Contains($"p{card.Character}"))
-                                            sp.Remove($"p{card.Character}");
-
-                                        user2.GameDeck.Wishlist = string.Join(";", sp);
-                                    }
+                                    user2.GameDeck.RemoveCharacterFromWishList(card.Character);
+                                    user2.GameDeck.RemoveCardFromWishList(card.Id);
                                 }
                             }
 
@@ -348,8 +338,8 @@ namespace Sanakan.Services.Session.Models
                                 var card = user2.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
                                 if (card != null)
                                 {
-                                    card.Tags = null;
                                     card.Active = false;
+                                    card.TagList.Clear();
                                     card.Affection -= 1.5;
 
                                     if (card.FirstIdOwner == 0)
@@ -358,18 +348,8 @@ namespace Sanakan.Services.Session.Models
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);
 
-                                    if (user1.GameDeck.Wishlist != null)
-                                    {
-                                        var sp = user1.GameDeck.Wishlist.Split(";").ToList();
-
-                                        if (sp.Contains($"c{card.Id}"))
-                                            sp.Remove($"c{card.Id}");
-
-                                        if (sp.Contains($"p{card.Character}"))
-                                            sp.Remove($"p{card.Character}");
-
-                                        user1.GameDeck.Wishlist = string.Join(";", sp);
-                                    }
+                                    user1.GameDeck.RemoveCharacterFromWishList(card.Character);
+                                    user1.GameDeck.RemoveCardFromWishList(card.Id);
                                 }
                             }
 

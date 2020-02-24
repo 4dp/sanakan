@@ -11,7 +11,7 @@ using Sanakan.Config;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController, Authorize]
+    [ApiController, Authorize(Policy = "Site")]
     [Route("api/[controller]")]
     public class QuizController : ControllerBase
     {

@@ -21,7 +21,12 @@ namespace Sanakan.Database.Models
         AffectionRecoveryGreat,
         BetterIncreaseUpgradeCnt,
         CheckAffection,
-        SetCustomImage
+        SetCustomImage,
+        IncreaseExpSmall,
+        IncreaseExpBig,
+        ChangeStarType,
+        SetCustomBorder,
+        ChangeCardImage
     }
 
     public class Item

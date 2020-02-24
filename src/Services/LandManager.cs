@@ -27,17 +27,32 @@ namespace Sanakan.Services
             return all.First();
         }
 
-        public EmbedBuilder GetMembersList(MyLand land, SocketGuild guild)
+        public List<Embed> GetMembersList(MyLand land, SocketGuild guild)
         {
-            string valueString = "";
-            foreach (var user in guild.Users.Where(x => x.Roles.Any(r => r.Id == land.Underling)))
-                valueString += $"{user.Mention}\n";
+            var embs = new List<Embed>();
+            string temp = $"**Członkowie**: *{land.Name}*\n\n";
 
-            return new EmbedBuilder
+            foreach (var user in guild.Users.Where(x => x.Roles.Any(r => r.Id == land.Underling)))
             {
-                Title = $"Członkowie: {land.Name}".TrimToLength(EmbedBuilder.MaxTitleLength),
-                Description = valueString.TrimToLength(1700)
-            };
+                if (temp.Length + user.Mention.Length > 2000)
+                {
+                    embs.Add(new EmbedBuilder()
+                    {
+                        Color = EMType.Info.Color(),
+                        Description = temp
+                    }.Build());
+                    temp = $"{user.Mention}\n";
+                }
+                else temp += $"{user.Mention}\n";
+            }
+
+            embs.Add(new EmbedBuilder()
+            {
+                Color = EMType.Info.Color(),
+                Description = temp
+            }.Build());
+
+            return embs;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -21,7 +22,7 @@ using Z.EntityFramework.Plus;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController, Authorize]
+    [ApiController, Authorize(Policy = "Site")]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
@@ -55,6 +56,23 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Wyszukuje id użytkownika na shinden
+        /// </summary>
+        /// <param name="name">nazwa użytkownika</param>
+        /// <returns>id użytkownika</returns>
+        [HttpPost("find")]
+        public async Task<IEnumerable<Shinden.Models.IUserSearch>> GetUserIdByNameAsync([FromBody, Required]string name)
+        {
+            var res = await _shClient.Search.UserAsync(name);
+            if (!res.IsSuccessStatusCode())
+            {
+                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                return null;
+            }
+            return res.Body;
+        }
+
+        /// <summary>
         /// Pobieranie użytkownika bota
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
@@ -75,7 +93,7 @@ namespace Sanakan.Api.Controllers
                 var currUser = ControllerContext.HttpContext.User;
                 if (currUser.HasClaim(x => x.Type == ClaimTypes.Webpage))
                 {
-                    tokenData = BuildUserToken(user);
+                    tokenData = UserTokenBuilder.BuildUserToken(_config, user);
                 }
 
                 return new UserWithToken()
@@ -258,32 +276,6 @@ namespace Sanakan.Api.Controllers
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                 await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
             }
-        }
-
-        private TokenData BuildUserToken(Database.Models.User user)
-        {
-            var config = _config.Get();
-
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("DiscordId", user.Id.ToString()),
-                new Claim("Player", "waifu_player"),
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Jwt.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(config.Jwt.Issuer,
-              config.Jwt.Issuer,
-              claims,
-              expires: DateTime.Now.AddMinutes(30),
-              signingCredentials: creds);
-
-            return new TokenData()
-            {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expire = token.ValidTo
-            };
         }
     }
 }

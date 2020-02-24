@@ -30,7 +30,7 @@ namespace Sanakan.Modules
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("h", "help")]
         [Summary("wyświetla listę poleceń")]
-        [Remarks("odcinki"), RequireCommandChannel]
+        [Remarks("odcinki"), RequireAnyCommandChannel]
         public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)
@@ -183,7 +183,7 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: "Wysłano zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
 
                 string userName = $"{Context.User.Username}({Context.User.Id})";
-                var sendMsg = await raportCh.SendMessageAsync("", embed: "prep".ToEmbedMessage().Build());
+                var sendMsg = await raportCh.SendMessageAsync($"{repMsg.GetJumpUrl()}", embed: "prep".ToEmbedMessage().Build());
 
                 try
                 {

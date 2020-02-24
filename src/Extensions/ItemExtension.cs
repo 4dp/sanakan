@@ -43,6 +43,16 @@ namespace Sanakan.Extensions
                     return "Pozwala sprawdzić dokładny poziom relacji z kartą.";
                 case ItemType.SetCustomImage:
                     return "Pozwala ustawić własny obrazek karcie. Zalecany wymiary 448x650.";
+                case ItemType.IncreaseExpSmall:
+                    return "Dodaje odrobinę punktów doświadczenia do karty.";
+                case ItemType.IncreaseExpBig:
+                    return "Dodaje punkty doświadczenia do karty.";
+                case ItemType.ChangeStarType:
+                    return "Pozwala zmienić typ gwiazdek na karcie.";
+                case ItemType.SetCustomBorder:
+                    return "Pozwala ustawić ramkę karcie kiedy jest wyświetlana w profilu.";
+                case ItemType.ChangeCardImage:
+                    return "Pozwala wybrać inny obrazek z shindena.";
 
                 default:
                     return "Brak opisu.";
@@ -85,6 +95,16 @@ namespace Sanakan.Extensions
                     return "Kryształowa kula";
                 case ItemType.SetCustomImage:
                     return "Skalpel";
+                case ItemType.IncreaseExpSmall:
+                    return "Mleko truskawkowe";
+                case ItemType.IncreaseExpBig:
+                    return "Gorąca czekolada";
+                case ItemType.ChangeStarType:
+                    return "Stempel";
+                case ItemType.SetCustomBorder:
+                    return "Nożyczki";
+                case ItemType.ChangeCardImage:
+                    return "Plastelina";
 
                 default:
                     return "Brak";
@@ -106,13 +126,23 @@ namespace Sanakan.Extensions
                 case ItemType.IncreaseUpgradeCnt:
                     return 200;
                 case ItemType.DereReRoll:
-                    return 5;
-                case ItemType.CardParamsReRoll:
-                    return 5;
-                case ItemType.CheckAffection:
                     return 10;
+                case ItemType.CardParamsReRoll:
+                    return 15;
+                case ItemType.CheckAffection:
+                    return 15;
                 case ItemType.SetCustomImage:
                     return 300;
+                case ItemType.IncreaseExpSmall:
+                    return 100;
+                case ItemType.IncreaseExpBig:
+                    return 500;
+                case ItemType.ChangeStarType:
+                    return 50;
+                case ItemType.SetCustomBorder:
+                    return 80;
+                case ItemType.ChangeCardImage:
+                    return 10;
 
                 default:
                     return 1;

@@ -32,7 +32,7 @@ namespace Sanakan.Modules
         [Command("portfel", RunMode = RunMode.Async)]
         [Alias("wallet")]
         [Summary("wyświetla portfel użytkownika")]
-        [Remarks(""), RequireCommandChannel]
+        [Remarks(""), RequireAnyCommandChannel]
         public async Task ShowWalletAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -158,7 +158,7 @@ namespace Sanakan.Modules
         [Command("statystyki", RunMode = RunMode.Async)]
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]
-        [Remarks(""), RequireCommandChannel]
+        [Remarks(""), RequireAnyCommandChannel]
         public async Task ShowStatsAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -180,7 +180,7 @@ namespace Sanakan.Modules
         [Command("topka", RunMode = RunMode.Async)]
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
-        [Remarks(""), RequireCommandChannel]
+        [Remarks(""), RequireAnyCommandChannel]
         public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
@@ -209,7 +209,7 @@ namespace Sanakan.Modules
         [Command("widok waifu")]
         [Alias("waifu view")]
         [Summary("przełącza widoczność waifu na pasku bocznym profilu użytkownika")]
-        [Remarks(""), RequireCommandChannel]
+        [Remarks(""), RequireAnyCommandChannel]
         public async Task ToggleWaifuViewInProfileAsync()
         {
             using (var db = new Database.UserContext(Config))

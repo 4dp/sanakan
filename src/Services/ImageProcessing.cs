@@ -204,7 +204,7 @@ namespace Sanakan.Services
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
                 if (tChar != null)
                 {
-                    using (var cardImage = await GetWaifuCardNoStatsAsync(tChar))
+                    using (var cardImage = await GetWaifuInProfileCardAsync(tChar))
                     {
                         cardImage.Mutate(x => x.Resize(new ResizeOptions
                         {
@@ -315,7 +315,7 @@ namespace Sanakan.Services
                 var tChar = botUser.GameDeck.Cards.OrderBy(x => x.Rarity).FirstOrDefault(x => x.Character == botUser.GameDeck.Waifu);
                 if (tChar != null)
                 {
-                    using (var cardImage = await GetWaifuCardNoStatsAsync(tChar))
+                    using (var cardImage = await GetWaifuInProfileCardAsync(tChar))
                     {
                         cardImage.Mutate(x => x.Resize(new ResizeOptions
                         {
@@ -708,8 +708,8 @@ namespace Sanakan.Services
         public Image<Rgba32> GetFColorsView(SCurrency currency)
         {
             var message = new Font(_latoRegular, 16);
-            var firstColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
-            var secondColumnMaxLength = TextMeasurer.Measure("a", new RendererOptions(message));
+            var firstColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
+            var secondColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
 
             var arrayOfColours = Enum.GetValues(typeof(FColor));
             var inFirstColumn = arrayOfColours.Length / 2;
@@ -739,7 +739,7 @@ namespace Sanakan.Services
             int posY = 5;
             int posX = 0;
             int realWidth = (int)(firstColumnMaxLength.Width + secondColumnMaxLength.Width + 20);
-            int realHeight = (int)(firstColumnMaxLength.Height + 1) * (inFirstColumn + 2);
+            int realHeight = (int)(firstColumnMaxLength.Height + 2) * (inFirstColumn + 1);
 
             var imgBase = new Image<Rgba32>(realWidth, realHeight);
             imgBase.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
@@ -760,7 +760,7 @@ namespace Sanakan.Services
 
                 posY += (int)firstColumnMaxLength.Height + 2;
                 var tname = $"{thisColor.ToString()} ({thisColor.Price(currency)} {currency.ToString().ToUpper()})";
-                imgBase.Mutate(x => x.DrawText(tname, message, Rgba32.FromHex(val.ToString("X")), new Point(posX, posY)));
+                imgBase.Mutate(x => x.DrawText(tname, message, Rgba32.FromHex(val.ToString("X6")), new Point(posX, posY)));
             }
 
             return imgBase;
@@ -806,6 +806,20 @@ namespace Sanakan.Services
             return img;
         }
 
+        private async Task<Image<Rgba32>> LoadCustomBorderAsync(Card card)
+        {
+            if (card.CustomBorder == null)
+                return GenerateBorder(card);
+
+            using (var stream = await GetImageFromUrlAsync(card.CustomBorder))
+            {
+                if (stream == null)
+                    return GenerateBorder(card);
+
+                return  Image.Load(stream);
+            }
+        }
+
         private void ApplyStats(Image<Rgba32> image, Card card, bool applyNegativeStats = false)
         {
             int health = card.GetHealthWithPenalty();
@@ -825,6 +839,20 @@ namespace Sanakan.Services
             using (var fire = Image.Load($"./Pictures/PW/fire.png"))
             {
                 image.Mutate(x => x.DrawImage(fire, new Point(0, 0), 1));
+            }
+
+            var starType = card.GetCardStarType();
+            var starCnt = card.GetCardStarCount();
+
+            var starX = 239 - (18 * starCnt);
+            for (int i = 0; i < starCnt; i++)
+            {
+                using (var fire = Image.Load($"./Pictures/PW/stars/{starType}_{card.StarStyle}.png"))
+                {
+                    image.Mutate(x => x.DrawImage(fire, new Point(starX, 30), 1));
+                }
+
+                starX += 36;
             }
 
             int startXDef = 390;
@@ -853,7 +881,7 @@ namespace Sanakan.Services
             }
         }
 
-        public async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(Card card)
+        private async Task<Image<Rgba32>> GetWaifuCardNoStatsAsync(Card card)
         {
             var image = new Image<Rgba32>(475, 667);
 
@@ -863,6 +891,23 @@ namespace Sanakan.Services
             }
 
             using (var bord = GenerateBorder(card))
+            {
+                image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
+            }
+
+            return image;
+        }
+
+        public async Task<Image<Rgba32>> GetWaifuInProfileCardAsync(Card card)
+        {
+            var image = new Image<Rgba32>(475, 667);
+
+            using (var chara = await GetCharacterPictureAsync(card.GetImage()))
+            {
+                image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
+            }
+
+            using (var bord = await LoadCustomBorderAsync(card))
             {
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
             }

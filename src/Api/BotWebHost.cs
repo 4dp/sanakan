@@ -29,7 +29,7 @@ namespace Sanakan.Api
     {
         public static void RunWebHost(DiscordSocketClient client, ShindenClient shinden, Waifu waifu, IConfig config, Services.Helper helper, IExecutor executor, Shinden.Logger.ILogger logger)
         {
-            new Thread(() => 
+            new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
                 CreateWebHostBuilder(config).ConfigureServices(services =>
@@ -65,7 +65,10 @@ namespace Sanakan.Api
                 services.AddAuthorization(op =>
                 {
                     op.AddPolicy("Player", policy => policy.RequireAssertion(context =>
-                    context.User.HasClaim(c => c.Type == "Player" && c.Value == "waifu_player")));
+                        context.User.HasClaim(c => c.Type == "Player" && c.Value == "waifu_player")));
+
+                    op.AddPolicy("Site", policy => policy.RequireAssertion(context =>
+                        !context.User.HasClaim(c => c.Type == "Player")));
                 });
                 services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                     .AddJsonOptions(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
@@ -116,7 +119,7 @@ namespace Sanakan.Api
                 app.UseMvc();
 #if !DEBUG
             });
-#else   
+#else
             }).UseUrls("http://*:5005");
 #endif
             }

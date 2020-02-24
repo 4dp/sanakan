@@ -49,6 +49,33 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static double GetMaxExpToChest(this Card card)
+        {
+            switch (card.Rarity)
+            {
+                case Rarity.SSS:
+                    return 16d;
+
+                case Rarity.SS:
+                    return 8d;
+
+                case Rarity.S:
+                    return 4.8;
+
+                case Rarity.A:
+                case Rarity.B:
+                    return 3.5;
+
+                case Rarity.C:
+                    return 2.5;
+
+                default:
+                case Rarity.D:
+                case Rarity.E:
+                    return 1.5;
+            }
+        }
+
         public static bool HasImage(this Card card) => card.GetImage() != null;
 
         public static double GetCardPower(this Card card)
@@ -82,41 +109,53 @@ namespace Sanakan.Extensions
             return cardPower;
         }
 
+        public static bool HasTag(this Card card, string tag)
+        {
+            return card.TagList.Any(x => x.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase));
+        }
+
         public static string GetStatusIcons(this Card card)
         {
             var icons = new List<string>();
+            if (card.Unique) icons.Add("💠");
             if (!card.IsTradable) icons.Add("⛔");
             if (card.IsBroken()) icons.Add("💔");
             if (card.InCage) icons.Add("🔒");
 
-            if (card.Tags != null)
+            if (card.TagList.Count > 0)
             {
-                if (card.Tags.Contains("ulubione", StringComparison.CurrentCultureIgnoreCase))
+                if (card.TagList.Any(x => x.Name.Equals("ulubione", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("💗");
 
-                if (card.Tags.Contains("rezerwacja", StringComparison.CurrentCultureIgnoreCase))
+                if (card.TagList.Any(x => x.Name.Equals("rezerwacja", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("📝");
 
-                if (card.Tags.Contains("wymiana", StringComparison.CurrentCultureIgnoreCase) && icons.Count == 0)
+                if (card.TagList.Any(x => x.Name.Equals("wymiana", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("🔄");
             }
-
             return string.Join(" ", icons);
         }
 
         public static string GetDescSmall(this Card card)
         {
+            var tags = string.Join(" ", card.TagList.Select(x => x.Name));
+            if (card.TagList.Count < 1) tags = "---";
+
             return $"**[{card.Id}]** *({card.Character})*\n"
                 + $"{card.GetString(true, true, true, false, true)}\n"
                 + $"_{card.Title}_\n\n"
+                + $"{card.Dere}\n"
                 + $"{card.GetAffectionString()}\n"
                 + $"{card.ExpCnt.ToString("F")} exp\n\n"
-                + $"{card.Tags ?? "---"}\n"
+                + $"{tags}\n"
                 + $"{card.GetStatusIcons()}";
         }
 
         public static string GetDesc(this Card card)
         {
+            var tags = string.Join(" ", card.TagList.Select(x => x.Name));
+            if (card.TagList.Count < 1) tags = "---";
+
             return $"{card.GetNameWithUrl()} **{card.Rarity}**\n"
                 + $"*{card.Title ?? "????"}*\n\n"
                 + $"*{card.GetCardParams(true, false, true)}*\n\n"
@@ -130,7 +169,7 @@ namespace Sanakan.Extensions
                 + $"**WID:** {card.Id} *({card.Character})*\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n"
-                + $"**Tagi:** {card.Tags ?? "---"}\n\n";
+                + $"**Tagi:** {tags}\n\n";
         }
 
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)
@@ -153,9 +192,51 @@ namespace Sanakan.Extensions
             return newHealth;
         }
 
+        public static int GetCardStarType(this Card card)
+        {
+            var max = card.MaxStarType();
+            var maxRestartsPerType = card.GetMaxStarsPerType() * card.GetRestartCntPerStar();
+            var type = (card.RestartCnt - 1) / maxRestartsPerType;
+            if (type > 0)
+            {
+                var ths = card.RestartCnt - (maxRestartsPerType + ((type - 1) * maxRestartsPerType));
+                if (ths < card.GetRestartCntPerStar()) --type;
+            }
+
+            if (type > max) type = max;
+            return type;
+        }
+
+        public static int GetMaxCardsRestartsOnStarType(this Card card)
+        {
+            return  card.GetMaxStarsPerType() * card.GetRestartCntPerStar() * card.GetCardStarType();
+        }
+
+        public static int GetCardStarCount(this Card card)
+        {
+            var max = card.GetMaxStarsPerType();
+            var starCnt = (card.RestartCnt - card.GetMaxCardsRestartsOnStarType()) / card.GetRestartCntPerStar();
+            if (starCnt > max) starCnt = max;
+            return starCnt;
+        }
+
+        public static int GetTotalCardStarCount(this Card card)
+        {
+            var max = card.GetMaxStarsPerType() * card.MaxStarType();
+            var stars = card.RestartCnt / card.GetRestartCntPerStar();
+            if (stars > max) stars = max;
+            return stars;
+        }
+
+        public static int MaxStarType(this Card _) => 9;
+
+        public static int GetRestartCntPerStar(this Card _) => 2;
+
+        public static int GetMaxStarsPerType(this Card _) => 5;
+
         public static int GetAttackWithBonus(this Card card)
         {
-            var newAttack = card.Attack + (card.RestartCnt * 2);
+            var newAttack = card.Attack + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 8);
             if (newAttack > 990) newAttack = 999;
             return newAttack;
         }
@@ -175,7 +256,7 @@ namespace Sanakan.Extensions
                 case CardSource.Safari: return "Safari";
                 case CardSource.Shop: return "Sklepik";
                 case CardSource.GodIntervention: return "Czity";
-                case CardSource.Api: return "Nieznane";
+                case CardSource.Api: return "Strona";
                 case CardSource.Migration: return "Stara baza";
                 case CardSource.PvE: return "Walki na boty";
                 case CardSource.Daily: return "Karta+";
@@ -191,6 +272,7 @@ namespace Sanakan.Extensions
         public static bool CanFightOnPvEGMwK(this Card card) => card.Affection > -80;
 
         public static bool CanGiveRing(this Card card) => card.Affection >= 5;
+
         public static bool HasNoNegativeEffectAfterBloodUsage(this Card card) => card.Affection >= 4;
 
         public static bool CanGiveBloodOrUpgradeToSSS(this Card card) => card.Affection >= 50;
@@ -352,7 +434,8 @@ namespace Sanakan.Extensions
                 case Rarity.SS:
                     return 100;
 
-                default: return 30;
+                default:
+                    return 30 + (4 * (7 - (int)card.Rarity));
             }
         }
 
@@ -452,7 +535,10 @@ namespace Sanakan.Extensions
         {
             var response = await client.GetCharacterInfoAsync(card.Character);
             if (!response.IsSuccessStatusCode())
+            {
+                card.Unique = true;
                 throw new Exception($"Couldn't get card info!");
+            }
 
             if (user != null)
             {
@@ -460,9 +546,52 @@ namespace Sanakan.Extensions
                     card.FirstIdOwner = user.Id;
             }
 
+            card.Unique = false;
             card.Name = response.Body.ToString();
             card.Image = response.Body.HasImage ? response.Body.PictureUrl : null;
             card.Title = response.Body?.Relations?.OrderBy(x => x.Id).FirstOrDefault()?.Title ?? "????";
+        }
+
+        public static StarStyle Parse(this StarStyle star, string s)
+        {
+            switch (s.ToLower())
+            {
+                case "waz":
+                case "waż":
+                case "wąz":
+                case "wąż":
+                case "snek":
+                case "snake":
+                    return StarStyle.Snek;
+
+                case "pig":
+                case "świnia":
+                case "swinia":
+                case "świnka":
+                case "swinka":
+                    return StarStyle.Pig;
+
+                case "biała":
+                case "biala":
+                case "white":
+                    return StarStyle.White;
+
+                case "full":
+                case "pełna":
+                case "pelna":
+                    return StarStyle.Full;
+
+                case "empty":
+                case "pusta":
+                    return StarStyle.Empty;
+
+                case "black":
+                case "czarna":
+                    return StarStyle.Black;
+
+                default:
+                    throw new Exception("Could't parse input!");
+            }
         }
     }
 }

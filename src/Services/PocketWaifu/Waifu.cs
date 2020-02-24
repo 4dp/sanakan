@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -25,12 +26,7 @@ namespace Sanakan.Services.PocketWaifu
 
     public enum HaremType
     {
-        Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken, Picture, NoPicture, CustomPicture
-    }
-
-    public enum WishlistObjectType
-    {
-        Card, Title, Character
+        Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken, Picture, NoPicture, CustomPicture, Unique
     }
 
     public class Waifu
@@ -70,6 +66,9 @@ namespace Sanakan.Services.PocketWaifu
                 case HaremType.Defence:
                     return list.OrderByDescending(x => x.GetDefenceWithBonus()).ToList();
 
+                case HaremType.Unique:
+                    return list.Where(x => x.Unique).ToList();
+
                 case HaremType.Cage:
                     return list.Where(x => x.InCage).ToList();
 
@@ -80,10 +79,32 @@ namespace Sanakan.Services.PocketWaifu
                     return list.Where(x => x.IsBroken()).ToList();
 
                 case HaremType.Tag:
-                    return list.Where(x => x.Tags != null).Where(x => x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                {
+                    var nList = new List<Card>();
+                    var tagList = tag.Split(" ").ToList();
+                    foreach (var t in tagList)
+                    {
+                        if (t.Length < 1)
+                            continue;
+
+                        nList = list.Where(x => x.TagList.Any(c => c.Name.Equals(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                    }
+                    return nList;
+                }
 
                 case HaremType.NoTag:
-                    return list.Where(x => x.Tags == null || (x.Tags != null && !x.Tags.Contains(tag, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                {
+                    var nList = new List<Card>();
+                    var tagList = tag.Split(" ").ToList();
+                    foreach (var t in tagList)
+                    {
+                        if (t.Length < 1)
+                            continue;
+
+                        nList = list.Where(x => !x.TagList.Any(c => c.Name.Equals(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
+                    }
+                    return nList;
+                }
 
                 case HaremType.Picture:
                     return list.Where(x => x.HasImage()).ToList();
@@ -210,7 +231,8 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromFight()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 7) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 8) return ItemType.BetterIncreaseUpgradeCnt;
             if (num < 15) return ItemType.IncreaseUpgradeCnt;
             if (num < 40) return ItemType.AffectionRecoveryGreat;
             if (num < 95) return ItemType.AffectionRecoveryBig;
@@ -220,15 +242,31 @@ namespace Sanakan.Services.PocketWaifu
             return ItemType.AffectionRecoverySmall;
         }
 
+        public ItemType RandomizeItemFromMFight()
+        {
+            var num = Fun.GetRandomValue(1000);
+            if (num < 2) return ItemType.IncreaseExpBig;
+            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 18) return ItemType.IncreaseUpgradeCnt;
+            if (num < 45) return ItemType.AffectionRecoveryGreat;
+            if (num < 100) return ItemType.AffectionRecoveryBig;
+            if (num < 160) return ItemType.CardParamsReRoll;
+            if (num < 230) return ItemType.DereReRoll;
+            if (num < 500) return ItemType.AffectionRecoveryNormal;
+            if (num < 510) return ItemType.IncreaseExpSmall;
+            return ItemType.AffectionRecoverySmall;
+        }
+
         public ItemType RandomizeItemFromBlackMarket()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
-            if (num < 20) return ItemType.IncreaseUpgradeCnt;
-            if (num < 60) return ItemType.AffectionRecoveryGreat;
-            if (num < 110) return ItemType.AffectionRecoveryBig;
-            if (num < 150) return ItemType.CardParamsReRoll;
-            if (num < 210) return ItemType.DereReRoll;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 12) return ItemType.BetterIncreaseUpgradeCnt;
+            if (num < 25) return ItemType.IncreaseUpgradeCnt;
+            if (num < 70) return ItemType.AffectionRecoveryGreat;
+            if (num < 120) return ItemType.AffectionRecoveryBig;
+            if (num < 180) return ItemType.CardParamsReRoll;
+            if (num < 250) return ItemType.DereReRoll;
             if (num < 780) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
@@ -236,11 +274,12 @@ namespace Sanakan.Services.PocketWaifu
         public ItemType RandomizeItemFromMarket()
         {
             var num = Fun.GetRandomValue(1000);
-            if (num < 10) return ItemType.IncreaseUpgradeCnt;
-            if (num < 75) return ItemType.AffectionRecoveryBig;
-            if (num < 140) return ItemType.CardParamsReRoll;
-            if (num < 225) return ItemType.DereReRoll;
-            if (num < 475) return ItemType.AffectionRecoveryNormal;
+            if (num < 2) return ItemType.IncreaseExpSmall;
+            if (num < 15) return ItemType.IncreaseUpgradeCnt;
+            if (num < 80) return ItemType.AffectionRecoveryBig;
+            if (num < 145) return ItemType.CardParamsReRoll;
+            if (num < 230) return ItemType.DereReRoll;
+            if (num < 480) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -248,28 +287,30 @@ namespace Sanakan.Services.PocketWaifu
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(5,     ItemType.AffectionRecoverySmall.ToItem()),
-                new ItemWithCost(19,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(139,   ItemType.AffectionRecoveryBig.ToItem()),
-                new ItemWithCost(39,    ItemType.DereReRoll.ToItem()),
-                new ItemWithCost(99,   ItemType.CardParamsReRoll.ToItem()),
-                new ItemWithCost(2000,  ItemType.IncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(1000,  ItemType.SetCustomImage.ToItem()),
-                new ItemWithCost(100,   ItemType.RandomBoosterPackSingleE.ToItem()),
-                new ItemWithCost(1299,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
-                new ItemWithCost(299,   ItemType.RandomNormalBoosterPackB.ToItem()),
-                new ItemWithCost(999,  ItemType.RandomNormalBoosterPackA.ToItem()),
-                new ItemWithCost(1499,  ItemType.RandomNormalBoosterPackS.ToItem()),
-                new ItemWithCost(1999,  ItemType.RandomNormalBoosterPackSS.ToItem()),
+                new ItemWithCost(3,     ItemType.AffectionRecoverySmall.ToItem()),
+                new ItemWithCost(14,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(109,   ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(29,    ItemType.DereReRoll.ToItem()),
+                new ItemWithCost(79,    ItemType.CardParamsReRoll.ToItem()),
+                new ItemWithCost(1099,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(999,   ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(659,   ItemType.SetCustomBorder.ToItem()),
+                new ItemWithCost(149,   ItemType.ChangeStarType.ToItem()),
+                new ItemWithCost(99,    ItemType.RandomBoosterPackSingleE.ToItem()),
+                new ItemWithCost(1199,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
+                new ItemWithCost(199,   ItemType.RandomNormalBoosterPackB.ToItem()),
+                new ItemWithCost(499,   ItemType.RandomNormalBoosterPackA.ToItem()),
+                new ItemWithCost(899,   ItemType.RandomNormalBoosterPackS.ToItem()),
+                new ItemWithCost(1299,  ItemType.RandomNormalBoosterPackSS.ToItem()),
             };
         }
 
         public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
-            double rExp = 30f / (wild ? 100f : 30f);
+            double rExp = 30f / (wild ? 100f : 10f);
 
-            if (toUp.Character == toSac.Character)
-                rExp = 30f / 5f;
+            if (toUp.Character == toSac.Character && !wild)
+                rExp = 30f;
 
             var sacVal = (int) toSac.Rarity;
             var upVal = (int) toUp.Rarity;
@@ -356,23 +397,27 @@ namespace Sanakan.Services.PocketWaifu
                 Defence = RandomizeDefence(rarity),
                 ArenaStats = new CardArenaStats(),
                 Attack = RandomizeAttack(rarity),
+                TagList = new List<CardTag>(),
                 CreationDate = DateTime.Now,
                 Name = character.ToString(),
+                StarStyle = StarStyle.Full,
                 Source = CardSource.Other,
                 Character = character.Id,
                 Dere = RandomizeDere(),
                 RarityOnStart = rarity,
+                CustomBorder = null,
                 CustomImage = null,
                 IsTradable = true,
                 FirstIdOwner = 1,
                 UpgradesCnt = 2,
+                LastIdOwner = 0,
                 Rarity = rarity,
+                Unique = false,
                 InCage = false,
                 RestartCnt = 0,
                 Active = false,
                 Affection = 0,
                 Image = null,
-                Tags = null,
                 Health = 0,
                 ExpCnt = 0,
             };
@@ -624,7 +669,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GetWaifuProfileImageAsync(Card card, ITextChannel trashCh)
         {
-            using (var cardImage = await _img.GetWaifuCardNoStatsAsync(card))
+            using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
                 cardImage.SaveToPath($"./GOut/Profile/P{card.Id}.png");
 
@@ -643,7 +688,7 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var card in cards)
             {
                 var thU = client.GetUser(card.GameDeck.UserId);
-                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** {card.GetStatusIcons()}\n";
+                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
             }
 
             return new EmbedBuilder()
@@ -667,7 +712,7 @@ namespace Sanakan.Services.PocketWaifu
                     var user = client.GetUser(card.GameDeckId);
                     var uString = user?.Mention ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]** {card.GetStatusIcons()}\n";
+                    tempContentString += $"{uString}: **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)
@@ -1016,7 +1061,7 @@ namespace Sanakan.Services.PocketWaifu
             var cards = new List<Card>();
             if (cardsId != null)
             {
-                var cds = await db.Cards.Where(x => cardsId.Any(c => c == x.Id)).FromCacheAsync( new[] {"users"});
+                var cds = await db.Cards.Include(x => x.TagList).Where(x => cardsId.Any(c => c == x.Id)).AsNoTracking().ToListAsync();
                 cards.AddRange(cds);
             }
 
@@ -1037,11 +1082,11 @@ namespace Sanakan.Services.PocketWaifu
             if (characters.Count > 0)
             {
                 characters = characters.Distinct().Where(c => !userCards.Any(x => x.Character == c)).ToList();
-                var cads = await db.Cards.Where(x => characters.Any(c => c == x.Character)).FromCacheAsync(new[] { "users" });
+                var cads = await db.Cards.Include(x => x.TagList).Where(x => characters.Any(c => c == x.Character)).AsNoTracking().ToListAsync();
                 cards.AddRange(cads);
             }
 
-            return cards.Distinct();
+            return cards.Distinct().ToList();
         }
     }
 }

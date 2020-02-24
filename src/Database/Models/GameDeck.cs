@@ -11,7 +11,6 @@ namespace Sanakan.Database.Models
         public long CTCnt { get; set; }
         public ulong Waifu { get; set; }
         public double Karma { get; set; }
-        public string Wishlist { get; set; }
         public bool WishlistIsPrivate { get;set; }
         public ulong MaxTowerFloor { get; set; }
 
@@ -19,6 +18,9 @@ namespace Sanakan.Database.Models
         public virtual ICollection<Item> Items { get; set; }
         public virtual ICollection<BoosterPack> BoosterPacks { get; set; }
         public virtual ICollection<CardPvPStats> PvPStats { get; set; }
+        public virtual ICollection<WishlistObject> Wishes { get; set; }
+
+        public virtual ExpContainer ExpContainer { get; set; }
 
         public ulong UserId { get; set; }
         [JsonIgnore]

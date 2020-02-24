@@ -34,25 +34,25 @@ namespace Sanakan.Extensions
                 new EmbedFieldBuilder
                 {
                     Name = "Wiek",
-                    Value = info.Age > 0 ? $"{info.Age}" : "??",
+                    Value = info.Age.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Wzrost",
-                    Value = info.Height > 0 ? $"{info.Height}" : "??",
+                    Value = info.Height.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Waga",
-                    Value = info.Weight > 0 ? $"{info.Weight}" : "??",
+                    Value = info.Weight.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
                 {
                     Name = "Grupa krwii",
-                    Value = string.IsNullOrEmpty(info.Bloodtype) ? "??" : $"{info.Bloodtype}",
+                    Value = info.Bloodtype.GetQMarksIfEmpty(),
                     IsInline = true
                 },
                 new EmbedFieldBuilder
@@ -68,21 +68,21 @@ namespace Sanakan.Extensions
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Biust",
-                    Value = info.Bust > 0 ? $"{info.Bust}" : "??",
+                    Value = info.Bust.GetQMarksIfEmpty(),
                     IsInline = true
                 });
 
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Talia",
-                    Value = info.Waist > 0 ? $"{info.Waist}" : "??",
+                    Value = info.Waist.GetQMarksIfEmpty(),
                     IsInline = true
                 });
 
                 fields.Add(new EmbedFieldBuilder()
                 {
                     Name = "Biodra",
-                    Value = info.Hips > 0 ? $"{info.Hips}" : "??",
+                    Value = info.Hips.GetQMarksIfEmpty(),
                     IsInline = true
                 });
             }
@@ -94,6 +94,7 @@ namespace Sanakan.Extensions
         {
             switch(s)
             {
+                case Sex.Other: return "Helikopter bojowy";
                 case Sex.Female: return "Kobieta";
                 case Sex.Male: return "Mężczyzna";
                 default: return "Homoniewiadomo";
