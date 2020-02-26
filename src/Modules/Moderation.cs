@@ -1466,19 +1466,17 @@ namespace Sanakan.Modules
 
                 if (reportMsg != null)
                 {
-                    if (reason == "z raportu")
+                    try
                     {
-                        try
-                        {
-                            var rEmbedBuilder = reportMsg?.Embeds?.FirstOrDefault().ToEmbedBuilder();
+                        var rEmbedBuilder = reportMsg?.Embeds?.FirstOrDefault().ToEmbedBuilder();
+                        if (reason == "z raportu")
                             reason = rEmbedBuilder?.Fields.FirstOrDefault(x => x.Name == "Powód:").Value.ToString() ?? reason;
 
-                            rEmbedBuilder.Color = EMType.Bot.Color();
-                            rEmbedBuilder.Fields.FirstOrDefault(x => x.Name == "Id zgloszenia:").Value = "Rozpatrzone!";
-                            await ReplyAsync("", embed: rEmbedBuilder.Build());
-                        }
-                        catch (Exception) { }
+                        rEmbedBuilder.Color = EMType.Bot.Color();
+                        rEmbedBuilder.Fields.FirstOrDefault(x => x.Name == "Id zgloszenia:").Value = "Rozpatrzone!";
+                        await ReplyAsync("", embed: rEmbedBuilder.Build());
                     }
+                    catch (Exception) { }
 
                     await reportMsg.DeleteAsync();
                 }

@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -257,7 +258,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var thisCards = db.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+                var thisCards = db.Cards.Include(x => x.TagList).Where(x => wids.Any(c => c == x.Id)).ToList();
                 if (thisCards.Count < 1)
                 {
                     await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
@@ -286,7 +287,7 @@ namespace Sanakan.Modules
         [Command("level")]
         [Summary("ustawia podany poziom użytkownikowi")]
         [Remarks("Karna 1")]
-        public async Task RestoreCardsAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("poziom")]long level)
+        public async Task ChangeUserLevelAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("poziom")]long level)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -351,7 +352,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(user.Id);
-                var thisCards = db.Cards.Where(x => (x.LastIdOwner == user.Id || (x.FirstIdOwner == user.Id && x.LastIdOwner == 0)) && x.GameDeckId == 1).ToList();
+                var thisCards = db.Cards.Include(x => x.TagList).Where(x => (x.LastIdOwner == user.Id || (x.FirstIdOwner == user.Id && x.LastIdOwner == 0)) && x.GameDeckId == 1).ToList();
                 if (thisCards.Count < 1)
                 {
                     await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
