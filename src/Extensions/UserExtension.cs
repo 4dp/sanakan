@@ -105,7 +105,7 @@ namespace Sanakan.Extensions
         }
 
         public static bool ReachedDailyMaxItemsCount(this GameDeck deck)
-            => deck.ItemsDropped >= 1000;
+            => deck.ItemsDropped >= 200;
 
         public static bool CanFightPvP(this GameDeck deck) =>
             deck.GetMaxDeckPower() >= deck.GetDeckPower();

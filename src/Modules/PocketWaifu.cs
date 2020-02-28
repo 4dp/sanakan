@@ -875,8 +875,13 @@ namespace Sanakan.Modules
                         ? card.GetMaxExpToChest()
                         : (card.ExpCnt / 2));
 
-                    bUser.GameDeck.Karma += 0.7;
+                    var incKarma = 0.7 * card.MarketValue;
+                    if (incKarma < 0.001) incKarma = 0.001;
+                    if (incKarma > 100) incKarma = 100;
+
+                    bUser.GameDeck.Karma += incKarma;
                     bUser.Stats.ReleasedCards += 1;
+
                     bUser.GameDeck.Cards.Remove(card);
                     _waifu.DeleteCardImageIfExist(card);
                 }
@@ -930,9 +935,14 @@ namespace Sanakan.Modules
                         ? card.GetMaxExpToChest()
                         : card.ExpCnt);
 
-                    bUser.GameDeck.Karma -= 1;
-                    bUser.Stats.DestroyedCards += 1;
+                    var incKarma = 1 * card.MarketValue;
+                    if (incKarma < 0.001) incKarma = 0.001;
+                    if (incKarma > 100) incKarma = 100;
+
                     bUser.GameDeck.CTCnt += card.GetValue();
+                    bUser.GameDeck.Karma -= incKarma;
+                    bUser.Stats.DestroyedCards += 1;
+
                     bUser.GameDeck.Cards.Remove(card);
                     _waifu.DeleteCardImageIfExist(card);
                 }
@@ -2439,7 +2449,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("arenam", RunMode = RunMode.Async)]
+        [Command("arenam")]
         [Alias("wildm")]
         [Summary("walka przeciwko botowi w stylu GMwK")]
         [Remarks("1"), RequireWaifuFightChannel]
@@ -2447,19 +2457,13 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var botUser = await db.GetCachedFullUserAsync(Context.User.Id);
+                var botUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
                 if (thisCard == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
-
-                var rUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var rcrd = rUser.GameDeck.Cards.First(x => x.Id == thisCard.Id);
-
-                thisCard.Health = rcrd.Health;
-                thisCard.Affection = rcrd.Affection;
 
                 if (!thisCard.CanFightOnPvEGMwK())
                 {
@@ -2517,49 +2521,36 @@ namespace Sanakan.Modules
                     players.Add(new PlayerInfo { Cards = new List<Card> { botCard } });
                 }
 
-                var history = await _waifu.MakeFightAsync(players, true);
+                var history = _waifu.MakeFightAsync(players, true);
                 var deathLog = _waifu.GetDeathLog(history, players);
 
-                bool userWon = history.Winner?.User != null;
-                string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
-                if (userWon)
-                {
-                    resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
-                    for (int i = 0; i < cardsCnt - 3; i++)
-                    {
-                        await Task.Delay(15);
-                        if (Services.Fun.TakeATry(2))
-                            items.Add(_waifu.RandomizeItemFromMFight().ToItem());
-                    }
-                }
-
-                items.Add(_waifu.RandomizeItemFromMFight().ToItem());
-                var boosterPack = new BoosterPack
-                {
-                    RarityExcludedFromPack = new List<RarityExcluded>(),
-                    CardSourceFromPack = CardSource.PvE,
-                    Name = "Losowa karta z masakry PvE",
-                    IsCardFromPackTradable = true,
-                    Characters = characters,
-                    MinRarity = Rarity.E,
-                    CardCnt = 1
-                };
-
-                if (botUser.GameDeck.ReachedDailyMaxItemsCount())
-                    items.Clear();
-
-                bool userWonPack = Services.Fun.TakeATry(10);
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
                 double exp = 0.22 * blowsDeal;
 
                 double affection = thisCard.HasImage() ? 0.15 : 0.5;
                 affection *= blowsDeal;
 
-                if (!userWon)
+                bool userWon = history.Winner?.User != null;
+                string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
+                if (userWon)
                 {
+                    ++thisCard.ArenaStats.Wins;
+                    resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
+                    for (int i = 0; i < cardsCnt - 2; i++)
+                    {
+                        if (Services.Fun.TakeATry(2))
+                            items.Add(_waifu.RandomizeItemFromMFight().ToItem());
+                    }
+                }
+                else
+                {
+                    ++thisCard.ArenaStats.Loses;
                     affection *= 1.5;
                     exp /= 1.5;
                 }
+
+                if (botUser.GameDeck.ReachedDailyMaxItemsCount())
+                    items.Clear();
 
                 if (thisCard.IsUnusable())
                 {
@@ -2571,60 +2562,48 @@ namespace Sanakan.Modules
                 int chance = 10 - (int)thisCard.Affection;
                 if (chance < 6) chance = 6;
 
-                bool allowItems = Services.Fun.TakeATry(chance);
-                if (thisCard.IsBroken()) allowItems = false;
-
-                if ((userWon && !thisCard.IsUnusable()) || allowItems)
+                if ((userWon && !thisCard.IsUnusable()) || (Services.Fun.TakeATry(chance) && !thisCard.IsBroken()))
                 {
+                    botUser.GameDeck.ItemsDropped += (uint)items.Count;
                     foreach (var item in items)
-                        resultString += $"+{item.Name}\n";
-                }
-                resultString += $"+{exp.ToString("F")} exp *({(thisCard.ExpCnt + exp).ToString("F")})*\n";
-
-                if (userWonPack && userWon)
-                    resultString += $"+{boosterPack.Name}";
-
-                var exe = new Executable($"GMwK PvE - {thisCard.Name}", new Task(() =>
-                {
-                    using (var dbu = new Database.UserContext(_config))
                     {
-                        var trUser = dbu.GetUserOrCreateAsync(Context.User.Id).Result;
-                        var trCard = trUser.GameDeck.Cards.First(x => x.Id == thisCard.Id);
-
-                        trCard.Affection -= affection;
-                        trCard.ExpCnt += exp;
-
-                        if (userWon)
-                            trCard.ArenaStats.Wins += 1;
-                        else
-                            trCard.ArenaStats.Loses += 1;
-
-                        if ((userWon && !thisCard.IsUnusable()) || allowItems)
+                        var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                        if (thisItem == null)
                         {
-                            trUser.GameDeck.ItemsDropped += (uint)items.Count;
-                            foreach (var item in items)
-                            {
-                                var thisItem = trUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
-                                if (thisItem == null)
-                                {
-                                    thisItem = item;
-                                    trUser.GameDeck.Items.Add(thisItem);
-                                }
-                                else ++thisItem.Count;
-                            }
+                            thisItem = item;
+                            botUser.GameDeck.Items.Add(thisItem);
                         }
-
-                        if (userWonPack && userWon)
-                            trUser.GameDeck.BoosterPacks.Add(boosterPack);
-
-                        trUser.GameDeck.Karma -= 0.03;
-
-                        dbu.SaveChanges();
-
-                        QueryCacheManager.ExpireTag(new string[] { $"user-{trUser.Id}", "users" });
+                        else ++thisItem.Count;
+                        resultString += $"+{item.Name}\n";
                     }
-                }));
-                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+                }
+
+                thisCard.ExpCnt += exp;
+                thisCard.Affection -= affection;
+                thisCard.GameDeck.Karma -= 0.04;
+
+                resultString += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
+
+                if (Services.Fun.TakeATry(10) && userWon)
+                {
+                    var boosterPack = new BoosterPack
+                    {
+                        RarityExcludedFromPack = new List<RarityExcluded>(),
+                        CardSourceFromPack = CardSource.PvE,
+                        Name = "Losowa karta z masakry PvE",
+                        IsCardFromPackTradable = true,
+                        Characters = characters,
+                        MinRarity = Rarity.E,
+                        CardCnt = 1
+                    };
+
+                    resultString += $"+{boosterPack.Name}";
+                    botUser.GameDeck.BoosterPacks.Add(boosterPack);
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{thisCard.Id}", "users" });
 
                 await ReplyAsync("", embed: $"**Arena GMwK**:\n\n**Twoja karta**: {thisCard.GetString(false, false, true)}\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
             }
@@ -2685,7 +2664,7 @@ namespace Sanakan.Modules
                     playerList += $"{p.User.Mention}: {card.GetString(true, false, true)}\n";
                 }
 
-                var history = await _waifu.MakeFightAsync(players, true);
+                var history = _waifu.MakeFightAsync(players, true);
                 var deathLog = _waifu.GetDeathLog(history, players);
 
                 string resultString = $"Nikt nie wygrał tego pojedynku!";

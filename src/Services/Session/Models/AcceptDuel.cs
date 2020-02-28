@@ -30,7 +30,8 @@ namespace Sanakan.Services.Session.Models
         public async Task<bool> OnAccept(SessionContext context)
         {
             var players = new List<PlayerInfo> { P1, P2 };
-            var fight = await _waifu.MakeFightAsync(players);
+
+            var fight = _waifu.MakeFightAsync(players);
             string deathLog = _waifu.GetDeathLog(fight, players);
 
             bool isWinner = fight.Winner != null;

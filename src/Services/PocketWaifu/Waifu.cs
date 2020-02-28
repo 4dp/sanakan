@@ -547,18 +547,14 @@ namespace Sanakan.Services.PocketWaifu
             }));
         }
 
-        public async Task<FightHistory> MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)
+        public FightHistory MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)
         {
-            var totalCards = new List<Card>();
-            await Task.CompletedTask;
+            var totalCards = new List<CardWithHealth>();
 
             foreach (var player in players)
             {
                 foreach (var card in player.Cards)
-                {
-                    card.Health = card.GetHealthWithPenalty();
-                    totalCards.Add(card);
-                }
+                    totalCards.Add(new CardWithHealth() { Card = card, Health = card.GetHealthWithPenalty() });
             }
 
             var rounds = new List<RoundInfo>();
@@ -574,19 +570,19 @@ namespace Sanakan.Services.PocketWaifu
                     if (card.Health <= 0)
                         continue;
 
-                    var enemies = totalCards.Where(x => x.Health > 0 && x.GameDeckId != card.GameDeckId);
+                    var enemies = totalCards.Where(x => x.Health > 0 && x.Card.GameDeckId != card.Card.GameDeckId).ToList();
                     if (enemies.Count() > 0)
                     {
                         var target = Fun.GetOneRandomFrom(enemies);
-                        var dmg = GetDmgDeal(card, target);
+                        var dmg = GetDmgDeal(card.Card, target.Card);
                         target.Health -= dmg;
 
-                        var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Id);
+                        var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Card.Id);
                         if (hpSnap == null)
                         {
                             round.Cards.Add(new HpSnapshot
                             {
-                                CardId = target.Id,
+                                CardId = target.Card.Id,
                                 Hp = target.Health
                             });
                         }
@@ -595,8 +591,8 @@ namespace Sanakan.Services.PocketWaifu
                         round.Fights.Add(new AttackInfo
                         {
                             Dmg = dmg,
-                            AtkCardId = card.Id,
-                            DefCardId = target.Id
+                            AtkCardId = card.Card.Id,
+                            DefCardId = target.Card.Id
                         });
                     }
                 }
@@ -609,7 +605,7 @@ namespace Sanakan.Services.PocketWaifu
                 }
                 else
                 {
-                    var alive = totalCards.Where(x => x.Health > 0);
+                    var alive = totalCards.Where(x => x.Health > 0).Select(x => x.Card);
                     var one = alive.FirstOrDefault();
                     if (one == null) break;
 
@@ -618,7 +614,7 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             PlayerInfo winner = null;
-            var win = totalCards.Where(x => x.Health > 0).FirstOrDefault();
+            var win = totalCards.Where(x => x.Health > 0).Select(x => x.Card).FirstOrDefault();
 
             if (win != null)
                 winner = players.FirstOrDefault(x => x.Cards.Any(c => c.GameDeckId == win.GameDeckId));
