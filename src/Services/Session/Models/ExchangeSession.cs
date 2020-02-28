@@ -313,8 +313,14 @@ namespace Sanakan.Services.Session.Models
                             var user1 = await db.GetUserOrCreateAsync(P1.User.Id);
                             var user2 = await db.GetUserOrCreateAsync(P2.User.Id);
 
-                            double exchangeRateP1 = P2.Cards.Count / ((P1.Cards.Count == 0) ? 0.5 : P1.Cards.Count);
-                            double exchangeRateP2 = P1.Cards.Count / ((P2.Cards.Count == 0) ? 0.5 : P2.Cards.Count);
+                            double avgValueP1 = P1.Cards.Sum(x => x.MarketValue) / ((P1.Cards.Count == 0) ? 1 : P1.Cards.Count);
+                            double avgValueP2 = P2.Cards.Sum(x => x.MarketValue) / ((P2.Cards.Count == 0) ? 1 : P2.Cards.Count);
+
+                            var divP1 = P1.Cards.Count / avgValueP1;
+                            var divP2 = P2.Cards.Count / avgValueP2;
+
+                            var exchangeRateP1 = divP2 / ((P1.Cards.Count == 0) ? 0.5 : divP1);
+                            var exchangeRateP2 = divP1 / ((P2.Cards.Count == 0) ? 0.5 : divP2);
 
                             foreach (var c in P1.Cards)
                             {
