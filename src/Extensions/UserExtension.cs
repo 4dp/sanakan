@@ -44,6 +44,7 @@ namespace Sanakan.Extensions
                     Waifu = 0,
                     CTCnt = 0,
                     Karma = 0,
+                    ItemsDropped = 0,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
@@ -102,6 +103,9 @@ namespace Sanakan.Extensions
 
             return user;
         }
+
+        public static bool ReachedDailyMaxItemsCount(this GameDeck deck)
+            => deck.ItemsDropped >= 1000;
 
         public static bool CanFightPvP(this GameDeck deck) =>
             deck.GetMaxDeckPower() >= deck.GetDeckPower();

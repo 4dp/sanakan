@@ -2360,6 +2360,23 @@ namespace Sanakan.Modules
                 thisCard.Affection -= thisCard.HasImage() ? 0.05 : 0.2;
                 var dInfo = new DuelInfo();
 
+                var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
+                if (maxItems == null)
+                {
+                    maxItems = new Database.Models.TimeStatus
+                    {
+                        Type = Database.Models.StatusType.Items,
+                        EndsAt = DateTime.MinValue
+                    };
+                    botUser.TimeStatuses.Add(maxItems);
+                }
+
+                if (!maxItems.IsActive())
+                {
+                    maxItems.EndsAt = DateTime.Now.Date.AddDays(1);
+                    botUser.GameDeck.ItemsDropped = 0;
+                }
+
                 switch (result)
                 {
                     case FightWinner.Card1:
@@ -2373,13 +2390,14 @@ namespace Sanakan.Modules
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        if (Services.Fun.TakeATry(5))
+                        if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCount())
                         {
                             var item = _waifu.RandomizeItemFromFight().ToItem();
                             var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
                             if (thisItem == null)
                             {
                                 thisItem = item;
+                                ++botUser.GameDeck.ItemsDropped;
                                 botUser.GameDeck.Items.Add(thisItem);
                             }
                             else ++thisItem.Count;
@@ -2459,6 +2477,23 @@ namespace Sanakan.Modules
                     }
                 };
 
+                var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
+                if (maxItems == null)
+                {
+                    maxItems = new Database.Models.TimeStatus
+                    {
+                        Type = Database.Models.StatusType.Items,
+                        EndsAt = DateTime.MinValue
+                    };
+                    botUser.TimeStatuses.Add(maxItems);
+                }
+
+                if (!maxItems.IsActive())
+                {
+                    maxItems.EndsAt = DateTime.Now.Date.AddDays(1);
+                    botUser.GameDeck.ItemsDropped = 0;
+                }
+
                 var items = new List<Item> { _waifu.RandomizeItemFromMFight().ToItem() };
                 var characters = new List<BoosterPackCharacter>();
 
@@ -2509,6 +2544,9 @@ namespace Sanakan.Modules
                     MinRarity = Rarity.E,
                     CardCnt = 1
                 };
+
+                if (botUser.GameDeck.ReachedDailyMaxItemsCount())
+                    items.Clear();
 
                 bool userWonPack = Services.Fun.TakeATry(10);
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
@@ -2563,6 +2601,7 @@ namespace Sanakan.Modules
 
                         if ((userWon && !thisCard.IsUnusable()) || allowItems)
                         {
+                            trUser.GameDeck.ItemsDropped += (uint)items.Count;
                             foreach (var item in items)
                             {
                                 var thisItem = trUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
