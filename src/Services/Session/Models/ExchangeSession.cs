@@ -313,6 +313,9 @@ namespace Sanakan.Services.Session.Models
                             var user1 = await db.GetUserOrCreateAsync(P1.User.Id);
                             var user2 = await db.GetUserOrCreateAsync(P2.User.Id);
 
+                            double exchangeRateP1 = P2.Cards.Count / ((P1.Cards.Count == 0) ? 0.5 : P1.Cards.Count);
+                            double exchangeRateP2 = P1.Cards.Count / ((P2.Cards.Count == 0) ? 0.5 : P2.Cards.Count);
+
                             foreach (var c in P1.Cards)
                             {
                                 var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
@@ -321,6 +324,9 @@ namespace Sanakan.Services.Session.Models
                                     card.Active = false;
                                     card.TagList.Clear();
                                     card.Affection -= 1.5;
+
+                                    var valueDiff = card.MarketValue - exchangeRateP1;
+                                    card.MarketValue -= valueDiff * 0.735;
 
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user1.Id;
@@ -341,6 +347,9 @@ namespace Sanakan.Services.Session.Models
                                     card.Active = false;
                                     card.TagList.Clear();
                                     card.Affection -= 1.5;
+
+                                    var valueDiff = card.MarketValue - exchangeRateP2;
+                                    card.MarketValue -= valueDiff * 0.735;
 
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user2.Id;

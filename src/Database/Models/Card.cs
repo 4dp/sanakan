@@ -56,6 +56,7 @@ namespace Sanakan.Database.Models
         public bool Unique { get; set; }
         public StarStyle StarStyle { get; set; }
         public string CustomBorder { get; set; }
+        public double MarketValue { get; set; }
 
         public virtual ICollection<CardTag> TagList { get; set; }
 

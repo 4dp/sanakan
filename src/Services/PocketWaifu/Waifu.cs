@@ -411,6 +411,7 @@ namespace Sanakan.Services.PocketWaifu
                 FirstIdOwner = 1,
                 UpgradesCnt = 2,
                 LastIdOwner = 0,
+                MarketValue = 1,
                 Rarity = rarity,
                 Unique = false,
                 InCage = false,
