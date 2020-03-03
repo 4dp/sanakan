@@ -1466,27 +1466,28 @@ namespace Sanakan.Modules
 
         [Command("żusuń")]
         [Alias("wremove", "zusuń", "żusun", "zusun")]
-        [Summary("usuwa kartę/tytuł/postać z listy życzeń")]
-        [Remarks("karta 4212"), RequireWaifuCommandChannel]
-        public async Task RemoveFromWishlistAsync([Summary("typ id(p - postać, t - tytuł, c - karta)")]WishlistObjectType type, [Summary("id/WID")]ulong id)
+        [Summary("usuwa karty/tytuły/postacie z listy życzeń")]
+        [Remarks("karta 4212 21452"), RequireWaifuCommandChannel]
+        public async Task RemoveFromWishlistAsync([Summary("typ id(p - postać, t - tytuł, c - karta)")]WishlistObjectType type, [Summary("ids/WIDs")]params ulong[] ids)
         {
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var obj = bUser.GameDeck.Wishes.FirstOrDefault(x => x.Type == type && x.ObjectId == id);
-                if (obj == null)
+                var objs = bUser.GameDeck.Wishes.Where(x => x.Type == type && ids.Any(c => c == x.ObjectId)).ToList();
+                if (objs.Count < 1)
                 {
-                    await ReplyAsync("", embed: "Nie posiadasz takiej pozycji na liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: "Nie posiadasz takich pozycji na liście życzeń!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                bUser.GameDeck.Wishes.Remove(obj);
+                foreach (var obj in objs)
+                    bUser.GameDeck.Wishes.Remove(obj);
 
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} usunął pozycję z listy życzeń.".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} usunął pozycje z listy życzeń.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
