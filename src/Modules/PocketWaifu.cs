@@ -2152,12 +2152,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var cards = await db.Cards.Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.Id == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => x.GameDeckId != user.Id && response.Body.Any(r => r.Id == x.Character)).AsNoTracking().ToListAsync();
 
                 if (!showFavs)
-                    cards = cards.Where(x => !x.HasTag("ulubione"));
+                    cards = cards.Where(x => !x.HasTag("ulubione")).ToList();
 
-                if (cards.Count() < 1)
+                if (cards.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
