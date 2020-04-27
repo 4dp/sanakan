@@ -187,9 +187,10 @@ namespace Sanakan.Services
             int emoteChars = message.Tags.CountEmotesTextLenght();
             int linkChars = message.Content.CountLinkTextLength();
             int nonWhiteSpaceChars = message.Content.Count(c => c != ' ');
-            double charsThatMatters = nonWhiteSpaceChars - linkChars - emoteChars;
+            int quotedChars = message.Content.CountQuotedTextLength();
+            double charsThatMatters = nonWhiteSpaceChars - linkChars - emoteChars - quotedChars;
 
-            CountCharacters(message.Author.Id, (ulong)charsThatMatters);
+            CountCharacters(message.Author.Id, (ulong)(charsThatMatters < 0 ? 1 : charsThatMatters));
             return GetExpPointBasedOnCharCount(charsThatMatters);
         }
 

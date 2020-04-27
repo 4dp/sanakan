@@ -85,6 +85,11 @@ namespace Sanakan.Extensions
             return new Regex(@"\B-\w+", RegexOptions.Compiled).Matches(message).Count > 0;
         }
 
+        public static int CountQuotedTextLength(this string message)
+        {
+            return new Regex(@"(^>[ ][^\n]*\n)|(\n>[ ][^\n]*\n)|(\n>[ ][^\n]*$)", RegexOptions.Compiled).Matches(message).Sum(x => x.Length);
+        }
+
         public static int CountLinkTextLength(this string message)
         {
             return new Regex("(http|ftp|https)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?", RegexOptions.Compiled).Matches(message).Sum(x => x.Length);
