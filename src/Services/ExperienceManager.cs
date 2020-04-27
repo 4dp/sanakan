@@ -190,7 +190,7 @@ namespace Sanakan.Services
             int quotedChars = message.Content.CountQuotedTextLength();
             double charsThatMatters = nonWhiteSpaceChars - linkChars - emoteChars - quotedChars;
 
-            CountCharacters(message.Author.Id, (ulong)(charsThatMatters < 0 ? 1 : charsThatMatters));
+            CountCharacters(message.Author.Id, (ulong)(charsThatMatters < 1 ? 1 : charsThatMatters));
             return GetExpPointBasedOnCharCount(charsThatMatters);
         }
 

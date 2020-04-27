@@ -284,7 +284,9 @@ namespace Sanakan.Services.PocketWaifu
             int emoteChars = message.Tags.CountEmotesTextLenght();
             int linkChars = message.Content.CountLinkTextLength();
             int nonWhiteSpaceChars = message.Content.Count(c => c != ' ');
-            return nonWhiteSpaceChars - linkChars - emoteChars;
+            int quotedChars = message.Content.CountQuotedTextLength();
+            long charsThatMatters = nonWhiteSpaceChars - linkChars - emoteChars - quotedChars;
+            return charsThatMatters < 1 ? 1 : charsThatMatters;
         }
 
         private async Task HandleMessageAsync(SocketMessage message)
