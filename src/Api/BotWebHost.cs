@@ -64,11 +64,21 @@ namespace Sanakan.Api
                 });
                 services.AddAuthorization(op =>
                 {
-                    op.AddPolicy("Player", policy => policy.RequireAssertion(context =>
-                        context.User.HasClaim(c => c.Type == "Player" && c.Value == "waifu_player")));
+                    op.AddPolicy("Player", policy =>
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
 
-                    op.AddPolicy("Site", policy => policy.RequireAssertion(context =>
-                        !context.User.HasClaim(c => c.Type == "Player")));
+                        policy.RequireAssertion(context => context.User.HasClaim(c => c.Type == "Player" && c.Value == "waifu_player"));
+                    });
+
+                    op.AddPolicy("Site", policy =>
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+
+                        policy.RequireAssertion(context => !context.User.HasClaim(c => c.Type == "Player"));
+                    });
                 });
                 services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                     .AddJsonOptions(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
