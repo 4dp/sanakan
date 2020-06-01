@@ -70,8 +70,8 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
-                    .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().FirstOrDefaultAsync(x => x.Shinden == id);
+                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
+                    .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().FirstOrDefaultAsync();
 
                 if (user == null)
                 {
@@ -80,6 +80,42 @@ namespace Sanakan.Api.Controllers
                 }
 
                 return user.GameDeck.Cards;
+            }
+        }
+
+        /// <summary>
+        /// Pobiera profil użytkownika
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <returns>profil</returns>
+        /// <response code="404">User not found</response>
+        [HttpGet("user/{id}/profile"), Authorize(Policy = "Site")]
+        public async Task<UserSiteProfile> GetUserWaifuProfileAsync(ulong id)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
+                    .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return new UserSiteProfile();
+                }
+
+                return new UserSiteProfile()
+                {
+                    SSSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS),
+                    SSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS),
+                    SCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.S),
+                    ACount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.A),
+                    BCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.B),
+                    CCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C),
+                    DCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D),
+                    ECount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E),
+                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).ToList(),
+                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).FirstOrDefault()
+                };
             }
         }
 

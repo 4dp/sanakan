@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sanakan.Api.Models;
 using Sanakan.Config;
@@ -83,6 +84,39 @@ namespace Sanakan.Api.Controllers
             using (var db = new Database.UserContext(_config))
             {
                 var user = await db.GetCachedFullUserByShindenIdAsync(id);
+                if (user == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+
+                TokenData tokenData = null;
+                var currUser = ControllerContext.HttpContext.User;
+                if (currUser.HasClaim(x => x.Type == ClaimTypes.Webpage))
+                {
+                    tokenData = UserTokenBuilder.BuildUserToken(_config, user);
+                }
+
+                return new UserWithToken()
+                {
+                    Expire = tokenData?.Expire,
+                    Token = tokenData?.Token,
+                    User = user,
+                };
+            }
+        }
+
+        /// <summary>
+        /// Pobieranie użytkownika bota z zmniejszoną ilością danych
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <returns>użytkownik bota</returns>
+        [HttpGet("shinden/simple/{id}")]
+        public async Task<UserWithToken> GetUserByShindenIdSimpleAsync(ulong id)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefault();
                 if (user == null)
                 {
                     await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
