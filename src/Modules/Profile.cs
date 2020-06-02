@@ -299,7 +299,7 @@ namespace Sanakan.Modules
         [Alias("tlo", "bg", "background")]
         [Summary("zmienia obrazek tła profilu (koszt 5000 SC)")]
         [Remarks("https://i.imgur.com/LjVxiv8.png"), RequireCommandChannel]
-        public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 150)")]string imgUrl)
+        public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 145)")]string imgUrl)
         {
             using (var db = new Database.UserContext(Config))
             {
