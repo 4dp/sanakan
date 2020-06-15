@@ -2072,12 +2072,6 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (active.Count() >= 3 && !active.Any(x => x.Id == wid))
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} możesz mieć tylko trzy aktywne karty.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var thisCard = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
 
@@ -2610,151 +2604,61 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("masakra", RunMode = RunMode.Async)]
-        [Alias("massacre")]
-        [Summary("rozpoczyna odliczanie do startu GMwK")]
-        [Remarks("SS"), RequireWaifuFightChannel]
-        public async Task StartMassacreAsync([Summary("maksymalna ranga uczestniczącej karty")]Rarity max = Rarity.SSS)
-        {
-            var addEmote = Emote.Parse("<:twa_podobaju_mie_sie:573904566836396032>");
-            var msg = await ReplyAsync("", embed: _waifu.GetGMwKView(addEmote, max));
-            await msg.AddReactionAsync(addEmote);
-
-            await Task.Delay(TimeSpan.FromMinutes(3));
-
-            await msg.RemoveReactionAsync(addEmote, Context.Client.CurrentUser);
-            var users = await msg.GetReactionUsersAsync(addEmote, 300).FlattenAsync();
-
-            using (var db = new Database.UserContext(Config))
-            {
-                var players = new List<PlayerInfo>();
-                foreach (var u in users)
-                {
-                    var user = Context.Guild.GetUser(u.Id);
-                    if (user == null) continue;
-
-                    var botUser = await db.GetCachedFullUserAsync(user.Id);
-                    if (botUser == null) continue;
-
-                    var activeCards = botUser.GameDeck.Cards.Where(x => x.Active && x.Rarity >= max).ToList();
-                    if (activeCards.Count < 1) continue;
-
-                    if (!botUser.GameDeck.CanFightPvP()) continue;
-
-                    players.Add(new PlayerInfo
-                    {
-                        Cards = new List<Card> { Services.Fun.GetOneRandomFrom(activeCards) },
-                        Dbuser = botUser,
-                        User = user
-                    });
-                }
-
-                if (players.Count < 5)
-                {
-                    await msg.ModifyAsync(x => x.Embed = $"Na **GMwK** nie zgłosiła się wystarczająca liczba graczy!".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                string playerList = "Lista graczy:\n";
-                foreach (var p in players)
-                {
-                    var card = p.Cards.First();
-                    var rUser = await db.GetUserOrCreateAsync(p.User.Id);
-                    card.Health = rUser.GameDeck.Cards.First(x => x.Id == card.Id).Health;
-
-                    playerList += $"{p.User.Mention}: {card.GetString(true, false, true)}\n";
-                }
-
-                var history = _waifu.MakeFightAsync(players, true);
-                var deathLog = _waifu.GetDeathLog(history, players);
-
-                string resultString = $"Nikt nie wygrał tego pojedynku!";
-                if (history.Winner != null)
-                    resultString = $"Zwycięża {history.Winner.User.Mention}!";
-
-                await _executor.TryAdd(_waifu.GetExecutableGMwK(history, players), TimeSpan.FromSeconds(1));
-
-                await msg.ModifyAsync(x => x.Embed = $"**GMwK**:\n\n{playerList.TrimToLength(900)}\n{deathLog.TrimToLength(1000)}{resultString}".ToEmbedMessage(EMType.Error).Build());
-                await msg.RemoveAllReactionsAsync();
-            }
-        }
-
         [Command("pojedynek")]
         [Alias("duel")]
         [Summary("stajesz do walki na przeciw innemu graczowi")]
-        [Remarks("Karna"), RequireWaifuFightChannel]
-        public async Task MakeADuelAsync([Summary("użytkownik")]SocketGuildUser user2)
+        [Remarks(""), RequireWaifuFightChannel]
+        public async Task MakeADuelAsync()
         {
-            var user1 = Context.User as SocketGuildUser;
-            if (user1 == null) return;
-
-            if (user1.Id == user2.Id)
-            {
-                await ReplyAsync("", embed: $"{user1.Mention} walka na siebie samego?".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            var session = new AcceptSession(user2, user1, Context.Client.CurrentUser);
-            if (_session.SessionExist(session))
-            {
-                await ReplyAsync("", embed: $"{user1.Mention} Ty lub twój partner znajdujecie się obecnie w trakcie walki.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
+            var user = Context.User as SocketGuildUser;
+            if (user == null) return;
 
             using (var db = new Database.UserContext(Config))
             {
-                var duser1 = await db.GetCachedFullUserAsync(user1.Id);
-                var duser2 = await db.GetCachedFullUserAsync(user2.Id);
-
-                if (!duser1.GameDeck.CanFightPvP())
+                var duser = await db.GetCachedFullUserAsync(user.Id);
+                var canFight = duser.GameDeck.CanFightPvP();
+                if (canFight != 0)
                 {
-                    await ReplyAsync("", embed: $"{user1.Mention} ma zbyt silną talie ({duser1.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
+                    var err = (canFight == -1) ? "słabą" : "silną";
+                    await ReplyAsync("", embed: $"{user.Mention} masz zbyt {err} talie ({duser.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var active1 = duser1?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-                if (active1.Count < 3)
+                var pvpDailyMax = duser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Pvp);
+                if (pvpDailyMax == null)
                 {
-                    await ReplyAsync("", embed: $"{user1.Mention} nie ma 3 aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (!duser2.GameDeck.CanFightPvP())
-                {
-                    await ReplyAsync("", embed: $"{user2.Mention} ma zbyt silną talie ({duser2.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                var active2 = duser2?.GameDeck?.Cards?.Where(x => x.Active).ToList();
-                if (active2.Count < 3)
-                {
-                    await ReplyAsync("", embed: $"{user2.Mention} nie ma 3 aktywnych kart.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                string Name = $"⚔ Pojedynek:\n\n{user1.Mention} wyzywa {user2.Mention}\n\n";
-                var msg = await ReplyAsync("", embed: $"{Name}{user2.Mention} przyjmujesz to wyzwanie?".ToEmbedMessage(EMType.Error).Build());
-                await msg.AddReactionsAsync(session.StartReactions);
-
-                session.Message = msg;
-                session.Actions = new AcceptDuel(_waifu, _config)
-                {
-                    Message = msg,
-                    DuelName = Name,
-                    P1 = new PlayerInfo
+                    pvpDailyMax = new Database.Models.TimeStatus
                     {
-                        User = user1,
-                        Cards = active1
-                    },
-                    P2 = new PlayerInfo
-                    {
-                        User = user2,
-                        Cards = active2
-                    }
-                };
+                        Type = Database.Models.StatusType.Pvp,
+                        EndsAt = DateTime.MinValue
+                    };
+                    duser.TimeStatuses.Add(pvpDailyMax);
+                }
 
-                await _session.TryAddSession(session);
+                if (!pvpDailyMax.IsActive())
+                {
+                    pvpDailyMax.EndsAt = DateTime.Now.Date.AddDays(1);
+                    duser.GameDeck.PVPDailyGamesPlayed = 0;
+                }
+
+                if (duser.GameDeck.ReachedDailyMaxPVPCount())
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} dziś już nie możesz rozegrać pojedynku.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if ((DateTime.Now - duser.GameDeck.PVPSeasonBeginDate.AddMonths(1)).TotalSeconds > 1)
+                {
+                    duser.GameDeck.PVPSeasonBeginDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                    duser.GameDeck.SeasonalPVPRank = 0;
+                }
             }
+
+            //TODO:
+            // check enemies by MMR and position in rank
+            // randomize enemy within boundaries
+            // make a standard duel from active cards, and save result in PVP stats
+            // change mmr, rank and add PVPCoins based on result
         }
 
         [Command("waifu")]

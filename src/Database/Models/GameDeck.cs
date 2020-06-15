@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -13,6 +14,13 @@ namespace Sanakan.Database.Models
         public double Karma { get; set; }
         public ulong ItemsDropped { get; set; }
         public bool WishlistIsPrivate { get; set; }
+
+        public long PVPCoins { get; set; }
+        public ulong GlobalPVPRank { get; set; }
+        public ulong SeasonalPVPRank { get; set; }
+        public double MatachMakingRatio { get; set; }
+        public ulong PVPDailyGamesPlayed { get; set; }
+        public DateTime PVPSeasonBeginDate { get; set; }
 
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }

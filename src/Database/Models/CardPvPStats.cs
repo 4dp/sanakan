@@ -6,7 +6,7 @@ namespace Sanakan.Database.Models
 {
     public enum FightType
     {
-        Versus, BattleRoyale
+        Versus, BattleRoyale, NewVersus
     }
 
     public enum FightResult

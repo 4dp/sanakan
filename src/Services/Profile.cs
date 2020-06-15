@@ -21,7 +21,7 @@ namespace Sanakan.Services
 {
     public enum TopType
     {
-        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower, Card, Karma, KarmaNegative
+        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower, Card, Karma, KarmaNegative, Pvp, PvpSeason
     }
 
     public enum SCurrency
@@ -251,6 +251,12 @@ namespace Sanakan.Services
 
                 case TopType.KarmaNegative:
                     return list.OrderBy(x => x.GameDeck.Karma).ToList();
+
+                case TopType.Pvp:
+                    return list.Where(x => x.GameDeck.GlobalPVPRank > 0).OrderBy(x => x.GameDeck.GlobalPVPRank).ToList();
+
+                case TopType.PvpSeason:
+                    return list.Where(x => x.IsPVPSeasonalRankActive() && x.GameDeck.SeasonalPVPRank > 0).OrderBy(x => x.GameDeck.SeasonalPVPRank).ToList();
             }
         }
 

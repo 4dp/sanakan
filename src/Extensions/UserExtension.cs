@@ -17,6 +17,9 @@ namespace Sanakan.Extensions
         public static bool IsCharCounterActive(this User u)
             => DateTime.Now.Month == u.MeasureDate.Month && DateTime.Now.Year == u.MeasureDate.Year;
 
+        public static bool IsPVPSeasonalRankActive(this User u)
+            => DateTime.Now.Month == u.GameDeck.PVPSeasonBeginDate.Month && DateTime.Now.Year == u.GameDeck.PVPSeasonBeginDate.Year;
+
         public static User Default(this User u, ulong id)
         {
             var user = new User
@@ -44,13 +47,19 @@ namespace Sanakan.Extensions
                     Waifu = 0,
                     CTCnt = 0,
                     Karma = 0,
+                    PVPCoins = 0,
                     ItemsDropped = 0,
+                    GlobalPVPRank = 0,
+                    SeasonalPVPRank = 0,
+                    MatachMakingRatio = 0,
+                    PVPDailyGamesPlayed = 0,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
                     Wishes = new List<WishlistObject>(),
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
+                    PVPSeasonBeginDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
                     ExpContainer = new ExpContainer
                     {
                         Id = id,
@@ -105,15 +114,26 @@ namespace Sanakan.Extensions
         }
 
         public static bool ReachedDailyMaxItemsCount(this GameDeck deck)
-            => deck.ItemsDropped >= 200;
+            => deck.ItemsDropped >= 100;
 
-        public static bool CanFightPvP(this GameDeck deck) =>
-            deck.GetMaxDeckPower() >= deck.GetDeckPower();
+        public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
+            => deck.PVPDailyGamesPlayed >= 15;
+
+        public static int CanFightPvP(this GameDeck deck)
+        {
+            var power = deck.GetDeckPower();
+
+            if (power > deck.GetMaxDeckPower()) return 1;
+            if (power < deck.GetMinDeckPower()) return -1;
+            return 0;
+        }
 
         public static double GetDeckPower(this GameDeck deck)
             => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
 
-        public static double GetMaxDeckPower(this GameDeck deck) => 500;
+        public static double GetMaxDeckPower(this GameDeck deck) => 800;
+
+        public static double GetMinDeckPower(this GameDeck deck) => 200;
 
         public static string GetUserNameStatus(this GameDeck deck)
         {
@@ -250,6 +270,12 @@ namespace Sanakan.Extensions
                 case TopType.Karma:
                 case TopType.KarmaNegative:
                     return $"{u.GameDeck.Karma}";
+
+                case TopType.Pvp:
+                    return $"{u.GameDeck.GlobalPVPRank}";
+
+                case TopType.PvpSeason:
+                    return $"{u.GameDeck.SeasonalPVPRank}";
             }
         }
 
