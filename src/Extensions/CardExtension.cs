@@ -146,7 +146,7 @@ namespace Sanakan.Extensions
                 + $"_{card.Title}_\n\n"
                 + $"{card.Dere}\n"
                 + $"{card.GetAffectionString()}\n"
-                + $"{card.ExpCnt.ToString("F")} exp\n\n"
+                + $"{card.ExpCnt.ToString("F")}/{card.ExpToUpgrade().ToString("F")} exp\n\n"
                 + $"{tags}\n"
                 + $"{card.GetStatusIcons()}";
         }
@@ -160,7 +160,7 @@ namespace Sanakan.Extensions
                 + $"*{card.Title ?? "????"}*\n\n"
                 + $"*{card.GetCardParams(true, false, true)}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
-                + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}\n"
+                + $"**Doświadczenie:** {card.ExpCnt.ToString("F")}/{card.ExpToUpgrade().ToString("F")}\n"
                 + $"**Dostępne ulepszenia:** {card.UpgradesCnt}\n\n"
                 + $"**W klatce:** {card.InCage.GetYesNo()}\n"
                 + $"**Aktywna:** {card.Active.GetYesNo()}\n"

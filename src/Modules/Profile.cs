@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
@@ -158,7 +159,7 @@ namespace Sanakan.Modules
         [Command("statystyki", RunMode = RunMode.Async)]
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]
-        [Remarks(""), RequireAnyCommandChannel]
+        [Remarks("karna"), RequireAnyCommandChannel]
         public async Task ShowStatsAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -177,10 +178,33 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("idp", RunMode = RunMode.Async)]
+        [Alias("iledopoziomu, howmuchtolevelup, hmtlup")]
+        [Summary("wyświetla ile pozostało punktów doświadczenia do następnego poziomu")]
+        [Remarks("karna"), RequireAnyCommandChannel]
+        public async Task ShowHowMuchToLevelUpAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
+        {
+            var usr = user ?? Context.User;
+            if (usr == null) return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.Users.Where(x => x.Id == usr.Id).AsNoTracking().FirstOrDefaultAsync();
+                if (botuser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"{usr.Mention} potrzebuje **{botuser.GetRemainingExp()}** punktów doświadczenia do następnego poziomu."
+                    .ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
         [Command("topka", RunMode = RunMode.Async)]
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
-        [Remarks(""), RequireAnyCommandChannel]
+        [Remarks("")]
         public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);

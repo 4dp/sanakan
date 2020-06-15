@@ -203,6 +203,19 @@ namespace Sanakan.Extensions
             };
         }
 
+        public static long GetRemainingExp(this User u)
+        {
+            var prevLvlExp = ExperienceManager.CalculateExpForLevel(u.Level);
+            var nextLvlExp = ExperienceManager.CalculateExpForLevel(u.Level + 1);
+            var expOnLvl = u.ExpCnt - prevLvlExp;
+            var lvlExp = nextLvlExp - prevLvlExp;
+
+            if (expOnLvl < 0) expOnLvl = 0;
+            if (lvlExp < 0) lvlExp = expOnLvl + 1;
+
+            return nextLvlExp - expOnLvl;
+        }
+
         public static string GetViewValueForTop(this User u, TopType type)
         {
             switch (type)
