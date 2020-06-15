@@ -33,7 +33,7 @@ namespace Sanakan.Modules
         [Command("portfel", RunMode = RunMode.Async)]
         [Alias("wallet")]
         [Summary("wyświetla portfel użytkownika")]
-        [Remarks(""), RequireAnyCommandChannel]
+        [Remarks("")]
         public async Task ShowWalletAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -159,7 +159,7 @@ namespace Sanakan.Modules
         [Command("statystyki", RunMode = RunMode.Async)]
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]
-        [Remarks("karna"), RequireAnyCommandChannel]
+        [Remarks("karna")]
         public async Task ShowStatsAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -181,7 +181,7 @@ namespace Sanakan.Modules
         [Command("idp", RunMode = RunMode.Async)]
         [Alias("iledopoziomu, howmuchtolevelup, hmtlup")]
         [Summary("wyświetla ile pozostało punktów doświadczenia do następnego poziomu")]
-        [Remarks("karna"), RequireAnyCommandChannel]
+        [Remarks("karna")]
         public async Task ShowHowMuchToLevelUpAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
@@ -204,7 +204,7 @@ namespace Sanakan.Modules
         [Command("topka", RunMode = RunMode.Async)]
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
-        [Remarks("")]
+        [Remarks(""), RequireAnyCommandChannel]
         public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
