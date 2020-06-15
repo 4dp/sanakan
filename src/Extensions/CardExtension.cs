@@ -431,6 +431,8 @@ namespace Sanakan.Extensions
         {
             switch (card.Rarity)
             {
+                case Rarity.SSS:
+                    return 1000;
                 case Rarity.SS:
                     return 100;
 
