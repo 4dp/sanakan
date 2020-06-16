@@ -16,8 +16,8 @@ namespace Sanakan.Database.Models
         public bool WishlistIsPrivate { get; set; }
 
         public long PVPCoins { get; set; }
-        public ulong GlobalPVPRank { get; set; }
-        public ulong SeasonalPVPRank { get; set; }
+        public long GlobalPVPRank { get; set; }
+        public long SeasonalPVPRank { get; set; }
         public double MatachMakingRatio { get; set; }
         public ulong PVPDailyGamesPlayed { get; set; }
         public DateTime PVPSeasonBeginDate { get; set; }

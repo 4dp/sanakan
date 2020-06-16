@@ -2615,7 +2615,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var duser = await db.GetCachedFullUserAsync(user.Id);
+                var duser = await db.GetUserOrCreateAsync(user.Id);
                 var canFight = duser.GameDeck.CanFightPvP();
                 if (canFight != 0)
                 {
@@ -2652,13 +2652,60 @@ namespace Sanakan.Modules
                     duser.GameDeck.PVPSeasonBeginDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                     duser.GameDeck.SeasonalPVPRank = 0;
                 }
-            }
 
-            //TODO:
-            // check enemies by MMR and position in rank
-            // randomize enemy within boundaries
-            // make a standard duel from active cards, and save result in PVP stats
-            // change mmr, rank and add PVPCoins based on result
+                var pvpTotalPlayers = (ulong) await db.GameDecks.Include(x => x.Cards).Where(x => x.CanFightPvPs()).CountAsync();
+                if (pvpTotalPlayers < 5)
+                {
+                    await ReplyAsync("", embed: $"{user.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var allPvpPlayers = await db.GameDecks.Include(x => x.Cards).Where(x => x.CanFightPvPs() && x.UserId != duser.Id).OrderByDescending(x => x.MatachMakingRatio).AsNoTracking().ToListAsync();
+                var pvpPlayersInRange = allPvpPlayers.Where(x => x.IsNearMMR(duser.GameDeck)).ToList();
+                for (double mrr = 0.2; pvpPlayersInRange.Count < 5; mrr += 0.05)
+                {
+                    pvpPlayersInRange = allPvpPlayers.Where(x => x.IsNearMMR(duser.GameDeck, mrr)).ToList();
+                }
+
+                var denemy = await db.GetUserOrCreateAsync(Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId);
+                var euser = Context.Guild.GetUser(denemy.Id);
+                var players = new List<PlayerInfo>
+                {
+                    new PlayerInfo
+                    {
+                        Cards = duser.GameDeck.Cards.Where(x => x.Active).ToList(),
+                        Dbuser = duser,
+                        User = user
+                    },
+                    new PlayerInfo
+                    {
+                        Cards = denemy.GameDeck.Cards.Where(x => x.Active).ToList(),
+                        Dbuser = denemy,
+                        User = euser
+                    }
+                };
+
+                var fight = _waifu.MakeFightAsync(players);
+                string deathLog = _waifu.GetDeathLog(fight, players);
+
+                var res = FightResult.Lose;
+                if (fight.Winner == null)
+                    res = FightResult.Draw;
+                else if (fight.Winner.User.Id == duser.Id)
+                    res = FightResult.Win;
+
+                duser.GameDeck.PvPStats.Add(new CardPvPStats
+                {
+                    Type = FightType.NewVersus,
+                    Result = res
+                });
+
+                var info = duser.GameDeck.CalculatePVPParams(denemy.GameDeck, res);
+                await db.SaveChangesAsync();
+
+                string wStr = fight.Winner == null ? "Remis!" : $"Zwycięża {fight.Winner.User.Mention}!";
+                await ReplyAsync("", embed: $"⚔️ **Pojedynek**:\n{user.Mention} vs. {euser.Mention}\n\n{deathLog.TrimToLength(2000)}\n{wStr}\n{info}".ToEmbedMessage(EMType.Bot).Build());
+            }
         }
 
         [Command("waifu")]

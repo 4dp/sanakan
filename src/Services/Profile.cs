@@ -253,10 +253,10 @@ namespace Sanakan.Services
                     return list.OrderBy(x => x.GameDeck.Karma).ToList();
 
                 case TopType.Pvp:
-                    return list.Where(x => x.GameDeck.GlobalPVPRank > 0).OrderBy(x => x.GameDeck.GlobalPVPRank).ToList();
+                    return list.Where(x => x.GameDeck.GlobalPVPRank > 0).OrderByDescending(x => x.GameDeck.GlobalPVPRank).ToList();
 
                 case TopType.PvpSeason:
-                    return list.Where(x => x.IsPVPSeasonalRankActive() && x.GameDeck.SeasonalPVPRank > 0).OrderBy(x => x.GameDeck.SeasonalPVPRank).ToList();
+                    return list.Where(x => x.IsPVPSeasonalRankActive() && x.GameDeck.SeasonalPVPRank > 0).OrderByDescending(x => x.GameDeck.SeasonalPVPRank).ToList();
             }
         }
 
