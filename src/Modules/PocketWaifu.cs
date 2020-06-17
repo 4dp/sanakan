@@ -2880,13 +2880,14 @@ namespace Sanakan.Modules
                 var dCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.D);
                 var eCnt = bUser.GameDeck.Cards.Count(x => x.Rarity == Rarity.E);
 
-                var a1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.Versus);
-                var w1vs1ac = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.Versus);
+                var aPvp = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.NewVersus);
+                var wPvp = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.NewVersus);
 
-                var abr = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.BattleRoyale);
-                var wbr = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.BattleRoyale);
+                var seasonString = "0";
+                if (bUser.GameDeck.IsPVPSeasonalRankActive())
+                    seasonString = $"{bUser.GameDeck.SeasonalPVPRank}";
 
-                string sssString = "";
+                var sssString = "";
                 if (sssCnt > 0)
                     sssString = $"**SSS**: {sssCnt} ";
 
@@ -2899,8 +2900,7 @@ namespace Sanakan.Modules
                                 + $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
-                                + $"**1vs1** Rozegrane: {a1vs1ac} Wygrane: {w1vs1ac}\n"
-                                + $"**GMwK** Rozegrane: {abr} Wygrane: {wbr}"
+                                + $"**PVP** Rozegrane: {aPvp} Wygrane: {wPvp}\n**Puzzle**: {bUser.GameDeck.PVPCoins}\n**GR**: {bUser.GameDeck.GlobalPVPRank}\n**SR**: {seasonString}"
                 };
 
                 if (bUser.GameDeck?.Waifu != 0)

@@ -120,7 +120,7 @@ namespace Sanakan.Extensions
             => deck.ItemsDropped >= 100;
 
         public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
-            => deck.PVPDailyGamesPlayed >= 15;
+            => deck.PVPDailyGamesPlayed >= 20;
 
         public static int CanFightPvP(this GameDeck deck)
         {
@@ -150,6 +150,21 @@ namespace Sanakan.Extensions
 
             var coinCnt = 20 + (20 * step);
             return (res == FightResult.Win) ? coinCnt : coinCnt / 2;
+        }
+
+        public static double GetMMRChangeFromDuelAsEnemy(this GameDeck deck, double mmrDif, FightResult res)
+        {
+            switch (res)
+            {
+                case FightResult.Win:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.3;
+                case FightResult.Lose:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.2;
+
+                default:
+                case FightResult.Draw:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, res) * 0.1;
+            }
         }
 
         public static double GetMMRChangeFromDuel(this GameDeck deck, double mmrDif, FightResult res)
@@ -205,12 +220,25 @@ namespace Sanakan.Extensions
             var mmrChange = d1.GetMMRChangeFromDuel(mmrDif, res);
             d1.MatachMakingRatio += mmrChange;
 
+            var mmreChange = d2.GetMMRChangeFromDuelAsEnemy(mmrDif, res);
+            d2.MatachMakingRatio += mmreChange;
+
             var sDif = d1.SeasonalPVPRank - d2.SeasonalPVPRank;
             var gDif = d1.GlobalPVPRank - d2.GlobalPVPRank;
 
-            //FIXME:
-            var gRank = (long) (15 * mmrChange) - (gDif / 100);
-            var sRank = (long) (30 * mmrChange) - ((gDif / 100) * (sDif / 100));
+            var gRank = 20 + (long) ((15 * mmrChange) - (gDif / 100d));
+            if (gRank > 200) gRank = 200;
+            if (gRank < -10) gRank = -10;
+
+            var sRank = 20 + (long) ((30 * mmrChange) - ((gDif / 100d) * (sDif / 100d)));
+            if (sRank > 200) sRank = 200;
+            if (sRank < -10) sRank = -10;
+
+            d1.GlobalPVPRank += gRank;
+            d1.SeasonalPVPRank += sRank;
+
+            if (d1.GlobalPVPRank < 0) d1.GlobalPVPRank = 0;
+            if (d1.SeasonalPVPRank < 0) d1.SeasonalPVPRank = 0;
 
             var coins = d1.GetPVPCoinsFromDuel(res);
             d1.PVPCoins += coins;
