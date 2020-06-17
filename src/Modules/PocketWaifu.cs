@@ -2653,14 +2653,16 @@ namespace Sanakan.Modules
                     duser.GameDeck.SeasonalPVPRank = 0;
                 }
 
-                var pvpTotalPlayers = (ulong) await db.GameDecks.Include(x => x.Cards).Where(x => x.CanFightPvPs()).CountAsync();
-                if (pvpTotalPlayers < 5)
+                var allUsers = await db.GetCachedAllUsersAsync();
+                var playersWithActiveCards = allUsers.Where(x => x.GameDeck.Cards.Any(c => c.Active)).Select(x => x.GameDeck).ToList();
+
+                var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs()).ToList();
+                if (allPvpPlayers.Count < 5)
                 {
                     await ReplyAsync("", embed: $"{user.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var allPvpPlayers = await db.GameDecks.Include(x => x.Cards).Where(x => x.CanFightPvPs() && x.UserId != duser.Id).OrderByDescending(x => x.MatachMakingRatio).AsNoTracking().ToListAsync();
                 var pvpPlayersInRange = allPvpPlayers.Where(x => x.IsNearMMR(duser.GameDeck)).ToList();
                 for (double mrr = 0.2; pvpPlayersInRange.Count < 5; mrr += 0.05)
                 {
@@ -2668,7 +2670,7 @@ namespace Sanakan.Modules
                 }
 
                 var denemy = await db.GetUserOrCreateAsync(Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId);
-                var euser = Context.Guild.GetUser(denemy.Id);
+                var euser = Context.Client.GetUser(denemy.Id);
                 var players = new List<PlayerInfo>
                 {
                     new PlayerInfo
@@ -2680,8 +2682,8 @@ namespace Sanakan.Modules
                     new PlayerInfo
                     {
                         Cards = denemy.GameDeck.Cards.Where(x => x.Active).ToList(),
-                        Dbuser = denemy,
-                        User = euser
+                        User = euser as SocketGuildUser,
+                        Dbuser = denemy
                     }
                 };
 
