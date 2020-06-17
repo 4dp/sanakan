@@ -134,7 +134,7 @@ namespace Sanakan.Extensions
         public static bool CanFightPvPs(this GameDeck deck)
             => CanFightPvP(deck) == 0;
 
-        public static bool IsNearMMR(this GameDeck d1, GameDeck d2, double margin = 0.1)
+        public static bool IsNearMMR(this GameDeck d1, GameDeck d2, double margin = 0.3)
         {
             var d1MMR = d1.MatachMakingRatio;
             var mDown = d2.MatachMakingRatio - margin;

@@ -2653,20 +2653,20 @@ namespace Sanakan.Modules
                     duser.GameDeck.SeasonalPVPRank = 0;
                 }
 
-                var allUsers = await db.GetCachedAllUsersAsync();
-                var playersWithActiveCards = allUsers.Where(x => x.GameDeck.Cards.Any(c => c.Active)).Select(x => x.GameDeck).ToList();
-
+                var playersWithActiveCards = await db.GetCachedPlayersWithActiveCards();
                 var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs() && x.UserId != duser.Id).ToList();
-                if (allPvpPlayers.Count < 5)
+                if (allPvpPlayers.Count < 10)
                 {
                     await ReplyAsync("", embed: $"{user.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
+                double toLong = 1;
                 var pvpPlayersInRange = allPvpPlayers.Where(x => x.IsNearMMR(duser.GameDeck)).ToList();
-                for (double mrr = 0.2; pvpPlayersInRange.Count < 5; mrr += 0.05)
+                for (double mrr = 0.5; pvpPlayersInRange.Count < 10; mrr += (0.5 * toLong))
                 {
                     pvpPlayersInRange = allPvpPlayers.Where(x => x.IsNearMMR(duser.GameDeck, mrr)).ToList();
+                    toLong += 0.5;
                 }
 
                 var denemy = await db.GetUserOrCreateAsync(Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId);
