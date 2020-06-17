@@ -2656,7 +2656,7 @@ namespace Sanakan.Modules
                 var allUsers = await db.GetCachedAllUsersAsync();
                 var playersWithActiveCards = allUsers.Where(x => x.GameDeck.Cards.Any(c => c.Active)).Select(x => x.GameDeck).ToList();
 
-                var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs()).ToList();
+                var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs() && x.UserId != duser.Id).ToList();
                 if (allPvpPlayers.Count < 5)
                 {
                     await ReplyAsync("", embed: $"{user.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());

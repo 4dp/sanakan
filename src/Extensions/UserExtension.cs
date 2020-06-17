@@ -183,7 +183,7 @@ namespace Sanakan.Extensions
                     if (mmrDif < -10)
                         mmrBaseChange *= 2.2;
 
-                    var val = mmrBaseChange * mmrDif;
+                    var val = mmrBaseChange + (mmrBaseChange * mmrDif);
                     if (val < 0) val = -val;
                     return val;
                 }
@@ -196,7 +196,7 @@ namespace Sanakan.Extensions
                     if (mmrDif > 3)
                         mmrBaseChange *= 2.2;
 
-                    var val = mmrBaseChange * mmrDif;
+                    var val = mmrBaseChange + (mmrBaseChange * mmrDif);
                     if (val > 0) val = -val;
                     return val;
                 }
