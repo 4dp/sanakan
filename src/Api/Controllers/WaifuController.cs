@@ -608,12 +608,6 @@ namespace Sanakan.Api.Controllers
                             await "Card is in cage!".ToResponse(403).ExecuteResultAsync(ControllerContext);
                             return;
                         }
-
-                        if (!thisCardCh.Active && botUserCh.GameDeck.Cards.Where(x => x.Active).Count() >= 3)
-                        {
-                            await "Limit of active cards triggered!".ToResponse(403).ExecuteResultAsync(ControllerContext);
-                            return;
-                        }
                     }
 
                     var exe = new Executable($"api-deck u{discordId}", new Task(() =>

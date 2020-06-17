@@ -74,6 +74,12 @@ namespace Sanakan.TypeReaders
                 case "-karma":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.KarmaNegative));
 
+                case "pvp":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.Pvp));
+
+                case "pvps":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.PvpSeason));
+
                 default:
                     return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Nie rozpoznano typu topki!"));
             }

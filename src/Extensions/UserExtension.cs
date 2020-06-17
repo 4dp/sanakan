@@ -17,6 +17,12 @@ namespace Sanakan.Extensions
         public static bool IsCharCounterActive(this User u)
             => DateTime.Now.Month == u.MeasureDate.Month && DateTime.Now.Year == u.MeasureDate.Year;
 
+        public static bool IsPVPSeasonalRankActive(this GameDeck d)
+            => DateTime.Now.Month == d.PVPSeasonBeginDate.Month && DateTime.Now.Year == d.PVPSeasonBeginDate.Year;
+
+        public static bool IsPVPSeasonalRankActive(this User u)
+            => u.GameDeck.IsPVPSeasonalRankActive();
+
         public static User Default(this User u, ulong id)
         {
             var user = new User
@@ -44,13 +50,19 @@ namespace Sanakan.Extensions
                     Waifu = 0,
                     CTCnt = 0,
                     Karma = 0,
+                    PVPCoins = 0,
                     ItemsDropped = 0,
+                    GlobalPVPRank = 0,
+                    SeasonalPVPRank = 0,
+                    MatachMakingRatio = 0,
+                    PVPDailyGamesPlayed = 0,
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
                     Wishes = new List<WishlistObject>(),
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
+                    PVPSeasonBeginDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
                     ExpContainer = new ExpContainer
                     {
                         Id = id,
@@ -105,15 +117,141 @@ namespace Sanakan.Extensions
         }
 
         public static bool ReachedDailyMaxItemsCount(this GameDeck deck)
-            => deck.ItemsDropped >= 200;
+            => deck.ItemsDropped >= 100;
 
-        public static bool CanFightPvP(this GameDeck deck) =>
-            deck.GetMaxDeckPower() >= deck.GetDeckPower();
+        public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
+            => deck.PVPDailyGamesPlayed >= 20;
+
+        public static int CanFightPvP(this GameDeck deck)
+        {
+            var power = deck.GetDeckPower();
+
+            if (power > deck.GetMaxDeckPower()) return 1;
+            if (power < deck.GetMinDeckPower()) return -1;
+            return 0;
+        }
+
+        public static bool CanFightPvPs(this GameDeck deck)
+            => CanFightPvP(deck) == 0;
+
+        public static bool IsNearMMR(this GameDeck d1, GameDeck d2, double margin = 0.1)
+        {
+            var d1MMR = d1.MatachMakingRatio;
+            var mDown = d2.MatachMakingRatio - margin;
+            var mUp = d2.MatachMakingRatio + (margin * 1.2);
+
+            return d1MMR >= mDown && d1MMR <= mUp;
+        }
+
+        public static long GetPVPCoinsFromDuel(this GameDeck deck, FightResult res)
+        {
+            var step = (ExperienceManager.CalculateLevel(deck.SeasonalPVPRank) / 10);
+            if (step > 10) step = 10;
+
+            var coinCnt = 20 + (20 * step);
+            return (res == FightResult.Win) ? coinCnt : coinCnt / 2;
+        }
+
+        public static double GetMMRChangeFromDuelAsEnemy(this GameDeck deck, double mmrDif, FightResult res)
+        {
+            switch (res)
+            {
+                case FightResult.Win:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.3;
+                case FightResult.Lose:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.2;
+
+                default:
+                case FightResult.Draw:
+                    return deck.GetMMRChangeFromDuel(-mmrDif, res) * 0.1;
+            }
+        }
+
+        public static double GetMMRChangeFromDuel(this GameDeck deck, double mmrDif, FightResult res)
+        {
+            var mmrBaseChange = 0.08;
+
+            switch (res)
+            {
+                case FightResult.Win:
+                {
+                    mmrBaseChange *= 1.2;
+
+                    if (mmrDif > 50)
+                        return 0.0001;
+
+                    if (mmrDif < -10)
+                        mmrBaseChange *= 2.2;
+
+                    var val = mmrBaseChange * mmrDif;
+                    if (val < 0) val = -val;
+                    return val;
+                }
+
+                case FightResult.Lose:
+                {
+                    if (mmrDif <= -50)
+                        return 0;
+
+                    if (mmrDif > 3)
+                        mmrBaseChange *= 2.2;
+
+                    var val = mmrBaseChange * mmrDif;
+                    if (val > 0) val = -val;
+                    return val;
+                }
+
+                default:
+                case FightResult.Draw:
+                {
+                    if (mmrDif <= 1.1)
+                        return 0;
+
+                    return -(mmrBaseChange * (mmrDif - 1));
+                }
+            }
+        }
+
+        public static string CalculatePVPParams(this GameDeck d1, GameDeck d2, FightResult res)
+        {
+            ++d1.PVPDailyGamesPlayed;
+
+            var mmrDif = d1.MatachMakingRatio - d2.MatachMakingRatio;
+            var mmrChange = d1.GetMMRChangeFromDuel(mmrDif, res);
+            d1.MatachMakingRatio += mmrChange;
+
+            var mmreChange = d2.GetMMRChangeFromDuelAsEnemy(mmrDif, res);
+            d2.MatachMakingRatio += mmreChange;
+
+            var sDif = d1.SeasonalPVPRank - d2.SeasonalPVPRank;
+            var gDif = d1.GlobalPVPRank - d2.GlobalPVPRank;
+
+            var gRank = 20 + (long) ((15 * mmrChange) - (gDif / 100d));
+            if (gRank > 200) gRank = 200;
+            if (gRank < -10) gRank = -10;
+
+            var sRank = 20 + (long) ((30 * mmrChange) - ((gDif / 100d) * (sDif / 100d)));
+            if (sRank > 200) sRank = 200;
+            if (sRank < -10) sRank = -10;
+
+            d1.GlobalPVPRank += gRank;
+            d1.SeasonalPVPRank += sRank;
+
+            if (d1.GlobalPVPRank < 0) d1.GlobalPVPRank = 0;
+            if (d1.SeasonalPVPRank < 0) d1.SeasonalPVPRank = 0;
+
+            var coins = d1.GetPVPCoinsFromDuel(res);
+            d1.PVPCoins += coins;
+
+            return $"**{coins.ToString("+0;-#")}** 🧩 **{gRank.ToString("+0;-#")}** 👑  **{sRank.ToString("+0;-#")}** ❄️";
+        }
 
         public static double GetDeckPower(this GameDeck deck)
             => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
 
-        public static double GetMaxDeckPower(this GameDeck deck) => 500;
+        public static double GetMaxDeckPower(this GameDeck deck) => 800;
+
+        public static double GetMinDeckPower(this GameDeck deck) => 200;
 
         public static string GetUserNameStatus(this GameDeck deck)
         {
@@ -250,6 +388,12 @@ namespace Sanakan.Extensions
                 case TopType.Karma:
                 case TopType.KarmaNegative:
                     return $"{u.GameDeck.Karma}";
+
+                case TopType.Pvp:
+                    return $"{u.GameDeck.GlobalPVPRank}";
+
+                case TopType.PvpSeason:
+                    return $"{u.GameDeck.SeasonalPVPRank}";
             }
         }
 
