@@ -157,7 +157,7 @@ namespace Sanakan.Extensions
             switch (res)
             {
                 case FightResult.Win:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.3;
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.5;
                 case FightResult.Lose:
                     return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.2;
 

@@ -7,8 +7,11 @@ using Sanakan.Config;
 using Sanakan.Extensions;
 using Sanakan.Preconditions;
 using Sanakan.Services.Commands;
+using Sanakan.Services.Session;
+using Sanakan.Services.Session.Models;
 using Shinden.Logger;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sanakan.Modules
@@ -16,12 +19,16 @@ namespace Sanakan.Modules
     [Name("Ogólne")]
     public class Helper : SanakanModuleBase<SocketCommandContext>
     {
+        private Services.Moderator _moderation;
+        private SessionManager _session;
         private Services.Helper _helper;
         private ILogger _logger;
         private IConfig _config;
 
-        public Helper(Services.Helper helper, ILogger logger, IConfig config)
+        public Helper(Services.Helper helper, Services.Moderator moderation, SessionManager session, ILogger logger, IConfig config)
         {
+            _moderation = moderation;
+            _session = session;
             _helper = helper;
             _logger = logger;
             _config = config;
@@ -158,6 +165,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                await Context.Message.DeleteAsync();
+
                 var repMsg = await Context.Channel.GetMessageAsync(messageId);
                 if (repMsg == null) repMsg = await _helper.FindMessageInGuildAsync(Context.Guild, messageId);
 
@@ -169,7 +178,7 @@ namespace Sanakan.Modules
 
                 if (repMsg.Author.IsBot || repMsg.Author.IsWebhook)
                 {
-                    await ReplyAsync("", embed: "Raportować bota? Bezsensu.".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: "Raportować bota? Bez sensu.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -179,7 +188,47 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await Context.Message.DeleteAsync();
+                if (repMsg.Author.Id == Context.User.Id)
+                {
+                    var user = Context.User as SocketGuildUser;
+                    if (user == null) return;
+
+                    var notifChannel = Context.Guild.GetTextChannel(config.NotificationChannel);
+                    var userRole = Context.Guild.GetRole(config.UserRole);
+                    var muteRole = Context.Guild.GetRole(config.MuteRole);
+
+                    if (muteRole == null)
+                    {
+                        await ReplyAsync("", embed: "Rola wyciszająca nie jest ustawiona.".ToEmbedMessage(EMType.Bot).Build());
+                        return;
+                    }
+
+                    if (user.Roles.Contains(muteRole))
+                    {
+                        await ReplyAsync("", embed: $"{user.Mention} już jest wyciszony.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var session = new AcceptSession(user, null, Context.Client.CurrentUser);
+                    await _session.KillSessionIfExistAsync(session);
+
+                    var msg = await ReplyAsync("", embed: $"{user.Mention} raportujesz samego siebie? Może pomoge! Na pewno chcesz muta?".ToEmbedMessage(EMType.Error).Build());
+                    await msg.AddReactionsAsync(session.StartReactions);
+                    session.Actions = new AcceptMute(Config)
+                    {
+                        NotifChannel = notifChannel,
+                        Moderation = _moderation,
+                        MuteRole = muteRole,
+                        UserRole = userRole,
+                        Message = msg,
+                        User = user,
+                    };
+                    session.Message = msg;
+
+                    await _session.TryAddSession(session);
+                    return;
+                }
+
                 await ReplyAsync("", embed: "Wysłano zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
 
                 string userName = $"{Context.User.Username}({Context.User.Id})";

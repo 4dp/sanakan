@@ -44,6 +44,12 @@ namespace Sanakan.Extensions
                 case TopType.Karma:
                 case TopType.KarmaNegative:
                     return "karmy";
+
+                case TopType.Pvp:
+                    return "globalnego PVP";
+
+                case TopType.PvpSeason:
+                    return "miesięcznego PVP";
             }
         }
     }

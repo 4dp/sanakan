@@ -2046,7 +2046,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetCachedFullUserAsync(Context.User.Id);
-                var active = botUser.GameDeck.Cards.Where(x => x.Active);
+                var active = botUser.GameDeck.Cards.Where(x => x.Active).ToList();
 
                 if (wid == 0)
                 {
@@ -2087,13 +2087,26 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                thisCard.Active = !thisCard.Active;
+
+                var tac = active.FirstOrDefault(x => x.Id == thisCard.Id);
+                if (tac == null)
+                {
+                    active.Add(thisCard);
+                    thisCard.Active = true;
+                }
+                else
+                {
+                    active.Remove(tac);
+                    thisCard.Active = false;
+                }
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                string message = thisCard.Active ? "aktywował: " : "dezaktywował: ";
-                await ReplyAsync("", embed: $"{Context.User.Mention} {message}{thisCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                var message = thisCard.Active ? "aktywował: " : "dezaktywował: ";
+                var power = $"**Moc talii**: {active.Sum(x => x.GetCardPower()).ToString("F")}";
+                await ReplyAsync("", embed: $"{Context.User.Mention} {message}{thisCard.GetString(false, false, true)}\n\n{power}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
