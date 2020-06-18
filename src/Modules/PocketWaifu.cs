@@ -2610,17 +2610,14 @@ namespace Sanakan.Modules
         [Remarks(""), RequireWaifuFightChannel]
         public async Task MakeADuelAsync()
         {
-            var user = Context.User as SocketGuildUser;
-            if (user == null) return;
-
             using (var db = new Database.UserContext(Config))
             {
-                var duser = await db.GetUserOrCreateAsync(user.Id);
+                var duser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var canFight = duser.GameDeck.CanFightPvP();
                 if (canFight != 0)
                 {
                     var err = (canFight == -1) ? "słabą" : "silną";
-                    await ReplyAsync("", embed: $"{user.Mention} masz zbyt {err} talie ({duser.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt {err} talie ({duser.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -2643,7 +2640,7 @@ namespace Sanakan.Modules
 
                 if (duser.GameDeck.ReachedDailyMaxPVPCount())
                 {
-                    await ReplyAsync("", embed: $"{user.Mention} dziś już nie możesz rozegrać pojedynku.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} dziś już nie możesz rozegrać pojedynku.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -2657,7 +2654,7 @@ namespace Sanakan.Modules
                 var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs() && x.UserId != duser.Id).ToList();
                 if (allPvpPlayers.Count < 10)
                 {
-                    await ReplyAsync("", embed: $"{user.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} zbyt mała liczba graczy ma utworzoną poprawną talie!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -2669,21 +2666,29 @@ namespace Sanakan.Modules
                     toLong += 0.5;
                 }
 
-                var denemy = await db.GetUserOrCreateAsync(Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId);
+                var randEnemy = Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId;
+                var denemy = await db.GetUserOrCreateAsync(randEnemy);
                 var euser = Context.Client.GetUser(denemy.Id);
+                while (euser == null)
+                {
+                    randEnemy = Services.Fun.GetOneRandomFrom(pvpPlayersInRange).UserId;
+                    denemy = await db.GetUserOrCreateAsync(randEnemy);
+                    euser = Context.Client.GetUser(denemy.Id);
+                }
+
                 var players = new List<PlayerInfo>
                 {
                     new PlayerInfo
                     {
                         Cards = duser.GameDeck.Cards.Where(x => x.Active).ToList(),
-                        Dbuser = duser,
-                        User = user
+                        User = Context.User,
+                        Dbuser = duser
                     },
                     new PlayerInfo
                     {
                         Cards = denemy.GameDeck.Cards.Where(x => x.Active).ToList(),
-                        User = euser as SocketGuildUser,
-                        Dbuser = denemy
+                        Dbuser = denemy,
+                        User = euser
                     }
                 };
 
@@ -2706,7 +2711,7 @@ namespace Sanakan.Modules
                 await db.SaveChangesAsync();
 
                 string wStr = fight.Winner == null ? "Remis!" : $"Zwycięża {fight.Winner.User.Mention}!";
-                await ReplyAsync("", embed: $"⚔️ **Pojedynek**:\n{user.Mention} vs. {euser.Mention}\n\n{deathLog.TrimToLength(2000)}\n{wStr}\n{info}".ToEmbedMessage(EMType.Bot).Build());
+                await ReplyAsync("", embed: $"⚔️ **Pojedynek**:\n{Context.User.Mention} vs. {euser.Mention}\n\n{deathLog.TrimToLength(2000)}\n{wStr}\n{info}".ToEmbedMessage(EMType.Bot).Build());
             }
         }
 
