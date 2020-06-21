@@ -157,13 +157,13 @@ namespace Sanakan.Extensions
             switch (res)
             {
                 case FightResult.Win:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.5;
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.6;
                 case FightResult.Lose:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.2;
+                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.4;
 
                 default:
                 case FightResult.Draw:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, res) * 0.1;
+                    return deck.GetMMRChangeFromDuel(-mmrDif, res) * 0.2;
             }
         }
 
@@ -230,7 +230,7 @@ namespace Sanakan.Extensions
             if (gRank > 200) gRank = 200;
             if (gRank < -10) gRank = -10;
 
-            var sRank = 20 + (long) ((30 * mmrChange) - ((gDif / 100d) * (sDif / 100d)));
+            var sRank = 20 + (long) ((30 * mmrChange) - (sDif / 100d));
             if (sRank > 200) sRank = 200;
             if (sRank < -10) sRank = -10;
 

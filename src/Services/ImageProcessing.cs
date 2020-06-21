@@ -135,7 +135,7 @@ namespace Sanakan.Services
                 color = Discord.Color.DarkerGrey;
 
             string rangName = shindenUser?.Rank ?? "";
-            string colorRank = color.RawValue.ToString("X");
+            string colorRank = color.RawValue.ToString("X6");
 
             var nickFont = GetFontSize(_latoBold, 28, nickname, 290);
             var rangFont = new Font(_latoRegular, 16);
