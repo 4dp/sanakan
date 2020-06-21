@@ -617,7 +617,7 @@ namespace Sanakan.Services
                 baseImg.Mutate(x => x.DrawImage(template, new Point(0, 0), 1));
             }
 
-            using (var avatar = await GetSiteStatisticUserBadge(shindenInfo.AvatarUrl, shindenInfo.Name, color.RawValue.ToString("X")))
+            using (var avatar = await GetSiteStatisticUserBadge(shindenInfo.AvatarUrl, shindenInfo.Name, color.RawValue.ToString("X6")))
             {
                 baseImg.Mutate(x => x.DrawImage(avatar, new Point(0, 0), 1));
             }
@@ -671,7 +671,7 @@ namespace Sanakan.Services
             var textLength = lvlLength.Width + msgText1Length.Width > nameLength.Width ? lvlLength.Width + msgText1Length.Width : nameLength.Width;
             var estimatedLength = 106 + (int)(textLength > msgText2Length.Width ? textLength : msgText2Length.Width);
 
-            var nickNameColor = color.RawValue.ToString("X");
+            var nickNameColor = color.RawValue.ToString("X6");
             var baseImg = new Image<Rgba32>((int)estimatedLength, 100);
 
             baseImg.Mutate(x => x.BackgroundColor(Rgba32.FromHex("#36393e")));
