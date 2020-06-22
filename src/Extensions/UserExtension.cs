@@ -152,93 +152,72 @@ namespace Sanakan.Extensions
             return (res == FightResult.Win) ? coinCnt : coinCnt / 2;
         }
 
-        public static double GetMMRChangeFromDuelAsEnemy(this GameDeck deck, double mmrDif, FightResult res)
-        {
-            switch (res)
-            {
-                case FightResult.Win:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Lose) * 0.6;
-                case FightResult.Lose:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, FightResult.Win) * 0.4;
-
-                default:
-                case FightResult.Draw:
-                    return deck.GetMMRChangeFromDuel(-mmrDif, res) * 0.2;
-            }
-        }
-
-        public static double GetMMRChangeFromDuel(this GameDeck deck, double mmrDif, FightResult res)
-        {
-            var mmrBaseChange = 0.08;
-
-            switch (res)
-            {
-                case FightResult.Win:
-                {
-                    mmrBaseChange *= 1.2;
-
-                    if (mmrDif > 50)
-                        return 0.0001;
-
-                    if (mmrDif < -10)
-                        mmrBaseChange *= 2.2;
-
-                    var val = mmrBaseChange + (mmrBaseChange * mmrDif);
-                    if (val < 0) val = -val;
-                    return val;
-                }
-
-                case FightResult.Lose:
-                {
-                    if (mmrDif <= -50)
-                        return 0;
-
-                    if (mmrDif > 3)
-                        mmrBaseChange *= 2.2;
-
-                    var val = mmrBaseChange + (mmrBaseChange * mmrDif);
-                    if (val > 0) val = -val;
-                    return val;
-                }
-
-                default:
-                case FightResult.Draw:
-                {
-                    if (mmrDif <= 1.1)
-                        return 0;
-
-                    return -(mmrBaseChange * (mmrDif - 1));
-                }
-            }
-        }
-
         public static string CalculatePVPParams(this GameDeck d1, GameDeck d2, FightResult res)
         {
             ++d1.PVPDailyGamesPlayed;
 
             var mmrDif = d1.MatachMakingRatio - d2.MatachMakingRatio;
-            var mmrChange = d1.GetMMRChangeFromDuel(mmrDif, res);
-            d1.MatachMakingRatio += mmrChange;
-
-            var mmreChange = d2.GetMMRChangeFromDuelAsEnemy(mmrDif, res);
-            d2.MatachMakingRatio += mmreChange;
+            var chanceD1 = 1 / (1 + Math.Pow(10, -mmrDif / 40f));
+            var chanceD2 = 1 / (1 + Math.Pow(10, mmrDif / 40f));
 
             var sDif = d1.SeasonalPVPRank - d2.SeasonalPVPRank;
+            var sChan = 1 / (1 + Math.Pow(10, -sDif / 400f));
+
             var gDif = d1.GlobalPVPRank - d2.GlobalPVPRank;
+            var gChan = 1 / (1 + Math.Pow(10, -gDif / 400f));
 
-            var gRank = 20 + (long) ((15 * mmrChange) - (gDif / 100d));
-            if (gRank > 200) gRank = 200;
-            if (gRank < -10) gRank = -10;
+            long gRank = 0;
+            long sRank = 0;
 
-            var sRank = 20 + (long) ((30 * mmrChange) - (sDif / 100d));
-            if (sRank > 200) sRank = 200;
-            if (sRank < -10) sRank = -10;
+            double mmrChange = 0;
+            double mmreChange = 0;
+
+            switch (res)
+            {
+                case FightResult.Win:
+                    ++d1.PVPWinStreak;
+
+                    var wsb = 15 * (1 + d1.PVPWinStreak / 10);
+                    if (wsb < 15) wsb = 15;
+                    if (wsb > 30) wsb = 30;
+
+                    sRank = (long) (60 * (1 - sChan)) + wsb;
+                    gRank = (long) (30 * (1 - gChan)) + wsb;
+
+
+                    mmrChange = 2 * (1 - chanceD1);
+                    mmreChange = 2 * (0 - chanceD2);
+                break;
+
+                case FightResult.Lose:
+                    d1.PVPWinStreak = 0;
+                    sRank = (long) (60 * (0 - sChan));
+                    gRank = (long) (30 * (0 - gChan));
+
+                    mmrChange = 2 * (0 - chanceD1);
+                    mmreChange = 2 * (1 - chanceD2);
+                break;
+
+                case FightResult.Draw:
+                    sRank = (long) (30 * (1 - sChan));
+                    gRank = (long) (15 * (1 - gChan));
+
+                    mmrChange = 1 * (1 - chanceD1);
+                    mmreChange = 1 * (1 - chanceD2);
+                break;
+            }
+
+            d1.MatachMakingRatio += mmrChange;
+            d2.MatachMakingRatio += mmreChange;
 
             d1.GlobalPVPRank += gRank;
             d1.SeasonalPVPRank += sRank;
 
-            if (d1.GlobalPVPRank < 0) d1.GlobalPVPRank = 0;
-            if (d1.SeasonalPVPRank < 0) d1.SeasonalPVPRank = 0;
+            if (d1.GlobalPVPRank < 0)
+                d1.GlobalPVPRank = 0;
+
+            if (d1.SeasonalPVPRank < 0)
+                d1.SeasonalPVPRank = 0;
 
             var coins = d1.GetPVPCoinsFromDuel(res);
             d1.PVPCoins += coins;
