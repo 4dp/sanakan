@@ -177,13 +177,12 @@ namespace Sanakan.Extensions
                 case FightResult.Win:
                     ++d1.PVPWinStreak;
 
-                    var wsb = 15 * (1 + d1.PVPWinStreak / 10);
+                    var wsb = 15 * (1 + (d1.PVPWinStreak / 10));
                     if (wsb < 15) wsb = 15;
                     if (wsb > 30) wsb = 30;
 
                     sRank = (long) (60 * (1 - sChan)) + wsb;
                     gRank = (long) (30 * (1 - gChan)) + wsb;
-
 
                     mmrChange = 2 * (1 - chanceD1);
                     mmreChange = 2 * (0 - chanceD2);

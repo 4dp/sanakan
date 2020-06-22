@@ -179,7 +179,7 @@ namespace Sanakan.Modules
         }
 
         [Command("idp", RunMode = RunMode.Async)]
-        [Alias("iledopoziomu, howmuchtolevelup, hmtlup")]
+        [Alias("iledopoziomu", "howmuchtolevelup", "hmtlup")]
         [Summary("wyświetla ile pozostało punktów doświadczenia do następnego poziomu")]
         [Remarks("karna")]
         public async Task ShowHowMuchToLevelUpAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)

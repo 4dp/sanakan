@@ -2087,7 +2087,6 @@ namespace Sanakan.Modules
                     return;
                 }
 
-
                 var tac = active.FirstOrDefault(x => x.Id == thisCard.Id);
                 if (tac == null)
                 {
