@@ -27,6 +27,7 @@ namespace Sanakan
         private CommandHandler _handler;
         private ExperienceManager _exp;
         private Supervisor _supervisor;
+        private FakeConsciousness _ai;
         private ImageProcessing _img;
         private DeletedLog _deleted;
         private Daemonizer _daemon;
@@ -97,6 +98,7 @@ namespace Sanakan
             _deleted = new DeletedLog(_client, _config);
             _chaos = new Chaos(_client, _config, _logger);
             _executor = new SynchronizedExecutor(_logger);
+            _ai = new FakeConsciousness(_client, _config);
             _mod = new Moderator(_logger, _config, _client);
             _waifu = new Waifu(_img, _shindenClient, _config);
             _daemon = new Daemonizer(_client, _logger, _config);
@@ -149,6 +151,7 @@ namespace Sanakan
                 .AddSingleton(_mod)
                 .AddSingleton(_exp)
                 .AddSingleton(_img)
+                .AddSingleton(_ai)
                 .AddSingleton<Services.Fun>()
                 .AddSingleton<Services.Shinden>()
                 .AddSingleton<Services.LandManager>()

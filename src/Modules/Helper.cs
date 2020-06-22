@@ -168,8 +168,6 @@ namespace Sanakan.Modules
                 await Context.Message.DeleteAsync();
 
                 var repMsg = await Context.Channel.GetMessageAsync(messageId);
-                if (repMsg == null) repMsg = await _helper.FindMessageInGuildAsync(Context.Guild, messageId);
-
                 if (repMsg == null)
                 {
                     await ReplyAsync("", embed: "Nie odnaleziono wiadomości.".ToEmbedMessage(EMType.Error).Build());
