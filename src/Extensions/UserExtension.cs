@@ -51,6 +51,7 @@ namespace Sanakan.Extensions
                     CTCnt = 0,
                     Karma = 0,
                     PVPCoins = 0,
+                    PVPWinStreak = 0,
                     ItemsDropped = 0,
                     GlobalPVPRank = 0,
                     SeasonalPVPRank = 0,
@@ -116,8 +117,11 @@ namespace Sanakan.Extensions
             return user;
         }
 
-        public static bool ReachedDailyMaxItemsCount(this GameDeck deck)
-            => deck.ItemsDropped >= 100;
+        public static bool ReachedDailyMaxItemsCountInArenaM(this GameDeck deck)
+            => deck.ItemsDropped >= 200;
+
+        public static bool ReachedDailyMaxItemsCountInArena(this GameDeck deck)
+            => deck.ItemsDropped >= 60;
 
         public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
             => deck.PVPDailyGamesPlayed >= 20;

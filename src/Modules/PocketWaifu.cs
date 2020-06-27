@@ -939,7 +939,10 @@ namespace Sanakan.Modules
                     if (incKarma < 0.001) incKarma = 0.001;
                     if (incKarma > 100) incKarma = 100;
 
-                    bUser.GameDeck.CTCnt += card.GetValue();
+                    var incCt = card.GetValue() * card.MarketValue;
+                    if (incCt > 0 && incCt < 200)
+                        bUser.GameDeck.CTCnt += (long) incCt;
+
                     bUser.GameDeck.Karma -= incKarma;
                     bUser.Stats.DestroyedCards += 1;
 
@@ -2407,7 +2410,7 @@ namespace Sanakan.Modules
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCount())
+                        if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
                         {
                             var item = _waifu.RandomizeItemFromFight().ToItem();
                             var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
@@ -2556,7 +2559,7 @@ namespace Sanakan.Modules
                     exp /= 1.5;
                 }
 
-                if (botUser.GameDeck.ReachedDailyMaxItemsCount())
+                if (botUser.GameDeck.ReachedDailyMaxItemsCountInArenaM())
                     items.Clear();
 
                 if (thisCard.IsUnusable())
