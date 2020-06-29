@@ -49,13 +49,13 @@ namespace Sanakan.Extensions
             switch (c.Level)
             {
                 case ExpContainerLevel.Level1:
-                    return 10;
+                    return 8;
 
                 case ExpContainerLevel.Level2:
                     return 15;
 
                 case ExpContainerLevel.Level3:
-                    return 12;
+                    return 10;
 
                 default:
                 case ExpContainerLevel.Disabled:
@@ -69,10 +69,8 @@ namespace Sanakan.Extensions
             {
                 case ExpContainerLevel.Disabled:
                 case ExpContainerLevel.Level1:
-                    return 1;
-
                 case ExpContainerLevel.Level2:
-                    return 2;
+                    return 1;
 
                 default:
                 case ExpContainerLevel.Level3:
@@ -85,13 +83,13 @@ namespace Sanakan.Extensions
             switch (c.Level)
             {
                 case ExpContainerLevel.Disabled:
-                    return 5;
+                    return 3;
 
                 case ExpContainerLevel.Level1:
-                    return 10;
+                    return 7;
 
                 case ExpContainerLevel.Level2:
-                    return 15;
+                    return 10;
 
                 default:
                 case ExpContainerLevel.Level3:

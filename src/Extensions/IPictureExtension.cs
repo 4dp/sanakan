@@ -9,7 +9,7 @@ namespace Sanakan.Extensions
     {
         public static string GetStr(this IPicture p)
         {
-            if (p == null || !p.Is18Plus || p.IsAccepted)
+            if (p == null || p.Is18Plus)
                 return null;
 
             return Shinden.API.Url.GetPersonPictureURL(p.PictureId);

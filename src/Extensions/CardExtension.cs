@@ -49,31 +49,56 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static double GetMaxExpToChest(this Card card)
+        public static double GetMaxExpToChest(this Card card, ExpContainerLevel lvl)
         {
+            double exp = 0;
+
             switch (card.Rarity)
             {
                 case Rarity.SSS:
-                    return 16d;
+                    exp = 16d;
+                    break;
 
                 case Rarity.SS:
-                    return 8d;
+                    exp = 8d;
+                    break;
 
                 case Rarity.S:
-                    return 4.8;
+                    exp = 4.8;
+                    break;
 
                 case Rarity.A:
                 case Rarity.B:
-                    return 3.5;
+                    exp = 3.5;
+                    break;
 
                 case Rarity.C:
-                    return 2.5;
+                    exp = 2.5;
+                    break;
 
                 default:
                 case Rarity.D:
                 case Rarity.E:
-                    return 1.5;
+                    exp = 1.5;
+                    break;
             }
+
+            switch (lvl)
+            {
+                case ExpContainerLevel.Level3:
+                    exp *= 2d;
+                    break;
+                case ExpContainerLevel.Level2:
+                    exp *= 1.5;
+                    break;
+
+                default:
+                case ExpContainerLevel.Level1:
+                case ExpContainerLevel.Disabled:
+                    break;
+            }
+
+            return exp;
         }
 
         public static bool HasImage(this Card card) => card.GetImage() != null;

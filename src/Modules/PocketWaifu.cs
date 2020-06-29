@@ -321,7 +321,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var imgCnt = 1;
+                var imgCnt = 0;
                 var itemCnt = 1;
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
@@ -339,7 +339,11 @@ namespace Sanakan.Modules
                 }
 
                 var dis = int.TryParse(detail, out itemCnt);
-                if (itemCnt < 1) itemCnt = 1;
+                if (itemCnt < 1)
+                {
+                    dis = false;
+                    itemCnt = 1;
+                }
 
                 var item = itemList[itemNumber - 1];
                 switch (item.Type)
@@ -354,8 +358,8 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.ChangeCardImage:
-                        imgCnt = itemCnt;
-                        if (imgCnt < 1) imgCnt = 1;
+                        if (dis) imgCnt = itemCnt;
+                        if (imgCnt < 0) imgCnt = 0;
                         itemCnt = 1;
                         break;
 
@@ -455,7 +459,7 @@ namespace Sanakan.Modules
                             return;
                         }
                         var urls = res.Body.Pictures.GetPicList();
-                        if (imgCnt == 1)
+                        if (imgCnt == 0 || !dis)
                         {
                             int tidx = 0;
                             var ls = "Obrazki: \n" + string.Join("\n", urls.Select(x => $"{++tidx}: {x}"));
@@ -905,6 +909,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                 var chLvl = bUser.GameDeck.ExpContainer.Level;
+
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -914,8 +920,8 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExpToChest())
-                        ? card.GetMaxExpToChest()
+                    bUser.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExpToChest(chLvl))
+                        ? card.GetMaxExpToChest(chLvl)
                         : (card.ExpCnt / 2));
 
                     var incKarma = 0.7 * card.MarketValue;
@@ -965,6 +971,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var chLvl = bUser.GameDeck.ExpContainer.Level;
+
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
@@ -974,8 +982,8 @@ namespace Sanakan.Modules
                         continue;
                     }
 
-                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExpToChest())
-                        ? card.GetMaxExpToChest()
+                    bUser.StoreExpIfPossible((card.ExpCnt > card.GetMaxExpToChest(chLvl))
+                        ? card.GetMaxExpToChest(chLvl)
                         : card.ExpCnt);
 
                     var incKarma = 1 * card.MarketValue;
