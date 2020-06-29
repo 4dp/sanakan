@@ -321,6 +321,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
+                var imgCnt = 1;
                 var itemCnt = 1;
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 var itemList = bUser.GameDeck.Items.OrderBy(x => x.Type).ToList();
@@ -337,16 +338,10 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                int.TryParse(detail, out itemCnt);
+                var dis = int.TryParse(detail, out itemCnt);
                 if (itemCnt < 1) itemCnt = 1;
 
                 var item = itemList[itemNumber - 1];
-                if (item.Count < itemCnt)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz tylu sztuk tego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
                 switch (item.Type)
                 {
                     case ItemType.AffectionRecoveryBig:
@@ -358,6 +353,12 @@ namespace Sanakan.Modules
                     case ItemType.IncreaseExpBig:
                         break;
 
+                    case ItemType.ChangeCardImage:
+                        imgCnt = itemCnt;
+                        if (imgCnt < 1) imgCnt = 1;
+                        itemCnt = 1;
+                        break;
+
                     default:
                         if (itemCnt != 1)
                         {
@@ -365,6 +366,12 @@ namespace Sanakan.Modules
                             return;
                         }
                         break;
+                }
+
+                if (item.Count < itemCnt)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz tylu sztuk tego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
+                    return;
                 }
 
                 var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
@@ -437,6 +444,42 @@ namespace Sanakan.Modules
                         affectionInc = 0.3 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Zmieniono typ gwiazdki!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.ChangeCardImage:
+                        var res = await _shclient.GetCharacterInfoAsync(card.Character);
+                        if (!res.IsSuccessStatusCode())
+                        {
+                            await ReplyAsync("", embed: "Nie odnaleziono postaci na shinden!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        var urls = res.Body.Pictures.GetPicList();
+                        if (imgCnt == 1)
+                        {
+                            int tidx = 0;
+                            var ls = "Obrazki: \n" + string.Join("\n", urls.Select(x => $"{++tidx}: {x}"));
+                            await ReplyAsync("", embed: ls.ToEmbedMessage(EMType.Info).Build());
+                            return;
+                        }
+                        else
+                        {
+                            if (imgCnt > urls.Count)
+                            {
+                                await ReplyAsync("", embed: "Nie odnaleziono obrazka!".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            var turl = urls[imgCnt - 1];
+                            if (card.GetImage() == turl)
+                            {
+                                await ReplyAsync("", embed: "Taki obrazek jest już ustawiony!".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            card.CustomImage = turl;
+                        }
+                        affectionInc = 0.3 * itemCnt;
+                        bUser.GameDeck.Karma += 0.001 * itemCnt;
+                        embed.Description += "Ustawiono nowy obrazek.";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 

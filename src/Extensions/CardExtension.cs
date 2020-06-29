@@ -283,12 +283,18 @@ namespace Sanakan.Extensions
 
         public static string GetAffectionString(this Card card)
         {
+            if (card.Affection <= -400) return "Pogarda (γ)";
+            if (card.Affection <= -200) return "Pogarda (β)";
+            if (card.Affection <= -100) return "Pogarda (α)";
             if (card.Affection <= -50) return "Pogarda";
             if (card.Affection <= -5) return "Nienawiść";
             if (card.Affection <= -4) return "Zawiść";
             if (card.Affection <= -3) return "Wrogość";
             if (card.Affection <= -2) return "Złośliwość";
             if (card.Affection <= -1) return "Chłodność";
+            if (card.Affection >= 400) return "Obsesyjna miłość (γ)";
+            if (card.Affection >= 200) return "Obsesyjna miłość (β)";
+            if (card.Affection >= 100) return "Obsesyjna miłość (α)";
             if (card.Affection >= 50) return "Obsesyjna miłość";
             if (card.Affection >= 5) return "Miłość";
             if (card.Affection >= 4) return "Zauroczenie";
