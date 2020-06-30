@@ -123,6 +123,35 @@ namespace Sanakan.Extensions
         public static bool ReachedDailyMaxItemsCountInArena(this GameDeck deck)
             => deck.ItemsDropped >= 60;
 
+        public static string GetRankName(this GameDeck deck, long? rank = null)
+        {
+            switch ((ExperienceManager.CalculateLevel(rank ?? deck.SeasonalPVPRank) / 10))
+            {
+                case var n when (n >= 17):
+                    return "Konsul";
+
+                case 16: return "Praetor";
+                case 15: return "Legatus";
+                case 14: return "Preafectus classis";
+                case 13: return "Praefectus praetoria";
+                case 12: return "Tribunus laticavius";
+                case 11: return "Prefectus";
+                case 10: return "Tribunus angusticlavius";
+                case 9: return "Praefectus castorium";
+                case 8: return "Primus pilus";
+                case 7: return "Primi ordines";
+                case 6: return "Centurio";
+                case 5: return "Decurio";
+                case 4: return "Tesserarius";
+                case 3: return "Optio";
+                case 2: return "Aquilifier";
+                case 1: return "Signifer";
+
+                default:
+                    return "Miles gregarius";
+            }
+        }
+
         public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
             => deck.PVPDailyGamesPlayed >= 20;
 
@@ -150,7 +179,7 @@ namespace Sanakan.Extensions
         public static long GetPVPCoinsFromDuel(this GameDeck deck, FightResult res)
         {
             var step = (ExperienceManager.CalculateLevel(deck.SeasonalPVPRank) / 10);
-            if (step > 10) step = 10;
+            if (step > 5) step = 5;
 
             var coinCnt = 20 + (20 * step);
             return (res == FightResult.Win) ? coinCnt : coinCnt / 2;

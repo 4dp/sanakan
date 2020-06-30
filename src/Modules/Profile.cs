@@ -48,7 +48,8 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: $"**Portfel** {usr.Mention}:\n\n {botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**".ToEmbedMessage(EMType.Info).Build());
+                await ReplyAsync("", embed: ($"**Portfel** {usr.Mention}:\n\n{botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**\n\n"
+                    + $"**PW**:\n{botuser?.GameDeck?.CTCnt} **CT**\n{botuser?.GameDeck?.PVPCoins} **PC**").ToEmbedMessage(EMType.Info).Build());
             }
         }
 

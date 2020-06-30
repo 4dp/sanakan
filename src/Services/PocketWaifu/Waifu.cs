@@ -293,7 +293,7 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(29,    ItemType.DereReRoll.ToItem()),
                 new ItemWithCost(79,    ItemType.CardParamsReRoll.ToItem()),
                 new ItemWithCost(1099,  ItemType.IncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(29,    ItemType.ChangeCardImage.ToItem()),
+                new ItemWithCost(69,    ItemType.ChangeCardImage.ToItem()),
                 new ItemWithCost(999,   ItemType.SetCustomImage.ToItem()),
                 new ItemWithCost(659,   ItemType.SetCustomBorder.ToItem()),
                 new ItemWithCost(149,   ItemType.ChangeStarType.ToItem()),
@@ -310,12 +310,13 @@ namespace Sanakan.Services.PocketWaifu
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(499,    ItemType.AffectionRecoveryNormal.ToItem()),
-                new ItemWithCost(1999,   ItemType.IncreaseExpBig.ToItem()),
-                new ItemWithCost(19999,  ItemType.IncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(49999,  ItemType.BetterIncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(4999,   ItemType.ChangeCardImage.ToItem()),
-                new ItemWithCost(999999, ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(169,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(1699,   ItemType.IncreaseExpBig.ToItem()),
+                new ItemWithCost(1699,   ItemType.CheckAffection.ToItem()),
+                new ItemWithCost(16999,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(46999,  ItemType.BetterIncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(4699,   ItemType.ChangeCardImage.ToItem()),
+                new ItemWithCost(269999, ItemType.SetCustomImage.ToItem()),
             };
         }
 

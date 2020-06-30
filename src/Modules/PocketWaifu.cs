@@ -1985,11 +1985,11 @@ namespace Sanakan.Modules
 
         [Command("wyzwól")]
         [Alias("unleash", "wyzwol")]
-        [Summary("zmienia karte niewymienialną na wymienialną (300 CT)")]
+        [Summary("zmienia karte niewymienialną na wymienialną (250 CT)")]
         [Remarks("8651"), RequireWaifuCommandChannel]
         public async Task UnleashCardAsync([Summary("WID")]ulong wid)
         {
-            int cost = 300;
+            int cost = 250;
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
@@ -2028,11 +2028,11 @@ namespace Sanakan.Modules
 
         [Command("wymień na kule")]
         [Alias("wymien na kule", "crystal")]
-        [Summary("zmienia naszyjnik i bukiet kwiatów na kryształową kule (10 CT)")]
+        [Summary("zmienia naszyjnik i bukiet kwiatów na kryształową kule (koszt 5 CT)")]
         [Remarks(""), RequireWaifuCommandChannel]
         public async Task ExchangeToCrystalBallAsync()
         {
-            int cost = 10;
+            int cost = 5;
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
@@ -3077,9 +3077,11 @@ namespace Sanakan.Modules
                 var aPvp = bUser.GameDeck?.PvPStats?.Count(x => x.Type == FightType.NewVersus);
                 var wPvp = bUser.GameDeck?.PvPStats?.Count(x => x.Result == FightResult.Win && x.Type == FightType.NewVersus);
 
-                var seasonString = "0";
+                var seasonString = "----";
                 if (bUser.GameDeck.IsPVPSeasonalRankActive())
-                    seasonString = $"{bUser.GameDeck.SeasonalPVPRank}";
+                    seasonString = $"{bUser.GameDeck.GetRankName()} ({bUser.GameDeck.SeasonalPVPRank})";
+
+                var globalString = $"{bUser.GameDeck.GetRankName(bUser.GameDeck.GlobalPVPRank)} ({bUser.GameDeck.GlobalPVPRank})";
 
                 var sssString = "";
                 if (sssCnt > 0)
@@ -3094,7 +3096,7 @@ namespace Sanakan.Modules
                                 + $"**Uwolnione**: {bUser.Stats.ReleasedCards}\n**Zniszczone**: {bUser.Stats.DestroyedCards}\n**Poświęcone**: {bUser.Stats.SacraficeCards}\n**Ulepszone**: {bUser.Stats.UpgaredCards}\n**Wyzwolone**: {bUser.Stats.UnleashedCards}\n\n"
                                 + $"**CT**: {bUser.GameDeck.CTCnt}\n**Karma**: {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
-                                + $"**PVP** Rozegrane: {aPvp} Wygrane: {wPvp}\n**PC**: {bUser.GameDeck.PVPCoins}\n**GR**: {bUser.GameDeck.GlobalPVPRank}\n**SR**: {seasonString}"
+                                + $"**PVP** Rozegrane: {aPvp} Wygrane: {wPvp}\n**PC**: {bUser.GameDeck.PVPCoins}\n**GR**: {globalString}\n**SR**: {seasonString}"
                 };
 
                 if (bUser.GameDeck?.Waifu != 0)
