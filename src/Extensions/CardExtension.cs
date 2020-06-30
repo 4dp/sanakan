@@ -286,6 +286,7 @@ namespace Sanakan.Extensions
                 case CardSource.PvE: return "Walki na boty";
                 case CardSource.Daily: return "Karta+";
                 case CardSource.Crafting: return "Tworzenie";
+                case CardSource.PvpShop: return "Koszary";
 
                 default:
                 case CardSource.Other: return "Inne";

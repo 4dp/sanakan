@@ -293,6 +293,7 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(29,    ItemType.DereReRoll.ToItem()),
                 new ItemWithCost(79,    ItemType.CardParamsReRoll.ToItem()),
                 new ItemWithCost(1099,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(29,    ItemType.ChangeCardImage.ToItem()),
                 new ItemWithCost(999,   ItemType.SetCustomImage.ToItem()),
                 new ItemWithCost(659,   ItemType.SetCustomBorder.ToItem()),
                 new ItemWithCost(149,   ItemType.ChangeStarType.ToItem()),
@@ -302,6 +303,19 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(499,   ItemType.RandomNormalBoosterPackA.ToItem()),
                 new ItemWithCost(899,   ItemType.RandomNormalBoosterPackS.ToItem()),
                 new ItemWithCost(1299,  ItemType.RandomNormalBoosterPackSS.ToItem()),
+            };
+        }
+
+        public ItemWithCost[] GetItemsWithCostForPVP()
+        {
+            return new ItemWithCost[]
+            {
+                new ItemWithCost(499,    ItemType.AffectionRecoveryNormal.ToItem()),
+                new ItemWithCost(1999,   ItemType.IncreaseExpBig.ToItem()),
+                new ItemWithCost(19999,  ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(49999,  ItemType.BetterIncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(4999,   ItemType.ChangeCardImage.ToItem()),
+                new ItemWithCost(999999, ItemType.SetCustomImage.ToItem()),
             };
         }
 
@@ -981,16 +995,16 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
-        public Embed GetShopView(ItemWithCost[] items)
+        public Embed GetShopView(ItemWithCost[] items, string name = "Sklepik", string currency = "TC")
         {
             string embedString = "";
             for (int i = 0; i < items.Length; i++)
-                embedString+= $"**[{i + 1}]** _{items[i].Item.Name}_ - {items[i].Cost} TC\n";
+                embedString+= $"**[{i + 1}]** _{items[i].Item.Name}_ - {items[i].Cost} {currency}\n";
 
             return new EmbedBuilder
             {
                 Color = EMType.Info.Color(),
-                Description = $"**Sklepik:**\n\n{embedString}".TrimToLength(2000)
+                Description = $"**{name}**:\n\n{embedString}".TrimToLength(2000)
             }.Build();
         }
 
@@ -999,7 +1013,7 @@ namespace Sanakan.Services.PocketWaifu
             return new EmbedBuilder
             {
                 Color = EMType.Info.Color(),
-                Description =$"**{item.Item.Name}**\n_{item.Item.Type.Desc()}_",
+                Description = $"**{item.Item.Name}**\n_{item.Item.Type.Desc()}_",
             }.Build();
         }
 

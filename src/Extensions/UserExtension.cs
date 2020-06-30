@@ -225,7 +225,7 @@ namespace Sanakan.Extensions
             var coins = d1.GetPVPCoinsFromDuel(res);
             d1.PVPCoins += coins;
 
-            return $"**{coins.ToString("+0;-#")}** 🧩 **{gRank.ToString("+0;-#")}** 👑  **{sRank.ToString("+0;-#")}** ❄️";
+            return $"**{coins.ToString("+0;-#")}** PC **{gRank.ToString("+0;-#")}** GR  **{sRank.ToString("+0;-#")}** SR";
         }
 
         public static double GetDeckPower(this GameDeck deck)

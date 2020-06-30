@@ -184,6 +184,127 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("koszary")]
+        [Alias("pvp shop")]
+        [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
+        [Remarks("1 info"), RequireWaifuCommandChannel]
+        public async Task BuyItemPvPAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4(liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
+        {
+            var itemsToBuy = _waifu.GetItemsWithCostForPVP();
+            if (itemNumber <= 0)
+            {
+                await ReplyAsync("", embed: _waifu.GetShopView(itemsToBuy, "Koszary", "PC"));
+                return;
+            }
+
+            if (itemNumber > itemsToBuy.Length)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} w koszarach nie ma takiego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            var thisItem = itemsToBuy[--itemNumber];
+            if (info == "info")
+            {
+                await ReplyAsync("", embed: _waifu.GetItemShopInfo(thisItem));
+                return;
+            }
+
+            int itemCount = 0;
+            if (!int.TryParse(info, out itemCount))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} liczbe poproszę, a nie jakieś bohomazy.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            ulong boosterPackTitleId = 0;
+            string boosterPackTitleName = "";
+
+            switch (thisItem.Item.Type)
+            {
+                case ItemType.RandomTitleBoosterPackSingleE:
+                    if (itemCount < 0) itemCount = 0;
+                    var response = await _shclient.Title.GetInfoAsync((ulong)itemCount);
+                    if (!response.IsSuccessStatusCode())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    var response2 = await _shclient.Title.GetCharactersAsync(response.Body);
+                    if (!response2.IsSuccessStatusCode())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można kupić pakietu z tytułu z miejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    boosterPackTitleName = $" ({response.Body.Title})";
+                    boosterPackTitleId = response.Body.Id;
+                    itemCount = 1;
+                    break;
+
+                default:
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+            }
+
+            var realCost = itemCount * thisItem.Cost;
+            string count = (itemCount > 1) ? $" x{itemCount}" : "";
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (bUser.GameDeck.PVPCoins < realCost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby PC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (thisItem.Item.Type.IsBoosterPack())
+                {
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        var booster = thisItem.Item.Type.ToBoosterPack();
+                        if (boosterPackTitleId != 0)
+                        {
+                            booster.Title = boosterPackTitleId;
+                            booster.Name += boosterPackTitleName;
+                        }
+                        if (booster != null)
+                        {
+                            booster.CardSourceFromPack = CardSource.PvpShop;
+                            bUser.GameDeck.BoosterPacks.Add(booster);
+                        }
+                    }
+
+                    bUser.Stats.WastedPuzzlesOnCards += realCost;
+                }
+                else
+                {
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type);
+                    if (inUserItem == null)
+                    {
+                        inUserItem = thisItem.Item.Type.ToItem(itemCount);
+                        bUser.GameDeck.Items.Add(inUserItem);
+                    }
+                    else inUserItem.Count += itemCount;
+
+                    bUser.Stats.WastedPuzzlesOnCookies += realCost;
+                }
+
+                bUser.GameDeck.PVPCoins -= realCost;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zakupił: _{thisItem.Item.Name}{boosterPackTitleName}{count}_.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("sklepik")]
         [Alias("shop", "p2w")]
         [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
@@ -481,7 +602,7 @@ namespace Sanakan.Modules
                             }
                             card.CustomImage = turl;
                         }
-                        affectionInc = 0.3 * itemCnt;
+                        affectionInc = 0.1 * itemCnt;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek.";
                         _waifu.DeleteCardImageIfExist(card);
@@ -2969,11 +3090,11 @@ namespace Sanakan.Modules
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(user),
                     Description = $"*{bUser.GameDeck.GetUserNameStatus()}*\n\n"
-                                + $"**Skrzynia({(int)bUser.GameDeck.ExpContainer.Level}):** {bUser.GameDeck.ExpContainer.ExpCount.ToString("F")}\n"
-                                + $"**Uwolnione:** {bUser.Stats.ReleasedCards}\n**Zniszczone:** {bUser.Stats.DestroyedCards}\n**Poświęcone:** {bUser.Stats.SacraficeCards}\n**Ulepszone:** {bUser.Stats.UpgaredCards}\n**Wyzwolone:** {bUser.Stats.UnleashedCards}\n\n"
-                                + $"**CT:** {bUser.GameDeck.CTCnt}\n**Karma:** {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                                + $"**Skrzynia({(int)bUser.GameDeck.ExpContainer.Level})**: {bUser.GameDeck.ExpContainer.ExpCount.ToString("F")}\n"
+                                + $"**Uwolnione**: {bUser.Stats.ReleasedCards}\n**Zniszczone**: {bUser.Stats.DestroyedCards}\n**Poświęcone**: {bUser.Stats.SacraficeCards}\n**Ulepszone**: {bUser.Stats.UpgaredCards}\n**Wyzwolone**: {bUser.Stats.UnleashedCards}\n\n"
+                                + $"**CT**: {bUser.GameDeck.CTCnt}\n**Karma**: {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
                                 + $"{sssString}**SS**: {ssCnt} **S**: {sCnt} **A**: {aCnt} **B**: {bCnt} **C**: {cCnt} **D**: {dCnt} **E**:{eCnt}\n\n"
-                                + $"**PVP** Rozegrane: {aPvp} Wygrane: {wPvp}\n**Puzzle**: {bUser.GameDeck.PVPCoins}\n**GR**: {bUser.GameDeck.GlobalPVPRank}\n**SR**: {seasonString}"
+                                + $"**PVP** Rozegrane: {aPvp} Wygrane: {wPvp}\n**PC**: {bUser.GameDeck.PVPCoins}\n**GR**: {bUser.GameDeck.GlobalPVPRank}\n**SR**: {seasonString}"
                 };
 
                 if (bUser.GameDeck?.Waifu != 0)

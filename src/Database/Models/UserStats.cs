@@ -31,6 +31,8 @@ namespace Sanakan.Database.Models
         public long WastedTcOnCookies { get; set; }
         public long WastedTcOnCards { get; set; }
         public long UpgradedToSSS { get; set; }
+        public long WastedPuzzlesOnCookies { get; set; }
+        public long WastedPuzzlesOnCards { get; set; }
 
         public ulong UserId { get; set; }
         [JsonIgnore]
