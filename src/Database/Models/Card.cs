@@ -20,7 +20,7 @@ namespace Sanakan.Database.Models
 
     public enum CardSource
     {
-        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop
+        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop, Figure
     }
 
     public enum StarStyle
@@ -58,6 +58,9 @@ namespace Sanakan.Database.Models
         public string CustomBorder { get; set; }
         public double MarketValue { get; set; }
 
+        public bool FromFigure { get; set; }
+        public Quality Quality { get; set; }
+
         public virtual ICollection<CardTag> TagList { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
@@ -73,6 +76,7 @@ namespace Sanakan.Database.Models
                 Unique ? "[U]" : "",
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
+                FromFigure ? "[F]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
 

@@ -15,7 +15,7 @@ namespace Sanakan.Extensions
         {
             string idStr = withoutId ? "" : $"**[{card.Id}]** ";
             string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
-            string upgCnt = withUpgrades ? $"_(U:{card.UpgradesCnt})_" : "";
+            string upgCnt = (withUpgrades && !card.FromFigure) ? $"_(U:{card.UpgradesCnt})_" : "";
 
             return $"{idStr} {name} **{card.Rarity}** {card.GetCardParams(showBaseHp, allowZero)} {upgCnt}";
         }
@@ -143,6 +143,7 @@ namespace Sanakan.Extensions
         {
             var icons = new List<string>();
             if (card.Unique) icons.Add("💠");
+            if (card.FromFigure) icons.Add("🎖️");
             if (!card.IsTradable) icons.Add("⛔");
             if (card.IsBroken()) icons.Add("💔");
             if (card.InCage) icons.Add("🔒");
@@ -199,9 +200,13 @@ namespace Sanakan.Extensions
 
         public static int GetHealthWithPenalty(this Card card, bool allowZero = false)
         {
+            var maxHealth = 999;
+            if (card.FromFigure)
+                maxHealth = 99999;
+
             var percent = card.Affection * 5d / 100d;
             var newHealth = (int)(card.Health + (card.Health * percent));
-            if (newHealth > 999) newHealth = 999;
+            if (newHealth > maxHealth) newHealth = maxHealth;
 
             if (allowZero)
             {
@@ -261,15 +266,23 @@ namespace Sanakan.Extensions
 
         public static int GetAttackWithBonus(this Card card)
         {
+            var maxAttack = 999;
+            if (card.FromFigure)
+                maxAttack = 9999;
+
             var newAttack = card.Attack + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 8);
-            if (newAttack > 990) newAttack = 999;
+            if (newAttack > maxAttack) newAttack = maxAttack;
             return newAttack;
         }
 
         public static int GetDefenceWithBonus(this Card card)
         {
+            var maxDefence = 99;
+            if (card.FromFigure)
+                maxDefence = 9999;
+
             var newDefence = card.Defence + card.RestartCnt;
-            if (newDefence > 99) newDefence = 99;
+            if (newDefence > maxDefence) newDefence = maxDefence;
             return newDefence;
         }
 
@@ -287,6 +300,7 @@ namespace Sanakan.Extensions
                 case CardSource.Daily: return "Karta+";
                 case CardSource.Crafting: return "Tworzenie";
                 case CardSource.PvpShop: return "Koszary";
+                case CardSource.Figure: return "Figurka";
 
                 default:
                 case CardSource.Other: return "Inne";

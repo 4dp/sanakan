@@ -506,6 +506,23 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (card.FromFigure)
+                {
+                    switch (item.Type)
+                    {
+                        case ItemType.IncreaseExpBig:
+                        case ItemType.IncreaseExpSmall:
+                        case ItemType.CardParamsReRoll:
+                        case ItemType.IncreaseUpgradeCnt:
+                        case ItemType.BetterIncreaseUpgradeCnt:
+                            await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie można użyć na tej karcie.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+
+                        default:
+                            break;
+                    }
+                }
+
                 double affectionInc = 0;
                 var textRelation = card.GetAffectionString();
                 string cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
@@ -854,6 +871,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (card.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} tej karty nie można restartować.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
                 if (card.IsUnusable())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma zbyt niską relacje aby dało się ją zrestartować.".ToEmbedMessage(EMType.Bot).Build());
@@ -906,6 +929,12 @@ namespace Sanakan.Modules
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} tej karty nie można zaktualizować.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -990,7 +1019,7 @@ namespace Sanakan.Modules
 
                 if (card.Rarity == Rarity.SSS)
                 {
-                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS % 15 == 0)
+                    if (card.RestartCnt < 1 && bUser.Stats.UpgradedToSSS % 10 == 0)
                     {
                         var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
                         if (inUserItem == null)
@@ -1035,7 +1064,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || card.HasTag("ulubione"))
+                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure)
                     {
                         broken.Add(card);
                         continue;
@@ -1097,7 +1126,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || card.HasTag("ulubione"))
+                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure)
                     {
                         broken.Add(card);
                         continue;
@@ -1160,6 +1189,12 @@ namespace Sanakan.Modules
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} na tą karte nie można przenieść doświadczenia.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -1334,6 +1369,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (card.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} z tą kartą nie można iść na rynek.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 if (card.IsUnusable())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ktoś kto Cie nienawidzi, nie pomoże Ci w niczym.".ToEmbedMessage(EMType.Error).Build());
@@ -1430,6 +1471,12 @@ namespace Sanakan.Modules
                 if (card == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (card.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} z tą kartą nie można iść na czarny rynek.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -1532,7 +1579,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione"))
+                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione") || card.FromFigure)
                     {
                         broken.Add(card);
                         continue;
@@ -2525,6 +2572,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (thisCard.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 if (thisCard.IsUnusable())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
@@ -2644,6 +2697,12 @@ namespace Sanakan.Modules
                 if (thisCard == null)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (thisCard.FromFigure)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może walczyć na areniem.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

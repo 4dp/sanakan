@@ -49,7 +49,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
                 .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Wishes).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .AsNoTracking().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
         }
 
         public static async Task<User> GetCachedFullUserByShindenIdAsync(this Database.UserContext context, ulong userId)
@@ -58,7 +58,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
                 .Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Wishes).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .AsNoTracking().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
         }
 
         public static async Task<List<User>> GetCachedAllUsersAsync(this Database.UserContext context)
@@ -67,7 +67,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .AsNoTracking().FromCacheAsync(new string[] { $"users" })).ToList();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"users" })).ToList();
         }
 
         public static async Task<List<GameDeck>> GetCachedPlayersWithActiveCards(this Database.UserContext context)
@@ -81,7 +81,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .FirstOrDefaultAsync();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).FirstOrDefaultAsync();
 
             if (user == null)
             {
@@ -98,7 +98,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                 .ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck)
                 .ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
         }
 
         public static async Task<List<Question>> GetCachedAllQuestionsAsync(this Database.UserContext context)
