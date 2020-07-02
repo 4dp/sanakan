@@ -40,10 +40,16 @@ namespace Sanakan.Modules
         [Remarks("odcinki"), RequireAnyCommandChannel]
         public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
         {
+            var gUser = Context.User as SocketGuildUser;
+            if (gUser == null) return;
+
             if (command != null)
             {
                 try
                 {
+                    bool admin = false;
+                    bool dev = false;
+
                     string prefix = _config.Get().Prefix;
                     if (Context.Guild != null)
                     {
@@ -51,10 +57,13 @@ namespace Sanakan.Modules
                         {
                             var gConfig = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
                             if (gConfig?.Prefix != null) prefix = gConfig.Prefix;
+
+                            admin = (gUser.Roles.Any(x => x.Id == gConfig?.AdminRole) || gUser.GuildPermissions.Administrator);
+                            dev = _config.Get().Dev.Any(x => x == gUser.Id);
                         }
                     }
 
-                    await ReplyAsync(_helper.GiveHelpAboutPublicCmd(command, prefix));
+                    await ReplyAsync(_helper.GiveHelpAboutPublicCmd(command, prefix, admin, dev));
                 }
                 catch (Exception ex)
                 {

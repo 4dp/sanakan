@@ -653,13 +653,14 @@ namespace Sanakan.Modules
         [Command("gitem")]
         [Summary("generuje przedmiot i daje go użytkownikowi")]
         [Remarks("Sniku 2 1")]
-        public async Task GenerateItemAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("przedmiot")]ItemType itemType, [Summary("liczba przedmiotów")]uint count = 1)
+        public async Task GenerateItemAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("przedmiot")]ItemType itemType, [Summary("liczba przedmiotów")]uint count = 1,
+            [Summary("jakość przedmiotu")]Quality quality = Quality.Broken)
         {
-            var item = itemType.ToItem(count);
+            var item = itemType.ToItem(count, quality);
             using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
-                var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                 if (thisItem == null)
                 {
                     thisItem = item;
@@ -734,6 +735,42 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.TcCnt} TC".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("pc")]
+        [Summary("zmienia PC użytkownika o podaną wartość")]
+        [Remarks("Sniku 10000")]
+        public async Task ChangeUserPcAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba PC")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.GameDeck.PVPCoins += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.GameDeck.PVPCoins} PC".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("ct")]
+        [Summary("zmienia CT użytkownika o podaną wartość")]
+        [Remarks("Sniku 10000")]
+        public async Task ChangeUserCtAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba CT")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.GameDeck.CTCnt += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.GameDeck.CTCnt} CT".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

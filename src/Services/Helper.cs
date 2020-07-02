@@ -54,7 +54,7 @@ namespace Sanakan.Services
             return $"**Lista poleceń:**\n\n**{item.Prefix}:** " + string.Join("  ", item.Commands);
         }
 
-        public string GiveHelpAboutPrivateCmd(string moduleName, string command, string prefix)
+        public string GiveHelpAboutPrivateCmd(string moduleName, string command, string prefix, bool throwEx = true)
         {
             var info = PrivateModulesInfo[moduleName];
 
@@ -66,7 +66,10 @@ namespace Sanakan.Services
             if (thisCommands != null)
                 return GetCommandInfo(thisCommands, prefix);
 
-            throw new Exception("Polecenie nie istnieje!");
+            if (throwEx)
+                throw new Exception("Polecenie nie istnieje!");
+
+            return null;
         }
 
         public string GetCommandInfo(CommandInfo cmd, string prefix = null)
@@ -96,7 +99,7 @@ namespace Sanakan.Services
             return command;
         }
 
-        public string GiveHelpAboutPublicCmd(string command, string prefix)
+        public string GiveHelpAboutPublicCmd(string command, string prefix, bool admin = false, bool dev = false)
         {
             foreach(var module in PublicModulesInfo)
             {
@@ -108,6 +111,19 @@ namespace Sanakan.Services
                 if (thisCommands != null)
                     return GetCommandInfo(thisCommands, prefix);
             }
+
+            if (admin)
+            {
+                var res = GiveHelpAboutPrivateCmd("Moderacja", command, prefix, false);
+                if (!string.IsNullOrEmpty(res)) return res;
+            }
+
+            if (dev)
+            {
+                var res = GiveHelpAboutPrivateCmd("Debug", command, prefix, false);
+                if (!string.IsNullOrEmpty(res)) return res;
+            }
+
             throw new Exception("Polecenie nie istnieje!");
         }
 
@@ -198,7 +214,7 @@ namespace Sanakan.Services
             {
                 roles = "";
                 foreach (var item in user.Roles.OrderByDescending(x => x.Position))
-                    if (!item.IsEveryone) 
+                    if (!item.IsEveryone)
                         roles += $"{item.Mention}\n";
             }
 
@@ -269,7 +285,7 @@ namespace Sanakan.Services
             string roles = "";
             foreach (var item in guild.Roles.OrderByDescending(x => x.Position))
             {
-                if (!item.IsEveryone && !ulong.TryParse(item.Name, out var id)) 
+                if (!item.IsEveryone && !ulong.TryParse(item.Name, out var id))
                     roles += item.Mention + " ";
             }
 
@@ -327,7 +343,7 @@ namespace Sanakan.Services
                 if (channel != null)
                 {
                     msg = await channel.GetMessageAsync(id);
-                    if (msg != null) 
+                    if (msg != null)
                         break;
                 }
 
