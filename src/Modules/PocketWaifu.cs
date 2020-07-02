@@ -558,6 +558,7 @@ namespace Sanakan.Modules
                 {
                     switch (item.Type)
                     {
+                        case ItemType.FigureSkeleton:
                         case ItemType.IncreaseExpBig:
                         case ItemType.IncreaseExpSmall:
                         case ItemType.CardParamsReRoll:

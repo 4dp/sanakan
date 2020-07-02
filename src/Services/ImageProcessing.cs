@@ -805,7 +805,7 @@ namespace Sanakan.Services
 
             if (card.FromFigure)
             {
-                borderStr = $"./Pictures/PW//CG/{card.Quality}/border.png";
+                borderStr = $"./Pictures/PW//CG/{card.Quality}/Border.png";
                 dereStr = $"./Pictures/PW//CG/{card.Quality}/Dere/{card.Dere}.png";
             }
 
@@ -854,11 +854,49 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(337, 603)));
         }
 
+        private void ApplyDeltaStats(Image<Rgba32> image, Card card)
+        {
+            var hpFont = new Font(_latoBold, 34);
+            var adFont = new Font(_latoBold, 26);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            using (var tmp = new Image<Rgba32>(image.Width, image.Height))
+            {
+                using (var backBorder = Image.Load($"./Pictures/PW//CG/{card.Quality}/BorderBack.png"))
+                {
+                    tmp.Mutate(x => x.DrawImage(backBorder, new Point(0), 1));
+                    tmp.Mutate(x => x.DrawImage(image, new Point(0), 1));
+
+                    var gc = new GraphicsOptions{ AlphaCompositionMode = PixelAlphaCompositionMode.Clear };
+                    var sh = new Rectangle(0, 0, image.Width, image.Height);
+
+                    image.Mutate(x => x.Fill(gc, Rgba32.Aqua, sh));
+                    image.Mutate(x => x.DrawImage(tmp, new Point(0), 1));
+                }
+            }
+
+            using (var hpImg = new Image<Rgba32>(120, 40))
+            {
+                hpImg.Mutate(x => x.DrawText($"{hp}", hpFont, Rgba32.FromHex("#356231"), new Point(1)));
+                hpImg.Mutate(x => x.Rotate(-27));
+
+                image.Mutate(x => x.DrawImage(hpImg, new Point(333, 490), 1));
+            }
+
+            image.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#78261a"), new Point(62, 600)));
+            image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(352, 600)));
+        }
+
         private void ApplyUltimateStats(Image<Rgba32> image, Card card)
         {
             switch (card.Quality)
             {
                 case Quality.Alpha: ApplyAlphaStats(image, card);
+                    break;
+                case Quality.Delta: ApplyDeltaStats(image, card);
                     break;
 
                 default:
@@ -933,7 +971,8 @@ namespace Sanakan.Services
 
             using (var chara = await GetCharacterPictureAsync(card.GetImage(), card.FromFigure))
             {
-                image.Mutate(x => x.DrawImage(chara, new Point(card.FromFigure ? 0 : 13), 1));
+                var mov = card.FromFigure ? 0 : 13;
+                image.Mutate(x => x.DrawImage(chara, new Point(mov, mov), 1));
             }
 
             using (var bord = GenerateBorder(card))
@@ -950,7 +989,8 @@ namespace Sanakan.Services
 
             using (var chara = await GetCharacterPictureAsync(card.GetImage(), card.FromFigure))
             {
-                image.Mutate(x => x.DrawImage(chara, new Point(card.FromFigure ? 0 : 13), 1));
+                var mov = card.FromFigure ? 0 : 13;
+                image.Mutate(x => x.DrawImage(chara, new Point(mov, mov), 1));
             }
 
             using (var bord = await LoadCustomBorderAsync(card))
