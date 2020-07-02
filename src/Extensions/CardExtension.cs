@@ -107,21 +107,32 @@ namespace Sanakan.Extensions
         {
             var cardPower = card.GetHealthWithPenalty() * 0.018;
             cardPower += card.GetAttackWithBonus() * 0.019;
-            cardPower += card.GetDefenceWithBonus() * 2.76;
+
+            var normalizedDef = card.GetDefenceWithBonus();
+            if (normalizedDef > 99)
+            {
+                normalizedDef = 99;
+                if (card.FromFigure)
+                {
+                    cardPower += (card.GetDefenceWithBonus() - normalizedDef) * 0.019;
+                }
+            }
+
+            cardPower += normalizedDef * 2.76;
 
             switch (card.Dere)
             {
                 case Dere.Yami:
                 case Dere.Raito:
-                    cardPower += 5;
+                    cardPower += 15;
                     break;
 
                 case Dere.Yato:
-                    cardPower += 10;
+                    cardPower += 20;
                     break;
 
                 case Dere.Tsundere:
-                    cardPower -= 5;
+                    cardPower -= 10;
                     break;
 
                 default:
@@ -206,7 +217,13 @@ namespace Sanakan.Extensions
 
             var percent = card.Affection * 5d / 100d;
             var newHealth = (int)(card.Health + (card.Health * percent));
-            if (newHealth > maxHealth) newHealth = maxHealth;
+            if (card.FromFigure)
+            {
+                newHealth += card.HealthBonus;
+            }
+
+            if (newHealth > maxHealth)
+                newHealth = maxHealth;
 
             if (allowZero)
             {
@@ -271,7 +288,14 @@ namespace Sanakan.Extensions
                 maxAttack = 9999;
 
             var newAttack = card.Attack + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 8);
-            if (newAttack > maxAttack) newAttack = maxAttack;
+            if (card.FromFigure)
+            {
+                newAttack += card.AttackBonus;
+            }
+
+            if (newAttack > maxAttack)
+                newAttack = maxAttack;
+
             return newAttack;
         }
 
@@ -282,7 +306,14 @@ namespace Sanakan.Extensions
                 maxDefence = 9999;
 
             var newDefence = card.Defence + card.RestartCnt;
-            if (newDefence > maxDefence) newDefence = maxDefence;
+            if (card.FromFigure)
+            {
+                newDefence += card.DefenceBonus;
+            }
+
+            if (newDefence > maxDefence)
+                newDefence = maxDefence;
+
             return newDefence;
         }
 
@@ -478,6 +509,10 @@ namespace Sanakan.Extensions
             switch (card.Rarity)
             {
                 case Rarity.SSS:
+                    if (card.FromFigure)
+                    {
+                        return 120 * (int) card.Quality;
+                    }
                     return 1000;
                 case Rarity.SS:
                     return 100;

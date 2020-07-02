@@ -370,9 +370,14 @@ namespace Sanakan.Services.PocketWaifu
             double def2 = enemy.GetDefenceWithBonus();
             if (!enemy.HasImage()) def2 -= def2 * 20 / 100;
             if (def2 < 1) def2 = 1;
-            if (def2 > 99) def2 = 99;
 
-            var realAtk1 = atk1 * (100 - def2) / 100;
+            var realAtk1 = atk1 - def2;
+            if (!target.FromFigure || !enemy.FromFigure)
+            {
+                if (def2 > 99) def2 = 99;
+                realAtk1 = atk1 * (100 - def2) / 100;
+            }
+
             if (enemy.IsWeakTo(target.Dere)) realAtk1 *= 2;
             if (enemy.IsResistTo(target.Dere)) realAtk1 /= 2;
             if (realAtk1 < 1) realAtk1 = 1;
