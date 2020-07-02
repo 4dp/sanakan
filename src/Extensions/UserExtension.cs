@@ -60,6 +60,7 @@ namespace Sanakan.Extensions
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
+                    Figures = new List<Figure>(),
                     Wishes = new List<WishlistObject>(),
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
