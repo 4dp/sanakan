@@ -20,12 +20,17 @@ namespace Sanakan.Database.Models
 
     public enum CardSource
     {
-        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop
+        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop, Figure
     }
 
     public enum StarStyle
     {
         Full, White, Black, Empty, Pig, Snek
+    }
+
+    public enum PreAssembledFigure
+    {
+        No, Megumin, Asuna, Gintoki
     }
 
     public class Card
@@ -58,6 +63,15 @@ namespace Sanakan.Database.Models
         public string CustomBorder { get; set; }
         public double MarketValue { get; set; }
 
+        public int EnhanceCnt { get; set; }
+        public bool FromFigure { get; set; }
+        public Quality Quality { get; set; }
+        public int AttackBonus { get; set; }
+        public int HealthBonus { get; set; }
+        public int DefenceBonus { get; set; }
+        public Quality QualityOnStart { get; set; }
+        public PreAssembledFigure PAS { get; set; }
+
         public virtual ICollection<CardTag> TagList { get; set; }
 
         public virtual CardArenaStats ArenaStats { get; set; }
@@ -73,6 +87,7 @@ namespace Sanakan.Database.Models
                 Unique ? "[U]" : "",
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
+                FromFigure ? "[F]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
 

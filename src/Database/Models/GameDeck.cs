@@ -31,6 +31,8 @@ namespace Sanakan.Database.Models
 
         public virtual ExpContainer ExpContainer { get; set; }
 
+        public virtual ICollection<Figure> Figures { get; set; }
+
         public ulong UserId { get; set; }
         [JsonIgnore]
         public virtual User User { get; set; }

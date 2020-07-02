@@ -60,6 +60,7 @@ namespace Sanakan.Extensions
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     WishlistIsPrivate = false,
+                    Figures = new List<Figure>(),
                     Wishes = new List<WishlistObject>(),
                     PvPStats = new List<CardPvPStats>(),
                     BoosterPacks = new List<BoosterPack>(),
@@ -95,6 +96,8 @@ namespace Sanakan.Extensions
                     SlotMachineGames = 0,
                     WastedTcOnCookies = 0,
                     OpenedBoosterPacks = 0,
+                    WastedPuzzlesOnCards = 0,
+                    WastedPuzzlesOnCookies = 0,
                     OpenedBoosterPacksActivity = 0,
                 },
                 SMConfig = new SlotMachineConfig

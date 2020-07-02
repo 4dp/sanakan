@@ -766,9 +766,13 @@ namespace Sanakan.Services
             return imgBase;
         }
 
-        private async Task<Image<Rgba32>> GetCharacterPictureAsync(string characterUrl)
+        private async Task<Image<Rgba32>> GetCharacterPictureAsync(string characterUrl, bool ultimate)
         {
             var characterImg = Image.Load($"./Pictures/PW/empty.png");
+            if (ultimate)
+            {
+                characterImg = new Image<Rgba32>(475, 667);
+            }
 
             using (var stream = await GetImageFromUrlAsync(characterUrl ?? "http://cdn.shinden.eu/cdn1/other/placeholders/title/225x350.jpg", true))
             {
@@ -796,9 +800,18 @@ namespace Sanakan.Services
 
         private Image<Rgba32> GenerateBorder(Card card)
         {
-            var img = Image.Load($"./Pictures/PW/{card.Rarity}.png");
+            var borderStr = $"./Pictures/PW/{card.Rarity}.png";
+            var dereStr = $"./Pictures/PW/{card.Dere}.png";
 
-            using (var dere = Image.Load($"./Pictures/PW/{card.Dere}.png"))
+            if (card.FromFigure)
+            {
+                borderStr = $"./Pictures/PW//CG/{card.Quality}/border.png";
+                dereStr = $"./Pictures/PW//CG/{card.Quality}/Dere/{card.Dere}.png";
+            }
+
+            var img = Image.Load(borderStr);
+
+            using (var dere = Image.Load(dereStr))
             {
                 img.Mutate(x => x.DrawImage(dere, new Point(0, 0), 1));
             }
@@ -817,6 +830,39 @@ namespace Sanakan.Services
                     return GenerateBorder(card);
 
                 return  Image.Load(stream);
+            }
+        }
+
+        private void ApplyAlphaStats(Image<Rgba32> image, Card card)
+        {
+            var adFont = new Font(_latoBold, 36);
+            var hpFont = new Font(_latoBold, 32);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            using (var hpImg = new Image<Rgba32>(120, 40))
+            {
+                hpImg.Mutate(x => x.DrawText($"{hp}", hpFont, Rgba32.FromHex("#356231"), new Point(1)));
+                hpImg.Mutate(x => x.Rotate(-18));
+
+                image.Mutate(x => x.DrawImage(hpImg, new Point(320, 528), 1));
+            }
+
+            image.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#522b4d"), new Point(43, 603)));
+            image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(337, 603)));
+        }
+
+        private void ApplyUltimateStats(Image<Rgba32> image, Card card)
+        {
+            switch (card.Quality)
+            {
+                case Quality.Alpha: ApplyAlphaStats(image, card);
+                    break;
+
+                default:
+                    break;
             }
         }
 
@@ -885,9 +931,9 @@ namespace Sanakan.Services
         {
             var image = new Image<Rgba32>(475, 667);
 
-            using (var chara = await GetCharacterPictureAsync(card.GetImage()))
+            using (var chara = await GetCharacterPictureAsync(card.GetImage(), card.FromFigure))
             {
-                image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
+                image.Mutate(x => x.DrawImage(chara, new Point(card.FromFigure ? 0 : 13), 1));
             }
 
             using (var bord = GenerateBorder(card))
@@ -902,14 +948,19 @@ namespace Sanakan.Services
         {
             var image = new Image<Rgba32>(475, 667);
 
-            using (var chara = await GetCharacterPictureAsync(card.GetImage()))
+            using (var chara = await GetCharacterPictureAsync(card.GetImage(), card.FromFigure))
             {
-                image.Mutate(x => x.DrawImage(chara, new Point(13, 13), 1));
+                image.Mutate(x => x.DrawImage(chara, new Point(card.FromFigure ? 0 : 13), 1));
             }
 
             using (var bord = await LoadCustomBorderAsync(card))
             {
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
+            }
+
+            if (card.CustomBorder == null && card.FromFigure)
+            {
+                ApplyUltimateStats(image, card);
             }
 
             return image;
@@ -975,7 +1026,14 @@ namespace Sanakan.Services
         {
             var image = await GetWaifuCardNoStatsAsync(card);
 
-            ApplyStats(image, card, !card.HasImage());
+            if (card.FromFigure)
+            {
+                ApplyUltimateStats(image, card);
+            }
+            else
+            {
+                ApplyStats(image, card, !card.HasImage());
+            }
 
             return image;
         }
