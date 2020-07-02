@@ -26,7 +26,14 @@ namespace Sanakan.Database.Models
         IncreaseExpBig,
         ChangeStarType,
         SetCustomBorder,
-        ChangeCardImage
+        ChangeCardImage,
+
+        PreAssembledMegumin,
+        PreAssembledGintoki,
+        PreAssembledAsuna,
+
+        FigureSkeleton,
+        FigureUniversalPart,
     }
 
     public class Item
@@ -35,6 +42,7 @@ namespace Sanakan.Database.Models
         public long Count { get; set; }
         public string Name { get; set; }
         public ItemType Type { get; set; }
+        public Quality Quality { get; set; }
 
         public ulong GameDeckId { get; set; }
         [JsonIgnore]

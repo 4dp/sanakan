@@ -246,6 +246,17 @@ namespace Sanakan.Modules
                     itemCount = 1;
                     break;
 
+                case ItemType.PreAssembledAsuna:
+                case ItemType.PreAssembledGintoki:
+                case ItemType.PreAssembledMegumin:
+                    if (itemCount > 1)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} można kupić tylko jeden taki przedmiot.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+
                 default:
                     if (itemCount < 1) itemCount = 1;
                     break;
@@ -282,12 +293,25 @@ namespace Sanakan.Modules
 
                     bUser.Stats.WastedPuzzlesOnCards += realCost;
                 }
+                else if (thisItem.Item.Type.IsPreAssembledFigure())
+                {
+                    if (bUser.GameDeck.Figures.Any(x => x.PAS == thisItem.Item.Type.ToPASType()))
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} masz już taką figurke.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var figure = thisItem.Item.Type.ToPAFigure();
+                    if (figure != null) bUser.GameDeck.Figures.Add(figure);
+
+                    bUser.Stats.WastedPuzzlesOnCards += realCost;
+                }
                 else
                 {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type);
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type && x.Quality == thisItem.Item.Quality);
                     if (inUserItem == null)
                     {
-                        inUserItem = thisItem.Item.Type.ToItem(itemCount);
+                        inUserItem = thisItem.Item.Type.ToItem(itemCount, thisItem.Item.Quality);
                         bUser.GameDeck.Items.Add(inUserItem);
                     }
                     else inUserItem.Count += itemCount;
@@ -367,6 +391,17 @@ namespace Sanakan.Modules
                     itemCount = 1;
                     break;
 
+                case ItemType.PreAssembledAsuna:
+                case ItemType.PreAssembledGintoki:
+                case ItemType.PreAssembledMegumin:
+                    if (itemCount > 1)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} można kupić tylko jeden taki przedmiot.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+
                 default:
                     if (itemCount < 1) itemCount = 1;
                     break;
@@ -404,12 +439,25 @@ namespace Sanakan.Modules
 
                     bUser.Stats.WastedTcOnCards += realCost;
                 }
+                else if (thisItem.Item.Type.IsPreAssembledFigure())
+                {
+                    if (bUser.GameDeck.Figures.Any(x => x.PAS == thisItem.Item.Type.ToPASType()))
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} masz już taką figurke.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var figure = thisItem.Item.Type.ToPAFigure();
+                    if (figure != null) bUser.GameDeck.Figures.Add(figure);
+
+                    bUser.Stats.WastedTcOnCards += realCost;
+                }
                 else
                 {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type);
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type && x.Quality == thisItem.Item.Quality);
                     if (inUserItem == null)
                     {
-                        inUserItem = thisItem.Item.Type.ToItem(itemCount);
+                        inUserItem = thisItem.Item.Type.ToItem(itemCount, thisItem.Item.Quality);
                         bUser.GameDeck.Items.Add(inUserItem);
                     }
                     else inUserItem.Count += itemCount;

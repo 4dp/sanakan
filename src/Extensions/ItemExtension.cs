@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using Sanakan.Database.Models;
 
@@ -53,14 +54,25 @@ namespace Sanakan.Extensions
                     return "Pozwala ustawić ramkę karcie kiedy jest wyświetlana w profilu.";
                 case ItemType.ChangeCardImage:
                     return "Pozwala wybrać inny obrazek z shindena.";
+                case ItemType.PreAssembledAsuna:
+                case ItemType.PreAssembledGintoki:
+                case ItemType.PreAssembledMegumin:
+                    return "Gotowy szkielet nie wymagający użycia karty SSS.";
+                case ItemType.FigureSkeleton:
+                    return $"Szkielet pozwalający rozpoczęcie tworzenia figurki.";
+                case ItemType.FigureUniversalPart:
+                    return $"Uniwersalna część, którą można zamontować jako dowolną część ciała figurki.";
 
                 default:
                     return "Brak opisu.";
             }
         }
 
-        public static string Name(this ItemType type)
+        public static string Name(this ItemType type, string quality = "")
         {
+            if (!string.IsNullOrEmpty(quality))
+                quality = $" {quality}";
+
             switch (type)
             {
                 case ItemType.AffectionRecoveryGreat:
@@ -105,6 +117,16 @@ namespace Sanakan.Extensions
                     return "Nożyczki";
                 case ItemType.ChangeCardImage:
                     return "Plastelina";
+                case ItemType.PreAssembledAsuna:
+                    return "Szkielet Asuny (SAO)";
+                case ItemType.PreAssembledGintoki:
+                    return "Szkielet Gintokiego (Gintama)";
+                case ItemType.PreAssembledMegumin:
+                    return "Szkielet Megumin (Konosuba)";
+                case ItemType.FigureSkeleton:
+                    return $"Szkielet{quality}";
+                case ItemType.FigureUniversalPart:
+                    return $"Uniwersalna część figurki{quality}";
 
                 default:
                     return "Brak";
@@ -159,6 +181,20 @@ namespace Sanakan.Extensions
                 case ItemType.RandomNormalBoosterPackA:
                 case ItemType.RandomNormalBoosterPackS:
                 case ItemType.RandomNormalBoosterPackSS:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsPreAssembledFigure(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.PreAssembledAsuna:
+                case ItemType.PreAssembledGintoki:
+                case ItemType.PreAssembledMegumin:
                     return true;
 
                 default:
@@ -261,13 +297,65 @@ namespace Sanakan.Extensions
             return ex;
         }
 
-        public static Item ToItem(this ItemType type, long count = 1)
+        public static Item ToItem(this ItemType type, long count = 1, Quality quality = Quality.Broken)
         {
             return new Item
             {
-                Name = type.Name(),
+                Name = type.Name(quality.ToName()),
+                Quality = quality,
                 Count = count,
                 Type = type,
+            };
+        }
+
+        public static PreAssembledFigure ToPASType(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.PreAssembledAsuna:
+                    return PreAssembledFigure.Asuna;
+                case ItemType.PreAssembledGintoki:
+                    return PreAssembledFigure.Gintoki;
+                case ItemType.PreAssembledMegumin:
+                    return PreAssembledFigure.Megumin;
+
+                default:
+                    return PreAssembledFigure.No;
+            }
+        }
+
+        public static Figure ToPAFigure(this ItemType type)
+        {
+            if (!type.IsPreAssembledFigure())
+                return null;
+
+            var pas = type.ToPASType();
+
+            return new Figure
+            {
+                PAS = pas,
+                ExpCnt = 0,
+                PartExp = 0,
+                Health = 300,
+                RestartCnt = 0,
+                IsFocus = false,
+                IsComplete = false,
+                Dere = Dere.Yandere,
+                Title = pas.GetTitleName(),
+                BodyQuality = Quality.Alpha,
+                HeadQuality = Quality.Alpha,
+                Name = pas.GetCharacterName(),
+                CompletionDate = DateTime.Now,
+                FocusedPart = FigurePart.Head,
+                ClothesQuality = Quality.Alpha,
+                LeftArmQuality = Quality.Alpha,
+                LeftLegQuality = Quality.Alpha,
+                RightArmQuality = Quality.Alpha,
+                RightLegQuality = Quality.Alpha,
+                SkeletonQuality = Quality.Alpha,
+                Character = pas.GetCharacterId(),
+                Attack = Rarity.SSS.GetAttackMin(),
+                Defence = Rarity.SSS.GetDefenceMin(),
             };
         }
 
