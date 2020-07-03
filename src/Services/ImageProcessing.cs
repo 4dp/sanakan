@@ -856,13 +856,16 @@ namespace Sanakan.Services
 
         private void ApplyGammaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 34);
+            var aphFont = new Font(_latoBold, 37);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
             int atk = card.GetAttackWithBonus();
 
-            // TODO: print stats
+            // TODO: center numbers
+            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#a90079"), new Point(196, 495)));
+            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#19615e"), new Point(282, 545)));
+            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#318b19"), new Point(90, 545)));
         }
 
         private void ApplyDeltaStats(Image<Rgba32> image, Card card)
@@ -897,6 +900,7 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(hpImg, new Point(333, 490), 1));
             }
 
+            // TODO: center numbers
             image.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#78261a"), new Point(62, 600)));
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(352, 600)));
         }
