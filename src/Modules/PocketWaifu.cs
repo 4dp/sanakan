@@ -477,9 +477,9 @@ namespace Sanakan.Modules
 
         [Command("użyj")]
         [Alias("uzyj", "use")]
-        [Summary("używa przedmiot na karcie")]
+        [Summary("używa przedmiot na karcie lub nie")]
         [Remarks("1 4212 2"), RequireWaifuCommandChannel]
-        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid, [Summary("liczba przedmiotów/link do obrazka/typ gwiazdki")]string detail = "1")
+        public async Task UseItemAsync([Summary("nr przedmiotu")]int itemNumber, [Summary("WID")]ulong wid = 0, [Summary("liczba przedmiotów/link do obrazka/typ gwiazdki")]string detail = "1")
         {
             var session = new CraftingSession(Context.User, _waifu, _config);
             if (_session.SessionExist(session))
@@ -547,14 +547,15 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                bool noCardOperation = item.Type.CanUseWithoutCard();
                 var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
-                if (card == null)
+                if (card == null && !noCardOperation)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (card.FromFigure)
+                if (!noCardOperation && card.FromFigure)
                 {
                     switch (item.Type)
                     {
@@ -573,13 +574,15 @@ namespace Sanakan.Modules
                 }
 
                 double affectionInc = 0;
-                var textRelation = card.GetAffectionString();
-                string cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
+                var bonusFromQ = 0.1 * (int) item.Quality;
+                var cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
+                var textRelation = noCardOperation ? "" : card.GetAffectionString();
+                var cardString = noCardOperation ? "" : " na " + card.GetString(false, false, true);
                 var embed = new EmbedBuilder
                 {
                     Color = EMType.Bot.Color(),
                     Author = new EmbedAuthorBuilder().WithUser(Context.User),
-                    Description = $"Użyto _{item.Name}_ {cnt} na {card.GetString(false, false, true)}\n\n"
+                    Description = $"Użyto _{item.Name}_ {cnt}{cardString}\n\n"
                 };
 
                 switch (item.Type)
@@ -609,14 +612,20 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.IncreaseExpSmall:
-                        card.ExpCnt += 1.5 * itemCnt;
+                        var exS = 1.5 * itemCnt;
+                        exS += exS * bonusFromQ;
+
+                        card.ExpCnt += exS;
                         affectionInc = 0.15 * itemCnt;
                         bUser.GameDeck.Karma += 0.1 * itemCnt;
                         embed.Description += "Twoja karta otrzymała odrobinę punktów doświadczenia!";
                         break;
 
                     case ItemType.IncreaseExpBig:
-                        card.ExpCnt += 5 * itemCnt;
+                        var exB = 5d * itemCnt;
+                        exB += exB * bonusFromQ;
+
+                        card.ExpCnt += exB;
                         affectionInc = 0.25 * itemCnt;
                         bUser.GameDeck.Karma += 0.3 * itemCnt;
                         embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
@@ -791,32 +800,63 @@ namespace Sanakan.Modules
                         embed.Description += $"Relacja wynosi: `{card.Affection.ToString("F")}`";
                         break;
 
+                    case ItemType.FigureSkeleton:
+                        if (card.Rarity != Rarity.SSS)
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} karta musi być rangi **SSS**.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        bUser.GameDeck.Karma -= 1;
+                        var figure = item.ToFigure(card);
+                        if (figure != null)
+                        {
+                            bUser.GameDeck.Figures.Add(figure);
+                            bUser.GameDeck.Cards.Remove(card);
+                        }
+                        embed.Description += $"Rozpoczęto tworzenie figurki.";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    // noCardOperation
+                    case ItemType.FigureUniversalPart:
+                        // TODO:: add item
+                        embed.Description += $"Dodano część do figurki.";
+                        break;
+
                     default:
                         await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie powinno tutaj być!".ToEmbedMessage(EMType.Error).Build());
                         return;
                 }
 
-                if (card.Character == bUser.GameDeck.Waifu)
+                if (!noCardOperation && card.Character == bUser.GameDeck.Waifu)
                     affectionInc *= 1.2;
 
-                var response = await _shclient.GetCharacterInfoAsync(card.Character);
-                if (response.IsSuccessStatusCode())
+                if (!noCardOperation)
                 {
-                    if (response.Body?.Points != null)
+                    var response = await _shclient.GetCharacterInfoAsync(card.Character);
+                    if (response.IsSuccessStatusCode())
                     {
-                        var ordered = response.Body.Points.OrderByDescending(x => x.Points);
-                        if (ordered.Any(x => x.Name == embed.Author.Name))
-                            affectionInc *= 1.2;
+                        if (response.Body?.Points != null)
+                        {
+                            var ordered = response.Body.Points.OrderByDescending(x => x.Points);
+                            if (ordered.Any(x => x.Name == embed.Author.Name))
+                                affectionInc *= 1.2;
+                        }
                     }
                 }
 
-                if (card.Dere == Dere.Tsundere)
+                if (!noCardOperation && card.Dere == Dere.Tsundere)
                     affectionInc *= 1.2;
 
-                item.Count -= itemCnt;
-                card.Affection += affectionInc;
+                if (item.Type.HasDifferentQualities())
+                    affectionInc += affectionInc * bonusFromQ;
 
-                var newTextRelation = card.GetAffectionString();
+                item.Count -= itemCnt;
+
+                if (!noCardOperation)
+                    card.Affection += affectionInc;
+
+                var newTextRelation = noCardOperation ? "" : card.GetAffectionString();
                 if (textRelation != newTextRelation)
                     embed.Description += $"\nNowa relacja to *{newTextRelation}*.";
 

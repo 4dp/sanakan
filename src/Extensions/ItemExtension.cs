@@ -76,11 +76,11 @@ namespace Sanakan.Extensions
             switch (type)
             {
                 case ItemType.AffectionRecoveryGreat:
-                    return "Wielka fontanna czekolady";
+                    return $"Wielka fontanna czekolady{quality}";
                 case ItemType.AffectionRecoveryBig:
-                    return "Tort czekoladowy";
+                    return $"Tort czekoladowy{quality}";
                 case ItemType.AffectionRecoveryNormal:
-                    return "Ciasto truskawkowe";
+                    return $"Ciasto truskawkowe{quality}";
                 case ItemType.BetterIncreaseUpgradeCnt:
                     return "Kropla twojej krwi";
                 case ItemType.IncreaseUpgradeCnt:
@@ -94,7 +94,7 @@ namespace Sanakan.Extensions
                 case ItemType.RandomTitleBoosterPackSingleE:
                     return "Pakiet losowych kart z tytułu";
                 case ItemType.AffectionRecoverySmall:
-                    return "Banan w czekoladzie";
+                    return $"Banan w czekoladzie{quality}";
                 case ItemType.RandomNormalBoosterPackB:
                     return "Fioletowy pakiet losowych kart";
                 case ItemType.RandomNormalBoosterPackA:
@@ -108,9 +108,9 @@ namespace Sanakan.Extensions
                 case ItemType.SetCustomImage:
                     return "Skalpel";
                 case ItemType.IncreaseExpSmall:
-                    return "Mleko truskawkowe";
+                    return $"Mleko truskawkowe{quality}";
                 case ItemType.IncreaseExpBig:
-                    return "Gorąca czekolada";
+                    return $"Gorąca czekolada{quality}";
                 case ItemType.ChangeStarType:
                     return "Stempel";
                 case ItemType.SetCustomBorder:
@@ -130,6 +130,37 @@ namespace Sanakan.Extensions
 
                 default:
                     return "Brak";
+            }
+        }
+
+        public static bool CanUseWithoutCard(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.FigureUniversalPart:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool HasDifferentQualities(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.AffectionRecoveryGreat:
+                case ItemType.AffectionRecoveryBig:
+                case ItemType.AffectionRecoveryNormal:
+                case ItemType.AffectionRecoverySmall:
+                case ItemType.IncreaseExpSmall:
+                case ItemType.IncreaseExpBig:
+                case ItemType.FigureSkeleton:
+                case ItemType.FigureUniversalPart:
+                    return true;
+
+                default:
+                    return false;
             }
         }
 
@@ -299,6 +330,9 @@ namespace Sanakan.Extensions
 
         public static Item ToItem(this ItemType type, long count = 1, Quality quality = Quality.Broken)
         {
+            if (!type.HasDifferentQualities() && quality != Quality.Broken)
+                quality = Quality.Broken;
+
             return new Item
             {
                 Name = type.Name(quality.ToName()),
@@ -322,6 +356,44 @@ namespace Sanakan.Extensions
                 default:
                     return PreAssembledFigure.No;
             }
+        }
+
+        public static Figure ToFigure(this Item item, Card card)
+        {
+            if (item.Type != ItemType.FigureSkeleton || card.Rarity != Rarity.SSS)
+                return null;
+
+            var maxExp = card.ExpToUpgrade();
+            var expToMove = card.ExpCnt;
+            if (expToMove > maxExp)
+                expToMove = maxExp;
+
+            return new Figure
+            {
+                PartExp = 0,
+                IsFocus = false,
+                Dere = card.Dere,
+                Name = card.Name,
+                IsComplete = false,
+                ExpCnt = expToMove,
+                Title = card.Title,
+                Health = card.Health,
+                Attack = card.Attack,
+                Defence = card.Defence,
+                Character = card.Character,
+                PAS = PreAssembledFigure.No,
+                BodyQuality = Quality.Broken,
+                RestartCnt = card.RestartCnt,
+                HeadQuality = Quality.Broken,
+                CompletionDate = DateTime.Now,
+                FocusedPart = FigurePart.Head,
+                SkeletonQuality = item.Quality,
+                ClothesQuality = Quality.Broken,
+                LeftArmQuality = Quality.Broken,
+                LeftLegQuality = Quality.Broken,
+                RightArmQuality = Quality.Broken,
+                RightLegQuality = Quality.Broken,
+            };
         }
 
         public static Figure ToPAFigure(this ItemType type)
