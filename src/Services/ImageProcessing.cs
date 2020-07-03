@@ -854,6 +854,17 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(337, 603)));
         }
 
+        private void ApplyGammaStats(Image<Rgba32> image, Card card)
+        {
+            var aphFont = new Font(_latoBold, 34);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            // TODO: print stats
+        }
+
         private void ApplyDeltaStats(Image<Rgba32> image, Card card)
         {
             var hpFont = new Font(_latoBold, 34);
@@ -895,6 +906,8 @@ namespace Sanakan.Services
             switch (card.Quality)
             {
                 case Quality.Alpha: ApplyAlphaStats(image, card);
+                    break;
+                case Quality.Gamma: ApplyGammaStats(image, card);
                     break;
                 case Quality.Delta: ApplyDeltaStats(image, card);
                     break;
