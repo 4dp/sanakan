@@ -1552,7 +1552,7 @@ namespace Sanakan.Modules
                         itmQu = _waifu.RandomizeItemQualityFromMarket();
                     }
 
-                    var item = _waifu.RandomizeItemFromMarket().ToItem(1, itmQu);
+                    var item = itmType.ToItem(1, itmQu);
                     var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                     if (thisItem == null)
                     {
@@ -1651,14 +1651,14 @@ namespace Sanakan.Modules
                 string reward = "";
                 for (int i = 0; i < itemCnt; i++)
                 {
-                    var itmType = _waifu.RandomizeItemFromMarket();
+                    var itmType = _waifu.RandomizeItemFromBlackMarket();
                     var itmQu = Quality.Broken;
                     if (itmType.HasDifferentQualities())
                     {
                         itmQu = _waifu.RandomizeItemQualityFromMarket();
                     }
 
-                    var item = _waifu.RandomizeItemFromMarket().ToItem(1, itmQu);
+                    var item = itmType.ToItem(1, itmQu);
                     var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                     if (thisItem == null)
                     {

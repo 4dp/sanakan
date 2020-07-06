@@ -19,7 +19,6 @@ namespace Sanakan.Extensions
                 case Quality.Sigma:  return "Σ";
                 case Quality.Omega:  return "Ω";
 
-
                 default:
                 case Quality.Broken:
                     return "";
