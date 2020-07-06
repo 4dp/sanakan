@@ -21,6 +21,7 @@ namespace Sanakan.Services
 {
     public class ImageProcessing
     {
+        private FontFamily _digital = new FontCollection().Install("Fonts/Digital.ttf");
         private FontFamily _latoBold = new FontCollection().Install("Fonts/Lato-Bold.ttf");
         private FontFamily _latoLight = new FontCollection().Install("Fonts/Lato-Light.ttf");
         private FontFamily _latoRegular = new FontCollection().Install("Fonts/Lato-Regular.ttf");
@@ -890,6 +891,20 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(352, 600)));
         }
 
+        private void ApplyZetaStats(Image<Rgba32> image, Card card)
+        {
+            var aphFont = new Font(_digital, 28);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80 };
+            image.Mutate(x => x.DrawText(ops, atk.ToString("D4"), aphFont, Rgba32.FromHex("#da4e00"), new Point(316, 538)));
+            image.Mutate(x => x.DrawText(ops, def.ToString("D4"), aphFont, Rgba32.FromHex("#00a4ff"), new Point(316, 565)));
+            image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex("#40ff40"), new Point(302, 593)));
+        }
+
         private void ApplyLambdaStats(Image<Rgba32> image, Card card)
         {
             var aphFont = new Font(_latoBold, 28);
@@ -926,6 +941,8 @@ namespace Sanakan.Services
                 case Quality.Gamma: ApplyGammaStats(image, card);
                     break;
                 case Quality.Delta: ApplyDeltaStats(image, card);
+                    break;
+                case Quality.Zeta: ApplyZetaStats(image, card);
                     break;
                 case Quality.Lambda: ApplyLambdaStats(image, card);
                     break;
