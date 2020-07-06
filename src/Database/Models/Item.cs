@@ -34,6 +34,13 @@ namespace Sanakan.Database.Models
 
         FigureSkeleton,
         FigureUniversalPart,
+        FigureHeadPart,
+        FigureBodyPart,
+        FigureLeftArmPart,
+        FigureRightArmPart,
+        FigureLeftLegPart,
+        FigureRightLegPart,
+        FigureClothesPart
     }
 
     public class Item

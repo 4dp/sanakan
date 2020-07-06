@@ -555,6 +555,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var activeFigure = bUser.GameDeck.Figures.FirstOrDefault(x => x.IsFocus);
+                if (activeFigure == null && noCardOperation)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz aktywnej figurki!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 if (!noCardOperation && card.FromFigure)
                 {
                     switch (item.Type)
@@ -573,6 +580,7 @@ namespace Sanakan.Modules
                     }
                 }
 
+                bool consumeItem = true;
                 double affectionInc = 0;
                 var bonusFromQ = 0.1 * (int) item.Quality;
                 var cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
@@ -696,6 +704,7 @@ namespace Sanakan.Modules
                         }
                         card.CustomImage = detail;
                         affectionInc = 0.5 * itemCnt;
+                        consumeItem = !card.FromFigure;
                         bUser.GameDeck.Karma += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek. Pamiętaj jednak że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -817,9 +826,29 @@ namespace Sanakan.Modules
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 
-                    // noCardOperation
+                    case ItemType.FigureHeadPart:
+                    case ItemType.FigureBodyPart:
+                    case ItemType.FigureClothesPart:
+                    case ItemType.FigureLeftArmPart:
+                    case ItemType.FigureLeftLegPart:
+                    case ItemType.FigureRightArmPart:
+                    case ItemType.FigureRightLegPart:
                     case ItemType.FigureUniversalPart:
-                        // TODO:: add item
+                        if (!activeFigure.CanAddPart(item))
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} część którą próbujesz dodać ma zbyt niską jakość.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (!activeFigure.HasEnoughPointsToAddPart(item))
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} aktywowana część ma zbyt małą ilość punktów konstrukcji, wymagana to {activeFigure.ConstructionPointsToInstall(item)}.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (!activeFigure.AddPart(item))
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} coś poszło nie tak.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
                         embed.Description += $"Dodano część do figurki.";
                         break;
 
@@ -851,7 +880,8 @@ namespace Sanakan.Modules
                 if (item.Type.HasDifferentQualities())
                     affectionInc += affectionInc * bonusFromQ;
 
-                item.Count -= itemCnt;
+                if (consumeItem)
+                    item.Count -= itemCnt;
 
                 if (!noCardOperation)
                     card.Affection += affectionInc;
@@ -1515,8 +1545,15 @@ namespace Sanakan.Modules
                 string reward = "";
                 for (int i = 0; i < itemCnt; i++)
                 {
-                    var item = _waifu.RandomizeItemFromMarket().ToItem();
-                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                    var itmType = _waifu.RandomizeItemFromMarket();
+                    var itmQu = Quality.Broken;
+                    if (itmType.HasDifferentQualities())
+                    {
+                        itmQu = _waifu.RandomizeItemQualityFromMarket();
+                    }
+
+                    var item = _waifu.RandomizeItemFromMarket().ToItem(1, itmQu);
+                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                     if (thisItem == null)
                     {
                         thisItem = item;
@@ -1614,8 +1651,15 @@ namespace Sanakan.Modules
                 string reward = "";
                 for (int i = 0; i < itemCnt; i++)
                 {
-                    var item = _waifu.RandomizeItemFromBlackMarket().ToItem();
-                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                    var itmType = _waifu.RandomizeItemFromMarket();
+                    var itmQu = Quality.Broken;
+                    if (itmType.HasDifferentQualities())
+                    {
+                        itmQu = _waifu.RandomizeItemQualityFromMarket();
+                    }
+
+                    var item = _waifu.RandomizeItemFromMarket().ToItem(1, itmQu);
+                    var thisItem = botuser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                     if (thisItem == null)
                     {
                         thisItem = item;
@@ -2727,7 +2771,7 @@ namespace Sanakan.Modules
                         if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
                         {
                             var item = _waifu.RandomizeItemFromFight().ToItem();
-                            var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                            var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                             if (thisItem == null)
                             {
                                 thisItem = item;
@@ -2897,7 +2941,7 @@ namespace Sanakan.Modules
                     botUser.GameDeck.ItemsDropped += (uint)items.Count;
                     foreach (var item in items)
                     {
-                        var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                        var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                         if (thisItem == null)
                         {
                             thisItem = item;

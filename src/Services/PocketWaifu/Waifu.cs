@@ -283,6 +283,19 @@ namespace Sanakan.Services.PocketWaifu
             return ItemType.AffectionRecoverySmall;
         }
 
+        public Quality RandomizeItemQualityFromMarket()
+        {
+            var num = Fun.GetRandomValue(10000);
+            if (num < 5) return Quality.Sigma;
+            if (num < 20) return Quality.Lambda;
+            if (num < 60) return Quality.Zeta;
+            if (num < 200) return Quality.Delta;
+            if (num < 500) return Quality.Gamma;
+            if (num < 1000) return Quality.Beta;
+            if (num < 2000) return Quality.Alpha;
+            return Quality.Broken;
+        }
+
         public ItemWithCost[] GetItemsWithCost()
         {
             return new ItemWithCost[]

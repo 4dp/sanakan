@@ -64,5 +64,85 @@ namespace Sanakan.Extensions
                     return "";
             }
         }
+
+        public static int ConstructionPointsToInstall(this Figure figure, Item part)
+        {
+            return (80 * (int) part.Quality) + (20 * (int) figure.SkeletonQuality);
+        }
+
+        public static Quality GetQualityOfFocusedPart(this Figure figure)
+        {
+            switch (figure.FocusedPart)
+            {
+                case FigurePart.Body:
+                    return figure.BodyQuality;
+                case FigurePart.Clothes:
+                    return figure.ClothesQuality;
+                case FigurePart.Head:
+                    return figure.HeadQuality;
+                case FigurePart.LeftArm:
+                    return figure.LeftArmQuality;
+                case FigurePart.LeftLeg:
+                    return figure.LeftLegQuality;
+                case FigurePart.RightArm:
+                    return figure.RightArmQuality;
+                case FigurePart.RightLeg:
+                    return figure.RightLegQuality;
+
+                default:
+                    return Quality.Broken;
+            }
+        }
+
+        public static bool CanAddPart(this Figure fig, Item part)
+        {
+            return part.Quality >= fig.SkeletonQuality && fig.GetQualityOfFocusedPart() == Quality.Broken;
+        }
+
+        public static bool HasEnoughPointsToAddPart(this Figure fig, Item part)
+        {
+            return fig.PartExp >= fig.ConstructionPointsToInstall(part);
+        }
+
+        public static bool AddPart(this Figure figure, Item part)
+        {
+            if (!figure.CanAddPart(part) || !figure.HasEnoughPointsToAddPart(part))
+                return false;
+
+            var partType = part.Type.GetPartType();
+            if (partType != figure.FocusedPart && partType != FigurePart.All)
+                return false;
+
+            switch (figure.FocusedPart)
+            {
+                case FigurePart.Body:
+                    figure.BodyQuality = part.Quality;
+                    break;
+                case FigurePart.Clothes:
+                    figure.ClothesQuality = part.Quality;
+                    break;
+                case FigurePart.Head:
+                    figure.HeadQuality = part.Quality;
+                    break;
+                case FigurePart.LeftArm:
+                    figure.LeftArmQuality = part.Quality;
+                    break;
+                case FigurePart.LeftLeg:
+                    figure.LeftLegQuality = part.Quality;
+                    break;
+                case FigurePart.RightArm:
+                    figure.RightArmQuality = part.Quality;
+                    break;
+                case FigurePart.RightLeg:
+                    figure.RightLegQuality = part.Quality;
+                    break;
+
+                default:
+                    return false;
+            }
+
+            figure.PartExp = 0;
+            return true;
+        }
     }
 }

@@ -62,6 +62,20 @@ namespace Sanakan.Extensions
                     return $"Szkielet pozwalający rozpoczęcie tworzenia figurki.";
                 case ItemType.FigureUniversalPart:
                     return $"Uniwersalna część, którą można zamontować jako dowolną część ciała figurki.";
+                case ItemType.FigureHeadPart:
+                    return $"Część, którą można zamontować jako głowę figurki.";
+                case ItemType.FigureBodyPart:
+                    return $"Część, którą można zamontować jako tułów figurki.";
+                case ItemType.FigureClothesPart:
+                    return $"Część, którą można zamontować jako ciuchy figurki.";
+                case ItemType.FigureLeftArmPart:
+                    return $"Część, którą można zamontować jako lewą rękę figurki.";
+                case ItemType.FigureLeftLegPart:
+                    return $"Część, którą można zamontować jako lewą nogę figurki.";
+                case ItemType.FigureRightArmPart:
+                    return $"Część, którą można zamontować jako prawą rękę figurki.";
+                case ItemType.FigureRightLegPart:
+                    return $"Część, którą można zamontować jako prawą nogę figurki.";
 
                 default:
                     return "Brak opisu.";
@@ -127,6 +141,20 @@ namespace Sanakan.Extensions
                     return $"Szkielet{quality}";
                 case ItemType.FigureUniversalPart:
                     return $"Uniwersalna część figurki{quality}";
+                case ItemType.FigureHeadPart:
+                    return $"Głowa figurki{quality}";
+                case ItemType.FigureBodyPart:
+                    return $"Tułów figurki{quality}";
+                case ItemType.FigureClothesPart:
+                    return $"Ciuchy figurki{quality}";
+                case ItemType.FigureLeftArmPart:
+                    return $"Lewa ręka{quality}";
+                case ItemType.FigureLeftLegPart:
+                    return $"Lewa noga{quality}";
+                case ItemType.FigureRightArmPart:
+                    return $"Prawa ręka{quality}";
+                case ItemType.FigureRightLegPart:
+                    return $"Prawa noga{quality}";
 
                 default:
                     return "Brak";
@@ -137,11 +165,44 @@ namespace Sanakan.Extensions
         {
             switch (type)
             {
+                case ItemType.FigureHeadPart:
+                case ItemType.FigureBodyPart:
+                case ItemType.FigureClothesPart:
+                case ItemType.FigureLeftArmPart:
+                case ItemType.FigureLeftLegPart:
+                case ItemType.FigureRightArmPart:
+                case ItemType.FigureRightLegPart:
                 case ItemType.FigureUniversalPart:
                     return true;
 
                 default:
                     return false;
+            }
+        }
+
+        public static FigurePart GetPartType(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.FigureUniversalPart:
+                    return FigurePart.All;
+                case ItemType.FigureHeadPart:
+                    return FigurePart.Head;
+                case ItemType.FigureBodyPart:
+                    return FigurePart.Body;
+                case ItemType.FigureClothesPart:
+                    return FigurePart.Clothes;
+                case ItemType.FigureLeftArmPart:
+                    return FigurePart.LeftArm;
+                case ItemType.FigureLeftLegPart:
+                    return FigurePart.LeftLeg;
+                case ItemType.FigureRightArmPart:
+                    return FigurePart.RightArm;
+                case ItemType.FigureRightLegPart:
+                    return FigurePart.RightLeg;
+
+                default:
+                    return FigurePart.None;
             }
         }
 
@@ -157,6 +218,13 @@ namespace Sanakan.Extensions
                 case ItemType.IncreaseExpBig:
                 case ItemType.FigureSkeleton:
                 case ItemType.FigureUniversalPart:
+                case ItemType.FigureHeadPart:
+                case ItemType.FigureBodyPart:
+                case ItemType.FigureClothesPart:
+                case ItemType.FigureLeftArmPart:
+                case ItemType.FigureLeftLegPart:
+                case ItemType.FigureRightArmPart:
+                case ItemType.FigureRightLegPart:
                     return true;
 
                 default:
