@@ -235,6 +235,9 @@ namespace Sanakan.Modules
                         user.GameDeck.Cards.Remove(thisCard);
                         winnerUser.GameDeck.Cards.Add(thisCard);
 
+                        winnerUser.GameDeck.RemoveCharacterFromWishList(thisCard.Character);
+                        winnerUser.GameDeck.RemoveCardFromWishList(thisCard.Id);
+
                         if (++counter == count)
                             break;
                     }
