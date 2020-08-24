@@ -70,7 +70,7 @@ namespace Sanakan.Extensions
                 case AnimeStatus.CurrentlyAiring: return "Wychodzi";
                 case AnimeStatus.FinishedAiring: return "Zakończone";
                 case AnimeStatus.Proposal:
-                case AnimeStatus.NotYetAired: return "Zapowiedź";
+                case AnimeStatus.NotYetAired: return "Deklaracja";
                 default: return "Niesprecyzowane";
             }
         }
@@ -81,6 +81,7 @@ namespace Sanakan.Extensions
             {
                 case MangaStatus.Publishing: return "Wychodzi";
                 case MangaStatus.Finished: return "Zakończone";
+                case MangaStatus.NotYetPublished: return "Deklaracja";
                 default: return "Niesprecyzowane";
             }
         }

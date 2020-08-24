@@ -1052,21 +1052,31 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var character in charactersId)
             {
                 var res = await _shClient.GetCharacterInfoAsync(character);
-                if (!res.IsSuccessStatusCode()) continue;
-
-                contentTable.Add($"**P[{res.Body.Id}]** [{res.Body}]({res.Body.CharacterUrl})");
+                if (res.IsSuccessStatusCode())
+                {
+                    contentTable.Add($"**P[{res.Body.Id}]** [{res.Body}]({res.Body.CharacterUrl})");
+                }
+                else
+                {
+                    contentTable.Add($"**P[{character}]** ????");
+                }
             }
 
             foreach (var title in titlesId)
             {
                 var res = await _shClient.Title.GetInfoAsync(title);
-                if (!res.IsSuccessStatusCode()) continue;
+                if (res.IsSuccessStatusCode())
+                {
+                    var url = "https://shinden.pl/";
+                    if (res.Body is IAnimeTitleInfo ai) url = ai.AnimeUrl;
+                    else if (res.Body is IMangaTitleInfo mi) url = mi.MangaUrl;
 
-                var url = "https://shinden.pl/";
-                if (res.Body is IAnimeTitleInfo ai) url = ai.AnimeUrl;
-                else if (res.Body is IMangaTitleInfo mi) url = mi.MangaUrl;
-
-                contentTable.Add($"**T[{res.Body.Id}]** [{res.Body}]({url})");
+                    contentTable.Add($"**T[{res.Body.Id}]** [{res.Body}]({url})");
+                }
+                else
+                {
+                    contentTable.Add($"**T[{title}]** ????");
+                }
             }
 
             string temp = "";

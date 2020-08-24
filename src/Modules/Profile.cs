@@ -335,7 +335,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/BG{botuser.Id}.png", 450, 150, true))
+                if (await _profile.SaveProfileImageAsync(imgUrl, $"./GOut/Saved/BG{botuser.Id}.png", 450, 145, true))
                 {
                     botuser.BackgroundProfileUri = $"./GOut/Saved/BG{botuser.Id}.png";
                 }

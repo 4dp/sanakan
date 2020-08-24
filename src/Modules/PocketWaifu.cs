@@ -2097,7 +2097,7 @@ namespace Sanakan.Modules
                 var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
                 if (wishlists.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na lise życzeń.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na liste życzeń.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
