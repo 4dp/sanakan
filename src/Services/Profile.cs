@@ -83,6 +83,9 @@ namespace Sanakan.Services
         SkinColor = 0xFFC18A,
         DirtyLilac = 0x996666,
         Silver = 0xC0C0C0,
+
+        Ejzur = 0x007FFF,
+        BlueBlueBlue = 0x1F75FE,
     }
 
     public class Profile

@@ -158,6 +158,7 @@ namespace Sanakan.Extensions
             if (!card.IsTradable) icons.Add("⛔");
             if (card.IsBroken()) icons.Add("💔");
             if (card.InCage) icons.Add("🔒");
+            if (!string.IsNullOrEmpty(card.CustomImage)) icons.Add("🖼️");
 
             if (card.TagList.Count > 0)
             {

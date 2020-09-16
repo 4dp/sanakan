@@ -817,6 +817,34 @@ namespace Sanakan.Modules
             Environment.Exit(255);
         }
 
+        [Command("rmconfig", RunMode = RunMode.Async)]
+        [Summary("wyświetla konfiguracje powiadomień")]
+        [Remarks("")]
+        public async Task ShowRMConfigAsync()
+        {
+            await ReplyAsync("", embed: $"{string.Join("\n\n", Config.Get().RMConfig)}".TrimToLength(1900).ToEmbedMessage(EMType.Bot).Build());
+        }
+
+        [Command("mrmconfig")]
+        [Summary("zmienia istniejący wpis w konfiguracji powiadomień w odniesieniu do serwera")]
+        [Remarks("News 1232321314 1232412323")]
+        public async Task ChangeRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("id kanału")]ulong channelId, [Summary("id roli")]ulong roleId)
+        {
+            var config = Config.Get();
+            var thisRM = config.RMConfig.FirstOrDefault(x => x.Type == type && x.GuildId == Context.Guild.Id);
+            if (thisRM == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono wpisu.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            thisRM.ChannelId = channelId;
+            thisRM.RoleId = roleId;
+            Config.Save();
+
+            await ReplyAsync("", embed: "Wpis został zmodyfikowany!".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("help", "h")]
         [Summary("wypisuje polecenia")]

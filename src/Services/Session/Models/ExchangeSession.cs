@@ -333,12 +333,18 @@ namespace Sanakan.Services.Session.Models
 
                             double avgValueP1 = P1.Cards.Sum(x => x.MarketValue) / ((P1.Cards.Count == 0) ? 1 : P1.Cards.Count);
                             double avgValueP2 = P2.Cards.Sum(x => x.MarketValue) / ((P2.Cards.Count == 0) ? 1 : P2.Cards.Count);
+                            if (double.IsInfinity(avgValueP1)) avgValueP1 = double.MinValue;
+                            if (double.IsInfinity(avgValueP2)) avgValueP2 = double.MinValue;
 
                             var divP1 = P1.Cards.Count / ((avgValueP1 == 0) ? 1 : avgValueP1);
                             var divP2 = P2.Cards.Count / ((avgValueP2 == 0) ? 1 : avgValueP2);
+                            if (double.IsInfinity(divP1)) divP1 = double.MinValue;
+                            if (double.IsInfinity(divP2)) divP2 = double.MinValue;
 
                             var exchangeRateP1 = divP2 / ((P1.Cards.Count == 0) ? (divP2 * 0.5) : divP1);
                             var exchangeRateP2 = divP1 / ((P2.Cards.Count == 0) ? (divP1 * 0.5) : divP2);
+                            if (double.IsInfinity(exchangeRateP1)) exchangeRateP1 = double.MinValue;
+                            if (double.IsInfinity(exchangeRateP2)) exchangeRateP2 = double.MinValue;
 
                             foreach (var c in P1.Cards)
                             {
@@ -350,7 +356,11 @@ namespace Sanakan.Services.Session.Models
                                     card.Affection -= 1.5;
 
                                     var valueDiff = card.MarketValue - exchangeRateP1;
-                                    card.MarketValue -= valueDiff * 0.735;
+                                    var changed = card.MarketValue - valueDiff * 0.735;
+                                    if (!double.IsInfinity(changed) && !double.IsInfinity(valueDiff))
+                                    {
+                                        card.MarketValue = changed;
+                                    }
 
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user1.Id;
@@ -373,7 +383,11 @@ namespace Sanakan.Services.Session.Models
                                     card.Affection -= 1.5;
 
                                     var valueDiff = card.MarketValue - exchangeRateP2;
-                                    card.MarketValue -= valueDiff * 0.735;
+                                    var changed = card.MarketValue - valueDiff * 0.735;
+                                    if (!double.IsInfinity(changed) && !double.IsInfinity(valueDiff))
+                                    {
+                                        card.MarketValue = changed;
+                                    }
 
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user2.Id;

@@ -10,5 +10,10 @@ namespace Sanakan.Config.Model
         public ulong GuildId { get; set; }
         public ulong ChannelId { get; set; }
         public RichMessageType Type { get; set; }
+
+        public override string ToString()
+        {
+            return $"Serwer: {GuildId}\nRola: {RoleId}\nKanał: {ChannelId}\nTyp: {Type}";
+        }
     }
 }

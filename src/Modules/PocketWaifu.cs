@@ -1194,10 +1194,9 @@ namespace Sanakan.Modules
                         : (card.ExpCnt / 2));
 
                     var incKarma = 0.7 * card.MarketValue;
-                    if (incKarma < 0.001) incKarma = 0.001;
-                    if (incKarma > 100) incKarma = 100;
+                    if (incKarma > 0.001 && incKarma < 100)
+                        bUser.GameDeck.Karma += incKarma;
 
-                    bUser.GameDeck.Karma += incKarma;
                     bUser.Stats.ReleasedCards += 1;
 
                     bUser.GameDeck.Cards.Remove(card);
@@ -1256,14 +1255,13 @@ namespace Sanakan.Modules
                         : card.ExpCnt);
 
                     var incKarma = 1 * card.MarketValue;
-                    if (incKarma < 0.001) incKarma = 0.001;
-                    if (incKarma > 100) incKarma = 100;
+                    if (incKarma > 0.001 && incKarma < 100)
+                        bUser.GameDeck.Karma -= incKarma;
 
                     var incCt = card.GetValue() * card.MarketValue;
                     if (incCt > 0 && incCt < 200)
                         bUser.GameDeck.CTCnt += (long) incCt;
 
-                    bUser.GameDeck.Karma -= incKarma;
                     bUser.Stats.DestroyedCards += 1;
 
                     bUser.GameDeck.Cards.Remove(card);
