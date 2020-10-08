@@ -126,9 +126,11 @@ namespace Sanakan.Extensions
         public static bool ReachedDailyMaxItemsCountInArena(this GameDeck deck)
             => deck.ItemsDropped >= 60;
 
+        private const double PVPRankMultiplier = 0.45;
+
         public static string GetRankName(this GameDeck deck, long? rank = null)
         {
-            switch ((ExperienceManager.CalculateLevel(rank ?? deck.SeasonalPVPRank) / 10))
+            switch ((ExperienceManager.CalculateLevel(rank ?? deck.SeasonalPVPRank, PVPRankMultiplier) / 10))
             {
                 case var n when (n >= 17):
                     return "Konsul";
@@ -156,7 +158,7 @@ namespace Sanakan.Extensions
         }
 
         public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
-            => deck.PVPDailyGamesPlayed >= 20;
+            => deck.PVPDailyGamesPlayed >= 10;
 
         public static int CanFightPvP(this GameDeck deck)
         {
@@ -181,10 +183,10 @@ namespace Sanakan.Extensions
 
         public static long GetPVPCoinsFromDuel(this GameDeck deck, FightResult res)
         {
-            var step = (ExperienceManager.CalculateLevel(deck.SeasonalPVPRank) / 10);
+            var step = (ExperienceManager.CalculateLevel(deck.SeasonalPVPRank, PVPRankMultiplier) / 10);
             if (step > 5) step = 5;
 
-            var coinCnt = 20 + (20 * step);
+            var coinCnt = 40 + (20 * step);
             return (res == FightResult.Win) ? coinCnt : coinCnt / 2;
         }
 
@@ -213,12 +215,12 @@ namespace Sanakan.Extensions
                 case FightResult.Win:
                     ++d1.PVPWinStreak;
 
-                    var wsb = 15 * (1 + (d1.PVPWinStreak / 10));
-                    if (wsb < 15) wsb = 15;
-                    if (wsb > 30) wsb = 30;
+                    var wsb = 20 * (1 + (d1.PVPWinStreak / 10));
+                    if (wsb < 20) wsb = 20;
+                    if (wsb > 40) wsb = 40;
 
-                    sRank = (long) (60 * (1 - sChan)) + wsb;
-                    gRank = (long) (30 * (1 - gChan)) + wsb;
+                    sRank = (long) (80 * (1 - sChan)) + wsb;
+                    gRank = (long) (40 * (1 - gChan)) + wsb;
 
                     mmrChange = 2 * (1 - chanceD1);
                     mmreChange = 2 * (0 - chanceD2);
@@ -226,16 +228,16 @@ namespace Sanakan.Extensions
 
                 case FightResult.Lose:
                     d1.PVPWinStreak = 0;
-                    sRank = (long) (60 * (0 - sChan));
-                    gRank = (long) (30 * (0 - gChan));
+                    sRank = (long) (80 * (0 - sChan));
+                    gRank = (long) (40 * (0 - gChan));
 
                     mmrChange = 2 * (0 - chanceD1);
                     mmreChange = 2 * (1 - chanceD2);
                 break;
 
                 case FightResult.Draw:
-                    sRank = (long) (30 * (1 - sChan));
-                    gRank = (long) (15 * (1 - gChan));
+                    sRank = (long) (40 * (1 - sChan));
+                    gRank = (long) (20 * (1 - gChan));
 
                     mmrChange = 1 * (1 - chanceD1);
                     mmreChange = 1 * (1 - chanceD2);
