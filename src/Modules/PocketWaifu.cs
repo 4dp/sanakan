@@ -2029,7 +2029,7 @@ namespace Sanakan.Modules
                     cards = cards.Where(x => !x.HasTag("ulubione")).ToList();
 
                 if (!showBlocked)
-                    cards = cards.Where(x => x.IsTradable.ToList();
+                    cards = cards.Where(x => x.IsTradable).ToList();
 
                 if (cards.Count() < 1)
                 {
