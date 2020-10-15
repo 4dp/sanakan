@@ -1992,7 +1992,7 @@ namespace Sanakan.Modules
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
         [Remarks("Dzida"), RequireWaifuCommandChannel]
-        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false, [Summary("czy pokazać niewymienialne(true/false) domyślnie pokazane, wymaga podania użytkownika (aby ten filtr zadziałał należy też podać wartość dla poprzedniego)")] bool showBlocked = true)
+        public async Task ShowWishlistAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione(true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false, [Summary("czy pokazać niewymienialne(true/false) domyślnie pokazane")] bool showBlocked = true)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -2029,7 +2029,7 @@ namespace Sanakan.Modules
                     cards = cards.Where(x => !x.HasTag("ulubione")).ToList();
 
                 if (!showBlocked)
-                    cards = cards.Where(x => !(x.IsTradable == false)).ToList();
+                    cards = cards.Where(x => x.IsTradable.ToList();
 
                 if (cards.Count() < 1)
                 {
