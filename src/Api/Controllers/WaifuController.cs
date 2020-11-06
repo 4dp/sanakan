@@ -508,6 +508,7 @@ namespace Sanakan.Api.Controllers
             {
                 if (ulong.TryParse(currUser.Claims.First(x => x.Type == "DiscordId").Value, out var discordId))
                 {
+                    string bPackName = "";
                     var cards = new List<Card>();
                     using (var db = new Database.UserContext(_config))
                     {
@@ -526,6 +527,7 @@ namespace Sanakan.Api.Controllers
 
                         var pack = botUserCh.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
                         cards = await _waifu.OpenBoosterPackAsync(null, pack);
+                        bPackName = pack.Name;
                     }
 
                     var exe = new Executable($"api-packet-open u{discordId}", new Task(async () =>
@@ -535,6 +537,12 @@ namespace Sanakan.Api.Controllers
                             var botUser = await db.GetUserOrCreateAsync(discordId);
 
                             var bPack = botUser.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
+                            if (bPack?.Name != bPackName)
+                            {
+                                await "Boosterpack already opened!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                                return;
+                            }
+
                             botUser.GameDeck.BoosterPacks.Remove(bPack);
 
                             if (bPack.CardSourceFromPack == CardSource.Activity || bPack.CardSourceFromPack == CardSource.Migration)
