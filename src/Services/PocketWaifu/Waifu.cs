@@ -335,7 +335,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
-            double rExp = 30f / (wild ? 100f : 10f);
+            double rExp = 30f / (wild ? 50f : 10f);
 
             if (toUp.Character == toSac.Character && !wild)
                 rExp = 30f;

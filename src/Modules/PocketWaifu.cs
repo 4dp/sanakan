@@ -2736,7 +2736,7 @@ namespace Sanakan.Modules
                 };
 
                 var result = _waifu.GetFightWinner(thisCard, enemyCard);
-                thisCard.Affection -= thisCard.HasImage() ? 0.05 : 0.2;
+                thisCard.Affection -= thisCard.HasImage() ? 0.2 : 0.8;
                 var dInfo = new DuelInfo();
 
                 var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
@@ -2769,25 +2769,28 @@ namespace Sanakan.Modules
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
+                        for (int i = 0; i < 3; i++)
                         {
-                            var item = _waifu.RandomizeItemFromFight().ToItem();
-                            var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
-                            if (thisItem == null)
+                            if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
                             {
-                                thisItem = item;
-                                ++botUser.GameDeck.ItemsDropped;
-                                botUser.GameDeck.Items.Add(thisItem);
-                            }
-                            else ++thisItem.Count;
+                                var item = _waifu.RandomizeItemFromFight().ToItem();
+                                var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
+                                if (thisItem == null)
+                                {
+                                    thisItem = item;
+                                    ++botUser.GameDeck.ItemsDropped;
+                                    botUser.GameDeck.Items.Add(thisItem);
+                                }
+                                else ++thisItem.Count;
 
-                            embed.Description += $"+{item.Name}";
+                                embed.Description += $"+{item.Name}";
+                            }
                         }
                         break;
 
                     case FightWinner.Card2:
                         embed.Description += "Twoja karta przegrywa!\n";
-                        thisCard.Affection -= thisCard.HasImage() ? 0.1 : 0.5;
+                        thisCard.Affection -= thisCard.HasImage() ? 0.4 : 1.5;
                         ++thisCard.ArenaStats.Loses;
 
                         dInfo.Side = DuelInfo.WinnerSide.Right;
@@ -2806,7 +2809,7 @@ namespace Sanakan.Modules
                         break;
                 }
 
-                botUser.GameDeck.Karma -= 0.01;
+                botUser.GameDeck.Karma -= 0.04;
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
@@ -2911,7 +2914,7 @@ namespace Sanakan.Modules
                 {
                     ++thisCard.ArenaStats.Wins;
                     resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
-                    for (int i = 0; i < cardsCnt - 2; i++)
+                    for (int i = 0; i < cardsCnt; i++)
                     {
                         if (Services.Fun.TakeATry(2))
                             items.Add(_waifu.RandomizeItemFromMFight().ToItem());
