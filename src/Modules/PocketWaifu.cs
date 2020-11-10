@@ -2783,7 +2783,7 @@ namespace Sanakan.Modules
                                 }
                                 else ++thisItem.Count;
 
-                                embed.Description += $"+{item.Name}";
+                                embed.Description += $"+{item.Name}\n";
                             }
                         }
                         break;
