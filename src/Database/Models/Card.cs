@@ -33,6 +33,11 @@ namespace Sanakan.Database.Models
         No, Megumin, Asuna, Gintoki
     }
 
+    public enum CardExpedition
+    {
+        No, Easy, Medium, Hard, Hardcore
+    }
+
     public class Card
     {
         public ulong Id { get; set; }
@@ -71,6 +76,9 @@ namespace Sanakan.Database.Models
         public int DefenceBonus { get; set; }
         public Quality QualityOnStart { get; set; }
         public PreAssembledFigure PAS { get; set; }
+
+        public CardExpedition Expedition { get; set; }
+        public DateTime ExpeditionDate { get; set; }
 
         public virtual ICollection<CardTag> TagList { get; set; }
 

@@ -431,6 +431,8 @@ namespace Sanakan.Services.PocketWaifu
                 ArenaStats = new CardArenaStats(),
                 Attack = RandomizeAttack(rarity),
                 QualityOnStart = Quality.Broken,
+                Expedition = CardExpedition.No,
+                ExpeditionDate = DateTime.Now,
                 TagList = new List<CardTag>(),
                 CreationDate = DateTime.Now,
                 PAS = PreAssembledFigure.No,
@@ -726,7 +728,7 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var card in cards)
             {
                 var thU = client.GetUser(card.GameDeck.UserId);
-                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
+                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
             }
 
             return new EmbedBuilder()
@@ -750,7 +752,7 @@ namespace Sanakan.Services.PocketWaifu
                     var user = client.GetUser(card.GameDeckId);
                     var uString = user?.Mention ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]** **{card.Rarity}** {card.GetStatusIcons()}\n";
+                    tempContentString += $"{uString}: **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)
