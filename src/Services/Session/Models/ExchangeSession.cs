@@ -336,6 +336,19 @@ namespace Sanakan.Services.Session.Models
                             if (double.IsInfinity(avgValueP1)) avgValueP1 = double.MinValue;
                             if (double.IsInfinity(avgValueP2)) avgValueP2 = double.MinValue;
 
+                            double avgRarP1 = P1.Cards.Sum(x => (int) x.Rarity) / ((P1.Cards.Count == 0) ? 1 : P1.Cards.Count);
+                            double avgRarP2 = P2.Cards.Sum(x => (int) x.Rarity) / ((P2.Cards.Count == 0) ? 1 : P2.Cards.Count);
+                            var avgRarDif = avgRarP1 - avgRarP2;
+
+                            if (avgRarDif > 0)
+                            {
+                                avgValueP1 /= avgRarP1 + 1;
+                            }
+                            else if (avgRarDif < 0)
+                            {
+                                avgValueP2 /= avgRarP2 + 1;
+                            }
+
                             var divP1 = P1.Cards.Count / ((avgValueP1 == 0) ? 1 : avgValueP1);
                             var divP2 = P2.Cards.Count / ((avgValueP2 == 0) ? 1 : avgValueP2);
                             if (double.IsInfinity(divP1)) divP1 = double.MinValue;

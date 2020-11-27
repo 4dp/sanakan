@@ -1053,6 +1053,7 @@ namespace Sanakan.Modules
 
                 if (card.FromFigure)
                 {
+                    _waifu.DeleteCardImageIfExist(card);
                     await ReplyAsync("", embed: $"{Context.User.Mention} tej karty nie można zaktualizować.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
@@ -1194,7 +1195,7 @@ namespace Sanakan.Modules
                         : (card.ExpCnt / 2));
 
                     var incKarma = 0.7 * card.MarketValue;
-                    if (incKarma > 0.001 && incKarma < 100)
+                    if (incKarma > 0.001 && incKarma < 50)
                         bUser.GameDeck.Karma += incKarma;
 
                     bUser.Stats.ReleasedCards += 1;
@@ -1255,11 +1256,11 @@ namespace Sanakan.Modules
                         : card.ExpCnt);
 
                     var incKarma = 1 * card.MarketValue;
-                    if (incKarma > 0.001 && incKarma < 100)
+                    if (incKarma > 0.001 && incKarma < 50)
                         bUser.GameDeck.Karma -= incKarma;
 
                     var incCt = card.GetValue() * card.MarketValue;
-                    if (incCt > 0 && incCt < 200)
+                    if (incCt > 0 && incCt < 100)
                         bUser.GameDeck.CTCnt += (long) incCt;
 
                     bUser.Stats.DestroyedCards += 1;

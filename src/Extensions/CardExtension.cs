@@ -17,7 +17,15 @@ namespace Sanakan.Extensions
             string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
             string upgCnt = (withUpgrades && !card.FromFigure) ? $"_(U:{card.UpgradesCnt})_" : "";
 
-            return $"{idStr} {name} **{card.Rarity}** {card.GetCardParams(showBaseHp, allowZero)} {upgCnt}";
+            return $"{idStr} {name} **{card.GetCardRealRarity()}** {card.GetCardParams(showBaseHp, allowZero)} {upgCnt}";
+        }
+
+        public static string GetCardRealRarity(this Card card)
+        {
+            if (card.FromFigure)
+                return card.Quality.ToName();
+
+            return card.Rarity.ToString();
         }
 
         public static string GetCardParams(this Card card, bool showBaseHp = false, bool allowZero = false, bool inNewLine = false)
@@ -194,7 +202,7 @@ namespace Sanakan.Extensions
             var tags = string.Join(" ", card.TagList.Select(x => x.Name));
             if (card.TagList.Count < 1) tags = "---";
 
-            return $"{card.GetNameWithUrl()} **{card.Rarity}**\n"
+            return $"{card.GetNameWithUrl()} **{card.GetCardRealRarity()}**\n"
                 + $"*{card.Title ?? "????"}*\n\n"
                 + $"*{card.GetCardParams(true, false, true)}*\n\n"
                 + $"**Relacja:** {card.GetAffectionString()}\n"
