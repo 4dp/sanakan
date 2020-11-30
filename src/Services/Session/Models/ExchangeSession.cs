@@ -77,6 +77,9 @@ namespace Sanakan.Services.Session.Models
 
         private async Task HandleMessageAsync(SessionContext context)
         {
+            if (context.ReactionAdded != null || context.ReactionRemoved != null)
+                return;
+                
             if (State != ExchangeStatus.Add)
                 return;
 
