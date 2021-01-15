@@ -84,6 +84,54 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Pobiera x kart z przefiltrowanej listy użytkownika
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <param name="offset">przesunięcie</param>
+        /// <param name="count">liczba kart</param>
+        /// <param name="filter">filtry listy</param>
+        /// <returns>lista kart</returns>
+        /// <response code="404">User not found</response>
+        [HttpPost("user/{id}/cards/{offset}/{count}")]
+        public async Task<IEnumerable<CardFinalView>> GetUsersCardsByShindenIdWithOffsetAndFilterAsync(ulong id, uint offset, uint count, [FromBody]CardsQueryFilter filter)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return new List<CardFinalView>();
+                }
+
+                var query = db.Cards.Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
+
+                if (!string.IsNullOrEmpty(filter.SearchText))
+                {
+                    query = query.Where(x => x.Name.Contains(filter.SearchText) || x.Title.Contains(filter.SearchText));
+                }
+
+                query = CardsQueryFilter.Use(filter.OrderBy, query);
+
+                var cards = await query.ToListAsync();
+                if (filter.IncludeTags != null)
+                {
+                    foreach (var iTag in filter.IncludeTags)
+                        cards = cards.Where(x => x.HasTag(iTag)).ToList();
+                }
+
+                if (filter.ExcludeTags != null)
+                {
+                    foreach (var eTag in filter.ExcludeTags)
+                        cards = cards.Where(x => !x.HasTag(eTag)).ToList();
+                }
+
+                return cards.Skip((int)offset).Take((int)count).ToView();
+            }
+        }
+
+        /// <summary>
         /// Pobiera x kart z listy użytkownika
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
@@ -92,7 +140,7 @@ namespace Sanakan.Api.Controllers
         /// <returns>lista kart</returns>
         /// <response code="404">User not found</response>
         [HttpGet("user/{id}/cards/{offset}/{count}")]
-        public async Task<IEnumerable<CardFinalView>> GetUsersCardsByShindenIdWithOffset(ulong id, uint offset, uint count)
+        public async Task<IEnumerable<CardFinalView>> GetUsersCardsByShindenIdWithOffsetAsync(ulong id, uint offset, uint count)
         {
             using (var db = new Database.UserContext(_config))
             {
