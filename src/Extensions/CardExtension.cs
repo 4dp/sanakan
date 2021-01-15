@@ -685,5 +685,14 @@ namespace Sanakan.Extensions
                     throw new Exception("Could't parse input!");
             }
         }
+
+        public static Api.Models.CardFinalView ToView(this Card c) => Api.Models.CardFinalView.ConvertFromRaw(c);
+
+        public static IEnumerable<Api.Models.CardFinalView> ToView(this IEnumerable<Card> clist)
+        {
+            var list = new List<Api.Models.CardFinalView>();
+            foreach (var c in clist) list.Add(c.ToView());
+            return list;
+        }
     }
 }

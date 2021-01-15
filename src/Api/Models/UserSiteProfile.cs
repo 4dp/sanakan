@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Sanakan.Api.Models
 {
@@ -43,10 +42,10 @@ namespace Sanakan.Api.Models
         /// <summary>
         /// Waifu
         /// </summary>
-        public Database.Models.Card Waifu { get; set; }
+        public CardFinalView Waifu { get; set; }
         /// <summary>
         /// Galeria
         /// </summary>
-        public List<Database.Models.Card> Gallery { get; set; }
+        public List<CardFinalView> Gallery { get; set; }
     }
 }
