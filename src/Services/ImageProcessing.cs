@@ -37,6 +37,7 @@ namespace Sanakan.Services
             if (!Directory.Exists("GOut/Cards")) Directory.CreateDirectory("GOut/Cards");
             if (!Directory.Exists("GOut/Profile")) Directory.CreateDirectory("GOut/Profile");
             if (!Directory.Exists("GOut/Cards/Small")) Directory.CreateDirectory("GOut/Cards/Small");
+            if (!Directory.Exists("GOut/Cards/Profile")) Directory.CreateDirectory("GOut/Cards/Profile");
         }
 
         private async Task<Stream> GetImageFromUrlAsync(string url, bool fixExt = false)

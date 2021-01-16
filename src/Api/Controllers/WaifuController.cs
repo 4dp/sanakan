@@ -415,7 +415,7 @@ namespace Sanakan.Api.Controllers
         [HttpGet("card/{id}")]
         public async Task GetCardAsync(ulong id)
         {
-            if (!System.IO.File.Exists($"./GOut/Cards/Small/{id}.png") || !System.IO.File.Exists($"./GOut/Cards/{id}.png"))
+            if (!System.IO.File.Exists($"./GOut/Cards/Small/{id}.png") || !System.IO.File.Exists($"./GOut/Cards/{id}.png") || !System.IO.File.Exists($"./GOut/Cards/Profile/{id}.png"))
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -426,6 +426,7 @@ namespace Sanakan.Api.Controllers
                         return;
                     }
 
+                    _waifu.DeleteCardImageIfExist(card);
                     var cardImage = await _waifu.GenerateAndSaveCardAsync(card);
                     await ControllerContext.HttpContext.Response.SendFileAsync(cardImage);
                 }

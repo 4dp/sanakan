@@ -711,11 +711,11 @@ namespace Sanakan.Services.PocketWaifu
         {
             using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
-                cardImage.SaveToPath($"./GOut/Profile/P{card.Id}.png");
+                cardImage.SaveToPath($"./GOut/Cards/Profile/{card.Id}.png");
 
                 using (var stream = cardImage.ToPngStream())
                 {
-                    var fs = await trashCh.SendFileAsync(stream, $"P{card.Id}.png");
+                    var fs = await trashCh.SendFileAsync(stream, $"{card.Id}.png");
                     var im = fs.Attachments.FirstOrDefault();
                     return im.Url;
                 }
@@ -879,11 +879,20 @@ namespace Sanakan.Services.PocketWaifu
         {
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+            string pImageLocation = $"./GOut/Cards/Profile/{card.Id}.png";
 
             using (var image = await _img.GetWaifuCardAsync(card))
             {
                 image.SaveToPath(imageLocation);
                 image.SaveToPath(sImageLocation, 133, 0);
+            }
+
+            if (!File.Exists(pImageLocation))
+            {
+                using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
+                {
+                    cardImage.SaveToPath($"./GOut/Cards/Profile/{card.Id}.png");
+                }
             }
 
             return small ? sImageLocation : imageLocation;
@@ -893,6 +902,7 @@ namespace Sanakan.Services.PocketWaifu
         {
             string imageLocation = $"./GOut/Cards/{card.Id}.png";
             string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+            string pImageLocation = $"./GOut/Cards/Profile/{card.Id}.png";
 
             try
             {
@@ -901,6 +911,9 @@ namespace Sanakan.Services.PocketWaifu
 
                 if (File.Exists(sImageLocation))
                     File.Delete(sImageLocation);
+
+                if (File.Exists(pImageLocation))
+                    File.Delete(pImageLocation);
             }
             catch (Exception) {}
         }

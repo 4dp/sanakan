@@ -67,7 +67,7 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"users" })).ToList();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"users-total" })).ToList();
         }
 
         public static async Task<List<GameDeck>> GetCachedPlayersWithActiveCards(this Database.UserContext context)

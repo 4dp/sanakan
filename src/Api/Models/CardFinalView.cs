@@ -97,6 +97,14 @@ namespace Sanakan.Api.Models
         /// </summary>
         public string ImageUrl { get; set; }
         /// <summary>
+        /// Link do obrazka karty w pomniejszonym rozmiarze
+        /// </summary>
+        public string SmallImageUrl { get; set; }
+        /// <summary>
+        /// Link do obrazka karty który będzie się wyświetlał gdy ustawi się go na waifu
+        /// </summary>
+        public string ProfileImageUrl { get; set; }
+        /// <summary>
         /// Jakość karty poziomu ultimate
         /// </summary>
         public Quality UltimateQuality { get; set; }
@@ -129,6 +137,8 @@ namespace Sanakan.Api.Models
                 AnimeTitle = card.Title ?? "????",
                 UltimateQuality = card.Quality,
                 ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.png",
+                SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.png",
+                ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",
                 Tags = card.TagList.Select(x => x.Name).ToList()
             };
     }
