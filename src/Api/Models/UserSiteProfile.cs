@@ -47,5 +47,9 @@ namespace Sanakan.Api.Models
         /// Galeria
         /// </summary>
         public List<CardFinalView> Gallery { get; set; }
+        /// <summary>
+        /// Lista tagów jakie ma użytkownik na kartach
+        /// </summary>
+        public List<string> TagList { get; set; }
     }
 }

@@ -177,6 +177,10 @@ namespace Sanakan.Api.Controllers
                     return new UserSiteProfile();
                 }
 
+                var tagList = new List<string>();
+                var tags = user.GameDeck.Cards.Where(x => x.TagList != null).Select(x => x.TagList.Select(c => c.Name));
+                foreach(var tag in tags) tagList.AddRange(tag);
+
                 return new UserSiteProfile()
                 {
                     SSSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS),
@@ -188,7 +192,8 @@ namespace Sanakan.Api.Controllers
                     DCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D),
                     ECount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E),
                     Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).ToView().ToList(),
-                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).FirstOrDefault().ToView()
+                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).FirstOrDefault().ToView(),
+                    TagList = tagList.Distinct().ToList()
                 };
             }
         }
