@@ -113,7 +113,11 @@ namespace Sanakan.Api.Models
         /// </summary>
         public List<string> Tags { get; set; }
 
-        public static CardFinalView ConvertFromRaw(Card card) => new CardFinalView
+        public static CardFinalView ConvertFromRaw(Card card)
+        {
+            if (card == null) return null;
+
+            return new CardFinalView
             {
                 Id = card.Id,
                 IsActive = card.Active,
@@ -141,5 +145,6 @@ namespace Sanakan.Api.Models
                 ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",
                 Tags = card.TagList.Select(x => x.Name).ToList()
             };
+        }
     }
 }

@@ -340,6 +340,15 @@ namespace Sanakan.Extensions
             if (en != null) deck.Wishes.Remove(en);
         }
 
+        public static void RemoveFromWaifu(this GameDeck deck, Card card)
+        {
+            if (deck.Waifu == card.Character)
+            {
+                card.Affection -= 25;
+                deck.Waifu = 0;
+            }
+        }
+
         public static void RemoveCardFromWishList(this GameDeck deck, ulong id)
         {
             var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Card && x.ObjectId == id);

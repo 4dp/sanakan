@@ -384,6 +384,7 @@ namespace Sanakan.Services.Session.Models
 
                                     user2.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user2.GameDeck.RemoveCardFromWishList(card.Id);
+                                    user2.GameDeck.RemoveFromWaifu(card);
                                 }
                             }
 
@@ -408,6 +409,7 @@ namespace Sanakan.Services.Session.Models
 
                                     user1.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user1.GameDeck.RemoveCardFromWishList(card.Id);
+                                    user1.GameDeck.RemoveFromWaifu(card);
                                 }
                             }
 
