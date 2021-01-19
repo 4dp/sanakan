@@ -183,6 +183,7 @@ namespace Sanakan.Api.Controllers
 
                 return new UserSiteProfile()
                 {
+                    ExchangeConditions = user.GameDeck.ExchangeConditions,
                     SSSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS),
                     SSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS),
                     SCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.S),

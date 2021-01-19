@@ -1,9 +1,11 @@
 ﻿#pragma warning disable 1591
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Configuration;
 using Sanakan.Database.Models.Management;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,8 +68,8 @@ namespace Sanakan.Extensions
             return (await context.Users.Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats).Include(x => x.GameDeck).ThenInclude(x => x.Wishes)
                 .Include(x => x.GameDeck).ThenInclude(x => x.Items).Include(x => x.GameDeck).ThenInclude(x => x.ExpContainer).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats)
                 .Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.Characters).Include(x => x.GameDeck).ThenInclude(x => x.BoosterPacks).ThenInclude(x => x.RarityExcludedFromPack)
-                .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList)
-                .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().FromCacheAsync(new string[] { $"users-total" })).ToList();
+                .Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking()
+                .FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6) })).ToList();
         }
 
         public static async Task<List<GameDeck>> GetCachedPlayersWithActiveCards(this Database.UserContext context)

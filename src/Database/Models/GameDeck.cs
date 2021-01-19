@@ -23,6 +23,8 @@ namespace Sanakan.Database.Models
         public ulong PVPDailyGamesPlayed { get; set; }
         public DateTime PVPSeasonBeginDate { get; set; }
 
+        public string ExchangeConditions { get; set; }
+
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }
         public virtual ICollection<BoosterPack> BoosterPacks { get; set; }

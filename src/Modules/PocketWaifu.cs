@@ -1857,7 +1857,7 @@ namespace Sanakan.Modules
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
                 if (bUser.GameDeck.Wishes.Any(x => x.Type == type && x.ObjectId == id))
                 {
-                    await ReplyAsync("", embed: "Już posaidasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: "Już posiadasz taki wpis w liście życzeń!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -3191,7 +3191,7 @@ namespace Sanakan.Modules
 
                 if (blood.Count < 3)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} odziwo posaidasz za mało kropli swojej krwii.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} odziwo posiadasz za mało kropli swojej krwii.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

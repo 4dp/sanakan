@@ -51,5 +51,9 @@ namespace Sanakan.Api.Models
         /// Lista tagów jakie ma użytkownik na kartach
         /// </summary>
         public List<string> TagList { get; set; }
+        /// <summary>
+        /// warunki wymiany z użytkownikiem
+        /// </summary>
+        public string ExchangeConditions { get; set; }
     }
 }
