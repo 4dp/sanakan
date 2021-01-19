@@ -379,12 +379,13 @@ namespace Sanakan.Services.Session.Models
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user1.Id;
 
+                                    user1.GameDeck.RemoveFromWaifu(card);
+
                                     user1.GameDeck.Cards.Remove(card);
                                     user2.GameDeck.Cards.Add(card);
 
                                     user2.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user2.GameDeck.RemoveCardFromWishList(card.Id);
-                                    user2.GameDeck.RemoveFromWaifu(card);
                                 }
                             }
 
@@ -404,12 +405,13 @@ namespace Sanakan.Services.Session.Models
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user2.Id;
 
+                                    user2.GameDeck.RemoveFromWaifu(card);
+
                                     user2.GameDeck.Cards.Remove(card);
                                     user1.GameDeck.Cards.Add(card);
 
                                     user1.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user1.GameDeck.RemoveCardFromWishList(card.Id);
-                                    user1.GameDeck.RemoveFromWaifu(card);
                                 }
                             }
 
