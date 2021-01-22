@@ -114,7 +114,7 @@ namespace Sanakan.Modules
                 }
             }
 
-            await ReplyAsync("", embed: $"{user.Mention} został wyciszony.".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"{user.Mention} został zbanowany.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("mute")]
