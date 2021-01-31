@@ -7,9 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.HttpOverrides;
-using Swashbuckle.AspNetCore.Swagger;
 using System.IO;
-using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Logging;
@@ -22,6 +20,7 @@ using Shinden;
 using Sanakan.Services.PocketWaifu;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Microsoft.OpenApi.Models;
 
 namespace Sanakan.Api
 {
@@ -80,9 +79,9 @@ namespace Sanakan.Api
                         policy.RequireAssertion(context => !context.User.HasClaim(c => c.Type == "Player"));
                     });
                 });
-                services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                    .AddJsonOptions(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
-                    .AddJsonOptions(o => o.SerializerSettings.Converters.Add(new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() }));
+                services.AddControllers()
+                    .AddNewtonsoftJson(o => o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
+                    .AddNewtonsoftJson(o => o.SerializerSettings.Converters.Add(new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() }));
                 services.AddCors(options =>
                 {
                     options.AddPolicy("AllowEverything", builder =>
@@ -100,7 +99,7 @@ namespace Sanakan.Api
                 });
                 services.AddSwaggerGen(c =>
                 {
-                    c.SwaggerDoc("v2", new Info
+                    c.SwaggerDoc("v2", new OpenApiInfo
                     {
                         Title = "Sanakan API",
                         Version = "1.0",
@@ -108,10 +107,9 @@ namespace Sanakan.Api
                             + "\n\nDocelowa wersja api powinna zostać przesłana pod nagówkiem `x-api-version`, w przypadku jej nie podania zapytania są interpretowane jako wysłane do wersji `1.0`.",
                     });
 
-                    var filePath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Sanakan.xml");
+                    var filePath = Path.Combine(System.AppContext.BaseDirectory, "Sanakan.xml");
                     if (File.Exists(filePath)) c.IncludeXmlComments(filePath);
 
-                    c.DescribeAllEnumsAsStrings();
                     c.CustomSchemaIds(x => x.FullName);
                 });
             }).ConfigureLogging(logging =>
@@ -126,7 +124,12 @@ namespace Sanakan.Api
                 app.UseCors("AllowEverything");
                 app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
                 app.UseAuthentication();
-                app.UseMvc();
+                app.UseStaticFiles();
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
 #if !DEBUG
             });
 #else

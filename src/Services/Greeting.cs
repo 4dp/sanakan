@@ -41,7 +41,7 @@ namespace Sanakan.Services
                 var gConfig = await db.GetGuildConfigOrCreateAsync(guild.Id);
                 db.Guilds.Remove(gConfig);
 
-                var stats = db.TimeStatuses.Where(x => x.Guild == guild.Id).ToList();
+                var stats = db.TimeStatuses.AsQueryable().Where(x => x.Guild == guild.Id).ToList();
                 db.TimeStatuses.RemoveRange(stats);
 
                 await db.SaveChangesAsync();
@@ -49,7 +49,7 @@ namespace Sanakan.Services
 
             using (var db = new Database.ManagmentContext(_config))
             {
-                var mute = db.Penalties.Where(x => x.Guild == guild.Id).ToList();
+                var mute = db.Penalties.AsQueryable().Where(x => x.Guild == guild.Id).ToList();
                 db.Penalties.RemoveRange(mute);
 
                 await db.SaveChangesAsync();

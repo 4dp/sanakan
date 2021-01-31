@@ -5,13 +5,13 @@ all-update-debug: update restore build-debug
 full-build: restore build
 
 run-debug:
-	dotnet bin/Debug/netcoreapp2.1/Sanakan.dll
+	dotnet bin/Debug/netcoreapp3.1/Sanakan.dll
 
 build-debug:
 	dotnet build -c Debug
 
 run:
-	dotnet bin/Release/netcoreapp2.1/Sanakan.dll
+	dotnet bin/Release/netcoreapp3.1/Sanakan.dll
 
 build:
 	dotnet build -c Release

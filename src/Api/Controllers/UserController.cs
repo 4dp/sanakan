@@ -116,7 +116,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefault();
+                var user = db.Users.AsQueryable().Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefault();
                 if (user == null)
                 {
                     await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
