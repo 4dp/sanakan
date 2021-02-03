@@ -123,9 +123,10 @@ namespace Sanakan.Api
                 app.UseSwagger();
                 app.UseCors("AllowEverything");
                 app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
-                app.UseAuthentication();
                 app.UseStaticFiles();
                 app.UseRouting();
+                app.UseAuthentication();
+                app.UseAuthorization();
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
