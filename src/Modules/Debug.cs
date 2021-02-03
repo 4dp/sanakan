@@ -72,7 +72,7 @@ namespace Sanakan.Modules
             var allUsers = Context.Client.Guilds.SelectMany(x => x.Users).Distinct();
             using (var db = new Database.UserContext(Config))
             {
-                var nonExistingIds = db.Users.AsQueryable().Where(x => !allUsers.Any(u => u.Id == x.Id)).Select(x => x.Id).ToList();
+                var nonExistingIds = db.Users.AsQueryable().AsSplitQuery().Where(x => !allUsers.Any(u => u.Id == x.Id)).Select(x => x.Id).ToList();
                 await ReplyAsync("", embed: string.Join("\n", nonExistingIds).ToEmbedMessage(EMType.Bot).Build());
             }
         }
@@ -117,7 +117,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var cards = db.Cards.AsQueryable().Where(x => ids.Any(c => c == x.Id)).ToList();
+                var cards = db.Cards.AsQueryable().AsSplitQuery().Where(x => ids.Any(c => c == x.Id)).ToList();
                 if (cards.Count < 1)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
@@ -389,7 +389,7 @@ namespace Sanakan.Modules
             var allUsers = Context.Client.Guilds.SelectMany(x => x.Users).Distinct();
             using (var db = new Database.UserContext(Config))
             {
-                var nonExistingIds = db.Cards.AsQueryable().Where(x => !allUsers.Any(u => u.Id == x.GameDeckId)).Select(x => x.Id).ToList();
+                var nonExistingIds = db.Cards.AsQueryable().AsSplitQuery().Where(x => !allUsers.Any(u => u.Id == x.GameDeckId)).Select(x => x.Id).ToList();
                 await ReplyAsync("", embed: $"Kart: {nonExistingIds.Count}".ToEmbedMessage(EMType.Bot).Build());
 
                 if (ids)
