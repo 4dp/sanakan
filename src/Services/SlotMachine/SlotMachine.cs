@@ -10,7 +10,7 @@ namespace Sanakan.Services.SlotMachine
     {
         private const int Rows = 3;
         private const int Slots = 5;
-        
+
         private User User;
 
         public SlotMachineSlots[,] Row { get; private set; }

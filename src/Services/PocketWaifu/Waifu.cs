@@ -711,7 +711,7 @@ namespace Sanakan.Services.PocketWaifu
         {
             using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
-                cardImage.SaveToPath($"./GOut/Cards/Profile/{card.Id}.png");
+                cardImage.SaveToPath($"{Dir.CardsInProfiles}/{card.Id}.png");
 
                 using (var stream = cardImage.ToPngStream())
                 {
@@ -877,9 +877,9 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GenerateAndSaveCardAsync(Card card, bool small = false)
         {
-            string imageLocation = $"./GOut/Cards/{card.Id}.png";
-            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
-            string pImageLocation = $"./GOut/Cards/Profile/{card.Id}.png";
+            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
+            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.png";
 
             using (var image = await _img.GetWaifuCardAsync(card))
             {
@@ -891,7 +891,7 @@ namespace Sanakan.Services.PocketWaifu
             {
                 using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
                 {
-                    cardImage.SaveToPath($"./GOut/Cards/Profile/{card.Id}.png");
+                    cardImage.SaveToPath($"{Dir.CardsInProfiles}/{card.Id}.png");
                 }
             }
 
@@ -900,9 +900,9 @@ namespace Sanakan.Services.PocketWaifu
 
         public void DeleteCardImageIfExist(Card card)
         {
-            string imageLocation = $"./GOut/Cards/{card.Id}.png";
-            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
-            string pImageLocation = $"./GOut/Cards/Profile/{card.Id}.png";
+            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
+            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.png";
 
             try
             {
@@ -921,8 +921,8 @@ namespace Sanakan.Services.PocketWaifu
         private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false, bool force = false)
         {
             string imageUrl = null;
-            string imageLocation = $"./GOut/Cards/{card.Id}.png";
-            string sImageLocation = $"./GOut/Cards/Small/{card.Id}.png";
+            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
 
             if (!File.Exists(imageLocation) || !File.Exists(sImageLocation) || force)
             {

@@ -18,7 +18,7 @@ namespace Sanakan.Services.Session.Models
     {
         private enum ExchangeStatus
         {
-            Add, AcceptP1, AcceptP2
+            Add, AcceptP1, AcceptP2, End
         }
 
         public IMessage Message { get; set; }
@@ -321,7 +321,7 @@ namespace Sanakan.Services.Session.Models
                         State = ExchangeStatus.AcceptP2;
                         Tips = $"{P2.User.Mention} daj {AcceptEmote} aby zaakceptować, lub {DeclineEmote} aby odrzucić.";
                     }
-                    else
+                    else if (State == ExchangeStatus.AcceptP2)
                     {
                         Tips = $"Wymiana zakończona!";
                         end = true;
@@ -381,8 +381,7 @@ namespace Sanakan.Services.Session.Models
 
                                     user1.GameDeck.RemoveFromWaifu(card);
 
-                                    user1.GameDeck.Cards.Remove(card);
-                                    user2.GameDeck.Cards.Add(card);
+                                    card.GameDeckId = user2.GameDeck.Id;
 
                                     user2.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user2.GameDeck.RemoveCardFromWishList(card.Id);
@@ -407,8 +406,7 @@ namespace Sanakan.Services.Session.Models
 
                                     user2.GameDeck.RemoveFromWaifu(card);
 
-                                    user2.GameDeck.Cards.Remove(card);
-                                    user1.GameDeck.Cards.Add(card);
+                                    card.GameDeckId = user1.GameDeck.Id;
 
                                     user1.GameDeck.RemoveCharacterFromWishList(card.Character);
                                     user1.GameDeck.RemoveCardFromWishList(card.Id);
@@ -417,6 +415,7 @@ namespace Sanakan.Services.Session.Models
 
                             await db.SaveChangesAsync();
 
+                            State = ExchangeStatus.End;
                             QueryCacheManager.ExpireTag(new string[] { $"user-{P1.User.Id}", $"user-{P2.User.Id}", "users" });
                         }
                     }

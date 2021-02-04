@@ -74,6 +74,8 @@ namespace Sanakan
 
         private void CreateModules()
         {
+            Services.Dir.Create();
+
             _logger = new ConsoleLogger();
 
             _client = new DiscordSocketClient(new DiscordSocketConfig()

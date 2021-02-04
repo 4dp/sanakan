@@ -17,7 +17,7 @@ namespace Sanakan.Services.Supervisor
             TotalMessages = 1;
             Messages.Add(new SupervisorMessage(contentOfFirstMessage));
         }
-        
+
         public SupervisorEntity()
         {
             Messages = new List<SupervisorMessage>();

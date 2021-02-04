@@ -6,6 +6,7 @@ src/.vscode
 SanakanTests/bin
 SanakanTests/obj
 SanakanTests/Properties
+GOut
 src/bin
 src/obj
 src/GOut

@@ -2558,7 +2558,12 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => response.Body.Any(r => r.CharacterId == x.Character)).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = new List<Card>();
+                foreach (var e in response.Body)
+                {
+                    var tmp = await db.Cards.AsQueryable().Include(x => x.TagList).Include(x => x.GameDeck).AsSplitQuery().Where(x => x.Character == e.CharacterId).AsNoTracking().FromCacheAsync( new[] {"users"});
+                    cards.AddRange(tmp);
+                }
 
                 if (cards.Count() < 1)
                 {

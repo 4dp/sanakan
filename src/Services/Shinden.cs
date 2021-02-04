@@ -11,7 +11,6 @@ using Sanakan.Extensions;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
 using Shinden;
-using Shinden.Models;
 
 namespace Sanakan.Services
 {
