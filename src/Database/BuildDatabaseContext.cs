@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Analytics;
@@ -65,7 +66,9 @@ namespace Sanakan.Database
                 SlidingExpiration = TimeSpan.FromHours(4),
                 AbsoluteExpirationRelativeToNow  = TimeSpan.FromHours(24)
             };
-            optionsBuilder.UseMySql(_config.Get().ConnectionString);
+            optionsBuilder.UseMySql(_config.Get().ConnectionString,
+                new MySqlServerVersion(new System.Version(5, 7)),
+                mySqlOptions => mySqlOptions.CharSetBehavior(CharSetBehavior.NeverAppend));
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

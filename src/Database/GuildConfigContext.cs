@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1591
 
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Database.Models.Configuration;
@@ -33,7 +34,9 @@ namespace Sanakan.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySql(_config.Get().ConnectionString);
+            optionsBuilder.UseMySql(_config.Get().ConnectionString,
+                new MySqlServerVersion(new System.Version(5, 7)),
+                mySqlOptions => mySqlOptions.CharSetBehavior(CharSetBehavior.NeverAppend));
         }
     }
 }

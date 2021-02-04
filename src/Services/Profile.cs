@@ -184,7 +184,7 @@ namespace Sanakan.Services
             if (cRole == null)
             {
                 var dColor = new Color(colorNumeric);
-                var createdRole = await user.Guild.CreateRoleAsync(colorNumeric.ToString(), GuildPermissions.None, dColor);
+                var createdRole = await user.Guild.CreateRoleAsync(colorNumeric.ToString(), GuildPermissions.None, dColor, false, false);
                 await createdRole.ModifyAsync(x => x.Position = aRole.Position + 1);
                 await user.AddRoleAsync(createdRole);
                 return true;

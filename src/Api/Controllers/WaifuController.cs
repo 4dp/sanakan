@@ -70,8 +70,8 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
-                    .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().FirstOrDefaultAsync();
+                var user = await db.Users.AsQueryable().Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
+                    .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().AsSplitQuery().FirstOrDefaultAsync();
 
                 if (user == null)
                 {
@@ -97,7 +97,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefaultAsync();
+                var user = await db.Users.AsQueryable().Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().AsSplitQuery().FirstOrDefaultAsync();
 
                 if (user == null)
                 {
@@ -105,7 +105,7 @@ namespace Sanakan.Api.Controllers
                     return new List<CardFinalView>();
                 }
 
-                var query = db.Cards.Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
+                var query = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
 
                 if (!string.IsNullOrEmpty(filter.SearchText))
                 {
@@ -144,7 +144,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefaultAsync();
+                var user = await db.Users.AsQueryable().AsSplitQuery().Where(x => x.Shinden == id).Include(x => x.GameDeck).AsNoTracking().FirstOrDefaultAsync();
 
                 if (user == null)
                 {
@@ -152,7 +152,7 @@ namespace Sanakan.Api.Controllers
                     return new List<CardFinalView>();
                 }
 
-                var cards = await db.Cards.Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).Skip((int)offset).Take((int)count).AsNoTracking().ToListAsync();
+                var cards = await db.Cards.AsQueryable().AsSplitQuery().Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).Skip((int)offset).Take((int)count).AsNoTracking().ToListAsync();
                 return cards.ToView();
             }
         }
@@ -168,7 +168,7 @@ namespace Sanakan.Api.Controllers
         {
             using (var db = new Database.UserContext(_config))
             {
-                var user = await db.Users.Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
+                var user = await db.Users.AsQueryable().AsSplitQuery().Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).ThenInclude(x => x.ArenaStats).Include(x => x.GameDeck)
                     .ThenInclude(x => x.Cards).ThenInclude(x => x.TagList).AsNoTracking().FirstOrDefaultAsync();
 
                 if (user == null)
@@ -220,7 +220,7 @@ namespace Sanakan.Api.Controllers
                 using (var db = new Database.UserContext(_config))
                 {
                     var userRelease = new List<string>() { "users" };
-                    var cards = db.Cards.Where(x => x.Character == oldId);
+                    var cards = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.Character == oldId);
 
                     foreach (var card in cards)
                     {
@@ -251,7 +251,7 @@ namespace Sanakan.Api.Controllers
                 using (var db = new Database.UserContext(_config))
                 {
                     var userRelease = new List<string>() { "users" };
-                    var cards = db.Cards.Where(x => x.Character == id);
+                    var cards = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.Character == id);
 
                     foreach (var card in cards)
                     {
@@ -311,7 +311,7 @@ namespace Sanakan.Api.Controllers
                     using (var db = new Database.UserContext(_config))
                     {
                         var userRelease = new List<string>() { "users" };
-                        var cards = db.Cards.Where(x => x.Character == id);
+                        var cards = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.Character == id);
 
                         foreach (var card in cards)
                         {
