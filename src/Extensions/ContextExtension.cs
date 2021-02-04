@@ -74,7 +74,7 @@ namespace Sanakan.Extensions
 
         public static async Task<List<GameDeck>> GetCachedPlayersWithActiveCards(this Database.UserContext context)
         {
-            return (await context.Cards.AsQueryable().Where(x => x.Active).Include(x => x.GameDeck).Select(x => x.GameDeck).Include(x => x.Cards).AsNoTracking().AsSplitQuery().FromCacheAsync(new string[] { $"users" })).ToList();
+            return (await context.Cards.AsQueryable().Where(x => x.Active).Include(x => x.GameDeck).ThenInclude(x => x.Cards).Select(x => x.GameDeck).AsNoTracking().AsSplitQuery().FromCacheAsync(new string[] { $"users" })).ToList();
         }
 
         public static async Task<User> GetUserOrCreateAsync(this Database.UserContext context, ulong userId)
