@@ -37,6 +37,14 @@ namespace Sanakan.Api.Models
         /// </summary>
         public bool IsUltimate { get; set; }
         /// <summary>
+        /// Czy karta posiada niestandardowy obrazek
+        /// </summary>
+        public bool HasCustomImage { get; set; }
+        /// <summary>
+        /// Czy karta posiada niestandardową ramkę
+        /// </summary>
+        public bool HasCustomBorder { get; set; }
+        /// <summary>
         /// Ilość punktów doświadczenia na karcie
         /// </summary>
         public double ExpCnt { get; set; }
@@ -140,6 +148,8 @@ namespace Sanakan.Api.Models
                 Source = card.Source.GetString(),
                 AnimeTitle = card.Title ?? "????",
                 UltimateQuality = card.Quality,
+                HasCustomImage = card.CustomImage != null,
+                HasCustomBorder = card.CustomBorder != null,
                 ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.png",
                 SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.png",
                 ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",
