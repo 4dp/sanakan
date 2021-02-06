@@ -806,14 +806,14 @@ namespace Sanakan.Modules
         }
 
         [Command("update", RunMode = RunMode.Async)]
-        [Summary("wyłącza bota z kodem 255")]
+        [Summary("wyłącza bota z kodem 200")]
         [Remarks("")]
         public async Task TurnOffWithUpdateAsync()
         {
             await ReplyAsync("", embed: "To już czas?".ToEmbedMessage(EMType.Bot).Build());
             await Context.Client.LogoutAsync();
             await Task.Delay(1500);
-            Environment.Exit(255);
+            Environment.Exit(200);
         }
 
         [Command("rmconfig", RunMode = RunMode.Async)]
