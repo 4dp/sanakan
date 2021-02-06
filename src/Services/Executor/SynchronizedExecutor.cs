@@ -11,11 +11,13 @@ namespace Sanakan.Services.Executor
 {
     public class SynchronizedExecutor : IExecutor
     {
+        private const int QueueLength = 50;
+
         private IServiceProvider _provider;
         private ILogger _logger;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(50);
+        private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(QueueLength);
 
         private Timer _timer;
         private CancellationTokenSource _cts { get; set; }
@@ -86,7 +88,7 @@ namespace Sanakan.Services.Executor
                 try
                 {
                     _logger.Log($"Executor: running {taskName}");
-                    
+
                     var watch = Stopwatch.StartNew();
                     await cmd.ExecuteAsync(_provider);
                     _logger.Log($"Executor: completed {taskName} in {watch.ElapsedMilliseconds}ms");

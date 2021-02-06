@@ -232,8 +232,7 @@ namespace Sanakan.Modules
                         thisCard.InCage = false;
                         thisCard.TagList.Clear();
 
-                        user.GameDeck.Cards.Remove(thisCard);
-                        winnerUser.GameDeck.Cards.Add(thisCard);
+                        thisCard.GameDeckId = winnerUser.GameDeck.Id;
 
                         winnerUser.GameDeck.RemoveCharacterFromWishList(thisCard.Character);
                         winnerUser.GameDeck.RemoveCardFromWishList(thisCard.Id);
@@ -261,7 +260,7 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                var thisCards = db.Cards.Include(x => x.TagList).Where(x => wids.Any(c => c == x.Id)).ToList();
+                var thisCards = db.Cards.AsQueryable().Include(x => x.TagList).AsSingleQuery().Where(x => wids.Contains(x.Id)).ToList();
                 if (thisCards.Count < 1)
                 {
                     await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
