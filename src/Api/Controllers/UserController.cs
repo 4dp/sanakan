@@ -23,7 +23,7 @@ using Z.EntityFramework.Plus;
 
 namespace Sanakan.Api.Controllers
 {
-    [ApiController, Authorize(Policy = "Site")]
+    [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
@@ -47,7 +47,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id użytkownika discorda</param>
         /// <returns>użytkownik bota</returns>
-        [HttpGet("discord/{id}")]
+        [HttpGet("discord/{id}"), Authorize(Policy = "Site")]
         public async Task<Database.Models.User> GetUserByDiscordIdAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
@@ -78,7 +78,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
         /// <returns>użytkownik bota</returns>
-        [HttpGet("shinden/{id}")]
+        [HttpGet("shinden/{id}"), Authorize(Policy = "Site")]
         public async Task<UserWithToken> GetUserByShindenIdAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
@@ -111,7 +111,7 @@ namespace Sanakan.Api.Controllers
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
         /// <returns>użytkownik bota</returns>
-        [HttpGet("shinden/simple/{id}")]
+        [HttpGet("shinden/simple/{id}"), Authorize(Policy = "Site")]
         public async Task<UserWithToken> GetUserByShindenIdSimpleAsync(ulong id)
         {
             using (var db = new Database.UserContext(_config))
@@ -146,7 +146,7 @@ namespace Sanakan.Api.Controllers
         /// <response code="403">Can't connect to shinden!</response>
         /// <response code="404">User not found</response>
         /// <response code="500">Model is invalid!</response>
-        [HttpPut("register")]
+        [HttpPut("register"), Authorize(Policy = "Site")]
         public async Task RegisterUserAsync([FromBody, Required]UserRegistration id)
         {
             if (id == null)
@@ -218,7 +218,7 @@ namespace Sanakan.Api.Controllers
         /// <param name="id">id użytkownika discorda</param>
         /// <param name="value">liczba TC</param>
         /// <response code="404">User not found</response>
-        [HttpPut("discord/{id}/tc")]
+        [HttpPut("discord/{id}/tc"), Authorize(Policy = "Site")]
         public async Task ModifyPointsTCDiscordAsync(ulong id, [FromBody, Required]long value)
         {
             using (var db = new Database.UserContext(_config))
@@ -268,7 +268,7 @@ namespace Sanakan.Api.Controllers
         /// <param name="id">id użytkownika shindena</param>
         /// <param name="value">liczba TC</param>
         /// <response code="404">User not found</response>
-        [HttpPut("shinden/{id}/tc")]
+        [HttpPut("shinden/{id}/tc"), Authorize(Policy = "Site")]
         public async Task ModifyPointsTCAsync(ulong id, [FromBody, Required]long value)
         {
             using (var db = new Database.UserContext(_config))

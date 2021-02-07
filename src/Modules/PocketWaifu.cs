@@ -2394,6 +2394,62 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("oznacz usuń")]
+        [Alias("tag remove", "oznacz usun")]
+        [Summary("kasuje tag z kart")]
+        [Remarks("ulubione 2211 2123 33123"), RequireWaifuCommandChannel]
+        public async Task RemoveCardTagAsync([Summary("tag")]string tag, [Summary("WID kart")]params ulong[] wids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var cardsSelected = bUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+
+                if (cardsSelected.Count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                int counter = 0;
+                foreach (var thisCard in cardsSelected)
+                {
+                    var tTag = thisCard.TagList.FirstOrDefault(x => x.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase));
+                    if (tTag != null)
+                    {
+                        ++counter;
+                        thisCard.TagList.Remove(tTag);
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} zdjął tag {tag} z {counter} kart.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("zasady wymiany")]
+        [Alias("exchange conditions")]
+        [Summary("ustawia tekst będący zasadami wymiany z nami, wywołanie bez podania zasad kasuje tekst")]
+        [Remarks("Wymieniam się tylko za karty z mojej listy życzeń."), RequireWaifuCommandChannel]
+        public async Task SetExchangeConditionAsync([Summary("zasady wymiany")][Remainder]string condition = null)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+
+                bUser.GameDeck.ExchangeConditions = condition;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} ustawił nowe zasady wymiany.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("talia")]
         [Alias("deck", "aktywne")]
         [Summary("wyświetla aktywne karty/ustawia karte jako aktywną")]
