@@ -107,8 +107,10 @@ namespace Sanakan.Services.PocketWaifu
 
                             if (dUser != null)
                             {
-                                if (!dUser.IsBlacklisted)
+                                if (!dUser.IsBlacklisted && dUser.GameDeck.MaxNumberOfCards > dUser.GameDeck.Cards.Count)
+                                {
                                     winner = selected;
+                                }
                             }
                             else users.Remove(selected);
                         }

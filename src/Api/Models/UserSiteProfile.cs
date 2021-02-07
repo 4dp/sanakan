@@ -40,6 +40,10 @@ namespace Sanakan.Api.Models
         /// </summary>
         public int ECount { get; set; }
         /// <summary>
+        /// Liczba kart które może posiadać użytkownik
+        /// </summary>
+        public long MaxCardCount { get; set; }
+        /// <summary>
         /// Waifu
         /// </summary>
         public CardFinalView Waifu { get; set; }

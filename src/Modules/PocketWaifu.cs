@@ -930,6 +930,12 @@ namespace Sanakan.Modules
                 }
 
                 var pack = bUser.GameDeck.BoosterPacks.ToArray()[numberOfPack - 1];
+                if (bUser.GameDeck.Cards.Count + pack.CardCnt > bUser.GameDeck.MaxNumberOfCards)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz już miejsca na kolejną kartę!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
                 if (cards.Count < pack.CardCnt)
                 {
@@ -1443,6 +1449,12 @@ namespace Sanakan.Modules
                 {
                     var timeTo = (int)freeCard.RemainingMinutes();
                     await ReplyAsync("", embed: $"{Context.User.Mention} możesz otrzymać następną darmową kartę dopiero za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (botuser.GameDeck.Cards.Count + 1 > botuser.GameDeck.MaxNumberOfCards)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz już miejsca na kolejną kartę!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -2208,6 +2220,78 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("limit kart")]
+        [Alias("card limit")]
+        [Summary("zwiększa limit kart jakie można posiadać o 100, podanie 0 jako krotności wypisuje obecny limit")]
+        [Remarks("10"), RequireWaifuCommandChannel]
+        public async Task IncCardLimitAsync([Summary("krotność użycia polecenia")]uint count = 1)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} obecny limit to: {bUser.GameDeck.MaxNumberOfCards}".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (count > 20)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} jednorazowo można zwiększyć limit tylko o 2000.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                long cost = bUser.GameDeck.CalculatePriceOfIncMaxCardCount(count);
+                if (bUser.TcCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby TC, aby zwiększyć limit o {100 * count} potrzebujesz {cost} TC.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                bUser.TcCnt -= cost;
+                bUser.GameDeck.MaxNumberOfCards += 100 * count;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} powiększył swój limit kart do {bUser.GameDeck.MaxNumberOfCards}.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("galeria")]
+        [Alias("gallery")]
+        [Summary("wykupuje dodatkowe 5 pozycji w galleri (koszt 100 TC), podanie 0 jako krotności wypisuje obecny limit")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task IncGalleryLimitAsync([Summary("krotność użycia polecenia")]uint count = 1)
+        {
+            int cost = 100 * (int)count;
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (count < 1)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} obecny limit to: {bUser.GameDeck.CardsInGallery}.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.TcCnt < cost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz wystarczającej liczby TC.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                bUser.TcCnt -= cost;
+                bUser.GameDeck.CardsInGallery += 5 * (int)count;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} powiększył swój limit kart w galleri do {bUser.GameDeck.CardsInGallery}.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("wymień na kule")]
         [Alias("wymien na kule", "crystal")]
         [Summary("zmienia naszyjnik i bukiet kwiatów na kryształową kule (koszt 5 CT)")]
@@ -2728,6 +2812,12 @@ namespace Sanakan.Modules
                 if (duser1 == null)
                 {
                     await ReplyAsync("", embed: "Jeden z graczy nie posiada profilu!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (duser1.GameDeck.Cards.Count + 1 > duser1.GameDeck.MaxNumberOfCards)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz już miejsca na kolejną kartę!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

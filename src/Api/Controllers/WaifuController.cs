@@ -183,6 +183,7 @@ namespace Sanakan.Api.Controllers
 
                 return new UserSiteProfile()
                 {
+                    MaxCardCount = user.GameDeck.MaxNumberOfCards,
                     ExchangeConditions = user.GameDeck.ExchangeConditions,
                     SSSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS),
                     SSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS),
@@ -192,8 +193,8 @@ namespace Sanakan.Api.Controllers
                     CCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C),
                     DCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D),
                     ECount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E),
-                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).ToView().ToList(),
-                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).FirstOrDefault().ToView(),
+                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).ToView().ToList(),
+                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenBy(x => x.Quality).FirstOrDefault().ToView(),
                     TagList = tagList.Distinct().ToList()
                 };
             }
@@ -607,6 +608,13 @@ namespace Sanakan.Api.Controllers
                         }
 
                         var pack = botUserCh.GameDeck.BoosterPacks.ToArray()[packNumber - 1];
+
+                        if (botUserCh.GameDeck.Cards.Count + pack.CardCnt > botUserCh.GameDeck.MaxNumberOfCards)
+                        {
+                            await "User has no space left in deck!".ToResponse(401).ExecuteResultAsync(ControllerContext);
+                            return null;
+                        }
+
                         cards = await _waifu.OpenBoosterPackAsync(null, pack);
                         bPackName = pack.Name;
                     }

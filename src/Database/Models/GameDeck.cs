@@ -25,6 +25,9 @@ namespace Sanakan.Database.Models
 
         public string ExchangeConditions { get; set; }
 
+        public long MaxNumberOfCards { get; set; }
+        public int CardsInGallery { get; set; }
+
         public virtual ICollection<Card> Cards { get; set; }
         public virtual ICollection<Item> Items { get; set; }
         public virtual ICollection<BoosterPack> BoosterPacks { get; set; }

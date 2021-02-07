@@ -110,7 +110,6 @@ namespace Sanakan.Api
                     var filePath = Path.Combine(System.AppContext.BaseDirectory, "Sanakan.xml");
                     if (File.Exists(filePath)) c.IncludeXmlComments(filePath);
 
-                    c.DescribeAllEnumsAsStrings();
                     c.CustomSchemaIds(x => x.FullName);
                 });
             }).ConfigureLogging(logging =>
