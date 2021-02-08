@@ -3142,7 +3142,7 @@ namespace Sanakan.Modules
         [Command("pojedynek")]
         [Alias("duel")]
         [Summary("stajesz do walki na przeciw innemu graczowi")]
-        [Remarks(""), RequireWaifuFightChannel]
+        [Remarks(""), RequireWaifuDuelChannel]
         public async Task MakeADuelAsync()
         {
             using (var db = new Database.UserContext(Config))

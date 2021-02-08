@@ -1033,6 +1033,32 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał rynku waifu.".ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("duelch")]
+        [Summary("ustawia kanał pojedynków waifu")]
+        [Remarks(""), RequireAdminRole]
+        public async Task SetDuelWaifuChannelAsync()
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+                if (config.WaifuConfig == null)
+                    config.WaifuConfig = new Database.Models.Configuration.Waifu();
+
+                if (config.WaifuConfig.DuelChannel == Context.Channel.Id)
+                {
+                    await ReplyAsync("", embed: $"Kanał `{Context.Channel.Name}` już jest ustawiony jako kanał pojedynków waifu.".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                config.WaifuConfig.DuelChannel = Context.Channel.Id;
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+            }
+
+            await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał pojedynków waifu.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("spawnch")]
         [Summary("ustawia kanał safari waifu")]
         [Remarks(""), RequireAdminRole]
@@ -1154,6 +1180,37 @@ namespace Sanakan.Modules
             }
 
             await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał poleceń.".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("ignch")]
+        [Summary("ustawia kanał jako ignorowany")]
+        [Remarks(""), RequireAdminRole]
+        public async Task SetIgnoredChannelAsync()
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
+
+                var chan = config.IgnoredChannels.FirstOrDefault(x => x.Channel == Context.Channel.Id);
+                if (chan != null)
+                {
+                    config.IgnoredChannels.Remove(chan);
+                    await db.SaveChangesAsync();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+
+                    await ReplyAsync("", embed: $"Usunięto `{Context.Channel.Name}` z listy kanałów ignorowanych.".ToEmbedMessage(EMType.Success).Build());
+                    return;
+                }
+
+                chan = new Database.Models.Configuration.WithoutMsgCntChannel { Channel = Context.Channel.Id };
+                config.IgnoredChannels.Add(chan);
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
+            }
+
+            await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał ignorowany.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("noexpch")]

@@ -31,6 +31,7 @@ namespace Sanakan.Database.Models.Configuration
         public virtual Waifu WaifuConfig { get; set; }
 
         public virtual ICollection<WithoutSupervisionChannel> ChannelsWithoutSupervision { get; set; }
+        public virtual ICollection<WithoutMsgCntChannel> IgnoredChannels { get; set; }
         public virtual ICollection<WithoutExpChannel> ChannelsWithoutExp { get; set; }
         public virtual ICollection<CommandChannel> CommandChannels { get; set; }
         public virtual ICollection<ModeratorRoles> ModeratorRoles { get; set; }

@@ -10,6 +10,7 @@ namespace Sanakan.Database.Models.Configuration
         public ulong Id { get; set; }
         public ulong MarketChannel { get; set; }
         public ulong SpawnChannel { get; set; }
+        public ulong DuelChannel { get; set; }
         public ulong TrashFightChannel { get; set; }
         public ulong TrashSpawnChannel { get; set; }
         public ulong TrashCommandsChannel { get; set; }

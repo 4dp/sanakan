@@ -84,6 +84,7 @@ namespace Sanakan.Services
             if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
                 return;
 
+            bool countMsg = true;
             bool calculateExp = true;
             using (var db = new Database.GuildConfigContext(_config))
             {
@@ -102,6 +103,12 @@ namespace Sanakan.Services
                         if (config.ChannelsWithoutExp.Any(x => x.Channel == message.Channel.Id))
                             calculateExp = false;
                     }
+
+                    if (config.IgnoredChannels != null)
+                    {
+                        if (config.IgnoredChannels.Any(x => x.Channel == message.Channel.Id))
+                            countMsg = false;
+                    }
                 }
             }
 
@@ -117,7 +124,10 @@ namespace Sanakan.Services
                 }
             }
 
-            CountMessage(user.Id, message.Content.IsCommand(_config.Get().Prefix));
+            if (countMsg)
+            {
+                CountMessage(user.Id, message.Content.IsCommand(_config.Get().Prefix));
+            }
             CalculateExpAndCreateTask(user, message, calculateExp);
         }
 

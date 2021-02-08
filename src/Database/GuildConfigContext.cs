@@ -23,6 +23,7 @@ namespace Sanakan.Database
         public DbSet<CommandChannel> CommandChannels { get; set; }
         public DbSet<ModeratorRoles> ModeratorRoles { get; set; }
         public DbSet<WithoutExpChannel> WithoutExpChannels { get; set; }
+        public DbSet<WithoutMsgCntChannel> IgnoredChannels { get; set; }
         public DbSet<WithoutSupervisionChannel> WithoutSupervisionChannels { get; set; }
         public DbSet<MyLand> MyLands { get; set; }
         public DbSet<Waifu> Waifus { get; set; }

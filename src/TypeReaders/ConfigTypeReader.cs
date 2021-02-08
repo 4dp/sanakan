@@ -32,6 +32,12 @@ namespace Sanakan.TypeReaders
                 case "nonexpchannels":
                     return Task.FromResult(TypeReaderResult.FromSuccess(ConfigType.NonExpChannels));
 
+                case "ignch":
+                case "nomsgcnt":
+                case "ignoredchannel":
+                case "ignoredchannels":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(ConfigType.IgnoredChannels));
+
                 case "wsup":
                 case "nosup":
                 case "nonsupchannel":

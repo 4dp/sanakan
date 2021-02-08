@@ -30,7 +30,8 @@ namespace Sanakan.Services
         WaifuCmdChannels,
         WaifuFightChannels,
         RichMessages,
-        ModeratorRoles
+        ModeratorRoles,
+        IgnoredChannels
     }
 
     public class Moderator
@@ -118,6 +119,9 @@ namespace Sanakan.Services
             var wExpCnt = config.ChannelsWithoutExp?.Count;
             string wExp = (wExpCnt > 0) ? $"({wExpCnt}) `config wexp`" : "--";
 
+            var wCntCnt = config.IgnoredChannels?.Count;
+            string wCnt = (wCntCnt > 0) ? $"({wCntCnt}) `config ignch`" : "--";
+
             var wSupCnt = config.ChannelsWithoutSupervision?.Count;
             string wSup = (wSupCnt > 0) ? $"({wSupCnt}) `config wsup`" : "--";
 
@@ -154,6 +158,7 @@ namespace Sanakan.Services
 
                             + $"**W Market:** {context.Guild.GetTextChannel(config.WaifuConfig?.MarketChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Spawn:** {context.Guild.GetTextChannel(config.WaifuConfig?.SpawnChannel ?? 0)?.Mention ?? "--"}\n"
+                            + $"**W Duel:** {context.Guild.GetTextChannel(config.WaifuConfig?.DuelChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Trash Fight:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashFightChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Trash Spawn:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashSpawnChannel ?? 0)?.Mention ?? "--"}\n"
                             + $"**W Trash Cmd:** {context.Guild.GetTextChannel(config.WaifuConfig?.TrashCommandsChannel ?? 0)?.Mention ?? "--"}\n"
@@ -168,6 +173,7 @@ namespace Sanakan.Services
                             + $"**W Cmd**: {wcmd}\n"
                             + $"**W Fight**: {wfCh}\n"
                             + $"**Role modów**: {mods}\n"
+                            + $"**Bez zliczania**: {wCnt}\n"
                             + $"**Bez exp**: {wExp}\n"
                             + $"**Bez nadzoru**: {wSup}\n"
                             + $"**Polecenia**: {cmdCh}\n"
@@ -235,7 +241,7 @@ namespace Sanakan.Services
             if (config.CommandChannels?.Count > 0)
             {
                 foreach (var channel in config.CommandChannels)
-                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? "usunięty"}\n";
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
             }
             else value += "*brak*";
 
@@ -248,7 +254,7 @@ namespace Sanakan.Services
             if (config.WaifuConfig?.CommandChannels?.Count > 0)
             {
                 foreach (var channel in config.WaifuConfig.CommandChannels)
-                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? "usunięty"}\n";
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
             }
             else value += "*brak*";
 
@@ -261,7 +267,20 @@ namespace Sanakan.Services
             if (config.WaifuConfig?.FightChannels?.Count > 0)
             {
                 foreach (var channel in config.WaifuConfig.FightChannels)
-                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? "usunięty"}\n";
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
+            }
+            else value += "*brak*";
+
+            return new EmbedBuilder().WithColor(EMType.Bot.Color()).WithDescription(value.TrimToLength(1950));
+        }
+
+        private EmbedBuilder GetIgnoredChannelsConfig(GuildOptions config, SocketCommandContext context)
+        {
+            string value = "**Kanały bez zliczania wiadomości:**\n\n";
+            if (config.IgnoredChannels?.Count > 0)
+            {
+                foreach (var channel in config.IgnoredChannels)
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
             }
             else value += "*brak*";
 
@@ -274,7 +293,7 @@ namespace Sanakan.Services
             if (config.ChannelsWithoutExp?.Count > 0)
             {
                 foreach (var channel in config.ChannelsWithoutExp)
-                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? "usunięty"}\n";
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
             }
             else value += "*brak*";
 
@@ -287,7 +306,7 @@ namespace Sanakan.Services
             if (config.ChannelsWithoutSupervision?.Count > 0)
             {
                 foreach (var channel in config.ChannelsWithoutSupervision)
-                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? "usunięty"}\n";
+                    value += $"{context.Guild.GetTextChannel(channel.Channel)?.Mention ?? $"{channel.Channel}"}\n";
             }
             else value += "*brak*";
 
@@ -300,6 +319,9 @@ namespace Sanakan.Services
             {
                 case ConfigType.NonExpChannels:
                     return GetNonExpChannelsConfig(config, context);
+
+                case ConfigType.IgnoredChannels:
+                    return GetIgnoredChannelsConfig(config, context);
 
                 case ConfigType.NonSupChannels:
                     return GetNonSupChannelsConfig(config, context);
