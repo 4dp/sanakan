@@ -4,8 +4,9 @@ while ((rval == 1)); do
     dotnet ./bin/Debug/netcoreapp3.1/Sanakan.dll
     rval=$?
     echo "$rval"
-    if ((rval == 200))
+    if test -f "./updateNow";
     then
+        rm ./updateNow
         make all-update-debug
         rval=1
     fi

@@ -812,6 +812,7 @@ namespace Sanakan.Modules
         {
             await ReplyAsync("", embed: "To już czas?".ToEmbedMessage(EMType.Bot).Build());
             await Context.Client.LogoutAsync();
+            System.IO.File.Create("./updateNow");
             await Task.Delay(1500);
             Environment.Exit(200);
         }
