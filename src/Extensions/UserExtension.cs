@@ -449,7 +449,7 @@ namespace Sanakan.Extensions
 
                 case TopType.Karma:
                 case TopType.KarmaNegative:
-                    return $"{u.GameDeck.Karma}";
+                    return $"{u.GameDeck.Karma.ToString("F")}";
 
                 case TopType.Pvp:
                     return $"{u.GameDeck.GlobalPVPRank}";

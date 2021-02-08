@@ -158,6 +158,36 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Pobiera surową listę życzeń użtykownika
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <returns>lista życzeń</returns>
+        /// <response code="404">User not found</response>
+        /// <response code="401">User wishlist is private</response>
+        [HttpGet("user/shinden/{id}/wishlist/raw")]
+        public async Task<IEnumerable<WishlistObject>> GetUsersRawWishlistByShindenIdAsync(ulong id)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.Users.AsQueryable().AsSplitQuery().Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Wishes).AsNoTracking().FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return new List<WishlistObject>();
+                }
+
+                if (user.GameDeck.WishlistIsPrivate)
+                {
+                    await "User wishlist is private".ToResponse(401).ExecuteResultAsync(ControllerContext);
+                    return new List<WishlistObject>();
+                }
+
+                return user.GameDeck.Wishes;
+            }
+        }
+
+        /// <summary>
         /// Pobiera profil użytkownika
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
@@ -193,8 +223,8 @@ namespace Sanakan.Api.Controllers
                     CCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C),
                     DCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D),
                     ECount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E),
-                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).ToView().ToList(),
-                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenBy(x => x.Quality).FirstOrDefault().ToView(),
+                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).ToView().ToList(),
+                    Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).FirstOrDefault().ToView(),
                     TagList = tagList.Distinct().ToList()
                 };
             }
