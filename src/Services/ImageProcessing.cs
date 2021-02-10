@@ -894,9 +894,9 @@ namespace Sanakan.Services
             int atk = card.GetAttackWithBonus();
 
             var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80 };
-            image.Mutate(x => x.DrawText(ops, atk.ToString("D4"), aphFont, Rgba32.FromHex("#da4e00"), new Point(316, 538)));
-            image.Mutate(x => x.DrawText(ops, def.ToString("D4"), aphFont, Rgba32.FromHex("#00a4ff"), new Point(316, 565)));
-            image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex("#40ff40"), new Point(302, 593)));
+            image.Mutate(x => x.DrawText(ops, atk.ToString("D4"), aphFont, Rgba32.FromHex("#da4e00"), new Point(342, 538)));
+            image.Mutate(x => x.DrawText(ops, def.ToString("D4"), aphFont, Rgba32.FromHex("#00a4ff"), new Point(342, 565)));
+            image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex("#40ff40"), new Point(328, 593)));
         }
 
         private void ApplyLambdaStats(Image<Rgba32> image, Card card)
