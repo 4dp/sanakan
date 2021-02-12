@@ -3146,7 +3146,10 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{thisCard.Id}", "users" });
 
-                await ReplyAsync("", embed: $"**Arena GMwK**:\n\n**Twoja karta**: {thisCard.GetString(false, false, true)}\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
+                _ = Task.Run(async () =>
+                {
+                    await ReplyAsync("", embed: $"**Arena GMwK**:\n\n**Twoja karta**: {thisCard.GetString(false, false, true)}\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
+                });
             }
         }
 
@@ -3256,8 +3259,11 @@ namespace Sanakan.Modules
                 var info = duser.GameDeck.CalculatePVPParams(denemy.GameDeck, res);
                 await db.SaveChangesAsync();
 
-                string wStr = fight.Winner == null ? "Remis!" : $"Zwycięża {fight.Winner.User.Mention}!";
-                await ReplyAsync("", embed: $"⚔️ **Pojedynek**:\n{Context.User.Mention} vs. {euser.Mention}\n\n{deathLog.TrimToLength(2000)}\n{wStr}\n{info}".ToEmbedMessage(EMType.Bot).Build());
+                _ = Task.Run(async () =>
+                {
+                    string wStr = fight.Winner == null ? "Remis!" : $"Zwycięża {fight.Winner.User.Mention}!";
+                    await ReplyAsync("", embed: $"⚔️ **Pojedynek**:\n{Context.User.Mention} vs. {euser.Mention}\n\n{deathLog.TrimToLength(2000)}\n{wStr}\n{info}".ToEmbedMessage(EMType.Bot).Build());
+                });
             }
         }
 
