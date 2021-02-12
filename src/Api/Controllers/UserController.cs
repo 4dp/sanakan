@@ -194,6 +194,24 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
+                if (db.Users.Any(x => x.Shinden == sUser.Id))
+                {
+                    await "This account is already linked!".ToResponse(401).ExecuteResultAsync(ControllerContext);
+                    var rmcs = _config.Get().RMConfig.Where(x => x.Type == RichMessageType.AdminNotify);
+                    foreach (var rmc in rmcs)
+                    {
+                        var guild = _client.GetGuild(rmc.GuildId);
+                        if (guild == null) continue;
+
+                        var channel = guild.GetTextChannel(rmc.ChannelId);
+                        if (channel == null) continue;
+
+                        await channel.SendMessageAsync("", embed: ($"Potencjalne multikonto:\nDID: {id.DiscordUserId}\n"
+                        + $"SID: {sUser.Id}\nSN: {sUser.Name}").ToEmbedMessage(EMType.Error).Build());
+                    }
+                    return;
+                }
+
                 var exe = new Executable($"api-register u{id.DiscordUserId}", new Task(() =>
                 {
                     using (var dbs = new Database.UserContext(_config))

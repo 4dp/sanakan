@@ -2888,7 +2888,7 @@ namespace Sanakan.Modules
                 };
 
                 var result = _waifu.GetFightWinner(thisCard, enemyCard);
-                thisCard.Affection -= thisCard.HasImage() ? 0.2 : 0.8;
+                thisCard.Affection -= thisCard.HasImage() ? 0.35 : 1.2;
                 var dInfo = new DuelInfo();
 
                 var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
@@ -2921,9 +2921,9 @@ namespace Sanakan.Modules
                         dInfo.Winner = thisCard;
                         dInfo.Loser = enemyCard;
 
-                        for (int i = 0; i < 3; i++)
+                        for (int i = 0; i < 5; i++)
                         {
-                            if (Services.Fun.TakeATry(5) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
+                            if (Services.Fun.TakeATry(3) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
                             {
                                 var item = _waifu.RandomizeItemFromFight().ToItem();
                                 var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
@@ -2942,7 +2942,7 @@ namespace Sanakan.Modules
 
                     case FightWinner.Card2:
                         embed.Description += "Twoja karta przegrywa!\n";
-                        thisCard.Affection -= thisCard.HasImage() ? 0.4 : 1.5;
+                        thisCard.Affection -= thisCard.HasImage() ? 0.6 : 1.8;
                         ++thisCard.ArenaStats.Loses;
 
                         dInfo.Side = DuelInfo.WinnerSide.Right;
@@ -2961,7 +2961,7 @@ namespace Sanakan.Modules
                         break;
                 }
 
-                botUser.GameDeck.Karma -= 0.04;
+                botUser.GameDeck.Karma -= 0.06;
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
@@ -3031,7 +3031,7 @@ namespace Sanakan.Modules
                 var items = new List<Item> { _waifu.RandomizeItemFromMFight().ToItem() };
                 var characters = new List<BoosterPackCharacter>();
 
-                var cardsCnt = Services.Fun.GetRandomValue(4, 9);
+                var cardsCnt = Services.Fun.GetRandomValue(6, 14);
                 var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
                 for (int i = 0; i < cardsCnt; i++)
                 {
@@ -3055,9 +3055,9 @@ namespace Sanakan.Modules
                 var deathLog = _waifu.GetDeathLog(history, players);
 
                 var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
-                double exp = 0.22 * blowsDeal;
+                double exp = 0.28 * blowsDeal;
 
-                double affection = thisCard.HasImage() ? 0.15 : 0.5;
+                double affection = thisCard.HasImage() ? 0.19 : 1.5;
                 affection *= blowsDeal;
 
                 bool userWon = history.Winner?.User != null;
@@ -3066,10 +3066,21 @@ namespace Sanakan.Modules
                 {
                     ++thisCard.ArenaStats.Wins;
                     resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
+                    items.Add(_waifu.RandomizeItemFromMFight().ToItem());
+
                     for (int i = 0; i < cardsCnt; i++)
                     {
                         if (Services.Fun.TakeATry(2))
-                            items.Add(_waifu.RandomizeItemFromMFight().ToItem());
+                        {
+                            var itmType = _waifu.RandomizeItemFromMFight();
+                            var itmQu = Quality.Broken;
+                            if (itmType.HasDifferentQualities())
+                            {
+                                itmQu = _waifu.RandomizeItemQualityFromMFight();
+                            }
+
+                            items.Add(itmType.ToItem(1, itmQu));
+                        }
                     }
                 }
                 else
@@ -3110,11 +3121,11 @@ namespace Sanakan.Modules
 
                 thisCard.ExpCnt += exp;
                 thisCard.Affection -= affection;
-                thisCard.GameDeck.Karma -= 0.04;
+                thisCard.GameDeck.Karma -= 0.09;
 
                 resultString += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
 
-                if (Services.Fun.TakeATry(10) && userWon)
+                if (Services.Fun.TakeATry(8) && userWon)
                 {
                     var boosterPack = new BoosterPack
                     {

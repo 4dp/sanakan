@@ -79,7 +79,7 @@ namespace Sanakan.Services.Session.Models
         {
             if (context.ReactionAdded != null || context.ReactionRemoved != null)
                 return;
-                
+
             if (State != ExchangeStatus.Add)
                 return;
 
@@ -256,7 +256,7 @@ namespace Sanakan.Services.Session.Models
             if (await Message.Channel.GetMessageAsync(Message.Id) is IUserMessage msg)
             {
                 var reaction = context.ReactionAdded ?? context.ReactionRemoved;
-                if (reaction == null) return false;
+                if (reaction == null || msg == null) return false;
 
                 switch (State)
                 {
@@ -311,12 +311,15 @@ namespace Sanakan.Services.Session.Models
         private async Task<bool> HandleUserReactionInAccept(SocketReaction reaction, PlayerInfo player, IUserMessage msg)
         {
             bool end = false;
+            bool msgCh = false;
+
             if (reaction.UserId == player.User.Id)
             {
                 if (reaction.Emote.Equals(AcceptEmote))
                 {
-                    if (State != ExchangeStatus.AcceptP2)
+                    if (State == ExchangeStatus.AcceptP1)
                     {
+                        msgCh = true;
                         RestartTimer();
                         State = ExchangeStatus.AcceptP2;
                         Tips = $"{P2.User.Mention} daj {AcceptEmote} aby zaakceptować, lub {DeclineEmote} aby odrzucić.";
@@ -324,6 +327,7 @@ namespace Sanakan.Services.Session.Models
                     else if (State == ExchangeStatus.AcceptP2)
                     {
                         Tips = $"Wymiana zakończona!";
+                        msgCh = true;
                         end = true;
 
                         if (P1.Cards.Count == 0 && P2.Cards.Count == 0)
@@ -420,14 +424,15 @@ namespace Sanakan.Services.Session.Models
                         }
                     }
                 }
-                else if (reaction.Emote.Equals(DeclineEmote))
+                else if (reaction.Emote.Equals(DeclineEmote) && State != ExchangeStatus.End)
                 {
                     RestartTimer();
                     Tips = $"{player.User.Mention} odrzucił propozycje wymiany!";
+                    msgCh = true;
                     end = true;
                 }
 
-                if (msg != null) await msg.ModifyAsync(x => x.Embed = BuildEmbed());
+                if (msg != null && msgCh) await msg.ModifyAsync(x => x.Embed = BuildEmbed());
             }
             return end;
         }

@@ -238,7 +238,7 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 95) return ItemType.AffectionRecoveryBig;
             if (num < 150) return ItemType.CardParamsReRoll;
             if (num < 225) return ItemType.DereReRoll;
-            if (num < 475) return ItemType.AffectionRecoveryNormal;
+            if (num < 500) return ItemType.AffectionRecoveryNormal;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -253,7 +253,7 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 160) return ItemType.CardParamsReRoll;
             if (num < 230) return ItemType.DereReRoll;
             if (num < 500) return ItemType.AffectionRecoveryNormal;
-            if (num < 510) return ItemType.IncreaseExpSmall;
+            if (num < 530) return ItemType.IncreaseExpSmall;
             return ItemType.AffectionRecoverySmall;
         }
 
@@ -296,6 +296,20 @@ namespace Sanakan.Services.PocketWaifu
             return Quality.Broken;
         }
 
+        public Quality RandomizeItemQualityFromMFight()
+        {
+            var num = Fun.GetRandomValue(100000);
+            if (num < 5) return Quality.Omega;
+            if (num < 50) return Quality.Sigma;
+            if (num < 200) return Quality.Lambda;
+            if (num < 600) return Quality.Zeta;
+            if (num < 2000) return Quality.Delta;
+            if (num < 5000) return Quality.Gamma;
+            if (num < 10000) return Quality.Beta;
+            if (num < 20000) return Quality.Alpha;
+            return Quality.Broken;
+        }
+
         public ItemWithCost[] GetItemsWithCost()
         {
             return new ItemWithCost[]
@@ -335,7 +349,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
         {
-            double rExp = 30f / (wild ? 50f : 10f);
+            double rExp = 30f / (wild ? 25f : 10f);
 
             if (toUp.Character == toSac.Character && !wild)
                 rExp = 30f;

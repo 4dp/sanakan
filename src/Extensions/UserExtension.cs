@@ -127,7 +127,7 @@ namespace Sanakan.Extensions
             => deck.ItemsDropped >= 200;
 
         public static bool ReachedDailyMaxItemsCountInArena(this GameDeck deck)
-            => deck.ItemsDropped >= 60;
+            => deck.ItemsDropped >= 100;
 
         public static long CalculatePriceOfIncMaxCardCount(this GameDeck deck, long count)
         {
