@@ -263,7 +263,7 @@ namespace Sanakan.Api.Controllers
 
                     QueryCacheManager.ExpireTag(userRelease.ToArray());
                 }
-            }));
+            }), Priority.High);
 
             await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "Success".ToResponse(200).ExecuteResultAsync(ControllerContext);
@@ -309,7 +309,7 @@ namespace Sanakan.Api.Controllers
 
                     QueryCacheManager.ExpireTag(userRelease.ToArray());
                 }
-            }));
+            }), Priority.High);
 
             await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await "Started!".ToResponse(200).ExecuteResultAsync(ControllerContext);

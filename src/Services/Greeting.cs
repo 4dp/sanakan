@@ -131,7 +131,7 @@ namespace Sanakan.Services
                 }
             });
 
-            await _executor.TryAdd(new Executable("delete user", moveTask), TimeSpan.FromSeconds(1));
+            await _executor.TryAdd(new Executable("delete user", moveTask, Priority.High), TimeSpan.FromSeconds(1));
         }
 
         private async Task SendMessageAsync(string message, ITextChannel channel)

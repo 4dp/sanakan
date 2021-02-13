@@ -409,7 +409,7 @@ namespace Sanakan.Extensions
             var exp = nextLvlExp - u.ExpCnt;
             if (exp < 1) exp = 1;
 
-            return nextLvlExp - u.ExpCnt;
+            return exp;
         }
 
         public static string GetViewValueForTop(this User u, TopType type)

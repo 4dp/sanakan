@@ -90,7 +90,7 @@ namespace Sanakan.Modules
 
         [Command("ban")]
         [Summary("banuje użytkownika")]
-        [Remarks("karna"), RequireAdminRole]
+        [Remarks("karna"), RequireAdminRole, Priority(1)]
         public async Task BanUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
@@ -119,7 +119,7 @@ namespace Sanakan.Modules
 
         [Command("mute")]
         [Summary("wycisza użytkownika")]
-        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles), Priority(1)]
         public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
@@ -162,7 +162,7 @@ namespace Sanakan.Modules
 
         [Command("mute mod")]
         [Summary("wycisza moderatora")]
-        [Remarks("karna"), RequireAdminRole]
+        [Remarks("karna"), RequireAdminRole, Priority(1)]
         public async Task MuteModUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
@@ -212,7 +212,7 @@ namespace Sanakan.Modules
 
         [Command("unmute")]
         [Summary("zdejmuje wyciszenie z użytkownika")]
-        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles)]
+        [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles), Priority(1)]
         public async Task UnmuteUserAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             using (var db = new Database.GuildConfigContext(Config))
@@ -1476,7 +1476,7 @@ namespace Sanakan.Modules
 
         [Command("raport")]
         [Summary("rozwiązuje raport")]
-        [Remarks("2342123444212 4 kara dla Ciebie"), RequireAdminRole]
+        [Remarks("2342123444212 4 kara dla Ciebie"), RequireAdminRole, Priority(1)]
         public async Task ResolveReportAsync([Summary("id raportu")]ulong rId, [Summary("długość wyciszenia w h")]long duration = -1, [Summary("powód")][Remainder]string reason = "z raportu")
         {
             using (var db = new Database.GuildConfigContext(Config))

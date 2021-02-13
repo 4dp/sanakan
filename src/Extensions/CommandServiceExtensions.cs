@@ -91,7 +91,7 @@ namespace Sanakan.Extensions
             }
 
             var chosenOverload = successfulParses[0];
-            return new Services.Commands.SearchResult(command: new Services.Commands.Command(chosenOverload.Key, chosenOverload.Value, context));
+            return new Services.Commands.SearchResult(command: new Services.Commands.Command(chosenOverload.Key, chosenOverload.Value, context, (Services.Executor.Priority) chosenOverload.Key.Command.Priority));
         }
     }
 }

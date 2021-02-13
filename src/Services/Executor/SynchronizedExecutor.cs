@@ -11,13 +11,14 @@ namespace Sanakan.Services.Executor
 {
     public class SynchronizedExecutor : IExecutor
     {
-        private const int QueueLength = 50;
+        private const int QueueLength = 60;
 
         private IServiceProvider _provider;
         private ILogger _logger;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(QueueLength);
+        private BlockingCollection<IExecutable> _hiQueue = new BlockingCollection<IExecutable>(QueueLength / 2);
 
         private Timer _timer;
         private CancellationTokenSource _cts { get; set; }
@@ -43,8 +44,8 @@ namespace Sanakan.Services.Executor
 
         public async Task<bool> TryAdd(IExecutable task, TimeSpan timeout)
         {
-            _logger.Log($"Executor: adding new task, on pool: {_queue.Count}");
-            if (_queue.TryAdd(task, timeout))
+            _logger.Log($"Executor: adding new task, on pool: {_queue.Count} /hi: {_hiQueue.Count}");
+            if (AddToQueue(task, timeout))
             {
                 await Task.CompletedTask;
                 return true;
@@ -54,7 +55,7 @@ namespace Sanakan.Services.Executor
 
         public async Task RunWorker()
         {
-            if (_queue.Count < 1)
+            if (_queue.Count < 1 && _hiQueue.Count < 1)
                 return;
 
             if (!await _semaphore.WaitAsync(0))
@@ -80,9 +81,26 @@ namespace Sanakan.Services.Executor
             }
         }
 
+        private bool AddToQueue(IExecutable task, TimeSpan timeout)
+        {
+            if (task.GetPriority() == Priority.High)
+            {
+                return _hiQueue.TryAdd(task, timeout);
+            }
+            return _queue.TryAdd(task, timeout);
+        }
+
+        private BlockingCollection<IExecutable> SelectQueue()
+        {
+            if (_hiQueue.Count > 0)
+                return _hiQueue;
+
+            return _queue;
+        }
+
         private async Task ProcessCommandsAsync()
         {
-            if (_queue.TryTake(out var cmd, 100))
+            if (SelectQueue().TryTake(out var cmd, 100))
             {
                 var taskName = cmd.GetName();
                 try

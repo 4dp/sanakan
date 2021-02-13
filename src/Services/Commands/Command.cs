@@ -9,12 +9,17 @@ namespace Sanakan.Services.Commands
 {
     public class Command : IExecutable
     {
-        public Command(CommandMatch match, ParseResult result, ICommandContext context)
+        private readonly Priority _priority;
+
+        public Command(CommandMatch match, ParseResult result, ICommandContext context, Priority priority)
         {
             Match = match;
             Result = result;
             Context = context;
+            _priority = priority;
         }
+
+        public Priority GetPriority() => _priority;
 
         public string GetName() => $"cmd-{Match.Command.Name}";
 

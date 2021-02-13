@@ -247,13 +247,13 @@ namespace Sanakan.Modules
 
                     await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
                 }
-            }));
+            }), Priority.High);
 
             await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             await msg.RemoveAllReactionsAsync();
         }
 
-        [Command("tranc")]
+        [Command("tranc"), Priority(1)]
         [Summary("przenosi kartę między użytkownikami")]
         [Remarks("Sniku 41231 41232")]
         public async Task TransferCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("WIDs")]params ulong[] wids)
@@ -346,7 +346,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Zbanowano {count} użytkowników.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("restore")]
+        [Command("restore"), Priority(1)]
         [Summary("przenosi kartę na nowo do użytkownika")]
         [Remarks("Sniku")]
         public async Task RestoreCardsAsync([Summary("użytkownik")]SocketGuildUser user)
@@ -415,7 +415,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("duser")]
+        [Command("duser"), Priority(1)]
         [Summary("usuwa użytkownika o podanym id z bazy")]
         [Remarks("845155646123")]
         public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id, [Summary("czy usunąć karty?")]bool cards = false)
@@ -446,7 +446,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został wymazany.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("tc duser")]
+        [Command("tc duser"), Priority(1)]
         [Summary("usuwa dane użytkownika o podanym id z bazy i danej wartości tc")]
         [Remarks("845155646123 5000")]
         public async Task FactoryUserAsync([Summary("id użytkownika")]ulong id, [Summary("wartość tc")]long value)
@@ -500,7 +500,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Użytkownik o id: `{id}` został zrównany.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("utitle")]
+        [Command("utitle"), Priority(1)]
         [Summary("updatuje tytuł karty")]
         [Remarks("ssało")]
         public async Task ChangeTitleCardAsync([Summary("WID")]ulong wid, [Summary("tytuł")][Remainder]string title = null)
@@ -535,7 +535,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("chpp")]
+        [Command("chpp"), Priority(1)]
         [Summary("ustawia liczbę znaków na pakiet")]
         [Remarks("true")]
         public async Task SetCharCntPerPacketAsync([Summary("liczba znaków")]long count, [Summary("true/false - czy zapisać")]bool save = false)
@@ -547,7 +547,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono próg `{count}` znaków na pakiet. `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("tsafari")]
+        [Command("tsafari"), Priority(1)]
         [Summary("wyłącza/załącza safari")]
         [Remarks("true")]
         public async Task ToggleSafariAsync([Summary("true/false - czy zapisać")]bool save = false)
@@ -559,7 +559,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Safari: `{config.SafariEnabled.GetYesNo()}` `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("twevent")]
+        [Command("twevent"), Priority(1)]
         [Summary("wyłącza/załącza event waifu")]
         [Remarks("")]
         public async Task ToggleWaifuEventAsync()
@@ -570,7 +570,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Waifu event: `{(!state).GetYesNo()}`.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("wevent")]
+        [Command("wevent"), Priority(1)]
         [Summary("ustawia idt eventu(kasowane są po restarcie)")]
         [Remarks("https://pastebin.com/raw/Y6a8gH5P")]
         public async Task SetWaifuEventIdsAsync([Summary("link do pliku z id postaci oddzielnymi średnikami")]string url)
@@ -629,7 +629,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("devr")]
+        [Command("devr", RunMode = RunMode.Async)]
         [Summary("przyznaje lub odbiera role developera")]
         [Remarks("")]
         public async Task ToggleDeveloperRoleAsync()
@@ -652,7 +652,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("gitem")]
+        [Command("gitem"), Priority(1)]
         [Summary("generuje przedmiot i daje go użytkownikowi")]
         [Remarks("Sniku 2 1")]
         public async Task GenerateItemAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("przedmiot")]ItemType itemType, [Summary("liczba przedmiotów")]uint count = 1,
@@ -679,7 +679,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("gcard")]
+        [Command("gcard"), Priority(1)]
         [Summary("generuje kartę i daje ją użytkownikowi")]
         [Remarks("Sniku 54861")]
         public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
@@ -704,7 +704,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("sc")]
+        [Command("sc"), Priority(1)]
         [Summary("zmienia SC użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]
         public async Task ChangeUserScAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba SC")]long amount)
@@ -722,7 +722,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("tc")]
+        [Command("tc"), Priority(1)]
         [Summary("zmienia TC użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]
         public async Task ChangeUserTcAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba TC")]long amount)
@@ -740,7 +740,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("pc")]
+        [Command("pc"), Priority(1)]
         [Summary("zmienia PC użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]
         public async Task ChangeUserPcAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba PC")]long amount)
@@ -758,7 +758,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("ct")]
+        [Command("ct"), Priority(1)]
         [Summary("zmienia CT użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]
         public async Task ChangeUserCtAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba CT")]long amount)
@@ -776,7 +776,7 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("exp")]
+        [Command("exp"), Priority(1)]
         [Summary("zmienia punkty doświadczenia użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]
         public async Task ChangeUserExpAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba punktów doświadczenia")]long amount)

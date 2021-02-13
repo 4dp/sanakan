@@ -223,7 +223,7 @@ namespace Sanakan.Api.Controllers
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }
-                }));
+                }), Priority.High);
 
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                 await "User connected!".ToResponse(200).ExecuteResultAsync(ControllerContext);
@@ -273,7 +273,7 @@ namespace Sanakan.Api.Controllers
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }
-                }));
+                }), Priority.High);
 
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                 await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
@@ -323,7 +323,7 @@ namespace Sanakan.Api.Controllers
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }
-                }));
+                }), Priority.High);
 
                 await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
                 await "TC added!".ToResponse(200).ExecuteResultAsync(ControllerContext);
