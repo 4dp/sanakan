@@ -108,7 +108,14 @@ namespace Sanakan.Extensions
 
         public static Color ToColor(this RichMessageType type)
         {
-            return EMType.Info.Color();
+            switch (type)
+            {
+                case RichMessageType.NewEpisodePL:
+                    return EMType.Error.Color();
+
+                default:
+                    return EMType.Info.Color();
+            }
         }
     }
 }
