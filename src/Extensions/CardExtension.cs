@@ -362,6 +362,41 @@ namespace Sanakan.Extensions
 
         public static bool IsUnusable(this Card card) => card.Affection <= -5;
 
+        public static bool ValidExpedition(this Card card, CardExpedition expedition, double karma)
+        {
+            if (card.Expedition != CardExpedition.No)
+                return false;
+
+            switch (expedition)
+            {
+                case CardExpedition.ExtremeItemWithExp:
+                case CardExpedition.NormalItemWithExp:
+                    return !card.FromFigure;
+
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHardcore:
+                    return card.FromFigure;
+
+                case CardExpedition.LightExp:
+                case CardExpedition.LightItems:
+                    return (karma > 1000) && !card.FromFigure;
+                case CardExpedition.LightItemWithExp:
+                    return (karma > 400) && !card.FromFigure;
+
+                case CardExpedition.DarkExp:
+                case CardExpedition.DarkItems:
+                    return (karma < -1000) && !card.FromFigure;
+                case CardExpedition.DarkItemWithExp:
+                    return (karma < -400) && !card.FromFigure;
+
+                default:
+                case CardExpedition.No:
+                    return false;
+            }
+        }
+
         public static string GetAffectionString(this Card card)
         {
             if (card.Affection <= -400) return "Pogarda (γ)";
@@ -385,132 +420,36 @@ namespace Sanakan.Extensions
             return "Obojętność";
         }
 
-        public static bool IsWeakTo(this Card card, Dere dere)
+        public static string GetName(this CardExpedition expedition)
         {
-            if (dere == Dere.Yato && card.Dere != Dere.Yato)
-                return true;
-
-            if (dere == Dere.Yami && (card.Dere != Dere.Yato && card.Dere != Dere.Raito && card.Dere != Dere.Yami))
-                return true;
-
-            switch (card.Dere)
+            switch (expedition)
             {
-                case Dere.Tsundere:
-                    if (dere != Dere.Tsundere)
-                        return true;
-                    return false;
+                case CardExpedition.NormalItemWithExp:
+                    return "normalną";
 
-                case Dere.Kamidere:
-                    if (dere == Dere.Deredere)
-                        return true;
-                    return false;
+                case CardExpedition.ExtremeItemWithExp:
+                    return "niemożliwą";
 
-                case Dere.Deredere:
-                    if (dere == Dere.Yandere)
-                        return true;
-                    return false;
+                case CardExpedition.DarkExp:
+                case CardExpedition.DarkItems:
+                case CardExpedition.DarkItemWithExp:
+                    return "nikczemną";
 
-                case Dere.Yandere:
-                    if (dere == Dere.Dandere)
-                        return true;
-                    return false;
+                case CardExpedition.LightExp:
+                case CardExpedition.LightItems:
+                case CardExpedition.LightItemWithExp:
+                    return "heroiczną";
 
-                case Dere.Dandere:
-                    if (dere == Dere.Kuudere)
-                        return true;
-                    return false;
 
-                case Dere.Kuudere:
-                    if (dere == Dere.Mayadere)
-                        return true;
-                    return false;
-
-                case Dere.Mayadere:
-                    if (dere == Dere.Bodere)
-                        return true;
-                    return false;
-
-                case Dere.Bodere:
-                    if (dere == Dere.Kamidere)
-                        return true;
-                    return false;
-
-                case Dere.Yami:
-                    if (dere == Dere.Raito)
-                        return true;
-                    return false;
-
-                case Dere.Raito:
-                    if (dere == Dere.Yami)
-                        return true;
-                    return false;
-
-                case Dere.Yato:
-                    return false;
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return "niezwykła";
 
                 default:
-                    return false;
-            }
-        }
-
-        public static bool IsResistTo(this Card card, Dere dere)
-        {
-            if (card.Dere == dere && dere != Dere.Yato)
-                return true;
-
-            switch (card.Dere)
-            {
-                case Dere.Tsundere:
-                    return false;
-
-                case Dere.Kamidere:
-                    if (dere == Dere.Yandere)
-                        return true;
-                    return false;
-
-                case Dere.Deredere:
-                    if (dere == Dere.Dandere)
-                        return true;
-                    return false;
-
-                case Dere.Yandere:
-                    if (dere == Dere.Kuudere)
-                        return true;
-                    return false;
-
-                case Dere.Dandere:
-                    if (dere == Dere.Mayadere)
-                        return true;
-                    return false;
-
-                case Dere.Kuudere:
-                    if (dere == Dere.Bodere)
-                        return true;
-                    return false;
-
-                case Dere.Mayadere:
-                    if (dere == Dere.Kamidere)
-                        return true;
-                    return false;
-
-                case Dere.Bodere:
-                    if (dere == Dere.Deredere)
-                        return true;
-                    return false;
-
-                case Dere.Yami:
-                    return false;
-
-                case Dere.Raito:
-                    if (dere != Dere.Yami)
-                        return true;
-                    return false;
-
-                case Dere.Yato:
-                    return true;
-
-                default:
-                    return false;
+                case CardExpedition.No:
+                    return "-";
             }
         }
 

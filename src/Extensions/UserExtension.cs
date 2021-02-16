@@ -123,12 +123,6 @@ namespace Sanakan.Extensions
             return user;
         }
 
-        public static bool ReachedDailyMaxItemsCountInArenaM(this GameDeck deck)
-            => deck.ItemsDropped >= 200;
-
-        public static bool ReachedDailyMaxItemsCountInArena(this GameDeck deck)
-            => deck.ItemsDropped >= 100;
-
         public static long CalculatePriceOfIncMaxCardCount(this GameDeck deck, long count)
         {
             long price = 0;
@@ -302,9 +296,11 @@ namespace Sanakan.Extensions
         public static double GetDeckPower(this GameDeck deck)
             => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
 
-        public static double GetMaxDeckPower(this GameDeck deck) => 800;
+        public static double GetMaxDeckPower(this GameDeck _) => 800;
 
-        public static double GetMinDeckPower(this GameDeck deck) => 200;
+        public static double GetMinDeckPower(this GameDeck _) => 200;
+
+        public static int LimitOfCardsOnExpedition(this GameDeck _) => 10;
 
         public static string GetUserNameStatus(this GameDeck deck)
         {

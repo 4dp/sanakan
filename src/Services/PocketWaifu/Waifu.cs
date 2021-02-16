@@ -31,11 +31,28 @@ namespace Sanakan.Services.PocketWaifu
 
     public class Waifu
     {
+        private const int DERE_TAB_SIZE = ((int) Dere.Yato) + 1;
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
 
         private IConfig _config;
         private ImageProcessing _img;
         private ShindenClient _shClient;
+
+        private static double[,] _dereDmgRelation = new double[DERE_TAB_SIZE, DERE_TAB_SIZE]
+        {
+            //Tsundere, Kamidere, Deredere, Yandere, Dandere, Kuudere, Mayadere, Bodere, Yami, Raito, Yato
+            { 0.5,      2,        2,        2,       2,       2,       2,        2,      3,    3,     3     }, //Tsundere
+            { 1,        0.5,      2,        0.5,     1,       1,       1,        1,      2,    1,     2     }, //Kamidere
+            { 1,        1,        0.5,      2,       0.5,     1,       1,        1,      2,    1,     2     }, //Deredere
+            { 1,        1,        1,        0.5,     2,       0.5,     1,        1,      2,    1,     2     }, //Yandere
+            { 1,        1,        1,        1,       0.5,     2,       0.5,      1,      2,    1,     2     }, //Dandere
+            { 1,        1,        1,        1,       1,       0.5,     2,        0.5,    2,    1,     2     }, //Kuudere
+            { 1,        0.5,      1,        1,       1,       1,       0.5,      2,      2,    1,     2     }, //Mayadere
+            { 1,        2,        0.5,      1,       1,       1,       1,        0.5,    2,    1,     2     }, //Bodere
+            { 1,        1,        1,        1,       1,       1,       1,        1,      0.5,  3,     2     }, //Yami
+            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    3,    0.5,   2     }, //Raito
+            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    0.5,  0.5,   1     }, //Yato
+        };
 
         public Waifu(ImageProcessing img, ShindenClient client, IConfig config)
         {
@@ -43,6 +60,8 @@ namespace Sanakan.Services.PocketWaifu
             _config = config;
             _shClient = client;
         }
+
+        public double GetDereDmgMultiplier(Card atk, Card def) => _dereDmgRelation[(int)def.Dere, (int)atk.Dere];
 
         public bool GetEventSate() => CharId.EventEnabled;
 
@@ -121,17 +140,6 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public Embed GetGMwKView(IEmote emote, Rarity max)
-        {
-            var time = DateTime.Now.AddMinutes(3);
-            return new EmbedBuilder
-            {
-                Color = EMType.Error.Color(),
-                Description = $"**Grupowa Masakra w Kisielu**\n\nRozpoczęcie: `{time.ToShortTimeString()}:{time.Second.ToString("00")}`\n"
-                    + $"Wymagana minimalna liczba graczy: `5`\nMaksymalna jakość karty: `{max}`\n\nAby dołączyć kliknij na reakcje {emote}"
-            }.Build();
-        }
-
         public Rarity RandomizeRarity()
         {
             var num = Fun.GetRandomValue(1000);
@@ -142,62 +150,6 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 370) return Rarity.C;
             if (num < 620) return Rarity.D;
             return Rarity.E;
-        }
-
-        public List<Rarity> GetExcludedArenaRarity(Rarity cardRarity)
-        {
-            var excudled = new List<Rarity>();
-
-            switch (cardRarity)
-            {
-                case Rarity.SSS:
-                    excudled.Add(Rarity.A);
-                    excudled.Add(Rarity.B);
-                    excudled.Add(Rarity.C);
-                    excudled.Add(Rarity.D);
-                    excudled.Add(Rarity.E);
-                    break;
-
-                case Rarity.SS:
-                    excudled.Add(Rarity.B);
-                    excudled.Add(Rarity.C);
-                    excudled.Add(Rarity.D);
-                    excudled.Add(Rarity.E);
-                    break;
-
-                case Rarity.S:
-                    excudled.Add(Rarity.C);
-                    excudled.Add(Rarity.D);
-                    excudled.Add(Rarity.E);
-                    break;
-
-                case Rarity.A:
-                    excudled.Add(Rarity.D);
-                    excudled.Add(Rarity.E);
-                    break;
-
-                case Rarity.B:
-                    excudled.Add(Rarity.E);
-                    break;
-
-                case Rarity.C:
-                    excudled.Add(Rarity.SS);
-                    break;
-
-                case Rarity.D:
-                    excudled.Add(Rarity.SS);
-                    excudled.Add(Rarity.S);
-                    break;
-
-                default:
-                case Rarity.E:
-                    excudled.Add(Rarity.SS);
-                    excudled.Add(Rarity.S);
-                    excudled.Add(Rarity.A);
-                    break;
-            }
-
-            return excudled;
         }
 
         public Rarity RandomizeRarity(List<Rarity> rarityExcluded)
@@ -226,35 +178,6 @@ namespace Sanakan.Services.PocketWaifu
                     return rar.Rarity;
             }
             return list.Last().Rarity;
-        }
-
-        public ItemType RandomizeItemFromFight()
-        {
-            var num = Fun.GetRandomValue(1000);
-            if (num < 2) return ItemType.IncreaseExpSmall;
-            if (num < 8) return ItemType.BetterIncreaseUpgradeCnt;
-            if (num < 15) return ItemType.IncreaseUpgradeCnt;
-            if (num < 40) return ItemType.AffectionRecoveryGreat;
-            if (num < 95) return ItemType.AffectionRecoveryBig;
-            if (num < 150) return ItemType.CardParamsReRoll;
-            if (num < 225) return ItemType.DereReRoll;
-            if (num < 500) return ItemType.AffectionRecoveryNormal;
-            return ItemType.AffectionRecoverySmall;
-        }
-
-        public ItemType RandomizeItemFromMFight()
-        {
-            var num = Fun.GetRandomValue(1000);
-            if (num < 2) return ItemType.IncreaseExpBig;
-            if (num < 10) return ItemType.BetterIncreaseUpgradeCnt;
-            if (num < 18) return ItemType.IncreaseUpgradeCnt;
-            if (num < 45) return ItemType.AffectionRecoveryGreat;
-            if (num < 100) return ItemType.AffectionRecoveryBig;
-            if (num < 160) return ItemType.CardParamsReRoll;
-            if (num < 230) return ItemType.DereReRoll;
-            if (num < 500) return ItemType.AffectionRecoveryNormal;
-            if (num < 530) return ItemType.IncreaseExpSmall;
-            return ItemType.AffectionRecoverySmall;
         }
 
         public ItemType RandomizeItemFromBlackMarket()
@@ -347,12 +270,12 @@ namespace Sanakan.Services.PocketWaifu
             };
         }
 
-        public double GetExpToUpgrade(Card toUp, Card toSac, bool wild = false)
+        public double GetExpToUpgrade(Card toUp, Card toSac)
         {
-            double rExp = 30f / (wild ? 25f : 10f);
+            double rExp = 30f / 5f;
 
-            if (toUp.Character == toSac.Character && !wild)
-                rExp = 30f;
+            if (toUp.Character == toSac.Character)
+                rExp *= 10f;
 
             var sacVal = (int) toSac.Rarity;
             var upVal = (int) toUp.Rarity;
@@ -405,8 +328,7 @@ namespace Sanakan.Services.PocketWaifu
                 realAtk1 = atk1 * (100 - def2) / 100;
             }
 
-            if (enemy.IsWeakTo(target.Dere)) realAtk1 *= 2;
-            if (enemy.IsResistTo(target.Dere)) realAtk1 /= 2;
+            realAtk1 *= GetDereDmgMultiplier(target, enemy);
             if (realAtk1 < 1) realAtk1 = 1;
 
             return realAtk1;
@@ -572,36 +494,6 @@ namespace Sanakan.Services.PocketWaifu
                 }
             }
             return deathLog;
-        }
-
-        public IExecutable GetExecutableGMwK(FightHistory history, List<PlayerInfo> players)
-        {
-            return new Executable("GMwK", new Task(() =>
-            {
-                using (var db = new Database.UserContext(_config))
-                {
-                    bool isWinner = history.Winner != null;
-                    foreach (var p in players)
-                    {
-                        var u = db.GetUserOrCreateAsync(p.User.Id).Result;
-                        var stat = new CardPvPStats
-                        {
-                            Type = FightType.BattleRoyale,
-                            Result = isWinner ? FightResult.Lose : FightResult.Draw
-                        };
-
-                        if (isWinner)
-                        {
-                            if (u.Id == history.Winner.User.Id)
-                                stat.Result = FightResult.Win;
-                        }
-
-                        u.GameDeck.PvPStats.Add(stat);
-                    }
-
-                    db.SaveChanges();
-                }
-            }));
         }
 
         public FightHistory MakeFightAsync(List<PlayerInfo> players, bool oneCard = false)
@@ -992,39 +884,6 @@ namespace Sanakan.Services.PocketWaifu
             string uri = info != null ? info.Uri(SafariImage.Type.Mystery) : SafariImage.DefaultUri(SafariImage.Type.Mystery);
             var msg = await trashChannel.SendFileAsync(uri);
             return msg.Attachments.First().Url;
-        }
-
-        public async Task<string> GetArenaViewAsync(DuelInfo info, ITextChannel trashChannel)
-        {
-            string url = null;
-            string imageUrlWinner = await GetCardUrlIfExistAsync(info.Winner, force: true);
-            string imageUrlLooser = await GetCardUrlIfExistAsync(info.Loser, force: true);
-
-            DuelImage dImg = null;
-            var reader = new Config.JsonFileReader($"./Pictures/Duel/List.json");
-            try
-            {
-                var images = reader.Load<List<DuelImage>>();
-                dImg = Fun.GetOneRandomFrom(images);
-            }
-            catch (Exception) { }
-
-            using (var winner = await _img.GetWaifuCardAsync(imageUrlWinner, info.Winner))
-            {
-                using (var looser = await _img.GetWaifuCardAsync(imageUrlLooser, info.Loser))
-                {
-                    using (var img = _img.GetDuelCardImage(info, dImg, winner, looser))
-                    {
-                        using (var stream = img.ToPngStream())
-                        {
-                            var msg = await trashChannel.SendFileAsync(stream, $"duel.png");
-                            url = msg.Attachments.First().Url;
-                        }
-                    }
-                }
-            }
-
-            return url;
         }
 
         public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)

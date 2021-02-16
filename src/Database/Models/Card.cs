@@ -35,7 +35,8 @@ namespace Sanakan.Database.Models
 
     public enum CardExpedition
     {
-        No, Easy, Medium, Hard, Hardcore
+        No, NormalItemWithExp, ExtremeItemWithExp, DarkExp, DarkItems, DarkItemWithExp, LightExp, LightItems, LightItemWithExp,
+        UltimateEasy, UltimateMedium, UltimateHard, UltimateHardcore
     }
 
     public class Card

@@ -2224,7 +2224,7 @@ namespace Sanakan.Modules
         [Alias("card limit")]
         [Summary("zwiększa limit kart jakie można posiadać o 100, podanie 0 jako krotności wypisuje obecny limit")]
         [Remarks("10"), RequireWaifuCommandChannel]
-        public async Task IncCardLimitAsync([Summary("krotność użycia polecenia")]uint count = 1)
+        public async Task IncCardLimitAsync([Summary("krotność użycia polecenia")]uint count = 0)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -2263,7 +2263,7 @@ namespace Sanakan.Modules
         [Alias("gallery")]
         [Summary("wykupuje dodatkowe 5 pozycji w galleri (koszt 100 TC), podanie 0 jako krotności wypisuje obecny limit")]
         [Remarks(""), RequireWaifuCommandChannel]
-        public async Task IncGalleryLimitAsync([Summary("krotność użycia polecenia")]uint count = 1)
+        public async Task IncGalleryLimitAsync([Summary("krotność użycia polecenia")]uint count = 0)
         {
             int cost = 100 * (int)count;
             using (var db = new Database.UserContext(Config))
@@ -2842,12 +2842,18 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("arena")]
-        [Alias("wild")]
-        [Summary("walka z losowo wygenerowaną kartą")]
-        [Remarks("1"), RequireWaifuFightChannel]
-        public async Task FightInArenaAsync([Summary("WID")]ulong wid)
+        [Command("wyprawa")]
+        [Alias("expedition")]
+        [Summary("wysyła kartę na wyprawę")]
+        [Remarks("11321 n"), RequireWaifuFightChannel]
+        public async Task SendCardToExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.No)
         {
+            if (expedition == CardExpedition.No)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nie podałeś poprawnej nazwy wyprawy.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetUserOrCreateAsync(Context.User.Id);
@@ -2858,297 +2864,29 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (thisCard.FromFigure)
+                var cardsOnExp = botUser.GameDeck.Cards.Count(x => x.Expedition != CardExpedition.No);
+                if (cardsOnExp >= botUser.GameDeck.LimitOfCardsOnExpedition())
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz wysłać więcej kart na wyprawę.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (thisCard.IsUnusable())
+                if (!thisCard.ValidExpedition(expedition, botUser.GameDeck.Karma))
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może się udać na tą wyprawę.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var enemyCharacter = await _waifu.GetRandomCharacterAsync();
-                if (enemyCharacter == null)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się pobrać informacji z shindena.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
+                thisCard.Expedition = expedition;
+                thisCard.ExpeditionDate = DateTime.Now;
 
-                var enemyCard = _waifu.GenerateNewCard(Context.User, enemyCharacter,
-                    _waifu.RandomizeRarity(_waifu.GetExcludedArenaRarity(thisCard.Rarity)));
-
-                var embed = new EmbedBuilder
-                {
-                    Color = EMType.Bot.Color(),
-                    Author = new EmbedAuthorBuilder().WithUser(Context.User),
-                    Description = $"{thisCard.GetString(false, false, true)} **vs** {enemyCard.GetString(true, false, true)}\n\n",
-                };
-
-                var result = _waifu.GetFightWinner(thisCard, enemyCard);
-                thisCard.Affection -= thisCard.HasImage() ? 0.35 : 1.2;
-                var dInfo = new DuelInfo();
-
-                var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
-                if (maxItems == null)
-                {
-                    maxItems = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Items,
-                        EndsAt = DateTime.MinValue
-                    };
-                    botUser.TimeStatuses.Add(maxItems);
-                }
-
-                if (!maxItems.IsActive())
-                {
-                    maxItems.EndsAt = DateTime.Now.Date.AddDays(1);
-                    botUser.GameDeck.ItemsDropped = 0;
-                }
-
-                switch (result)
-                {
-                    case FightWinner.Card1:
-                        ++thisCard.ArenaStats.Wins;
-                        var exp = _waifu.GetExpToUpgrade(thisCard, enemyCard, true);
-                        thisCard.ExpCnt += exp;
-                        embed.Description += "Twoja karta zwycięża!\n";
-                        embed.Description += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
-
-                        dInfo.Side = DuelInfo.WinnerSide.Left;
-                        dInfo.Winner = thisCard;
-                        dInfo.Loser = enemyCard;
-
-                        for (int i = 0; i < 5; i++)
-                        {
-                            if (Services.Fun.TakeATry(3) && !botUser.GameDeck.ReachedDailyMaxItemsCountInArena())
-                            {
-                                var item = _waifu.RandomizeItemFromFight().ToItem();
-                                var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
-                                if (thisItem == null)
-                                {
-                                    thisItem = item;
-                                    ++botUser.GameDeck.ItemsDropped;
-                                    botUser.GameDeck.Items.Add(thisItem);
-                                }
-                                else ++thisItem.Count;
-
-                                embed.Description += $"+{item.Name}\n";
-                            }
-                        }
-                        break;
-
-                    case FightWinner.Card2:
-                        embed.Description += "Twoja karta przegrywa!\n";
-                        thisCard.Affection -= thisCard.HasImage() ? 0.6 : 1.8;
-                        ++thisCard.ArenaStats.Loses;
-
-                        dInfo.Side = DuelInfo.WinnerSide.Right;
-                        dInfo.Winner = enemyCard;
-                        dInfo.Loser = thisCard;
-                        break;
-
-                    default:
-                    case FightWinner.Draw:
-                        embed.Description += "Twoja karta remisuje!\n";
-                        ++thisCard.ArenaStats.Draws;
-
-                        dInfo.Side = DuelInfo.WinnerSide.Draw;
-                        dInfo.Winner = thisCard;
-                        dInfo.Loser = enemyCard;
-                        break;
-                }
-
-                botUser.GameDeck.Karma -= 0.06;
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});
 
                 _ = Task.Run(async () =>
                 {
-                    await ReplyAsync("", embed: embed.Build());
-                });
-            }
-        }
-
-        [Command("arenam")]
-        [Alias("wildm")]
-        [Summary("walka przeciwko botowi w stylu GMwK")]
-        [Remarks("1"), RequireWaifuFightChannel]
-        public async Task StartPvEMassacreAsync([Summary("WID")]ulong wid)
-        {
-            using (var db = new Database.UserContext(Config))
-            {
-                var botUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
-                if (thisCard == null)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (thisCard.FromFigure)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może walczyć na areniem.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (!thisCard.CanFightOnPvEGMwK())
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt niską relację z tą kartą, aby mogła walczyć na arenie.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                var players = new List<PlayerInfo>
-                {
-                    new PlayerInfo
-                    {
-                        User = Context.User as SocketGuildUser,
-                        Cards = new List<Card> { thisCard },
-                        Dbuser = botUser
-                    }
-                };
-
-                var maxItems = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Items);
-                if (maxItems == null)
-                {
-                    maxItems = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Items,
-                        EndsAt = DateTime.MinValue
-                    };
-                    botUser.TimeStatuses.Add(maxItems);
-                }
-
-                if (!maxItems.IsActive())
-                {
-                    maxItems.EndsAt = DateTime.Now.Date.AddDays(1);
-                    botUser.GameDeck.ItemsDropped = 0;
-                }
-
-                var items = new List<Item> { _waifu.RandomizeItemFromMFight().ToItem() };
-                var characters = new List<BoosterPackCharacter>();
-
-                var cardsCnt = Services.Fun.GetRandomValue(6, 14);
-                var excludedRarity = _waifu.GetExcludedArenaRarity(thisCard.Rarity);
-                for (int i = 0; i < cardsCnt; i++)
-                {
-                    var character = await _waifu.GetRandomCharacterAsync();
-                    var botCard = _waifu.GenerateNewCard(null, character, thisCard.Rarity);
-                    characters.Add(new BoosterPackCharacter { Character = character.Id });
-
-                    botCard.GameDeckId = (ulong)i;
-                    botCard.Id = (ulong)i;
-
-                    if (i == 0 && botCard.Health < thisCard.Health)
-                        botCard.Health = thisCard.Health;
-
-                    if (i == 0 && botCard.Defence < thisCard.Defence)
-                        botCard.Defence = thisCard.Defence;
-
-                    players.Add(new PlayerInfo { Cards = new List<Card> { botCard } });
-                }
-
-                var history = _waifu.MakeFightAsync(players, true);
-                var deathLog = _waifu.GetDeathLog(history, players);
-
-                var blowsDeal = history.Rounds.Select(x => x.Fights.Where(c => c.AtkCardId == thisCard.Id)).Sum(x => x.Count());
-                double exp = 0.28 * blowsDeal;
-
-                double affection = thisCard.HasImage() ? 0.19 : 1.5;
-                affection *= blowsDeal;
-
-                bool userWon = history.Winner?.User != null;
-                string resultString = $"Niestety przegrałeś {Context.User.Mention}\n\n";
-                if (userWon)
-                {
-                    ++thisCard.ArenaStats.Wins;
-                    resultString = $"Wygrałeś {Context.User.Mention}!\n\n";
-                    items.Add(_waifu.RandomizeItemFromMFight().ToItem());
-
-                    for (int i = 0; i < cardsCnt; i++)
-                    {
-                        if (Services.Fun.TakeATry(2))
-                        {
-                            var itmType = _waifu.RandomizeItemFromMFight();
-                            var itmQu = Quality.Broken;
-                            if (itmType.HasDifferentQualities())
-                            {
-                                itmQu = _waifu.RandomizeItemQualityFromMFight();
-                            }
-
-                            items.Add(itmType.ToItem(1, itmQu));
-                        }
-                    }
-                }
-                else
-                {
-                    ++thisCard.ArenaStats.Loses;
-                    affection *= 1.5;
-                    exp /= 1.5;
-                }
-
-                if (botUser.GameDeck.ReachedDailyMaxItemsCountInArenaM())
-                    items.Clear();
-
-                if (thisCard.IsUnusable())
-                {
-                    affection *= 1.5;
-                    exp /= 5;
-                }
-                exp += 0.001;
-
-                int chance = 10 - (int)thisCard.Affection;
-                if (chance < 6) chance = 6;
-
-                if ((userWon && !thisCard.IsUnusable()) || (Services.Fun.TakeATry(chance) && !thisCard.IsBroken()))
-                {
-                    botUser.GameDeck.ItemsDropped += (uint)items.Count;
-                    foreach (var item in items)
-                    {
-                        var thisItem = botUser.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
-                        if (thisItem == null)
-                        {
-                            thisItem = item;
-                            botUser.GameDeck.Items.Add(thisItem);
-                        }
-                        else ++thisItem.Count;
-                        resultString += $"+{item.Name}\n";
-                    }
-                }
-
-                thisCard.ExpCnt += exp;
-                thisCard.Affection -= affection;
-                thisCard.GameDeck.Karma -= 0.09;
-
-                resultString += $"+{exp.ToString("F")} exp *({thisCard.ExpCnt.ToString("F")})*\n";
-
-                if (Services.Fun.TakeATry(8) && userWon)
-                {
-                    var boosterPack = new BoosterPack
-                    {
-                        RarityExcludedFromPack = new List<RarityExcluded>(),
-                        CardSourceFromPack = CardSource.PvE,
-                        Name = "Losowa karta z masakry PvE",
-                        IsCardFromPackTradable = true,
-                        Characters = characters,
-                        MinRarity = Rarity.E,
-                        CardCnt = 1
-                    };
-
-                    resultString += $"+{boosterPack.Name}";
-                    botUser.GameDeck.BoosterPacks.Add(boosterPack);
-                }
-
-                await db.SaveChangesAsync();
-
-                QueryCacheManager.ExpireTag(new string[] { $"user-{thisCard.Id}", "users" });
-
-                _ = Task.Run(async () =>
-                {
-                    await ReplyAsync("", embed: $"**Arena GMwK**:\n\n**Twoja karta**: {thisCard.GetString(false, false, true)}\n\n{deathLog.TrimToLength(1900)}{resultString}".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName()} wyprawę!".ToEmbedMessage(EMType.Success).Build());
                 });
             }
         }
