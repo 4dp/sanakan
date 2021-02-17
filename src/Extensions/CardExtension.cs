@@ -420,32 +420,32 @@ namespace Sanakan.Extensions
             return "Obojętność";
         }
 
-        public static string GetName(this CardExpedition expedition)
+        public static string GetName(this CardExpedition expedition, string end = "a")
         {
             switch (expedition)
             {
                 case CardExpedition.NormalItemWithExp:
-                    return "normalną";
+                    return $"normaln{end}";
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return "niemożliwą";
+                    return $"niemożliw{end}";
 
                 case CardExpedition.DarkExp:
                 case CardExpedition.DarkItems:
                 case CardExpedition.DarkItemWithExp:
-                    return "nikczemną";
+                    return $"nikczemn{end}";
 
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
                 case CardExpedition.LightItemWithExp:
-                    return "heroiczną";
+                    return $"heroiczn{end}";
 
 
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
                 case CardExpedition.UltimateHard:
                 case CardExpedition.UltimateHardcore:
-                    return "niezwykła";
+                    return $"niezwykł{end}";
 
                 default:
                 case CardExpedition.No:

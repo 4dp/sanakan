@@ -157,6 +157,12 @@ namespace Sanakan.Services.Session.Models
                     continue;
                 }
 
+                if (card.Expedition != Database.Models.CardExpedition.No)
+                {
+                    error = true;
+                    continue;
+                }
+
                 if (card.InCage || !card.IsTradable || card.IsBroken())
                 {
                     error = true;
