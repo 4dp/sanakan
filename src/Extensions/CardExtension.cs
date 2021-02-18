@@ -440,7 +440,6 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightItemWithExp:
                     return $"heroiczn{end}";
 
-
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
                 case CardExpedition.UltimateHard:
@@ -623,6 +622,92 @@ namespace Sanakan.Extensions
 
                 default:
                     throw new Exception("Could't parse input!");
+            }
+        }
+
+        public static double GetCostOfExpeditionPerMinute(this Card card)
+        {
+            switch (card.Expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                    return 0.015;
+
+                case CardExpedition.ExtremeItemWithExp:
+                    return 0.1;
+
+                case CardExpedition.DarkItems:
+                case CardExpedition.DarkExp:
+                    return 0.3;
+
+                case CardExpedition.DarkItemWithExp:
+                    return 0.25;
+
+                case CardExpedition.LightExp:
+                case CardExpedition.LightItems:
+                    return 0.15;
+
+                case CardExpedition.LightItemWithExp:
+                    return 0.08;
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return 0;
+            }
+        }
+
+        public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card)
+        {
+            double param = card.GetDefenceWithBonus() + card.GetAttackWithBonus();
+            double perMinute = card.GetCostOfExpeditionPerMinute();
+            double affectionOffset = 6d;
+
+            switch (card.Expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                case CardExpedition.ExtremeItemWithExp:
+                case CardExpedition.LightExp:
+                case CardExpedition.LightItems:
+                case CardExpedition.LightItemWithExp:
+                    param = card.Affection + affectionOffset;
+                    break;
+
+                case CardExpedition.DarkItems:
+                case CardExpedition.DarkExp:
+                case CardExpedition.DarkItemWithExp:
+                    break;
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return 0;
+            }
+
+            param *= card.Rarity.ValueModifier();
+            if (!card.HasImage()) perMinute *= 2;
+            var calc = param / perMinute;
+
+            return (calc < 1) ? 1 : calc;
+        }
+
+        public static double ValueModifier(this Rarity rarity)
+        {
+            switch (rarity)
+            {
+                case Rarity.SS: return 1.1;
+                case Rarity.S: return 1d;
+                case Rarity.A: return 0.9;
+                case Rarity.B: return 0.85;
+                case Rarity.C: return 0.8;
+                case Rarity.D: return 0.75;
+                case Rarity.E: return 0.7;
+
+                case Rarity.SSS:
+                default: return 1.25;
             }
         }
 

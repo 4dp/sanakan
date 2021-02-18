@@ -1024,5 +1024,114 @@ namespace Sanakan.Services.PocketWaifu
 
             return cards.Distinct().ToList();
         }
+
+        public double GetBaseItemsPerMinuteFromExpedition(CardExpedition expedition, Rarity rarity)
+        {
+            var cnt = 0d;
+
+            switch (expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                    cnt = 1.2;
+                    break;
+
+                case CardExpedition.ExtremeItemWithExp:
+                    cnt = 4.2;
+                    break;
+
+                case CardExpedition.LightItemWithExp:
+                case CardExpedition.DarkItemWithExp:
+                    cnt = 1.9;
+                    break;
+
+                case CardExpedition.DarkItems:
+                case CardExpedition.LightItems:
+                    cnt = 3.1;
+                    break;
+
+                case CardExpedition.LightExp:
+                case CardExpedition.DarkExp:
+                    return 0;
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return 0;
+            }
+
+            cnt *= rarity.ValueModifier();
+
+            return cnt / 60d;
+        }
+
+        public double GetBaseExpPerMinuteFromExpedition(CardExpedition expedition, Rarity rarity)
+        {
+            var baseExp = 0d;
+
+            switch (expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                    baseExp = 2.8;
+                    break;
+
+                case CardExpedition.ExtremeItemWithExp:
+                    baseExp = 6.8;
+                    break;
+
+                case CardExpedition.LightItemWithExp:
+                case CardExpedition.DarkItemWithExp:
+                    baseExp = 3.6;
+                    break;
+
+                case CardExpedition.LightExp:
+                case CardExpedition.DarkExp:
+                    baseExp = 11.6;
+                    break;
+
+                case CardExpedition.DarkItems:
+                case CardExpedition.LightItems:
+                    return 0.001;
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return 0;
+            }
+
+            baseExp *= rarity.ValueModifier();
+
+            return baseExp / 60d;
+        }
+
+        public string EndExpeditionAsync(User user, Card card)
+        {
+            var maxMinutes = card.CalculateMaxTimeOnExpeditionInMinutes();
+            var durationMin = (DateTime.Now - card.ExpeditionDate).TotalMinutes;
+            var baseExp = GetBaseExpPerMinuteFromExpedition(card.Expedition, card.Rarity);
+            var baseitemsCnt = GetBaseItemsPerMinuteFromExpedition(card.Expedition, card.Rarity);
+
+            if (maxMinutes < durationMin)
+                durationMin = maxMinutes;
+
+            //FIXME: add progressive accumulation
+            double totalExp = durationMin * baseExp;
+            double totalItemsCnt = durationMin * baseitemsCnt;
+
+            for (int i = 0; i < totalItemsCnt; i++)
+            {
+                //TODO: randomize items
+            }
+
+            //TODO: add inpact to karma
+
+            card.ExpCnt += totalExp;
+            card.Expedition = CardExpedition.No;
+
+            return $"RT: {maxMinutes / 60}\nT: {durationMin / 60}\nE: {totalExp}\nI: {totalItemsCnt}"; //FIXME: add normal info
+        }
     }
 }

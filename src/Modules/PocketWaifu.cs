@@ -2929,7 +2929,9 @@ namespace Sanakan.Modules
                 }
 
                 var oldName = thisCard.Expedition;
-                thisCard.Expedition = CardExpedition.No;
+                var message = _waifu.EndExpeditionAsync(botUser, thisCard);
+
+                //TODO: check event
 
                 await db.SaveChangesAsync();
 
@@ -2937,7 +2939,7 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} wróciła z {oldName.GetName("ej")} wyprawy!".ToEmbedMessage(EMType.Success).Build());
+                    await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} wróciła z {oldName.GetName("ej")} wyprawy!\n\n{message}".ToEmbedMessage(EMType.Success).Build());
                 });
             }
         }

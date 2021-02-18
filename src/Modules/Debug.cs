@@ -794,6 +794,32 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("sime"), Priority(1)]
+        [Summary("symuluje wyprawę daną kartą")]
+        [Remarks("12312 n")]
+        public async Task SimulateExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.No, [Summary("czas w godzinach")]int time = -1)
+        {
+            if (expedition == CardExpedition.No)
+                return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botUser = await db.GetUserAndDontTrackAsync(Context.User.Id);
+                var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
+                if (thisCard == null) return;
+
+                if (time > 0)
+                {
+                    thisCard.ExpeditionDate = DateTime.Now.AddHours(-time);
+                }
+
+                thisCard.Expedition = expedition;
+                var message = _waifu.EndExpeditionAsync(botUser, thisCard);
+
+                await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} wróciła z {expedition.GetName("ej")} wyprawy!\n\n{message}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("kill", RunMode = RunMode.Async)]
         [Summary("wyłącza bota")]
         [Remarks("")]
