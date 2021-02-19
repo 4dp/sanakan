@@ -9,7 +9,7 @@ namespace Sanakan.Api.Models
     public enum OrderType
     {
         Id, IdDes, Name, NameDes, Rarity, RarityDes, Title, TitleDes, Health, HealthDes, HealthBase, HealthBaseDes,
-        Atack, AtackDes, Defence, DefenceDes, Exp, ExpDes, Dere, DereDes, Picture, PictureDes
+        Atack, AtackDes, Defence, DefenceDes, Exp, ExpDes, Dere, DereDes, Picture, PictureDes, Relation, RelationDes
     }
 
     /// <summary>
@@ -62,6 +62,10 @@ namespace Sanakan.Api.Models
                     return query.OrderBy(x => x.Health);
                 case OrderType.HealthBaseDes:
                     return query.OrderByDescending(x => x.Health);
+                case OrderType.Relation:
+                    return query.OrderBy(x => x.Affection);
+                case OrderType.RelationDes:
+                    return query.OrderByDescending(x => x.Affection);
                 case OrderType.Title:
                     return query.OrderBy(x => x.Title);
                 case OrderType.TitleDes:
