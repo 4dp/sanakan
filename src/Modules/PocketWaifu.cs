@@ -2902,7 +2902,7 @@ namespace Sanakan.Modules
                  }
 
                  var expStrs = cardsOnExpedition.Select(x => $"{x.GetString(false, false, true)} na {x.Expedition.GetName("ej")} wyprawie od {x.ExpeditionDate.ToShortDateTime()}");
-                 await ReplyAsync("", embed: $"**Wyprawy[**{cardsOnExpedition.Count}/{botUser.GameDeck.LimitOfCardsOnExpedition()}**]** {Context.User.Mention}:\n\n{string.Join("\n", expStrs)}".ToEmbedMessage(EMType.Bot).Build());
+                 await ReplyAsync("", embed: $"**Wyprawy[**{cardsOnExpedition.Count}/{botUser.GameDeck.LimitOfCardsOnExpedition()}**]** {Context.User.Mention}:\n\n{string.Join("\n", expStrs)}".ToEmbedMessage(EMType.Bot).WithUser(Context.User).Build());
             }
         }
 
@@ -2937,7 +2937,7 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} wróciła z {oldName.GetName("ej")} wyprawy!\n\n{message}".ToEmbedMessage(EMType.Success).Build());
+                    await ReplyAsync("", embed: $"Karta {thisCard.GetString(false, false, true)} wróciła z {oldName.GetName("ej")} wyprawy!\n\n{message}".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
                 });
             }
         }
@@ -2986,7 +2986,7 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!".ToEmbedMessage(EMType.Success).Build());
+                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
                 });
             }
         }
