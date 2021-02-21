@@ -297,12 +297,18 @@ namespace Sanakan.Modules
                 {
                     case ProfileType.Img:
                     case ProfileType.StatsWithImg:
-                        if (await _profile.SaveProfileImageAsync(imgUrl, $"{Dir.SavedData}/SR{botuser.Id}.png", 325, 272))
+                        var res = await _profile.SaveProfileImageAsync(imgUrl, $"{Dir.SavedData}/SR{botuser.Id}.png", 325, 272);
+                        if (res == SaveResult.Success)
                         {
                             botuser.StatsReplacementProfileUri = $"{Dir.SavedData}/SR{botuser.Id}.png";
                             break;
                         }
-                        await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                        else if (res == SaveResult.BadUrl)
+                        {
+                            await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        await ReplyAsync("", embed: "Coś poszło nie tak, prawdopodobnie nie mam uprawnień do zapisu!".ToEmbedMessage(EMType.Error).Build());
                         return;
 
                     default:
@@ -335,13 +341,19 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (await _profile.SaveProfileImageAsync(imgUrl, $"{Dir.SavedData}/BG{botuser.Id}.png", 450, 145, true))
+                var res = await _profile.SaveProfileImageAsync(imgUrl, $"{Dir.SavedData}/BG{botuser.Id}.png", 450, 145, true);
+                if (res == SaveResult.Success)
                 {
                     botuser.BackgroundProfileUri = $"{Dir.SavedData}/BG{botuser.Id}.png";
                 }
-                else
+                else if (res == SaveResult.BadUrl)
                 {
                     await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                else
+                {
+                    await ReplyAsync("", embed: "Coś poszło nie tak, prawdopodobnie nie mam uprawnień do zapisu!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

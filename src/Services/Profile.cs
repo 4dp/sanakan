@@ -29,6 +29,13 @@ namespace Sanakan.Services
         Sc, Tc
     }
 
+    public enum SaveResult
+    {
+        Error,
+        BadUrl,
+        Success
+    }
+
     public enum FColor : uint
     {
         None = 0x000000,
@@ -297,24 +304,25 @@ namespace Sanakan.Services
             }
         }
 
-        public async Task<bool> SaveProfileImageAsync(string imgUrl, string path, int width = 0, int height = 0, bool streach = false)
+        public async Task<SaveResult> SaveProfileImageAsync(string imgUrl, string path, int width = 0, int height = 0, bool streach = false)
         {
             if (imgUrl == null)
-                return false;
+                return SaveResult.BadUrl;
 
             if (!imgUrl.IsURLToImage())
-                return false;
+                return SaveResult.BadUrl;
 
             try
             {
+                if (File.Exists(path)) File.Delete(path);
                 await _img.SaveImageFromUrlAsync(imgUrl, path, new Size(width, height), streach);
             }
             catch (Exception)
             {
-                return false;
+                return SaveResult.Error;
             }
 
-            return true;
+            return SaveResult.Success;
         }
     }
 }
