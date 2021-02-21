@@ -1246,6 +1246,13 @@ namespace Sanakan.Services.PocketWaifu
                 affectionCost += 3.3;
             }
 
+            if (duration.Item1 <= 5)
+            {
+                totalItemsCnt = 0;
+                karmaCost = 0;
+                totalExp = 0;
+            }
+
             for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))
@@ -1272,7 +1279,7 @@ namespace Sanakan.Services.PocketWaifu
 
             if (showStats)
             {
-                reward += $"\n\nRT: {duration.Item1.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
+                reward += $"\n\nRT: {duration.Item1.ToString("F")} E: {totalExp.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
             }
 
             card.ExpCnt += totalExp;
@@ -1315,21 +1322,30 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        private double GetProgressiveValueFromExpedition(double baseValue, double duration, double div)
+        public double GetProgressiveValueFromExpedition(double baseValue, double duration, double div)
         {
+            if (duration < div)
+            {
+                return baseValue * 0.3 * duration;
+            }
+
             var value = 0d;
-            var vB = (duration / div) + 1;
+            var vB = (int)(duration / div);
             for (int i = 0; i < vB; i++)
             {
                 var sBase = baseValue * ((i + 4d) / 10d);
                 if (sBase >= baseValue)
                 {
-                    value =+ (vB - i) * baseValue * div;
+                    var rest = vB - i;
+                    value += rest * baseValue * div;
+                    duration -= rest * div;
                     break;
                 }
                 value += sBase * div;
+                duration -= div;
             }
-            return value;
+
+            return value + (duration * baseValue);
         }
 
         private Item RandomizeItemForExpedition(CardExpedition expedition)
