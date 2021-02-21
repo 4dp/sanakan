@@ -636,7 +636,7 @@ namespace Sanakan.Extensions
                     return 0.015;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return 0.1;
+                    return 0.17;
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.DarkExp:
@@ -669,7 +669,7 @@ namespace Sanakan.Extensions
                     return 0.005;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return 0.3;
+                    return 0.13;
 
                 case CardExpedition.DarkItemWithExp:
                 case CardExpedition.DarkItems:
@@ -707,7 +707,7 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
                 case CardExpedition.LightItemWithExp:
-                    if (addOFK > 4) addOFK = 4;
+                    if (addOFK > 5) addOFK = 5;
                     break;
 
                 case CardExpedition.DarkItems:
@@ -744,7 +744,7 @@ namespace Sanakan.Extensions
                 case Rarity.B: return 0.90;
                 case Rarity.C: return 0.85;
                 case Rarity.D: return 0.80;
-                case Rarity.E: return 0.75;
+                case Rarity.E: return 0.70;
 
                 case Rarity.SSS:
                 default: return 1.3;

@@ -206,6 +206,22 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static bool HasDifferentQualitiesOnExpedition(this CardExpedition expedition)
+        {
+            switch (expedition)
+            {
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                case CardExpedition.ExtremeItemWithExp:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
         public static bool HasDifferentQualities(this ItemType type)
         {
             switch (type)

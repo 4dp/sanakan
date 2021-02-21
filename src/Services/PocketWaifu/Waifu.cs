@@ -306,7 +306,7 @@ namespace Sanakan.Services.PocketWaifu
             return Quality.Broken;
         }
 
-        public Quality RandomizeItemQualityFromMFight()
+        public Quality RandomizeItemQualityFromExpedition()
         {
             var num = Fun.GetRandomValue(100000);
             if (num < 5) return Quality.Omega;
@@ -1134,17 +1134,17 @@ namespace Sanakan.Services.PocketWaifu
                     break;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    cnt = 11.1;
+                    cnt = 9.1;
                     break;
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.DarkItemWithExp:
-                    cnt = 5.2;
+                    cnt = 4.7;
                     break;
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.LightItems:
-                    cnt = 8.2;
+                    cnt = 7.2;
                     break;
 
                 case CardExpedition.LightExp:
@@ -1209,15 +1209,20 @@ namespace Sanakan.Services.PocketWaifu
         {
             Dictionary<string, int> items = new Dictionary<string, int>();
 
-            var duration = GetRealTimeOnExpeditionInMinutes(card, user.GameDeck.Karma);
-            var baseExp = GetBaseExpPerMinuteFromExpedition(card.Expedition, card.Rarity);
             var baseItemsCnt = GetBaseItemsPerMinuteFromExpedition(card.Expedition, card.Rarity);
+            var baseExp = GetBaseExpPerMinuteFromExpedition(card.Expedition, card.Rarity);
+            var duration = GetRealTimeOnExpeditionInMinutes(card, user.GameDeck.Karma);
+            var multiplier = (duration < 60) ? ((duration < 30) ? 5d : 3d) : 1d;
 
-            //FIXME: add progressive accumulation
-            double totalExp = duration * baseExp;
-            int totalItemsCnt = (int)(duration * baseItemsCnt);
+            double totalExp = GetProgressivExpFromExpedition(baseExp, duration);
+            int totalItemsCnt = GetProgressivItemsFromExpedition(baseItemsCnt, duration);
 
-            string reward = $"+{totalExp.ToString("F")} exp\n";
+            string reward = $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
+            if (duration < 30)
+            {
+                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\nZdobywa:\n+{totalExp.ToString("F")} exp\n";
+            }
+
             for (int i = 0; i < totalItemsCnt; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))
@@ -1241,7 +1246,7 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             var karmaCost = card.GetKarmaCostInExpeditionPerMinute() * duration;
-            var affectionCost = card.GetCostOfExpeditionPerMinute() * duration;
+            var affectionCost = card.GetCostOfExpeditionPerMinute() * duration * multiplier;
 
             reward += string.Join("\n", items.Select(x => $"+{x.Key} x{x.Value}"));
 
@@ -1258,49 +1263,98 @@ namespace Sanakan.Services.PocketWaifu
 
             user.GameDeck.Karma -= karmaCost;
 
-            return $"Zdobywa:\n{reward}";
+            return reward;
+        }
+
+        private double GetProgressivExpFromExpedition(double baseValue, double duration)
+        {
+            var div = 15d;
+            var value = 0d;
+            var vB = (duration / div) + 1;
+            for (int i = 0; i < vB; i++)
+            {
+                var sBase = baseValue * ((i + 4d) / 10d);
+                if (sBase >= baseValue)
+                {
+                    value =+ (vB - i) * baseValue * div;
+                    break;
+                }
+                value += sBase * div;
+            }
+            return value;
+        }
+
+        private int GetProgressivItemsFromExpedition(double baseValue, double duration)
+        {
+            var div = 25d;
+            var value = 0d;
+            var vB = (duration / div) + 1;
+            for (int i = 0; i < vB; i++)
+            {
+                var sBase = baseValue * ((i + 4d) / 10d);
+                if (sBase >= baseValue)
+                {
+                    value =+ (vB - i) * baseValue * div;
+                    break;
+                }
+                value += sBase * div;
+            }
+            return (int) value;
         }
 
         private Item RandomizeItemForExpedition(CardExpedition expedition)
         {
             var c = _chanceOfItemsInExpedition[expedition];
 
-            //TODO: randomize quality of item
+            var quality = Quality.Broken;
+            if (expedition.HasDifferentQualitiesOnExpedition())
+            {
+                quality = RandomizeItemQualityFromExpedition();
+            }
 
             switch (Fun.GetRandomValue(10000))
             {
-                case int n when (n < c[ItemType.AffectionRecoverySmall].Item2 && n >= c[ItemType.AffectionRecoverySmall].Item1):
-                    return ItemType.AffectionRecoverySmall.ToItem();
+                case int n when (n < c[ItemType.AffectionRecoverySmall].Item2
+                                && n >= c[ItemType.AffectionRecoverySmall].Item1):
+                    return ItemType.AffectionRecoverySmall.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.AffectionRecoveryNormal].Item2 && n >= c[ItemType.AffectionRecoveryNormal].Item1):
-                    return ItemType.AffectionRecoveryNormal.ToItem();
+                case int n when (n < c[ItemType.AffectionRecoveryNormal].Item2
+                                && n >= c[ItemType.AffectionRecoveryNormal].Item1):
+                    return ItemType.AffectionRecoveryNormal.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.DereReRoll].Item2 && n >= c[ItemType.DereReRoll].Item1):
-                    return ItemType.DereReRoll.ToItem();
+                case int n when (n < c[ItemType.DereReRoll].Item2
+                                && n >= c[ItemType.DereReRoll].Item1):
+                    return ItemType.DereReRoll.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.CardParamsReRoll].Item2 && n >= c[ItemType.CardParamsReRoll].Item1):
-                    return ItemType.CardParamsReRoll.ToItem();
+                case int n when (n < c[ItemType.CardParamsReRoll].Item2
+                                && n >= c[ItemType.CardParamsReRoll].Item1):
+                    return ItemType.CardParamsReRoll.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.AffectionRecoveryBig].Item2 && n >= c[ItemType.AffectionRecoveryBig].Item1):
-                    return ItemType.AffectionRecoveryBig.ToItem();
+                case int n when (n < c[ItemType.AffectionRecoveryBig].Item2
+                                && n >= c[ItemType.AffectionRecoveryBig].Item1):
+                    return ItemType.AffectionRecoveryBig.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.AffectionRecoveryGreat].Item2 && n >= c[ItemType.AffectionRecoveryGreat].Item1):
-                    return ItemType.AffectionRecoveryGreat.ToItem();
+                case int n when (n < c[ItemType.AffectionRecoveryGreat].Item2
+                                && n >= c[ItemType.AffectionRecoveryGreat].Item1):
+                    return ItemType.AffectionRecoveryGreat.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.IncreaseUpgradeCnt].Item2 && n >= c[ItemType.IncreaseUpgradeCnt].Item1):
-                    return ItemType.IncreaseUpgradeCnt.ToItem();
+                case int n when (n < c[ItemType.IncreaseUpgradeCnt].Item2
+                                && n >= c[ItemType.IncreaseUpgradeCnt].Item1):
+                    return ItemType.IncreaseUpgradeCnt.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.IncreaseExpSmall].Item2 && n >= c[ItemType.IncreaseExpSmall].Item1):
-                    return ItemType.IncreaseExpSmall.ToItem();
+                case int n when (n < c[ItemType.IncreaseExpSmall].Item2
+                                && n >= c[ItemType.IncreaseExpSmall].Item1):
+                    return ItemType.IncreaseExpSmall.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.IncreaseExpBig].Item2 && n >= c[ItemType.IncreaseExpBig].Item1):
-                    return ItemType.IncreaseExpBig.ToItem();
+                case int n when (n < c[ItemType.IncreaseExpBig].Item2
+                                && n >= c[ItemType.IncreaseExpBig].Item1):
+                    return ItemType.IncreaseExpBig.ToItem(1, quality);
 
-                case int n when (n < c[ItemType.BetterIncreaseUpgradeCnt].Item2 && n >= c[ItemType.BetterIncreaseUpgradeCnt].Item1):
-                    return ItemType.BetterIncreaseUpgradeCnt.ToItem();
+                case int n when (n < c[ItemType.BetterIncreaseUpgradeCnt].Item2
+                                && n >= c[ItemType.BetterIncreaseUpgradeCnt].Item1):
+                    return ItemType.BetterIncreaseUpgradeCnt.ToItem(1, quality);
 
-                default:
-                    return null;
+                default: return null;
             }
         }
 
@@ -1313,7 +1367,7 @@ namespace Sanakan.Services.PocketWaifu
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.DarkItemWithExp:
-                    return !Services.Fun.TakeATry(20);
+                    return !Services.Fun.TakeATry(15);
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.LightItems:

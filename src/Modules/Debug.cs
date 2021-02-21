@@ -797,7 +797,7 @@ namespace Sanakan.Modules
         [Command("sime"), Priority(1)]
         [Summary("symuluje wyprawę daną kartą")]
         [Remarks("12312 n")]
-        public async Task SimulateExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.No, [Summary("czas w godzinach")]int time = -1)
+        public async Task SimulateExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.No, [Summary("czas w minutach")]int time = -1)
         {
             if (expedition == CardExpedition.No)
                 return;
@@ -810,7 +810,7 @@ namespace Sanakan.Modules
 
                 if (time > 0)
                 {
-                    thisCard.ExpeditionDate = DateTime.Now.AddHours(-time);
+                    thisCard.ExpeditionDate = DateTime.Now.AddMinutes(-time);
                 }
 
                 thisCard.Expedition = expedition;
