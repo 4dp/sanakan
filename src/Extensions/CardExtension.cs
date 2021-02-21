@@ -367,6 +367,9 @@ namespace Sanakan.Extensions
             if (card.Expedition != CardExpedition.No)
                 return false;
 
+            if (card.InCage)
+                return false;
+
             switch (expedition)
             {
                 case CardExpedition.ExtremeItemWithExp:

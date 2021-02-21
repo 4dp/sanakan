@@ -2929,7 +2929,7 @@ namespace Sanakan.Modules
                 }
 
                 var oldName = thisCard.Expedition;
-                var message = _waifu.EndExpeditionAsync(botUser, thisCard);
+                var message = _waifu.EndExpedition(botUser, thisCard);
 
                 await db.SaveChangesAsync();
 

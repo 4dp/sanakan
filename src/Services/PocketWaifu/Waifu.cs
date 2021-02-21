@@ -1205,7 +1205,7 @@ namespace Sanakan.Services.PocketWaifu
             return baseExp / 60d;
         }
 
-        public string EndExpeditionAsync(User user, Card card, bool showStats = false)
+        public string EndExpedition(User user, Card card, bool showStats = false)
         {
             Dictionary<string, int> items = new Dictionary<string, int>();
 
