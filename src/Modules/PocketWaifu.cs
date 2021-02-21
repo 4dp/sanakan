@@ -2931,8 +2931,6 @@ namespace Sanakan.Modules
                 var oldName = thisCard.Expedition;
                 var message = _waifu.EndExpeditionAsync(botUser, thisCard);
 
-                //TODO: check event
-
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users"});

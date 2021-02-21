@@ -637,17 +637,17 @@ namespace Sanakan.Extensions
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.DarkExp:
-                    return 0.3;
+                    return 0.11;
 
                 case CardExpedition.DarkItemWithExp:
-                    return 0.25;
+                    return 0.06;
 
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
-                    return 0.15;
+                    return 0.12;
 
                 case CardExpedition.LightItemWithExp:
-                    return 0.08;
+                    return 0.07;
 
                 default:
                 case CardExpedition.UltimateEasy:
@@ -658,25 +658,60 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card)
+        public static double GetKarmaCostInExpeditionPerMinute(this Card card)
         {
-            double param = card.GetDefenceWithBonus() + card.GetAttackWithBonus();
+            switch (card.Expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                    return 0.005;
+
+                case CardExpedition.ExtremeItemWithExp:
+                    return 0.3;
+
+                case CardExpedition.DarkItemWithExp:
+                case CardExpedition.DarkItems:
+                case CardExpedition.DarkExp:
+                    return 0.01;
+
+                case CardExpedition.LightItemWithExp:
+                case CardExpedition.LightExp:
+                case CardExpedition.LightItems:
+                    return 0.07;
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return 0;
+            }
+        }
+
+        public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card, double karma)
+        {
             double perMinute = card.GetCostOfExpeditionPerMinute();
-            double affectionOffset = 6d;
+            double param = card.Affection;
+            double addOFK = karma / 200;
+            double affOffset = 6d;
 
             switch (card.Expedition)
             {
                 case CardExpedition.NormalItemWithExp:
                 case CardExpedition.ExtremeItemWithExp:
+                    addOFK = 0;
+                    break;
+
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
                 case CardExpedition.LightItemWithExp:
-                    param = card.Affection + affectionOffset;
+                    if (addOFK > 4) addOFK = 4;
                     break;
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.DarkExp:
                 case CardExpedition.DarkItemWithExp:
+                    addOFK = -addOFK;
+                    if (addOFK > 10) addOFK = 10;
                     break;
 
                 default:
@@ -687,27 +722,29 @@ namespace Sanakan.Extensions
                     return 0;
             }
 
+            param += affOffset + addOFK;
             param *= card.Rarity.ValueModifier();
             if (!card.HasImage()) perMinute *= 2;
-            var calc = param / perMinute;
+            var t = param / perMinute;
+            if (t > 10080) t = 10080;
 
-            return (calc < 1) ? 1 : calc;
+            return (t < 1) ? 1 : t;
         }
 
         public static double ValueModifier(this Rarity rarity)
         {
             switch (rarity)
             {
-                case Rarity.SS: return 1.1;
-                case Rarity.S: return 1d;
-                case Rarity.A: return 0.9;
-                case Rarity.B: return 0.85;
-                case Rarity.C: return 0.8;
-                case Rarity.D: return 0.75;
-                case Rarity.E: return 0.7;
+                case Rarity.SS: return 1.15;
+                case Rarity.S: return 1.05;
+                case Rarity.A: return 0.95;
+                case Rarity.B: return 0.90;
+                case Rarity.C: return 0.85;
+                case Rarity.D: return 0.80;
+                case Rarity.E: return 0.75;
 
                 case Rarity.SSS:
-                default: return 1.25;
+                default: return 1.3;
             }
         }
 
