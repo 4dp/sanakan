@@ -211,7 +211,6 @@ namespace Sanakan.Extensions
                 + $"**W klatce:** {card.InCage.GetYesNo()}\n"
                 + $"**Aktywna:** {card.Active.GetYesNo()}\n"
                 + $"**Możliwość wymiany:** {card.IsTradable.GetYesNo()}\n\n"
-                + $"**Arena:** **W**: {card?.ArenaStats?.Wins ?? 0} **L**: {card?.ArenaStats?.Loses ?? 0} **D**: {card?.ArenaStats?.Draws ?? 0}\n\n"
                 + $"**WID:** {card.Id} *({card.Character})*\n"
                 + $"**Restarty:** {card.RestartCnt}\n"
                 + $"**Pochodzenie:** {card.Source.GetString()}\n"
@@ -342,6 +341,7 @@ namespace Sanakan.Extensions
                 case CardSource.Crafting: return "Tworzenie";
                 case CardSource.PvpShop: return "Koszary";
                 case CardSource.Figure: return "Figurka";
+                case CardSource.Expedition: return "Wyprawa";
 
                 default:
                 case CardSource.Other: return "Inne";

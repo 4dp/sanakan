@@ -3021,7 +3021,7 @@ namespace Sanakan.Modules
 
                 if (!pvpDailyMax.IsActive())
                 {
-                    pvpDailyMax.EndsAt = DateTime.Now.Date.AddDays(1);
+                    pvpDailyMax.EndsAt = DateTime.Now.Date.AddHours(3).AddDays(1);
                     duser.GameDeck.PVPDailyGamesPlayed = 0;
                 }
 

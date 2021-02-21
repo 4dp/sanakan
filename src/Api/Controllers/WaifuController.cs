@@ -93,7 +93,7 @@ namespace Sanakan.Api.Controllers
         /// <returns>lista kart</returns>
         /// <response code="404">User not found</response>
         [HttpPost("user/{id}/cards/{offset}/{count}")]
-        public async Task<IEnumerable<CardFinalView>> GetUsersCardsByShindenIdWithOffsetAndFilterAsync(ulong id, uint offset, uint count, [FromBody]CardsQueryFilter filter)
+        public async Task<FilteredCards> GetUsersCardsByShindenIdWithOffsetAndFilterAsync(ulong id, uint offset, uint count, [FromBody]CardsQueryFilter filter)
         {
             using (var db = new Database.UserContext(_config))
             {
@@ -102,7 +102,7 @@ namespace Sanakan.Api.Controllers
                 if (user == null)
                 {
                     await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
-                    return new List<CardFinalView>();
+                    return new FilteredCards{TotalCards = 0, Cards = new List<CardFinalView>()};
                 }
 
                 var query = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
@@ -127,7 +127,7 @@ namespace Sanakan.Api.Controllers
                         cards = cards.Where(x => !x.HasTag(eTag)).ToList();
                 }
 
-                return cards.Skip((int)offset).Take((int)count).ToView();
+                return new FilteredCards{TotalCards = cards.Count, Cards = cards.Skip((int)offset).Take((int)count).ToView()};
             }
         }
 

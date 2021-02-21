@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
-using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.PocketWaifu.Fight;
@@ -32,10 +31,6 @@ namespace Sanakan.Services.PocketWaifu
     {
         private const int DERE_TAB_SIZE = ((int) Dere.Yato) + 1;
         private static CharacterIdUpdate CharId = new CharacterIdUpdate();
-
-        private IConfig _config;
-        private ImageProcessing _img;
-        private ShindenClient _shClient;
 
         private static double[,] _dereDmgRelation = new double[DERE_TAB_SIZE, DERE_TAB_SIZE]
         {
@@ -141,10 +136,14 @@ namespace Sanakan.Services.PocketWaifu
             }
         };
 
-        public Waifu(ImageProcessing img, ShindenClient client, IConfig config)
+        private Events _events;
+        private ImageProcessing _img;
+        private ShindenClient _shClient;
+
+        public Waifu(ImageProcessing img, ShindenClient client, Events events)
         {
             _img = img;
-            _config = config;
+            _events = events;
             _shClient = client;
         }
 
@@ -1112,15 +1111,16 @@ namespace Sanakan.Services.PocketWaifu
             return cards.Distinct().ToList();
         }
 
-        public double GetRealTimeOnExpeditionInMinutes(Card card, double karma)
+        public Tuple<double, double> GetRealTimeOnExpeditionInMinutes(Card card, double karma)
         {
             var maxMinutes = card.CalculateMaxTimeOnExpeditionInMinutes(karma);
-            var durationMin = (DateTime.Now - card.ExpeditionDate).TotalMinutes;
+            var realMin = (DateTime.Now - card.ExpeditionDate).TotalMinutes;
+            var durationMin = realMin;
 
             if (maxMinutes < durationMin)
                 durationMin = maxMinutes;
 
-            return durationMin;
+            return new Tuple<double, double>(durationMin, realMin);
         }
 
         public double GetBaseItemsPerMinuteFromExpedition(CardExpedition expedition, Rarity rarity)
@@ -1209,21 +1209,44 @@ namespace Sanakan.Services.PocketWaifu
         {
             Dictionary<string, int> items = new Dictionary<string, int>();
 
-            var baseItemsCnt = GetBaseItemsPerMinuteFromExpedition(card.Expedition, card.Rarity);
-            var baseExp = GetBaseExpPerMinuteFromExpedition(card.Expedition, card.Rarity);
             var duration = GetRealTimeOnExpeditionInMinutes(card, user.GameDeck.Karma);
-            var multiplier = (duration < 60) ? ((duration < 30) ? 5d : 3d) : 1d;
+            var baseExp = GetBaseExpPerMinuteFromExpedition(card.Expedition, card.Rarity);
+            var baseItemsCnt = GetBaseItemsPerMinuteFromExpedition(card.Expedition, card.Rarity);
+            var multiplier = (duration.Item2 < 60) ? ((duration.Item2 < 30) ? 5d : 3d) : 1d;
 
-            double totalExp = GetProgressivExpFromExpedition(baseExp, duration);
-            int totalItemsCnt = GetProgressivItemsFromExpedition(baseItemsCnt, duration);
+            var totalExp = GetProgressiveValueFromExpedition(baseExp, duration.Item1, 15d);
+            var totalItemsCnt = (int) GetProgressiveValueFromExpedition(baseItemsCnt, duration.Item1, 25d);
 
-            string reward = $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
-            if (duration < 30)
+            var karmaCost = card.GetKarmaCostInExpeditionPerMinute() * duration.Item1;
+            var affectionCost = card.GetCostOfExpeditionPerMinute() * duration.Item1 * multiplier;
+
+            var reward = "";
+            bool allowItems = true;
+            if (CheckEventInExpedition(card.Expedition, duration))
             {
-                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\nZdobywa:\n+{totalExp.ToString("F")} exp\n";
+                var e = _events.RandomizeEvent(card.Expedition, duration);
+                allowItems = _events.ExecuteEvent(e, user, card, ref reward);
+
+                totalItemsCnt += _events.GetMoreItems(e);
+                if (e == EventType.ChangeDere)
+                {
+                    card.Dere = RandomizeDere();
+                    reward += $"{card.Dere}\n";
+                }
+                if (e == EventType.LoseCard)
+                {
+                    user.StoreExpIfPossible(totalExp);
+                }
             }
 
-            for (int i = 0; i < totalItemsCnt; i++)
+            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
+            if (duration.Item2 < 30)
+            {
+                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\nZdobywa:\n+{totalExp.ToString("F")} exp\n";
+                affectionCost += 3.3;
+            }
+
+            for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))
                 {
@@ -1245,17 +1268,12 @@ namespace Sanakan.Services.PocketWaifu
                 }
             }
 
-            var karmaCost = card.GetKarmaCostInExpeditionPerMinute() * duration;
-            var affectionCost = card.GetCostOfExpeditionPerMinute() * duration * multiplier;
-
             reward += string.Join("\n", items.Select(x => $"+{x.Key} x{x.Value}"));
 
             if (showStats)
             {
-                reward += $"\n\nRT: {duration.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
+                reward += $"\n\nRT: {duration.Item1.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
             }
-
-            //TODO: check event
 
             card.ExpCnt += totalExp;
             card.Affection -= affectionCost;
@@ -1266,9 +1284,39 @@ namespace Sanakan.Services.PocketWaifu
             return reward;
         }
 
-        private double GetProgressivExpFromExpedition(double baseValue, double duration)
+        private bool CheckEventInExpedition(CardExpedition expedition, Tuple<double, double> duration)
         {
-            var div = 15d;
+            switch (expedition)
+            {
+                case CardExpedition.NormalItemWithExp:
+                    return Services.Fun.TakeATry(10);
+
+                case CardExpedition.ExtremeItemWithExp:
+                    if (duration.Item1 > 60 || duration.Item2 > 600)
+                        return true;
+                    return !Services.Fun.TakeATry(5);
+
+                case CardExpedition.LightItemWithExp:
+                case CardExpedition.DarkItemWithExp:
+                    return Services.Fun.TakeATry(10);
+
+                case CardExpedition.DarkItems:
+                case CardExpedition.LightItems:
+                case CardExpedition.LightExp:
+                case CardExpedition.DarkExp:
+                    return Services.Fun.TakeATry(5);
+
+                default:
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return false;
+            }
+        }
+
+        private double GetProgressiveValueFromExpedition(double baseValue, double duration, double div)
+        {
             var value = 0d;
             var vB = (duration / div) + 1;
             for (int i = 0; i < vB; i++)
@@ -1282,24 +1330,6 @@ namespace Sanakan.Services.PocketWaifu
                 value += sBase * div;
             }
             return value;
-        }
-
-        private int GetProgressivItemsFromExpedition(double baseValue, double duration)
-        {
-            var div = 25d;
-            var value = 0d;
-            var vB = (duration / div) + 1;
-            for (int i = 0; i < vB; i++)
-            {
-                var sBase = baseValue * ((i + 4d) / 10d);
-                if (sBase >= baseValue)
-                {
-                    value =+ (vB - i) * baseValue * div;
-                    break;
-                }
-                value += sBase * div;
-            }
-            return (int) value;
         }
 
         private Item RandomizeItemForExpedition(CardExpedition expedition)
