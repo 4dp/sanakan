@@ -28,7 +28,7 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.MoreItems,   new Tuple<int, int>(0,    1500)},
                     {EventType.MoreExp,     new Tuple<int, int>(1500, 3900)},
                     {EventType.IncAtk,      new Tuple<int, int>(3900, 7400)},
-                    {EventType.IncDef,      new Tuple<int, int>(7400, 1000)},
+                    {EventType.IncDef,      new Tuple<int, int>(7400, 10000)},
                     {EventType.AddReset,    new Tuple<int, int>(-1,   -2)},
                     {EventType.NewCard,     new Tuple<int, int>(-3,   -4)},
                     {EventType.ChangeDere,  new Tuple<int, int>(-5,   -6)},
