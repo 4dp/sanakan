@@ -44,8 +44,8 @@ namespace Sanakan.Services.PocketWaifu
             { 1,        0.5,      1,        1,       1,       1,       0.5,      2,      2,    1,     2     }, //Mayadere
             { 1,        2,        0.5,      1,       1,       1,       1,        0.5,    2,    1,     2     }, //Bodere
             { 1,        1,        1,        1,       1,       1,       1,        1,      0.5,  3,     2     }, //Yami
-            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    3,    0.5,   2     }, //Raito
-            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    0.5,  0.5,   1     }, //Yato
+            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    3,    0.5,   1     }, //Raito
+            { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    1,    0.5,   1     }, //Yato
         };
 
         private static Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>> _chanceOfItemsInExpedition = new Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>>
