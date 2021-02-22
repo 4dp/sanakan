@@ -367,7 +367,7 @@ namespace Sanakan.Extensions
             if (card.Expedition != CardExpedition.No)
                 return false;
 
-            if (card.InCage)
+            if (card.InCage || !card.CanFightOnPvEGMwK())
                 return false;
 
             switch (expedition)
@@ -669,7 +669,7 @@ namespace Sanakan.Extensions
                     return 0.005;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return 0.13;
+                    return 0.07;
 
                 case CardExpedition.DarkItemWithExp:
                 case CardExpedition.DarkItems:
@@ -679,7 +679,7 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
-                    return 0.07;
+                    return 0.04;
 
                 default:
                 case CardExpedition.UltimateEasy:
@@ -731,7 +731,7 @@ namespace Sanakan.Extensions
             var t = param / perMinute;
             if (t > 10080) t = 10080;
 
-            return (t < 1) ? 1 : t;
+            return (t < 0.1) ? 0.1 : t;
         }
 
         public static double ValueModifier(this Rarity rarity)

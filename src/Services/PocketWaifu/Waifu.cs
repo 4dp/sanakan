@@ -1239,20 +1239,19 @@ namespace Sanakan.Services.PocketWaifu
                 }
             }
 
-            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
             if (duration.Item2 < 30)
             {
-                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\nZdobywa:\n+{totalExp.ToString("F")} exp\n";
+                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\n";
                 affectionCost += 3.3;
             }
 
-            if (duration.Item1 <= 5)
+            if (duration.Item1 <= 3)
             {
                 totalItemsCnt = 0;
-                karmaCost = 0;
-                totalExp = 0;
+                totalExp /= 2;
             }
 
+            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
             for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))
@@ -1324,10 +1323,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public double GetProgressiveValueFromExpedition(double baseValue, double duration, double div)
         {
-            if (duration < div)
-            {
-                return baseValue * 0.3 * duration;
-            }
+            if (duration < div) return baseValue * 0.4 * duration;
 
             var value = 0d;
             var vB = (int)(duration / div);
