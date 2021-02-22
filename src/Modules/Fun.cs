@@ -165,9 +165,9 @@ namespace Sanakan.Modules
 
         [Command("rzut")]
         [Alias("beat", "toss")]
-        [Summary("bot wykonuje rzut monetą, wygrywasz kwotę o którą się założysz")]
+        [Summary("bot wykonuje rzut monetą, wygrywasz kwotę, o którą się założysz")]
         [Remarks("reszka 10"), RequireCommandChannel]
-        public async Task TossCoinAsync([Summary("strona monety(orzeł/reszka)")]Services.CoinSide side, [Summary("ilość SC")]int amount)
+        public async Task TossCoinAsync([Summary("strona monety (orzeł/reszka)")]Services.CoinSide side, [Summary("ilość SC")]int amount)
         {
             if (amount <= 0)
             {
@@ -218,7 +218,7 @@ namespace Sanakan.Modules
         [Alias("set slot")]
         [Summary("ustawia automat")]
         [Remarks("info"), RequireCommandChannel]
-        public async Task SlotMachineSettingsAsync([Summary("typ nastaw(info - wyświetla informacje)")]SlotMachineSetting setting = SlotMachineSetting.Info, [Summary("wartość nastawy")]string value = "info")
+        public async Task SlotMachineSettingsAsync([Summary("typ nastaw (info - wyświetla informacje)")]SlotMachineSetting setting = SlotMachineSetting.Info, [Summary("wartość nastawy")]string value = "info")
         {
             if (setting == SlotMachineSetting.Info)
             {
@@ -247,7 +247,7 @@ namespace Sanakan.Modules
         [Alias("slot", "slot machine")]
         [Summary("grasz na jednorękim bandycie")]
         [Remarks("info"), RequireCommandChannel]
-        public async Task PlayOnSlotMachineAsync([Summary("typ(info - wyświetla informacje)")]string type = "game")
+        public async Task PlayOnSlotMachineAsync([Summary("typ (info - wyświetla informacje)")]string type = "game")
         {
             if (type != "game")
             {
@@ -282,11 +282,11 @@ namespace Sanakan.Modules
         [Alias("donatesc")]
         [Summary("dajesz datek innemu graczowi w postaci SC obarczony 40% podatkiem")]
         [Remarks("Karna 2000"), RequireCommandChannel]
-        public async Task GiveUserScAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba SC(min. 1000)")]uint value)
+        public async Task GiveUserScAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba SC (min. 1000)")]uint value)
         {
             if (value < 1000)
             {
-                await ReplyAsync("", embed: "Nie można podarować mniej jak 1000 SC.".ToEmbedMessage(EMType.Error).Build());
+                await ReplyAsync("", embed: "Nie można podarować mniej niż 1000 SC.".ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 

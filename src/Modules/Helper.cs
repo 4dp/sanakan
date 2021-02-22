@@ -38,7 +38,7 @@ namespace Sanakan.Modules
         [Alias("h", "help")]
         [Summary("wyświetla listę poleceń")]
         [Remarks("odcinki"), RequireAnyCommandChannel]
-        public async Task GiveHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
+        public async Task GiveHelpAsync([Summary("nazwa polecenia (opcjonalne)")][Remainder]string command = null)
         {
             var gUser = Context.User as SocketGuildUser;
             if (gUser == null) return;
@@ -80,7 +80,7 @@ namespace Sanakan.Modules
         [Alias("whois")]
         [Summary("wyświetla informacje o użytkowniku")]
         [Remarks("Dzida"), RequireCommandChannel]
-        public async Task GiveUserInfoAsync([Summary("nazwa użytkownika(opcjonalne)")]SocketUser user = null)
+        public async Task GiveUserInfoAsync([Summary("nazwa użytkownika (opcjonalne)")]SocketUser user = null)
         {
             var usr = (user ?? Context.User) as SocketGuildUser;
             if (usr == null)
@@ -125,7 +125,7 @@ namespace Sanakan.Modules
         [Alias("avatar", "pfp")]
         [Summary("wyświetla awatar użytkownika")]
         [Remarks("Dzida"), RequireCommandChannel]
-        public async Task ShowUserAvatarAsync([Summary("nazwa użytkownika(opcjonalne)")]SocketUser user = null)
+        public async Task ShowUserAvatarAsync([Summary("nazwa użytkownika (opcjonalne)")]SocketUser user = null)
         {
             var usr = (user ?? Context.User);
             var embed = new EmbedBuilder
@@ -154,7 +154,7 @@ namespace Sanakan.Modules
 
         [Command("zgłoś", RunMode = RunMode.Async)]
         [Alias("raport", "report", "zgłos", "zglos", "zgloś")]
-        [Summary("zgłasza wiadomośc użytkownika")]
+        [Summary("zgłasza wiadomość użytkownika")]
         [Remarks("63312335634561 Tak nie wolno!"), RequireUserRole]
         public async Task ReportUserAsync([Summary("id wiadomości")]ulong messageId, [Summary("powód")][Remainder]string reason)
         {
@@ -191,7 +191,7 @@ namespace Sanakan.Modules
 
                 if ((DateTime.Now - repMsg.CreatedAt.DateTime.ToLocalTime()).TotalHours > 3)
                 {
-                    await ReplyAsync("", embed: "Można raportować tylko wiadomośći, które nie są starsze jak 3h.".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: "Można raportować tylko wiadomości, które nie są starsze od 3h.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -219,7 +219,7 @@ namespace Sanakan.Modules
                     var session = new AcceptSession(user, null, Context.Client.CurrentUser);
                     await _session.KillSessionIfExistAsync(session);
 
-                    var msg = await ReplyAsync("", embed: $"{user.Mention} raportujesz samego siebie? Może pomoge! Na pewno chcesz muta?".ToEmbedMessage(EMType.Error).Build());
+                    var msg = await ReplyAsync("", embed: $"{user.Mention} raportujesz samego siebie? Może pomogę! Na pewno chcesz muta?".ToEmbedMessage(EMType.Error).Build());
                     await msg.AddReactionsAsync(session.StartReactions);
                     session.Actions = new AcceptMute(Config)
                     {

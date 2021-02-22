@@ -77,7 +77,7 @@ namespace Sanakan.Services
                 }
                 else toSend[messageNr] += $"[{i}] {item.ToString()}\n";
             }
-            toSend[messageNr] += "```\nNapisz `koniec` aby zamknąć menu.";
+            toSend[messageNr] += "```\nNapisz `koniec`, aby zamknąć menu.";
 
             return toSend;
         }
@@ -97,7 +97,7 @@ namespace Sanakan.Services
             }
 
             var list = res.Body;
-            var toSend = GetSearchResponse(list, "Wybierz tytuł który chcesz wyświetlić poprzez wpisanie numeru odpowadającemu mu na liście.");
+            var toSend = GetSearchResponse(list, "Wybierz tytuł, który chcesz wyświetlić poprzez wpisanie numeru odpowiadającemu mu na liście.");
 
             if (list.Count == 1)
             {

@@ -247,7 +247,7 @@ namespace Sanakan.Services.PocketWaifu
                     };
 
                     user.GameDeck.BoosterPacks.Add(boosterPack);
-                    msg += "Wydarzenie: Pakit z kartą.\n";
+                    msg += "Wydarzenie: Pakiet z kartą.\n";
                 }
                 break;
 

@@ -44,7 +44,7 @@ namespace Sanakan.Services
 
                 commands += $"\r\n**{item.Name}:**" + string.Join("\n", sSubInfo);
             }
-            commands += $"\r\n\r\nUżyj `{_config.Get().Prefix}pomoc [polecenie]` aby uzyskać informacje dotyczące danego polecenia.";
+            commands += $"\r\n\r\nUżyj `{_config.Get().Prefix}pomoc [polecenie]`, aby uzyskać informacje dotyczące danego polecenia.";
             return commands;
         }
 

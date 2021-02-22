@@ -26,7 +26,7 @@ namespace Sanakan.Modules
         [Alias("ludnosc", "ludnośc", "ludnosć", "people")]
         [Summary("wyświetla użytkowników należących do krainy")]
         [Remarks("Kotleciki")]
-        public async Task ShowPeopleAsync([Summary("nazwa krainy(opcjonalne)")][Remainder]string name = null)
+        public async Task ShowPeopleAsync([Summary("nazwa krainy (opcjonalne)")][Remainder]string name = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -50,7 +50,7 @@ namespace Sanakan.Modules
         [Alias("land add")]
         [Summary("dodaje użytkownika do krainy")]
         [Remarks("Karna Kotleciki")]
-        public async Task AddPersonAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("nazwa krainy(opcjonalne)")][Remainder]string name = null)
+        public async Task AddPersonAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("nazwa krainy (opcjonalne)")][Remainder]string name = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -80,7 +80,7 @@ namespace Sanakan.Modules
         [Alias("land remove", "kraina usun")]
         [Summary("usuwa użytkownika z krainy")]
         [Remarks("Karna")]
-        public async Task RemovePersonAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("nazwa krainy(opcjonalne)")][Remainder]string name = null)
+        public async Task RemovePersonAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("nazwa krainy (opcjonalne)")][Remainder]string name = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {

@@ -91,7 +91,7 @@ namespace Sanakan.Modules
         [Command("ban")]
         [Summary("banuje użytkownika")]
         [Remarks("karna"), RequireAdminRole, Priority(1)]
-        public async Task BanUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
+        public async Task BanUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód (opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
 
@@ -120,7 +120,7 @@ namespace Sanakan.Modules
         [Command("mute")]
         [Summary("wycisza użytkownika")]
         [Remarks("karna"), RequireAdminRoleOrChannelPermission(ChannelPermission.ManageRoles), Priority(1)]
-        public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
+        public async Task MuteUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód (opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
 
@@ -163,7 +163,7 @@ namespace Sanakan.Modules
         [Command("mute mod")]
         [Summary("wycisza moderatora")]
         [Remarks("karna"), RequireAdminRole, Priority(1)]
-        public async Task MuteModUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód(opcjonalne)")][Remainder]string reason = "nie podano")
+        public async Task MuteModUserAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("czas trwania w godzinach")]long duration, [Summary("powód (opcjonalne)")][Remainder]string reason = "nie podano")
         {
             if (duration < 1) return;
 
@@ -260,7 +260,7 @@ namespace Sanakan.Modules
         }
 
         [Command("prefix")]
-        [Summary("ustawia prefix serwera(nie podanie reset)")]
+        [Summary("ustawia prefix serwera (nie podanie reset)")]
         [Remarks("."), RequireAdminRole]
         public async Task SetPrefixPerServerAsync([Summary("nowy prefix")]string prefix = null)
         {
@@ -279,16 +279,16 @@ namespace Sanakan.Modules
 
         [Command("przywitanie")]
         [Alias("welcome")]
-        [Summary("ustawia/wyświetla wiadomośc przywitania")]
+        [Summary("ustawia/wyświetla wiadomość przywitania")]
         [Remarks("No elo ^mention!"), RequireAdminRole]
-        public async Task SetOrShowWelcomeMessageAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        public async Task SetOrShowWelcomeMessageAsync([Summary("wiadomość (opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
                 var config = await db.GetGuildConfigOrCreateAsync(Context.Guild.Id);
                 if (messsage == null)
                 {
-                    await ReplyAsync("", embed: $"**Wiadomość przywitalna:**\n\n{config?.WelcomeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: $"**Wiadomość powitalna:**\n\n{config?.WelcomeMessage ?? "off"}".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -304,14 +304,14 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
             }
 
-            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość przywitalną.".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość powitalną.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("przywitaniepw")]
         [Alias("welcomepw")]
         [Summary("ustawia/wyświetla wiadomośc przywitania wysyłanego na pw")]
         [Remarks("No elo ^mention!"), RequireAdminRole]
-        public async Task SetOrShowWelcomeMessagePWAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        public async Task SetOrShowWelcomeMessagePWAsync([Summary("wiadomość (opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -334,14 +334,14 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"config-{Context.Guild.Id}" });
             }
 
-            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość przywitalną wysyłaną na pw.".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"Ustawiono `{messsage}` jako wiadomość powitalną wysyłaną na pw.".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("pożegnanie")]
         [Alias("pozegnanie", "goodbye")]
-        [Summary("ustawia/wyświetla wiadomośc pożegnalną")]
+        [Summary("ustawia/wyświetla wiadomość pożegnalną")]
         [Remarks("Nara ^nick?"), RequireAdminRole]
-        public async Task SetOrShowGoodbyeMessageAsync([Summary("wiadomość(opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
+        public async Task SetOrShowGoodbyeMessageAsync([Summary("wiadomość (opcjonalne, off - wyłączenie)")][Remainder]string messsage = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -393,7 +393,7 @@ namespace Sanakan.Modules
         [Command("config")]
         [Summary("wyświetla konfiguracje serwera")]
         [Remarks("mods"), RequireAdminRole]
-        public async Task ShowConfigAsync([Summary("typ(opcjonalne)")][Remainder]Services.ConfigType type = Services.ConfigType.Global)
+        public async Task ShowConfigAsync([Summary("typ (opcjonalne)")][Remainder]Services.ConfigType type = Services.ConfigType.Global)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -628,7 +628,7 @@ namespace Sanakan.Modules
         }
 
         [Command("addur")]
-        [Summary("dodaje nową role na poziom")]
+        [Summary("dodaje nową rolę na poziom")]
         [Remarks("34125343243432 130"), RequireAdminRole]
         public async Task SetUselessRoleAsync([Summary("id roli")]SocketRole role, [Summary("poziom")]uint level)
         {
@@ -1278,7 +1278,7 @@ namespace Sanakan.Modules
         [Command("todo")]
         [Summary("dodaje wiadomość do todo")]
         [Remarks("2342123444212"), RequireAdminOrModRole]
-        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId, [Summary("nazwa serwera(opcjonalne)")]string serverName = null)
+        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId, [Summary("nazwa serwera (opcjonalne)")]string serverName = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
@@ -1325,7 +1325,7 @@ namespace Sanakan.Modules
                 var message = await Context.Channel.GetMessageAsync(messageId);
                 if (message == null)
                 {
-                    await ReplyAsync("", embed: "Wiadomość nie isnieje!\nPamiętaj że polecenie musi zostać użyte w tym samym kanale gdzie znajduje się wiadomość!".ToEmbedMessage(EMType.Bot).Build());
+                    await ReplyAsync("", embed: "Wiadomość nie istnieje!\nPamiętaj, że polecenie musi zostać użyte w tym samym kanale, gdzie znajduje się wiadomość!".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
@@ -1455,13 +1455,13 @@ namespace Sanakan.Modules
         }
 
         [Command("loteria", RunMode = RunMode.Async)]
-        [Summary("bot losuje osobę spośród tych co dodali reakcję")]
+        [Summary("bot losuje osobę spośród tych, co dodali reakcję")]
         [Remarks("5"), RequireAdminRole]
         public async Task GetRandomUserAsync([Summary("długość w minutach")]uint duration)
         {
             var emote = new Emoji("🎰");
             var time = DateTime.Now.AddMinutes(duration);
-            var msg = await ReplyAsync("", embed: $"Loteria! zareaguj {emote} aby wziąć udział.\n\n Koniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+            var msg = await ReplyAsync("", embed: $"Loteria! zareaguj {emote}, aby wziąć udział.\n\n Koniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
 
             await msg.AddReactionAsync(emote);
             await Task.Delay(TimeSpan.FromMinutes(duration));
@@ -1569,7 +1569,7 @@ namespace Sanakan.Modules
         [Alias("help", "h")]
         [Summary("wypisuje polecenia")]
         [Remarks("kasuj"), RequireAdminOrModRole]
-        public async Task SendHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
+        public async Task SendHelpAsync([Summary("nazwa polecenia (opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)
             {
