@@ -8,37 +8,9 @@ namespace Sanakan.Api.Models
     public class UserSiteProfile
     {
         /// <summary>
-        /// Liczba posiadanych sss
+        /// Liczba posaidanych kart z podziałem na jakość
         /// </summary>
-        public int SSSCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych ss
-        /// </summary>
-        public int SSCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych s
-        /// </summary>
-        public int SCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych a
-        /// </summary>
-        public int ACount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych b
-        /// </summary>
-        public int BCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych c
-        /// </summary>
-        public int CCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych d
-        /// </summary>
-        public int DCount { get; set; }
-        /// <summary>
-        /// Liczba posiadanych e
-        /// </summary>
-        public int ECount { get; set; }
+        public Dictionary<string, int> CardsCount { get; set; }
         /// <summary>
         /// Liczba kart które może posiadać użytkownik
         /// </summary>
@@ -51,6 +23,10 @@ namespace Sanakan.Api.Models
         /// Galeria
         /// </summary>
         public List<CardFinalView> Gallery { get; set; }
+        /// <summary>
+        /// Lista wypraw
+        /// </summary>
+        public List<ExpeditionCard> Expeditions { get; set; }
         /// <summary>
         /// Lista tagów jakie ma użytkownik na kartach
         /// </summary>

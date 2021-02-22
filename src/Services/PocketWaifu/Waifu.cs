@@ -1251,7 +1251,10 @@ namespace Sanakan.Services.PocketWaifu
                 totalExp /= 2;
             }
 
-            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp\n";
+            card.ExpCnt += totalExp;
+            card.Affection -= affectionCost;
+
+            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp ({card.ExpCnt})\n";
             for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))
@@ -1281,10 +1284,7 @@ namespace Sanakan.Services.PocketWaifu
                 reward += $"\n\nRT: {duration.Item1.ToString("F")} E: {totalExp.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
             }
 
-            card.ExpCnt += totalExp;
-            card.Affection -= affectionCost;
             card.Expedition = CardExpedition.No;
-
             user.GameDeck.Karma -= karmaCost;
 
             return reward;

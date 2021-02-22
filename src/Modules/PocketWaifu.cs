@@ -2903,7 +2903,7 @@ namespace Sanakan.Modules
                     return;
                  }
 
-                 var expStrs = cardsOnExpedition.Select(x => $"{x.GetString(false, false, true)} na {x.Expedition.GetName("ej")} wyprawie od {x.ExpeditionDate.ToShortDateTime()}");
+                 var expStrs = cardsOnExpedition.Select(x => $"{x.GetShortString(true)} na {x.Expedition.GetName("ej")} wyprawie od {x.ExpeditionDate.ToShortDateTime()}");
                  await ReplyAsync("", embed: $"**Wyprawy[**{cardsOnExpedition.Count}/{botUser.GameDeck.LimitOfCardsOnExpedition()}**]** {Context.User.Mention}:\n\n{string.Join("\n", expStrs)}".ToEmbedMessage(EMType.Bot).WithUser(Context.User).Build());
             }
         }

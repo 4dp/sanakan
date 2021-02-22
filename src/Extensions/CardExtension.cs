@@ -20,6 +20,12 @@ namespace Sanakan.Extensions
             return $"{idStr} {name} **{card.GetCardRealRarity()}** {card.GetCardParams(showBaseHp, allowZero)} {upgCnt}";
         }
 
+        public static string GetShortString(this Card card, bool nameAsUrl = false)
+        {
+            string name = nameAsUrl ? card.GetNameWithUrl() : card.Name;
+            return $"**[{card.Id}]** {name} **{card.GetCardRealRarity()}**";
+        }
+
         public static string GetCardRealRarity(this Card card)
         {
             if (card.FromFigure)
@@ -751,9 +757,20 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static Api.Models.CardFinalView ToView(this Card c) => Api.Models.CardFinalView.ConvertFromRaw(c);
+        public static Api.Models.CardFinalView ToView(this Card c)
+            => Api.Models.CardFinalView.ConvertFromRaw(c);
 
-        public static IEnumerable<Api.Models.CardFinalView> ToView(this IEnumerable<Card> clist)
+        public static Api.Models.ExpeditionCard ToExpeditionView(this Card c)
+            => Api.Models.ExpeditionCard.ConvertFromRaw(c);
+
+        public static List<Api.Models.ExpeditionCard> ToExpeditionView(this IEnumerable<Card> clist)
+        {
+            var list = new List<Api.Models.ExpeditionCard>();
+            foreach (var c in clist) list.Add(c.ToExpeditionView());
+            return list;
+        }
+
+        public static List<Api.Models.CardFinalView> ToView(this IEnumerable<Card> clist)
         {
             var list = new List<Api.Models.CardFinalView>();
             foreach (var c in clist) list.Add(c.ToView());

@@ -211,21 +211,28 @@ namespace Sanakan.Api.Controllers
                 var tags = user.GameDeck.Cards.Where(x => x.TagList != null).Select(x => x.TagList.Select(c => c.Name));
                 foreach(var tag in tags) tagList.AddRange(tag);
 
+                var cardCount = new Dictionary<string, int>
+                {
+                    {Rarity.SSS.ToString(), user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS)},
+                    {Rarity.SS.ToString(),  user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS)},
+                    {Rarity.S.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.S)},
+                    {Rarity.A.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.A)},
+                    {Rarity.B.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.B)},
+                    {Rarity.C.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C)},
+                    {Rarity.D.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D)},
+                    {Rarity.E.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E)},
+                    {"total",               user.GameDeck.Cards.Count}
+                };
+
                 return new UserSiteProfile()
                 {
+                    CardsCount = cardCount,
+                    TagList = tagList.Distinct().ToList(),
                     MaxCardCount = user.GameDeck.MaxNumberOfCards,
                     ExchangeConditions = user.GameDeck.ExchangeConditions,
-                    SSSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS),
-                    SSCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS),
-                    SCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.S),
-                    ACount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.A),
-                    BCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.B),
-                    CCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C),
-                    DCount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D),
-                    ECount = user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E),
-                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).ToView().ToList(),
+                    Expeditions = user.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.No).ToExpeditionView(),
                     Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).FirstOrDefault().ToView(),
-                    TagList = tagList.Distinct().ToList()
+                    Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).ToView()
                 };
             }
         }
