@@ -34,7 +34,7 @@ namespace Sanakan.Modules
         [Alias("wallet")]
         [Summary("wyświetla portfel użytkownika")]
         [Remarks("")]
-        public async Task ShowWalletAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
+        public async Task ShowWalletAsync([Summary("użytkownik (opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
             if (usr == null) return;
@@ -78,7 +78,7 @@ namespace Sanakan.Modules
 
         [Command("przyznaj role", RunMode = RunMode.Async)]
         [Alias("add role")]
-        [Summary("dodaje samozarządzaną role")]
+        [Summary("dodaje samo zarządzaną role")]
         [Remarks("newsy"), RequireCommandChannel]
         public async Task AddRoleAsync([Summary("nazwa roli z wypisz role")]string name)
         {
@@ -106,7 +106,7 @@ namespace Sanakan.Modules
 
         [Command("zdejmij role", RunMode = RunMode.Async)]
         [Alias("remove role")]
-        [Summary("zdejmuje samozarządzaną role")]
+        [Summary("zdejmuje samo zarządzaną role")]
         [Remarks("newsy"), RequireCommandChannel]
         public async Task RemoveRoleAsync([Summary("nazwa roli z wypisz role")]string name)
         {
@@ -133,7 +133,7 @@ namespace Sanakan.Modules
         }
 
         [Command("wypisz role", RunMode = RunMode.Async)]
-        [Summary("wypisuje samozarządzane role")]
+        [Summary("wypisuje samo zarządzane role")]
         [Remarks(""), RequireCommandChannel]
         public async Task ShowRolesAsync()
         {
@@ -161,7 +161,7 @@ namespace Sanakan.Modules
         [Alias("stats")]
         [Summary("wyświetla statystyki użytkownika")]
         [Remarks("karna")]
-        public async Task ShowStatsAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
+        public async Task ShowStatsAsync([Summary("użytkownik (opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;
             if (usr == null) return;
@@ -206,7 +206,7 @@ namespace Sanakan.Modules
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
         [Remarks(""), RequireAnyCommandChannel]
-        public async Task ShowTopAsync([Summary("rodzaj topki(poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))/pvp(s)")]TopType type = TopType.Level)
+        public async Task ShowTopAsync([Summary("rodzaj topki (poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))/pvp(s)")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
@@ -256,7 +256,7 @@ namespace Sanakan.Modules
         [Alias("profile")]
         [Summary("wyświetla profil użytkownika")]
         [Remarks("karna")]
-        public async Task ShowUserProfileAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser user = null)
+        public async Task ShowUserProfileAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser user = null)
         {
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
@@ -282,7 +282,7 @@ namespace Sanakan.Modules
         [Alias("style")]
         [Summary("zmienia styl profilu (koszt 3000 SC)")]
         [Remarks("1 https://i.imgur.com/8UK8eby.png"), RequireCommandChannel]
-        public async Task ChangeStyleAsync([Summary("typ stylu (statystyki(0), obrazek(1), brzydkie(2), karcianka(3))")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2(325 x 272)")]string imgUrl = null)
+        public async Task ChangeStyleAsync([Summary("typ stylu (statystyki(0), obrazek(1), brzydkie(2), karcianka(3))")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2 (325 x 272)")]string imgUrl = null)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -426,7 +426,7 @@ namespace Sanakan.Modules
         [Alias("color", "colour")]
         [Summary("zmienia kolor użytkownika (koszt TC/SC na liście)")]
         [Remarks("pink"), RequireCommandChannel]
-        public async Task ToggleColorRoleAsync([Summary("kolor z listy(none - lista)")]FColor color = FColor.None, [Summary("waluta(SC/TC)")]SCurrency currency = SCurrency.Tc)
+        public async Task ToggleColorRoleAsync([Summary("kolor z listy (none - lista)")]FColor color = FColor.None, [Summary("waluta (SC/TC)")]SCurrency currency = SCurrency.Tc)
         {
             var user = Context.User as SocketGuildUser;
             if (user == null) return;

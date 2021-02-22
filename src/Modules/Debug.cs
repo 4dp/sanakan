@@ -65,7 +65,7 @@ namespace Sanakan.Modules
         }
 
         [Command("missingu", RunMode = RunMode.Async)]
-        [Summary("generuje liste id użytkowników, których nie widzi bot na serwerach")]
+        [Summary("generuje listę id użytkowników, których nie widzi bot na serwerach")]
         [Remarks("")]
         public async Task GenerateMissingUsersListAsync()
         {
@@ -161,7 +161,7 @@ namespace Sanakan.Modules
                 }
             }
 
-            var msg = await ReplyAsync(mention, embed: $"Loteria kart. Zareaguj {emote} aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+            var msg = await ReplyAsync(mention, embed: $"Loteria kart. Zareaguj {emote}, aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
             await msg.AddReactionAsync(emote);
 
             await Task.Delay(TimeSpan.FromMinutes(duration));
@@ -381,9 +381,9 @@ namespace Sanakan.Modules
         }
 
         [Command("missingc", RunMode = RunMode.Async)]
-        [Summary("generuje liste id kart, których właścicieli nie widzi bot na serwerach")]
+        [Summary("generuje listę id kart, których właścicieli nie widzi bot na serwerach")]
         [Remarks("true")]
-        public async Task GenerateMissingUsersCardListAsync([Summary("czy wypisać idki")]bool ids = false)
+        public async Task GenerateMissingUsersCardListAsync([Summary("czy wypisać id'ki")]bool ids = false)
         {
             var allUsers = Context.Client.Guilds.SelectMany(x => x.Users).Distinct();
             using (var db = new Database.UserContext(Config))
@@ -501,7 +501,7 @@ namespace Sanakan.Modules
         }
 
         [Command("utitle"), Priority(1)]
-        [Summary("updatuje tytuł karty")]
+        [Summary("aktualizuje tytuł karty")]
         [Remarks("ssało")]
         public async Task ChangeTitleCardAsync([Summary("WID")]ulong wid, [Summary("tytuł")][Remainder]string title = null)
         {
@@ -571,7 +571,7 @@ namespace Sanakan.Modules
         }
 
         [Command("wevent"), Priority(1)]
-        [Summary("ustawia idt eventu(kasowane są po restarcie)")]
+        [Summary("ustawia id eventu (kasowane są po restarcie)")]
         [Remarks("https://pastebin.com/raw/Y6a8gH5P")]
         public async Task SetWaifuEventIdsAsync([Summary("link do pliku z id postaci oddzielnymi średnikami")]string url)
         {
@@ -682,8 +682,8 @@ namespace Sanakan.Modules
         [Command("gcard"), Priority(1)]
         [Summary("generuje kartę i daje ją użytkownikowi")]
         [Remarks("Sniku 54861")]
-        public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden(nie podanie - losowo)")]ulong id = 0,
-            [Summary("jakość karty(nie podanie - losowo)")]Rarity rarity = Rarity.E)
+        public async Task GenerateCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("id postaci na shinden (nie podanie - losowo)")]ulong id = 0,
+            [Summary("jakość karty (nie podanie - losowo)")]Rarity rarity = Rarity.E)
         {
             var character = (id == 0) ? await _waifu.GetRandomCharacterAsync() : (await _shClient.GetCharacterInfoAsync(id)).Body;
             var card = (rarity == Rarity.E) ? _waifu.GenerateNewCard(user, character) : _waifu.GenerateNewCard(user, character, rarity);
@@ -875,7 +875,7 @@ namespace Sanakan.Modules
         [Alias("help", "h")]
         [Summary("wypisuje polecenia")]
         [Remarks("kasuj"), RequireAdminOrModRole]
-        public async Task SendHelpAsync([Summary("nazwa polecenia(opcjonalne)")][Remainder]string command = null)
+        public async Task SendHelpAsync([Summary("nazwa polecenia (opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)
             {

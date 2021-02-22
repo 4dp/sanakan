@@ -100,7 +100,7 @@ namespace Sanakan.Modules
             }
 
             var list = response.Body;
-            var toSend = _shinden.GetSearchResponse(list, "Wybierz postać którą chcesz wyświetlić poprzez wpisanie numeru odpowadającemu jej na liście.");
+            var toSend = _shinden.GetSearchResponse(list, "Wybierz postać, którą chcesz wyświetlić poprzez wpisanie numeru odpowiadającemu jej na liście.");
 
             if (list.Count == 1)
             {
@@ -118,7 +118,7 @@ namespace Sanakan.Modules
         [Alias("ile", "otaku", "site", "mangozjeb")]
         [Summary("wyświetla statystyki użytkownika z strony")]
         [Remarks("karna")]
-        public async Task ShowSiteStatisticAsync([Summary("użytkownik(opcjonalne)")]SocketGuildUser user = null)
+        public async Task ShowSiteStatisticAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser user = null)
         {
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
