@@ -98,12 +98,12 @@ namespace Sanakan.Services.PocketWaifu
                     {ItemType.AffectionRecoveryNormal,  new Tuple<int, int>(2499, 5999)},
                     {ItemType.DereReRoll,               new Tuple<int, int>(5999, 6999)},
                     {ItemType.CardParamsReRoll,         new Tuple<int, int>(6999, 7199)},
-                    {ItemType.AffectionRecoveryBig,     new Tuple<int, int>(7199, 8299)},
-                    {ItemType.AffectionRecoveryGreat,   new Tuple<int, int>(8299, 8899)},
-                    {ItemType.IncreaseUpgradeCnt,       new Tuple<int, int>(8899, 8999)},
+                    {ItemType.AffectionRecoveryBig,     new Tuple<int, int>(7199, 8499)},
+                    {ItemType.AffectionRecoveryGreat,   new Tuple<int, int>(8499, 9099)},
+                    {ItemType.IncreaseUpgradeCnt,       new Tuple<int, int>(9099, 9199)},
                     {ItemType.IncreaseExpSmall,         new Tuple<int, int>(-1,   -2)},
-                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(8999,  9799)},
-                    {ItemType.BetterIncreaseUpgradeCnt, new Tuple<int, int>(9799,  10000)},
+                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(9199,  10000)},
+                    {ItemType.BetterIncreaseUpgradeCnt, new Tuple<int, int>(-3,   -4)},
                 }
             },
             {CardExpedition.LightItems, new Dictionary<ItemType, Tuple<int, int>>
@@ -1251,10 +1251,20 @@ namespace Sanakan.Services.PocketWaifu
                 totalExp /= 2;
             }
 
+            if (duration.Item1 <= 1 || user.GameDeck.CanCreateDemon())
+            {
+                karmaCost /= 2.5;
+            }
+
+            if (duration.Item1 >= 24 || user.GameDeck.CanCreateAngel())
+            {
+                karmaCost *= 2.5;
+            }
+
             card.ExpCnt += totalExp;
             card.Affection -= affectionCost;
 
-            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp ({card.ExpCnt})\n";
+            reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp ({card.ExpCnt.ToString("F")})\n";
             for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
                 if (CheckChanceForItemInExpedition(i, totalItemsCnt, card.Expedition))

@@ -93,10 +93,10 @@ namespace Sanakan.Database.Models
         {
             var marks = new[]
             {
-                Unique ? "[U]" : "",
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
-                FromFigure ? "[F]" : "",
+                Unique ? (FromFigure ? "[F]" : "[U]") : "",
+                Expedition != CardExpedition.No ? "[W]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
 

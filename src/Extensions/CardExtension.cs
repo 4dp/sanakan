@@ -379,6 +379,8 @@ namespace Sanakan.Extensions
             switch (expedition)
             {
                 case CardExpedition.ExtremeItemWithExp:
+                    return !card.FromFigure && !card.HasTag("ulubione");
+
                 case CardExpedition.NormalItemWithExp:
                     return !card.FromFigure;
 
@@ -675,7 +677,7 @@ namespace Sanakan.Extensions
                     return 0.005;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return 0.07;
+                    return 0.055;
 
                 case CardExpedition.DarkItemWithExp:
                 case CardExpedition.DarkItems:
@@ -685,7 +687,7 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
-                    return 0.04;
+                    return 0.025;
 
                 default:
                 case CardExpedition.UltimateEasy:
