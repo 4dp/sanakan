@@ -638,6 +638,11 @@ namespace Sanakan.Extensions
 
         public static double GetCostOfExpeditionPerMinute(this Card card)
         {
+            return GetCostOfExpeditionPerMinuteRaw(card) * card.Rarity.ValueModifierReverse();
+        }
+
+        public static double GetCostOfExpeditionPerMinuteRaw(this Card card)
+        {
             switch (card.Expedition)
             {
                 case CardExpedition.NormalItemWithExp:
@@ -733,9 +738,8 @@ namespace Sanakan.Extensions
                     return 0;
             }
 
-            param += affOffset + addOFK;
-            param *= card.Rarity.ValueModifier();
             if (!card.HasImage()) perMinute *= 2;
+            param += affOffset + addOFK;
             var t = param / perMinute;
             if (t > 10080) t = 10080;
 
@@ -757,6 +761,11 @@ namespace Sanakan.Extensions
                 case Rarity.SSS:
                 default: return 1.3;
             }
+        }
+
+        public static double ValueModifierReverse(this Rarity rarity)
+        {
+            return 2d - rarity.ValueModifier();
         }
 
         public static Api.Models.CardFinalView ToView(this Card c)

@@ -401,11 +401,9 @@ namespace Sanakan.Services.PocketWaifu
         {
             double atk1 = target.GetAttackWithBonus();
             if (!target.HasImage()) atk1 -= atk1 * 20 / 100;
-            if (atk1 < 1) atk1 = 1;
 
             double def2 = enemy.GetDefenceWithBonus();
             if (!enemy.HasImage()) def2 -= def2 * 20 / 100;
-            if (def2 < 1) def2 = 1;
 
             var realAtk1 = atk1 - def2;
             if (!target.FromFigure || !enemy.FromFigure)
@@ -415,7 +413,6 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             realAtk1 *= GetDereDmgMultiplier(target, enemy);
-            if (realAtk1 < 1) realAtk1 = 1;
 
             return realAtk1;
         }
@@ -554,12 +551,9 @@ namespace Sanakan.Services.PocketWaifu
             return nDef;
         }
 
-        private int GetDmgDeal(Card c1, Card c2)
+        private double GetDmgDeal(Card c1, Card c2)
         {
-            var dmg = GetFA(c1, c2);
-            if (dmg < 1) dmg = 1;
-
-            return (int)dmg;
+            return GetFA(c1, c2);
         }
 
         public string GetDeathLog(FightHistory fight, List<PlayerInfo> players)
@@ -611,6 +605,9 @@ namespace Sanakan.Services.PocketWaifu
                         var target = Fun.GetOneRandomFrom(enemies);
                         var dmg = GetDmgDeal(card.Card, target.Card);
                         target.Health -= dmg;
+
+                        if (target.Health < 1)
+                            target.Health = 0;
 
                         var hpSnap = round.Cards.FirstOrDefault(x => x.CardId == target.Card.Id);
                         if (hpSnap == null)

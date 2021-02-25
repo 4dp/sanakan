@@ -203,7 +203,7 @@ namespace Sanakan.Services.Supervisor
             if ((total == mWTot || specified == mWSpec) && hasRole)
                 return Action.Warn;
 
-            if (total > mTotal || specified > mSpecified)
+            if (total == mTotal || specified == mSpecified)
             {
                 if (!hasRole) return Action.Ban;
                 return Action.Mute;

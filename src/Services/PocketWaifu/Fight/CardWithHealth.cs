@@ -7,6 +7,6 @@ namespace Sanakan.Services.PocketWaifu.Fight
     public class CardWithHealth
     {
         public Card Card { get; set; }
-        public int Health { get; set; }
+        public double Health { get; set; }
     }
 }
