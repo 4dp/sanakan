@@ -117,6 +117,8 @@ namespace Sanakan.Extensions
 
         public static bool HasImage(this Card card) => card.GetImage() != null;
 
+        public static bool HasCustomBorder(this Card card) => card.CustomBorder != null;
+
         public static double GetCardPower(this Card card)
         {
             var cardPower = card.GetHealthWithPenalty() * 0.018;

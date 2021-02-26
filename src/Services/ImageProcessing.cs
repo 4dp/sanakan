@@ -800,8 +800,8 @@ namespace Sanakan.Services
 
             if (card.FromFigure)
             {
-                borderStr = $"./Pictures/PW//CG/{card.Quality}/Border.png";
-                dereStr = $"./Pictures/PW//CG/{card.Quality}/Dere/{card.Dere}.png";
+                borderStr = $"./Pictures/PW/CG/{card.Quality}/Border.png";
+                dereStr = $"./Pictures/PW/CG/{card.Quality}/Dere/{card.Dere}.png";
             }
 
             var img = Image.Load(borderStr);
@@ -816,7 +816,7 @@ namespace Sanakan.Services
 
         private async Task<Image<Rgba32>> LoadCustomBorderAsync(Card card)
         {
-            if (card.CustomBorder == null)
+            if (!card.HasCustomBorder())
                 return GenerateBorder(card);
 
             using (var stream = await GetImageFromUrlAsync(card.CustomBorder))
@@ -847,6 +847,40 @@ namespace Sanakan.Services
 
             image.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#522b4d"), new Point(43, 603)));
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(337, 603)));
+        }
+
+        private void ApplyBetaStats(Image<Rgba32> image, Card card)
+        {
+            var adFont = new Font(_latoBold, 36);
+            var hpFont = new Font(_latoBold, 29);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            using (var hpImg = new Image<Rgba32>(120, 40))
+            {
+                hpImg.Mutate(x => x.DrawText($"{hp}", hpFont, Rgba32.FromHex("#006633"), new Point(1)));
+                hpImg.Mutate(x => x.Rotate(18));
+
+                image.Mutate(x => x.DrawImage(hpImg, new Point(342, 338), 1));
+            }
+
+            using (var defImg = new Image<Rgba32>(120, 40))
+            {
+                defImg.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#1154b8"), new Point(1)));
+                defImg.Mutate(x => x.Rotate(19));
+
+                image.Mutate(x => x.DrawImage(defImg, new Point(28, 175), 1));
+            }
+
+            using (var atkImg = new Image<Rgba32>(120, 40))
+            {
+                atkImg.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#7d0e0e"), new Point(1)));
+                atkImg.Mutate(x => x.Rotate(-16));
+
+                image.Mutate(x => x.DrawImage(atkImg, new Point(50, 502), 1));
+            }
         }
 
         private void ApplyGammaStats(Image<Rgba32> image, Card card)
@@ -928,9 +962,19 @@ namespace Sanakan.Services
 
         private void ApplyUltimateStats(Image<Rgba32> image, Card card)
         {
+            if (File.Exists($"./Pictures/PW/CG/{card.Quality}/Stats.png"))
+            {
+                using (var stats = Image.Load($"./Pictures/PW/CG/{card.Quality}/Stats.png"))
+                {
+                    image.Mutate(x => x.DrawImage(stats, new Point(0, 0), 1));
+                }
+            }
+
             switch (card.Quality)
             {
-                case Quality.Alpha: ApplyAlphaStats(image, card);
+                case Quality.Alpha:ApplyAlphaStats(image, card);
+                    break;
+                case Quality.Beta: ApplyBetaStats(image, card);
                     break;
                 case Quality.Gamma: ApplyGammaStats(image, card);
                     break;
@@ -943,6 +987,20 @@ namespace Sanakan.Services
 
                 default:
                     break;
+            }
+        }
+
+        private bool AllowStatsOnNoStatsImage(Card card)
+        {
+            switch (card.Quality)
+            {
+                case Quality.Zeta:
+                    if (card.HasCustomBorder())
+                        return false;
+                    return true;
+
+                default:
+                    return false;
             }
         }
 
@@ -1009,8 +1067,8 @@ namespace Sanakan.Services
 
         private void ApplyBorderBack(Image<Rgba32> image, Card card)
         {
-            var isFromFigureOriginalBorder = card.CustomBorder == null && card.FromFigure;
-            var backBorderStr = $"./Pictures/PW//CG/{card.Quality}/BorderBack.png";
+            var isFromFigureOriginalBorder = !card.HasCustomBorder() && card.FromFigure;
+            var backBorderStr = $"./Pictures/PW/CG/{card.Quality}/BorderBack.png";
 
             if (isFromFigureOriginalBorder && File.Exists(backBorderStr))
             {
@@ -1038,6 +1096,11 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
             }
 
+            if (AllowStatsOnNoStatsImage(card))
+            {
+                ApplyUltimateStats(image, card);
+            }
+
             return image;
         }
 
@@ -1056,6 +1119,11 @@ namespace Sanakan.Services
             using (var bord = await LoadCustomBorderAsync(card))
             {
                 image.Mutate(x => x.DrawImage(bord, new Point(0, 0), 1));
+            }
+
+            if (AllowStatsOnNoStatsImage(card))
+            {
+                ApplyUltimateStats(image, card);
             }
 
             return image;
