@@ -286,6 +286,36 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("rmc"), Priority(1)]
+        [Summary("kasuje podane karty")]
+        [Remarks("41231 41232")]
+        public async Task RemoveCardAsync([Summary("WIDs")]params ulong[] wids)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var thisCards = db.Cards.AsQueryable().Include(x => x.TagList).AsSingleQuery().Where(x => wids.Contains(x.Id)).ToList();
+                if (thisCards.Count < 1)
+                {
+                    await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
+                    return;
+                }
+
+                string reply = $"Karta {thisCards.First().GetString(false, false, true)} została skasowana.";
+                if (thisCards.Count > 1) reply = $"Stasowano {thisCards.Count} kart.";
+
+                foreach (var thisCard in thisCards)
+                {
+                    thisCard.GameDeckId = 1;
+                }
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+
+                await ReplyAsync("", embed: reply.ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("level")]
         [Summary("ustawia podany poziom użytkownikowi")]
         [Remarks("Karna 1")]

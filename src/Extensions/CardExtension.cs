@@ -681,10 +681,10 @@ namespace Sanakan.Extensions
             switch (card.Expedition)
             {
                 case CardExpedition.NormalItemWithExp:
-                    return 0.005;
+                    return 0.0032;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    return 0.055;
+                    return 0.04;
 
                 case CardExpedition.DarkItemWithExp:
                 case CardExpedition.DarkItems:
@@ -694,7 +694,7 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
-                    return 0.025;
+                    return 0.015;
 
                 default:
                 case CardExpedition.UltimateEasy:

@@ -1131,17 +1131,17 @@ namespace Sanakan.Services.PocketWaifu
                     break;
 
                 case CardExpedition.ExtremeItemWithExp:
-                    cnt = 9.1;
+                    cnt = 10.1;
                     break;
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.DarkItemWithExp:
-                    cnt = 4.7;
+                    cnt = 4.5;
                     break;
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.LightItems:
-                    cnt = 7.2;
+                    cnt = 8.8;
                     break;
 
                 case CardExpedition.LightExp:
@@ -1177,12 +1177,12 @@ namespace Sanakan.Services.PocketWaifu
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.DarkItemWithExp:
-                    baseExp = 3.6;
+                    baseExp = 3.1;
                     break;
 
                 case CardExpedition.LightExp:
                 case CardExpedition.DarkExp:
-                    baseExp = 11.6;
+                    baseExp = 12.6;
                     break;
 
                 case CardExpedition.DarkItems:
