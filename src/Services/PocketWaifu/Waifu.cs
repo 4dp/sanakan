@@ -1253,7 +1253,7 @@ namespace Sanakan.Services.PocketWaifu
                 karmaCost /= 2.5;
             }
 
-            if (duration.Item1 >= 1440 || user.GameDeck.CanCreateAngel())
+            if (duration.Item1 >= 2160 || user.GameDeck.CanCreateAngel())
             {
                 karmaCost *= 2.5;
             }

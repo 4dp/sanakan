@@ -378,6 +378,9 @@ namespace Sanakan.Extensions
             if (card.InCage || !card.CanFightOnPvEGMwK())
                 return false;
 
+            if (card.CalculateMaxTimeOnExpeditionInMinutes(karma, expedition) < 1)
+                return false;
+
             switch (expedition)
             {
                 case CardExpedition.ExtremeItemWithExp:
@@ -705,14 +708,15 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card, double karma)
+        public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card, double karma, CardExpedition expedition = CardExpedition.No)
         {
+            expedition = (expedition == CardExpedition.No) ? card.Expedition : expedition;
             double perMinute = card.GetCostOfExpeditionPerMinute();
             double param = card.Affection;
             double addOFK = karma / 200;
             double affOffset = 6d;
 
-            switch (card.Expedition)
+            switch (expedition)
             {
                 case CardExpedition.NormalItemWithExp:
                 case CardExpedition.ExtremeItemWithExp:
