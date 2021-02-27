@@ -25,6 +25,10 @@ namespace Sanakan.Api.Models
         /// </summary>
         public bool IsInCage { get; set; }
         /// <summary>
+        /// Czy karta jest na wyprawie
+        /// </summary>
+        public bool IsOnExpedition { get; set; }
+        /// <summary>
         /// Czy karta można wymienić
         /// </summary>
         public bool IsTradable { get; set; }
@@ -48,6 +52,10 @@ namespace Sanakan.Api.Models
         /// Ilość punktów doświadczenia na karcie
         /// </summary>
         public double ExpCnt { get; set; }
+        /// <summary>
+        /// Teoretyczna moc karty
+        /// </summary>
+        public double CardPower { get; set; }
         /// <summary>
         /// Poziom relacji na karcie
         /// </summary>
@@ -148,8 +156,10 @@ namespace Sanakan.Api.Models
                 Source = card.Source.GetString(),
                 AnimeTitle = card.Title ?? "????",
                 UltimateQuality = card.Quality,
+                CardPower = card.GetCardPower(),
                 HasCustomImage = card.CustomImage != null,
                 HasCustomBorder = card.CustomBorder != null,
+                IsOnExpedition = card.Expedition != CardExpedition.No,
                 ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.png",
                 SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.png",
                 ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",

@@ -20,17 +20,22 @@ namespace Sanakan.Api.Models
         /// </summary>
         public string Expedition { get; set; }
         /// <summary>
+        /// Czas po którym przestaje karta otrzymywać bonusy w minutach
+        /// </summary>
+        public double MaxTime { get; set; }
+        /// <summary>
         /// Karta
         /// </summary>
         public CardFinalView Card { get; set; }
 
-        public static ExpeditionCard ConvertFromRaw(Card card)
+        public static ExpeditionCard ConvertFromRaw(Card card, double karma)
         {
             return new ExpeditionCard
             {
                 Card = card.ToView(),
                 StartTime = card.ExpeditionDate,
-                Expedition = card.Expedition.GetName()
+                Expedition = card.Expedition.GetName(),
+                MaxTime = card.CalculateMaxTimeOnExpeditionInMinutes(karma)
             };
         }
     }

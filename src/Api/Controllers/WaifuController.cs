@@ -211,7 +211,7 @@ namespace Sanakan.Api.Controllers
                 var tags = user.GameDeck.Cards.Where(x => x.TagList != null).Select(x => x.TagList.Select(c => c.Name));
                 foreach(var tag in tags) tagList.AddRange(tag);
 
-                var cardCount = new Dictionary<string, int>
+                var cardCount = new Dictionary<string, long>
                 {
                     {Rarity.SSS.ToString(), user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SSS)},
                     {Rarity.SS.ToString(),  user.GameDeck.Cards.Count(x => x.Rarity == Rarity.SS)},
@@ -221,16 +221,27 @@ namespace Sanakan.Api.Controllers
                     {Rarity.C.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.C)},
                     {Rarity.D.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.D)},
                     {Rarity.E.ToString(),   user.GameDeck.Cards.Count(x => x.Rarity == Rarity.E)},
+                    {"max",                 user.GameDeck.MaxNumberOfCards},
                     {"total",               user.GameDeck.Cards.Count}
+                };
+
+                var wallet = new Dictionary<string, long>
+                {
+                    {"PC", user.GameDeck.PVPCoins},
+                    {"CT", user.GameDeck.CTCnt},
+                    {"TC", user.TcCnt},
+                    {"SC", user.ScCnt},
                 };
 
                 return new UserSiteProfile()
                 {
+                    Wallet = wallet,
                     CardsCount = cardCount,
+                    Karma = user.GameDeck.Karma,
                     TagList = tagList.Distinct().ToList(),
-                    MaxCardCount = user.GameDeck.MaxNumberOfCards,
+                    UserTitle = user.GameDeck.GetUserNameStatus(),
                     ExchangeConditions = user.GameDeck.ExchangeConditions,
-                    Expeditions = user.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.No).ToExpeditionView(),
+                    Expeditions = user.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.No).ToExpeditionView(user.GameDeck.Karma),
                     Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).FirstOrDefault().ToView(),
                     Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).ToView()
                 };

@@ -10,11 +10,11 @@ namespace Sanakan.Api.Models
         /// <summary>
         /// Liczba posaidanych kart z podziałem na jakość
         /// </summary>
-        public Dictionary<string, int> CardsCount { get; set; }
+        public Dictionary<string, long> CardsCount { get; set; }
         /// <summary>
-        /// Liczba kart które może posiadać użytkownik
+        /// Waluty jakie użytkownik posiada
         /// </summary>
-        public long MaxCardCount { get; set; }
+        public Dictionary<string, long> Wallet { get; set; }
         /// <summary>
         /// Waifu
         /// </summary>
@@ -35,5 +35,13 @@ namespace Sanakan.Api.Models
         /// warunki wymiany z użytkownikiem
         /// </summary>
         public string ExchangeConditions { get; set; }
+        /// <summary>
+        /// Tytuł użytkownika z gry
+        /// </summary>
+        public string UserTitle { get; set; }
+        /// <summary>
+        /// Karma użytkownika
+        /// </summary>
+        public double Karma { get; set; }
     }
 }
