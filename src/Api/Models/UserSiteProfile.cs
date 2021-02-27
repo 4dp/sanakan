@@ -40,6 +40,10 @@ namespace Sanakan.Api.Models
         /// </summary>
         public string UserTitle { get; set; }
         /// <summary>
+        /// Obrazek tła profilu użytkownika
+        /// </summary>
+        public string BackgroundImageUrl { get; set; }
+        /// <summary>
         /// Karma użytkownika
         /// </summary>
         public double Karma { get; set; }

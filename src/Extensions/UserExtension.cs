@@ -62,6 +62,7 @@ namespace Sanakan.Extensions
                     Items = new List<Item>(),
                     Cards = new List<Card>(),
                     ExchangeConditions = null,
+                    BackgroundImageUrl = null,
                     WishlistIsPrivate = false,
                     Figures = new List<Figure>(),
                     Wishes = new List<WishlistObject>(),

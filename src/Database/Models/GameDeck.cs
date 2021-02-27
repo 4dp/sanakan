@@ -24,6 +24,7 @@ namespace Sanakan.Database.Models
         public DateTime PVPSeasonBeginDate { get; set; }
 
         public string ExchangeConditions { get; set; }
+        public string BackgroundImageUrl { get; set; }
 
         public long MaxNumberOfCards { get; set; }
         public int CardsInGallery { get; set; }

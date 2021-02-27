@@ -241,6 +241,7 @@ namespace Sanakan.Api.Controllers
                     TagList = tagList.Distinct().ToList(),
                     UserTitle = user.GameDeck.GetUserNameStatus(),
                     ExchangeConditions = user.GameDeck.ExchangeConditions,
+                    BackgroundImageUrl = user.GameDeck.BackgroundImageUrl,
                     Expeditions = user.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.No).ToExpeditionView(user.GameDeck.Karma),
                     Waifu = user.GameDeck.Cards.Where(x => x.Character == user.GameDeck.Waifu).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).FirstOrDefault().ToView(),
                     Gallery = user.GameDeck.Cards.Where(x => x.HasTag("galeria")).Take(user.GameDeck.CardsInGallery).OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality).ToView()
