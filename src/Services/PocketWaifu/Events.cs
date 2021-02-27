@@ -318,7 +318,7 @@ namespace Sanakan.Services.PocketWaifu
                     if (card.Attack < min)
                         card.Attack = min;
 
-                    msg += $"Wydarzenie: Zmniejszenie ataku obrony do {card.Attack}.\n";
+                    msg += $"Wydarzenie: Zmniejszenie ataku do {card.Attack}.\n";
                 }
                 break;
 
