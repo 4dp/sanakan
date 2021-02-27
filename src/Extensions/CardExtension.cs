@@ -684,7 +684,7 @@ namespace Sanakan.Extensions
             switch (card.Expedition)
             {
                 case CardExpedition.NormalItemWithExp:
-                    return 0.0032;
+                    return 0.001;
 
                 case CardExpedition.ExtremeItemWithExp:
                     return 0.04;
@@ -692,12 +692,12 @@ namespace Sanakan.Extensions
                 case CardExpedition.DarkItemWithExp:
                 case CardExpedition.DarkItems:
                 case CardExpedition.DarkExp:
-                    return 0.01;
+                    return 0.004;
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
-                    return 0.015;
+                    return 0.008;
 
                 default:
                 case CardExpedition.UltimateEasy:
@@ -715,6 +715,11 @@ namespace Sanakan.Extensions
             double param = card.Affection;
             double addOFK = karma / 200;
             double affOffset = 6d;
+
+            if (karma.IsKarmaNeutral())
+            {
+                affOffset += 4d;
+            }
 
             switch (expedition)
             {

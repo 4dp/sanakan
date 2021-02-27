@@ -339,6 +339,10 @@ namespace Sanakan.Extensions
 
         public static bool IsGood(this GameDeck deck) => deck.Karma >= 10;
 
+        public static bool IsNeutral(this GameDeck deck) => IsKarmaNeutral(deck.Karma);
+
+        public static bool IsKarmaNeutral(this double karma) => karma > -10 && karma < 10;
+
         public static double AffectionFromKarma(this GameDeck deck)
         {
             var karmaDif = deck.Karma / 150d;
