@@ -2301,6 +2301,38 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("tło strony")]
+        [Alias("tlo strony", "site bg", "site background")]
+        [Summary("zmienia obrazek tła profilu na stronie waifu (2000 TC)")]
+        [Remarks("https://i.imgur.com/wmDhRWd.jpeg"), RequireCommandChannel]
+        public async Task ChangeWaifuSiteBackgroundAsync([Summary("bezpośredni adres do obrazka")]string imgUrl)
+        {
+            var tcCost = 2000;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.TcCnt < tcCost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (!imgUrl.IsURLToImage())
+                {
+                    await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.TcCnt -= tcCost;
+                botuser.GameDeck.BackgroundImageUrl = imgUrl;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Zmieniono tło na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("galeria")]
         [Alias("gallery")]
         [Summary("wykupuje dodatkowe 5 pozycji w galerii (koszt 100 TC), podanie 0 jako krotności wypisuje obecny limit")]

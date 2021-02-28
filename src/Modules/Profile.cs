@@ -280,16 +280,24 @@ namespace Sanakan.Modules
 
         [Command("styl")]
         [Alias("style")]
-        [Summary("zmienia styl profilu (koszt 3000 SC)")]
+        [Summary("zmienia styl profilu (koszt 3000 SC/1000 TC)")]
         [Remarks("1 https://i.imgur.com/8UK8eby.png"), RequireCommandChannel]
-        public async Task ChangeStyleAsync([Summary("typ stylu (statystyki(0), obrazek(1), brzydkie(2), karcianka(3))")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2 (325 x 272)")]string imgUrl = null)
+        public async Task ChangeStyleAsync([Summary("typ stylu (statystyki(0), obrazek(1), brzydkie(2), karcianka(3))")]ProfileType type, [Summary("bezpośredni adres do obrazka gdy wybrany styl 1 lub 2 (325 x 272)")]string imgUrl = null, [Summary("waluta (SC/TC)")]SCurrency currency = SCurrency.Sc)
         {
+            var scCost = 3000;
+            var tcCost = 1000;
+
             using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (botuser.ScCnt < 3000)
+                if (botuser.ScCnt < scCost && currency == SCurrency.Sc)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (botuser.TcCnt < tcCost && currency == SCurrency.Tc)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -315,7 +323,14 @@ namespace Sanakan.Modules
                         break;
                 }
 
-                botuser.ScCnt -= 3000;
+                if (currency == SCurrency.Sc)
+                {
+                    botuser.ScCnt -= scCost;
+                }
+                else
+                {
+                    botuser.TcCnt -= tcCost;
+                }
                 botuser.ProfileType = type;
 
                 await db.SaveChangesAsync();
@@ -328,16 +343,24 @@ namespace Sanakan.Modules
 
         [Command("tło")]
         [Alias("tlo", "bg", "background")]
-        [Summary("zmienia obrazek tła profilu (koszt 5000 SC)")]
+        [Summary("zmienia obrazek tła profilu (koszt 5000 SC/2500 TC)")]
         [Remarks("https://i.imgur.com/LjVxiv8.png"), RequireCommandChannel]
-        public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 145)")]string imgUrl)
+        public async Task ChangeBackgroundAsync([Summary("bezpośredni adres do obrazka (450 x 145)")]string imgUrl, [Summary("waluta (SC/TC)")]SCurrency currency = SCurrency.Sc)
         {
+            var tcCost = 2500;
+            var scCost = 5000;
+
             using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (botuser.ScCnt < 5000)
+                if (botuser.ScCnt < scCost && currency == SCurrency.Sc)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby SC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (botuser.TcCnt < tcCost && currency == SCurrency.Tc)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -357,7 +380,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                botuser.ScCnt -= 5000;
+                if (currency == SCurrency.Sc)
+                {
+                    botuser.ScCnt -= scCost;
+                }
+                else
+                {
+                    botuser.TcCnt -= tcCost;
+                }
 
                 await db.SaveChangesAsync();
 
@@ -369,17 +399,18 @@ namespace Sanakan.Modules
 
         [Command("globalki")]
         [Alias("global")]
-        [Summary("nadaje na miesiąc rangę od globalnych emotek (4000 TC)")]
+        [Summary("nadaje na miesiąc rangę od globalnych emotek (1000 TC)")]
         [Remarks(""), RequireCommandChannel]
         public async Task AddGlobalEmotesAsync()
         {
+            var cost = 1000;
             var user = Context.User as SocketGuildUser;
             if (user == null) return;
 
             using (var db = new Database.UserContext(Config))
             {
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
-                if (botuser.TcCnt < 4000)
+                if (botuser.TcCnt < cost)
                 {
                     await ReplyAsync("", embed: $"{user.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -411,7 +442,7 @@ namespace Sanakan.Modules
                         await user.AddRoleAsync(gRole);
 
                     global.EndsAt = global.EndsAt.AddMonths(1);
-                    botuser.TcCnt -= 4000;
+                    botuser.TcCnt -= cost;
                 }
 
                 await db.SaveChangesAsync();
