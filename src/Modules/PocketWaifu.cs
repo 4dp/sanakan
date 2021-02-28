@@ -2304,7 +2304,7 @@ namespace Sanakan.Modules
         [Command("tło strony")]
         [Alias("tlo strony", "site bg", "site background")]
         [Summary("zmienia obrazek tła profilu na stronie waifu (2000 TC)")]
-        [Remarks("https://i.imgur.com/wmDhRWd.jpeg"), RequireCommandChannel]
+        [Remarks("https://i.imgur.com/wmDhRWd.jpeg"), RequireWaifuCommandChannel]
         public async Task ChangeWaifuSiteBackgroundAsync([Summary("bezpośredni adres do obrazka")]string imgUrl)
         {
             var tcCost = 2000;
