@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sanakan.Database.Models;
@@ -52,6 +53,10 @@ namespace Sanakan.Api.Models
         /// Ilość punktów doświadczenia na karcie
         /// </summary>
         public double ExpCnt { get; set; }
+        /// <summary>
+        /// Ilość punktów doświadczenia potrzebnych na następny poziom karty
+        /// </summary>
+        public double ExpCntForNextLevel { get; set; }
         /// <summary>
         /// Teoretyczna moc karty
         /// </summary>
@@ -121,9 +126,17 @@ namespace Sanakan.Api.Models
         /// </summary>
         public string ProfileImageUrl { get; set; }
         /// <summary>
+        /// Wartość rynkowa wyrażona w trzech stanach
+        /// </summary>
+        public MarketValue Value { get; set; }
+        /// <summary>
         /// Jakość karty poziomu ultimate
         /// </summary>
         public Quality UltimateQuality { get; set; }
+        /// <summary>
+        /// Data utworzenia karty
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
         /// <summary>
         /// Tagi znajdujące się na karcie
         /// </summary>
@@ -156,7 +169,10 @@ namespace Sanakan.Api.Models
                 Source = card.Source.GetString(),
                 AnimeTitle = card.Title ?? "????",
                 UltimateQuality = card.Quality,
+                CreatedAt = card.CreationDate,
                 CardPower = card.GetCardPower(),
+                Value = card.GetThreeStateMarketValue(),
+                ExpCntForNextLevel = card.ExpToUpgrade(),
                 HasCustomImage = card.CustomImage != null,
                 HasCustomBorder = card.CustomBorder != null,
                 IsOnExpedition = card.Expedition != CardExpedition.No,

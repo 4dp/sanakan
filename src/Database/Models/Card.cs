@@ -28,6 +28,13 @@ namespace Sanakan.Database.Models
         Full, White, Black, Empty, Pig, Snek
     }
 
+    public enum MarketValue
+    {
+        Normal = 0,
+        Low = -1,
+        High = 1
+    }
+
     public enum PreAssembledFigure
     {
         No, Megumin, Asuna, Gintoki

@@ -166,9 +166,17 @@ namespace Sanakan.Extensions
             return card.TagList.Any(x => x.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase));
         }
 
+        public static MarketValue GetThreeStateMarketValue(this Card card)
+        {
+            if (card.MarketValue < 0.3) return MarketValue.Low;
+            if (card.MarketValue > 2.8) return MarketValue.High;
+            return MarketValue.Normal;
+        }
+
         public static string GetStatusIcons(this Card card)
         {
             var icons = new List<string>();
+            if (card.Active) icons.Add("☑️");
             if (card.Unique) icons.Add("💠");
             if (card.FromFigure) icons.Add("🎖️");
             if (!card.IsTradable) icons.Add("⛔");
@@ -176,6 +184,10 @@ namespace Sanakan.Extensions
             if (card.InCage) icons.Add("🔒");
             if (card.Expedition != CardExpedition.No) icons.Add("✈️");
             if (!string.IsNullOrEmpty(card.CustomImage)) icons.Add("🖼️");
+
+            var value = card.GetThreeStateMarketValue();
+            if (value == MarketValue.Low) icons.Add("♻️");
+            if (value == MarketValue.High) icons.Add("💰");
 
             if (card.TagList.Count > 0)
             {
@@ -642,14 +654,16 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static double GetCostOfExpeditionPerMinute(this Card card)
+        public static double GetCostOfExpeditionPerMinute(this Card card, CardExpedition expedition = CardExpedition.No)
         {
-            return GetCostOfExpeditionPerMinuteRaw(card) * card.Rarity.ValueModifierReverse();
+            return GetCostOfExpeditionPerMinuteRaw(card, expedition) * card.Rarity.ValueModifierReverse();
         }
 
-        public static double GetCostOfExpeditionPerMinuteRaw(this Card card)
+        public static double GetCostOfExpeditionPerMinuteRaw(this Card card, CardExpedition expedition = CardExpedition.No)
         {
-            switch (card.Expedition)
+            expedition = (expedition == CardExpedition.No) ? card.Expedition : expedition;
+
+            switch (expedition)
             {
                 case CardExpedition.NormalItemWithExp:
                     return 0.015;
@@ -712,7 +726,7 @@ namespace Sanakan.Extensions
         public static double CalculateMaxTimeOnExpeditionInMinutes(this Card card, double karma, CardExpedition expedition = CardExpedition.No)
         {
             expedition = (expedition == CardExpedition.No) ? card.Expedition : expedition;
-            double perMinute = card.GetCostOfExpeditionPerMinute();
+            double perMinute = card.GetCostOfExpeditionPerMinute(expedition);
             double param = card.Affection;
             double addOFK = karma / 200;
             double affOffset = 6d;

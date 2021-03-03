@@ -2935,7 +2935,7 @@ namespace Sanakan.Modules
                     return;
                  }
 
-                 var expStrs = cardsOnExpedition.Select(x => $"{x.GetShortString(true)}:\n Od {x.ExpeditionDate.ToShortDateTime()} na {x.Expedition.GetName("ej")} wyprawie.\nTraci siły po {x.CalculateMaxTimeOnExpeditionInMinutes(botUser.GameDeck.Karma).ToString("F")} m.");
+                 var expStrs = cardsOnExpedition.Select(x => $"{x.GetShortString(true)}:\n Od {x.ExpeditionDate.ToShortDateTime()} na {x.Expedition.GetName("ej")} wyprawie.\nTraci siły po {x.CalculateMaxTimeOnExpeditionInMinutes(botUser.GameDeck.Karma).ToString("F")} min.");
                  await ReplyAsync("", embed: $"**Wyprawy[**{cardsOnExpedition.Count}/{botUser.GameDeck.LimitOfCardsOnExpedition()}**]** {Context.User.Mention}:\n\n{string.Join("\n\n", expStrs)}".ToEmbedMessage(EMType.Bot).WithUser(Context.User).Build());
             }
         }
@@ -3021,7 +3021,7 @@ namespace Sanakan.Modules
                 _ = Task.Run(async () =>
                 {
                     var max = thisCard.CalculateMaxTimeOnExpeditionInMinutes(botUser.GameDeck.Karma, expedition).ToString("F");
-                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!\nZmęczy się za {max} m.".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
+                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!\nZmęczy się za {max} min.".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
                 });
             }
         }
