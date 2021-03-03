@@ -184,6 +184,7 @@ namespace Sanakan.Extensions
             if (card.InCage) icons.Add("🔒");
             if (card.Expedition != CardExpedition.No) icons.Add("✈️");
             if (!string.IsNullOrEmpty(card.CustomImage)) icons.Add("🖼️");
+            if (!string.IsNullOrEmpty(card.CustomBorder)) icons.Add("✂️");
 
             var value = card.GetThreeStateMarketValue();
             if (value == MarketValue.Low) icons.Add("♻️");
@@ -193,6 +194,9 @@ namespace Sanakan.Extensions
             {
                 if (card.TagList.Any(x => x.Name.Equals("ulubione", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("💗");
+
+                if (card.TagList.Any(x => x.Name.Equals("galeria", StringComparison.CurrentCultureIgnoreCase)))
+                    icons.Add("📌");
 
                 if (card.TagList.Any(x => x.Name.Equals("rezerwacja", StringComparison.CurrentCultureIgnoreCase)))
                     icons.Add("📝");
