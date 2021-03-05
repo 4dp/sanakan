@@ -40,9 +40,25 @@ namespace Sanakan.Api.Models
         /// </summary>
         public string UserTitle { get; set; }
         /// <summary>
+        /// Pozycja obrazku tła profilu użytkownika
+        /// </summary>
+        public int BackgroundPosition { get; set; }
+        /// <summary>
+        /// Pozycja obrazka postaci na tle profilu użytkownika
+        /// </summary>
+        public int ForegroundPosition { get; set; }
+        /// <summary>
         /// Obrazek tła profilu użytkownika
         /// </summary>
         public string BackgroundImageUrl { get; set; }
+        /// <summary>
+        /// Obrazek postaci na tle profilu użytkownika
+        /// </summary>
+        public string ForegroundImageUrl { get; set; }
+        /// <summary>
+        /// Główny kolor profilu użytkownika
+        /// </summary>
+        public string ForegroundColor { get; set; }
         /// <summary>
         /// Karma użytkownika
         /// </summary>

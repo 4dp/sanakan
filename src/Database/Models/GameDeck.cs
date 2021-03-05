@@ -25,6 +25,10 @@ namespace Sanakan.Database.Models
 
         public string ExchangeConditions { get; set; }
         public string BackgroundImageUrl { get; set; }
+        public string ForegroundImageUrl { get; set; }
+        public string ForegroundColor { get; set; }
+        public int ForegroundPosition { get; set; }
+        public int BackgroundPosition { get; set; }
 
         public long MaxNumberOfCards { get; set; }
         public int CardsInGallery { get; set; }

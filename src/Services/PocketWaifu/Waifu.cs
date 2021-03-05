@@ -1219,6 +1219,12 @@ namespace Sanakan.Services.PocketWaifu
 
             var reward = "";
             bool allowItems = true;
+            if (duration.Item2 < 30)
+            {
+                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\n";
+                affectionCost += 3.3;
+            }
+
             if (CheckEventInExpedition(card.Expedition, duration))
             {
                 var e = _events.RandomizeEvent(card.Expedition, duration);
@@ -1234,12 +1240,6 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     user.StoreExpIfPossible(totalExp);
                 }
-            }
-
-            if (duration.Item2 < 30)
-            {
-                reward = $"Wyprawa? Chyba po bułki do sklepu.\n\n";
-                affectionCost += 3.3;
             }
 
             if (duration.Item1 <= 3)
