@@ -2301,6 +2301,70 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("kolor strony")]
+        [Alias("site color")]
+        [Summary("zmienia kolor przewodni profilu na stronie waifu (500 TC)")]
+        [Remarks("#dc5341"), RequireWaifuCommandChannel]
+        public async Task ChangeWaifuSiteForegroundColorAsync([Summary("kolor w formacie hex")]string color)
+        {
+            var tcCost = 500;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.TcCnt < tcCost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (!color.IsAColorInHEX())
+                {
+                    await ReplyAsync("", embed: "Nie wykryto koloru! Upewnij się, że podałeś poprawny kod HEX!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.TcCnt -= tcCost;
+                botuser.GameDeck.ForegroundColor = color;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Zmieniono kolor na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("szczegół strony")]
+        [Alias("szczegoł strony", "szczegol strony", "szczegól strony", "site fg", "site foreground")]
+        [Summary("zmienia obrazek nakładany na tło profilu na stronie waifu (500 TC)")]
+        [Remarks("https://i.imgur.com/eQoaZid.png"), RequireWaifuCommandChannel]
+        public async Task ChangeWaifuSiteForegroundAsync([Summary("bezpośredni adres do obrazka")]string imgUrl)
+        {
+            var tcCost = 500;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (botuser.TcCnt < tcCost)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (!imgUrl.IsURLToImage())
+                {
+                    await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.TcCnt -= tcCost;
+                botuser.GameDeck.ForegroundImageUrl = imgUrl;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Zmieniono szczegół na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("tło strony")]
         [Alias("tlo strony", "site bg", "site background")]
         [Summary("zmienia obrazek tła profilu na stronie waifu (2000 TC)")]
@@ -2330,6 +2394,52 @@ namespace Sanakan.Modules
                 await db.SaveChangesAsync();
 
                 await ReplyAsync("", embed: $"Zmieniono tło na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("pozycja tła strony")]
+        [Alias("pozycja tla strony", "site bgp", "site background position")]
+        [Summary("zmienia położenie obrazka tła profilu na stronie waifu")]
+        [Remarks("65"), RequireWaifuCommandChannel]
+        public async Task ChangeWaifuSiteBackgroundPositionAsync([Summary("pozycja w % od 0 do 100")]uint position)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (position > 100)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} podano niepoprawną wartość!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.GameDeck.BackgroundPosition = (int) position;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Zmieniono pozycję tła na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("pozycja szczegółu strony")]
+        [Alias("pozycja szczególu strony", "pozycja szczegolu strony", "pozycja szczegołu strony", "site fgp", "site foreground position")]
+        [Summary("zmienia położenie obrazka szczegółu profilu na stronie waifu")]
+        [Remarks("78"), RequireWaifuCommandChannel]
+        public async Task ChangeWaifuSiteForegroundPositionAsync([Summary("pozycja w % od 0 do 100")]uint position)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (position > 100)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} podano niepoprawną wartość!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                botuser.GameDeck.ForegroundPosition = (int) position;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Zmieniono pozycję szczegółu na stronie waifu użytkownika: {Context.User.Mention}!".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

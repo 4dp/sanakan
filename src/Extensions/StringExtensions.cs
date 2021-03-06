@@ -95,6 +95,11 @@ namespace Sanakan.Extensions
             return new Regex("(http|ftp|https)://[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?", RegexOptions.Compiled).Matches(message).Sum(x => x.Length);
         }
 
+        public static bool IsAColorInHEX(this string message)
+        {
+            return new Regex("^#(?:[0-9a-fA-F]{3}){1,2}$", RegexOptions.Compiled).IsMatch(message);
+        }
+
         public static bool IsCommand(this string message, string prefix)
         {
             prefix = prefix.Replace(".", @"\.").Replace("?", @"\?");
