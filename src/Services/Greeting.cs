@@ -119,10 +119,9 @@ namespace Sanakan.Services
                         card.InCage = false;
                         card.TagList.Clear();
                         card.LastIdOwner = user.Id;
-                        fakeu.GameDeck.Cards.Add(card);
+                        card.GameDeckId = fakeu.GameDeck.Id;
                     }
 
-                    duser.GameDeck.Cards.Clear();
                     db.Users.Remove(duser);
 
                     db.SaveChanges();

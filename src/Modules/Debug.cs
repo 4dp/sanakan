@@ -256,10 +256,16 @@ namespace Sanakan.Modules
         [Command("tranc"), Priority(1)]
         [Summary("przenosi kartę między użytkownikami")]
         [Remarks("Sniku 41231 41232")]
-        public async Task TransferCardAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("WIDs")]params ulong[] wids)
+        public async Task TransferCardAsync([Summary("id użytkownika")]ulong userId, [Summary("WIDs")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
             {
+                if (!db.Users.Any(x => x.Id == userId))
+                {
+                    await ReplyAsync("", embed: "W bazie nie ma użytkownika o podanym id!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 var thisCards = db.Cards.AsQueryable().Include(x => x.TagList).AsSingleQuery().Where(x => wids.Contains(x.Id)).ToList();
                 if (thisCards.Count < 1)
                 {
@@ -275,12 +281,12 @@ namespace Sanakan.Modules
                     thisCard.Active = false;
                     thisCard.InCage = false;
                     thisCard.TagList.Clear();
-                    thisCard.GameDeckId = user.Id;
+                    thisCard.GameDeckId = userId;
                 }
 
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+                QueryCacheManager.ExpireTag(new string[] { $"user-{userId}", "users" });
 
                 await ReplyAsync("", embed: reply.ToEmbedMessage(EMType.Success).Build());
             }
@@ -445,6 +451,24 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("dusrcards"), Priority(1)]
+        [Summary("usuwa karty użytkownika o podanym id z bazy")]
+        [Remarks("845155646123")]
+        public async Task RemoveCardsUserAsync([Summary("id użytkownika")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var user = await db.GetUserOrCreateAsync(id);
+                user.GameDeck.Cards.Clear();
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { "users", $"user-{id}" });
+            }
+
+            await ReplyAsync("", embed: $"Karty użytkownika o id: `{id}` zostały skasowane.".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("duser"), Priority(1)]
         [Summary("usuwa użytkownika o podanym id z bazy")]
         [Remarks("845155646123")]
@@ -462,9 +486,8 @@ namespace Sanakan.Modules
                         card.InCage = false;
                         card.TagList.Clear();
                         card.LastIdOwner = id;
-                        fakeu.GameDeck.Cards.Add(card);
+                        card.GameDeckId = fakeu.GameDeck.Id;
                     }
-                    user.GameDeck.Cards.Clear();
                 }
 
                 db.Users.Remove(user);
