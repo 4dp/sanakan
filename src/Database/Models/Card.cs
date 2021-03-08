@@ -37,12 +37,17 @@ namespace Sanakan.Database.Models
 
     public enum PreAssembledFigure
     {
-        No, Megumin, Asuna, Gintoki
+        None, Megumin, Asuna, Gintoki
+    }
+
+    public enum CardCurse
+    {
+        None, LoweredStats, DereBlockade, BloodBlockade, InvertedItems, ExpeditionBlockade, LoweredExperience
     }
 
     public enum CardExpedition
     {
-        No, NormalItemWithExp, ExtremeItemWithExp, DarkExp, DarkItems, DarkItemWithExp, LightExp, LightItems, LightItemWithExp,
+        None, NormalItemWithExp, ExtremeItemWithExp, DarkExp, DarkItems, DarkItemWithExp, LightExp, LightItems, LightItemWithExp,
         UltimateEasy, UltimateMedium, UltimateHard, UltimateHardcore
     }
 
@@ -75,6 +80,7 @@ namespace Sanakan.Database.Models
         public StarStyle StarStyle { get; set; }
         public string CustomBorder { get; set; }
         public double MarketValue { get; set; }
+        public CardCurse Curse { get; set; }
 
         public int EnhanceCnt { get; set; }
         public bool FromFigure { get; set; }
@@ -103,7 +109,7 @@ namespace Sanakan.Database.Models
                 InCage ? "[C]" : "",
                 Active ? "[A]" : "",
                 Unique ? (FromFigure ? "[F]" : "[U]") : "",
-                Expedition != CardExpedition.No ? "[W]" : "",
+                Expedition != CardExpedition.None ? "[W]" : "",
                 this.IsBroken() ? "[B]" : (this.IsUnusable() ? "[N]" : ""),
             };
 

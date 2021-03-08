@@ -449,12 +449,12 @@ namespace Sanakan.Services.PocketWaifu
                 Defence = RandomizeDefence(rarity),
                 ArenaStats = new CardArenaStats(),
                 Attack = RandomizeAttack(rarity),
+                Expedition = CardExpedition.None,
                 QualityOnStart = Quality.Broken,
-                Expedition = CardExpedition.No,
                 ExpeditionDate = DateTime.Now,
+                PAS = PreAssembledFigure.None,
                 TagList = new List<CardTag>(),
                 CreationDate = DateTime.Now,
-                PAS = PreAssembledFigure.No,
                 Name = character.ToString(),
                 StarStyle = StarStyle.Full,
                 Source = CardSource.Other,
@@ -1291,7 +1291,7 @@ namespace Sanakan.Services.PocketWaifu
                 reward += $"\n\nRT: {duration.Item1.ToString("F")} E: {totalExp.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
             }
 
-            card.Expedition = CardExpedition.No;
+            card.Expedition = CardExpedition.None;
             user.GameDeck.Karma -= karmaCost;
 
             return reward;

@@ -175,8 +175,8 @@ namespace Sanakan.Api.Models
                 ExpCntForNextLevel = card.ExpToUpgrade(),
                 HasCustomImage = card.CustomImage != null,
                 HasCustomBorder = card.CustomBorder != null,
-                IsOnExpedition = card.Expedition != CardExpedition.No,
                 ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.png",
+                IsOnExpedition = card.Expedition != CardExpedition.None,
                 SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.png",
                 ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",
                 Tags = card.TagList.Select(x => x.Name).ToList()

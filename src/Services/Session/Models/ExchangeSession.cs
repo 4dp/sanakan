@@ -157,7 +157,7 @@ namespace Sanakan.Services.Session.Models
                     continue;
                 }
 
-                if (card.Expedition != Database.Models.CardExpedition.No)
+                if (card.Expedition != Database.Models.CardExpedition.None)
                 {
                     error = true;
                     continue;
@@ -192,7 +192,7 @@ namespace Sanakan.Services.Session.Models
 
                 if (card.FromFigure)
                 {
-                    if (card.PAS != Database.Models.PreAssembledFigure.No)
+                    if (card.PAS != Database.Models.PreAssembledFigure.None)
                     {
                         error = true;
                         continue;

@@ -438,7 +438,7 @@ namespace Sanakan.Extensions
                     return PreAssembledFigure.Megumin;
 
                 default:
-                    return PreAssembledFigure.No;
+                    return PreAssembledFigure.None;
             }
         }
 
@@ -465,10 +465,10 @@ namespace Sanakan.Extensions
                 Attack = card.Attack,
                 Defence = card.Defence,
                 Character = card.Character,
-                PAS = PreAssembledFigure.No,
                 BodyQuality = Quality.Broken,
                 RestartCnt = card.RestartCnt,
                 HeadQuality = Quality.Broken,
+                PAS = PreAssembledFigure.None,
                 CompletionDate = DateTime.Now,
                 FocusedPart = FigurePart.Head,
                 SkeletonQuality = item.Quality,

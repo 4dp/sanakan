@@ -14,7 +14,7 @@ namespace Sanakan.TypeReaders
             switch (input.ToLower())
             {
                 case "-":
-                    return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.No));
+                    return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.None));
 
                 case "normalna":
                 case "normal":

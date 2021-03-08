@@ -555,7 +555,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.No && !noCardOperation)
+                if (card.Expedition != CardExpedition.None && !noCardOperation)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1008,7 +1008,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.No)
+                if (card.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1121,7 +1121,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.No)
+                if (card.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1208,7 +1208,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.No)
+                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.None)
                     {
                         broken.Add(card);
                         continue;
@@ -1269,7 +1269,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.No)
+                    if (card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.None)
                     {
                         broken.Add(card);
                         continue;
@@ -1523,7 +1523,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.No)
+                if (card.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1641,7 +1641,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.No)
+                if (card.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1749,7 +1749,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (cardToUp.Expedition != CardExpedition.No)
+                if (cardToUp.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -1759,7 +1759,7 @@ namespace Sanakan.Modules
                 var broken = new List<Card>();
                 foreach (var card in cardsToSac)
                 {
-                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.No)
+                    if (card.IsBroken() || card.InCage || card.HasTag("ulubione") || card.FromFigure || card.Expedition != CardExpedition.None)
                     {
                         broken.Add(card);
                         continue;
@@ -2237,7 +2237,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (thisCard.Expedition != CardExpedition.No)
+                if (thisCard.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -3037,7 +3037,7 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                  var botUser = await db.GetCachedFullUserAsync(Context.User.Id);
-                 var cardsOnExpedition = botUser.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.No).ToList();
+                 var cardsOnExpedition = botUser.GameDeck.Cards.Where(x => x.Expedition != CardExpedition.None).ToList();
 
                  if (cardsOnExpedition.Count < 1)
                  {
@@ -3066,7 +3066,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (thisCard.Expedition == CardExpedition.No)
+                if (thisCard.Expedition == CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie jest na wyprawie.".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -3090,9 +3090,9 @@ namespace Sanakan.Modules
         [Alias("expedition")]
         [Summary("wysyła kartę na wyprawę")]
         [Remarks("11321 n"), RequireWaifuFightChannel]
-        public async Task SendCardToExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.No)
+        public async Task SendCardToExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.None)
         {
-            if (expedition == CardExpedition.No)
+            if (expedition == CardExpedition.None)
             {
                 await ReplyAsync("", embed: $"{Context.User.Mention} nie podałeś poprawnej nazwy wyprawy.".ToEmbedMessage(EMType.Error).Build());
                 return;
@@ -3108,7 +3108,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var cardsOnExp = botUser.GameDeck.Cards.Count(x => x.Expedition != CardExpedition.No);
+                var cardsOnExp = botUser.GameDeck.Cards.Count(x => x.Expedition != CardExpedition.None);
                 if (cardsOnExp >= botUser.GameDeck.LimitOfCardsOnExpedition())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz wysłać więcej kart na wyprawę.".ToEmbedMessage(EMType.Error).Build());
