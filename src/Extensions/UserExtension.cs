@@ -33,6 +33,7 @@ namespace Sanakan.Extensions
                 ScCnt = 100,
                 ExpCnt = 10,
                 Shinden = 0,
+                Warnings = 0,
                 MessagesCnt = 0,
                 CommandsCnt = 0,
                 MessagesCntAtDate = 0,

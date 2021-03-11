@@ -461,6 +461,7 @@ namespace Sanakan.Services.PocketWaifu
                 Character = character.Id,
                 Quality = Quality.Broken,
                 Dere = RandomizeDere(),
+                Curse = CardCurse.None,
                 RarityOnStart = rarity,
                 CustomBorder = null,
                 FromFigure = false,
