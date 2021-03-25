@@ -712,23 +712,46 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public Embed GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client)
+        public List<Embed> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention)
         {
-            string contentString = "";
+            var list = new List<Embed>();
+            string contentString = $"{title}\n\n";
+
             foreach (var card in cards)
             {
+                string tempContentString = $"";
                 var thU = client.GetUser(card.GameDeck.UserId);
-                contentString += $"{thU?.Mention ?? "????"} **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
+
+                var usrName = (mention ? (thU?.Mention) : (thU?.Username)) ?? "????";
+                tempContentString += $"{usrName} **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
+
+                if ((contentString.Length + tempContentString.Length) <= 2000)
+                {
+                    contentString += tempContentString;
+                }
+                else
+                {
+                    list.Add(new EmbedBuilder()
+                    {
+                        Color = EMType.Info.Color(),
+                        Description = contentString.TrimToLength(2000)
+                    }.Build());
+
+                    contentString = tempContentString;
+                }
+                tempContentString = "";
             }
 
-            return new EmbedBuilder()
+            list.Add(new EmbedBuilder()
             {
                 Color = EMType.Info.Color(),
-                Description = $"{title}\n\n{contentString.TrimToLength(1850)}"
-            }.Build();
+                Description = contentString.TrimToLength(2000)
+            }.Build());
+
+            return list;
         }
 
-        public List<Embed> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client)
+        public List<Embed> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client, bool mention)
         {
             var list = new List<Embed>();
             var characters = cards.GroupBy(x => x.Character);
@@ -740,9 +763,9 @@ namespace Sanakan.Services.PocketWaifu
                 foreach (var card in cardsG)
                 {
                     var user = client.GetUser(card.GameDeckId);
-                    var uString = user?.Mention ?? "????";
+                    var usrName = (mention ? (user?.Mention) : (user?.Username)) ?? "????";
 
-                    tempContentString += $"{uString}: **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
+                    tempContentString += $"{usrName}: **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
                 }
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)

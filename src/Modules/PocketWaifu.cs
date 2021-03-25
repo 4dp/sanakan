@@ -2040,8 +2040,8 @@ namespace Sanakan.Modules
         [Command("życzenia", RunMode = RunMode.Async)]
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
-        [Remarks("Dzida"), RequireWaifuCommandChannel]
-        public async Task ShowWishlistAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false, [Summary("czy pokazać niewymienialne (true/false) domyślnie pokazane")] bool showBlocked = true)
+        [Remarks("Dzida tak tak tak"), RequireWaifuCommandChannel]
+        public async Task ShowWishlistAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false, [Summary("czy pokazać niewymienialne (true/false) domyślnie pokazane")] bool showBlocked = true, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -2089,7 +2089,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2158,8 +2158,8 @@ namespace Sanakan.Modules
         [Command("życzenia użytkownik", RunMode = RunMode.Async)]
         [Alias("wishlist user", "wishlistu", "zyczenia uzytkownik", "życzeniau", "zyczeniau","życzenia uzytkownik","zyczenia użytkownik")]
         [Summary("wyświetla karty na listę życzeń użytkownika posiadane przez konkretnego gracza")]
-        [Remarks(""), RequireWaifuCommandChannel]
-        public async Task ShowWishlistByUserAsync([Summary("użytkownik")]SocketGuildUser user2, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte")]bool showFavs = false)
+        [Remarks("tak tak"), RequireWaifuCommandChannel]
+        public async Task ShowWishlistByUserAsync([Summary("użytkownik")]SocketGuildUser user2, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte")]bool showFavs = false, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var user1 = Context.User as SocketGuildUser;
             if (user1 == null) return;
@@ -2199,7 +2199,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2793,8 +2793,8 @@ namespace Sanakan.Modules
         [Command("kto", RunMode = RunMode.Async)]
         [Alias("who")]
         [Summary("pozwala wyszukać użytkowników posiadających kartę danej postaci")]
-        [Remarks("51"), RequireWaifuCommandChannel]
-        public async Task SearchCharacterCardsAsync([Summary("id postaci na shinden")]ulong id)
+        [Remarks("51 tak"), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsAsync([Summary("id postaci na shinden")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var response = await _shclient.GetCharacterInfoAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -2813,15 +2813,35 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client));
+                var msgs = _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client, !showNames);
+                if (msgs.Count == 1)
+                {
+                    await ReplyAsync("", embed: msgs.First());
+                    return;
+                }
+
+                try
+                {
+                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    foreach (var emb in msgs)
+                    {
+                        await dm.SendMessageAsync("", embed: emb);
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+                    await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                }
+                catch (Exception)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można wysłać do Ciebie PW!".ToEmbedMessage(EMType.Error).Build());
+                }
             }
         }
 
         [Command("ulubione", RunMode = RunMode.Async)]
         [Alias("favs")]
         [Summary("pozwala wyszukać użytkowników posiadających karty z naszej listy ulubionych postaci")]
-        [Remarks(""), RequireWaifuCommandChannel]
-        public async Task SearchCharacterCardsFromFavListAsync([Summary("czy pokazać ulubione (true/false) domyślnie ukryte")]bool showFavs = false)
+        [Remarks("tak tak"), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsFromFavListAsync([Summary("czy pokazać ulubione (true/false) domyślnie ukryte")]bool showFavs = false, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -2853,7 +2873,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2870,8 +2890,8 @@ namespace Sanakan.Modules
         [Command("jakie", RunMode = RunMode.Async)]
         [Alias("which")]
         [Summary("pozwala wyszukać użytkowników posiadających karty z danego tytułu")]
-        [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task SearchCharacterCardsFromTitleAsync([Summary("id serii na shinden")]ulong id)
+        [Remarks("1 tak"), RequireWaifuCommandChannel]
+        public async Task SearchCharacterCardsFromTitleAsync([Summary("id serii na shinden")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var response = await _shclient.Title.GetCharactersAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -2900,7 +2920,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.GetOrCreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client))
+                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
