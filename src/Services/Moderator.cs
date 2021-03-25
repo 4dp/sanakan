@@ -353,6 +353,23 @@ namespace Sanakan.Services
             }
         }
 
+        public async Task NotifyUserAsync(SocketGuildUser user, string reason)
+        {
+            try
+            {
+                var dm = await user.GetOrCreateDMChannelAsync();
+                if (dm != null)
+                {
+                    await dm.SendMessageAsync($"Elo! Otrzymałeś ostrzeżenie o treści:\n {reason}\n\nPozdrawiam serdecznie!".TrimToLength(2000));
+                    await dm.CloseAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"in notify: {ex}");
+            }
+        }
+
         public async Task NotifyAboutPenaltyAsync(SocketGuildUser user, ITextChannel channel,
             PenaltyInfo info, string byWho = "automat")
         {
