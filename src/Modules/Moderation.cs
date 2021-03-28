@@ -1275,7 +1275,7 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono `{Context.Channel.Name}` jako kanał bez nadzoru.".ToEmbedMessage(EMType.Success).Build());
         }
 
-        [Command("todo")]
+        [Command("todo", RunMode = RunMode.Async)]
         [Summary("dodaje wiadomość do todo")]
         [Remarks("2342123444212"), RequireAdminOrModRole]
         public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId, [Summary("nazwa serwera (opcjonalne)")]string serverName = null)
@@ -1332,6 +1332,29 @@ namespace Sanakan.Modules
                 await Context.Message.AddReactionAsync(new Emoji("👌"));
                 await todoChannel.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
             }
+        }
+
+        [Command("quote", RunMode = RunMode.Async)]
+        [Summary("cytuje wiadomość i wysyła na podany kanał")]
+        [Remarks("2342123444212 2342123444212"), RequireAdminOrModRole]
+        public async Task QuoteAndSendAsync([Summary("id wiadomości")]ulong messageId, [Summary("id kanału na serwerze")]ulong channelId)
+        {
+            var channel2Send = Context.Guild.GetTextChannel(channelId);
+            if (channel2Send == null)
+            {
+                await ReplyAsync("", embed: "Nie odnaleziono kanału.\nPamiętaj, że kanał musi znajdować się na tym samym serwerze.".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            var message = await Context.Channel.GetMessageAsync(messageId);
+            if (message == null)
+            {
+                await ReplyAsync("", embed: "Wiadomość nie istnieje!\nPamiętaj, że polecenie musi zostać użyte w tym samym kanale, gdzie znajduje się wiadomość!".ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+
+            await Context.Message.AddReactionAsync(new Emoji("👌"));
+            await channel2Send.SendMessageAsync(message.GetJumpUrl(), embed: _moderation.BuildTodo(message, Context.User as SocketGuildUser));
         }
 
         [Command("tchaos")]

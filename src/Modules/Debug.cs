@@ -110,6 +110,22 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("r2msg", RunMode = RunMode.Async)]
+        [Summary("dodaje reakcje do wiadomości")]
+        [Remarks("15188451644 101155483 825724399512453140 <:Redpill:455880209711759400>")]
+        public async Task AddReactionToMsgOnChannelInGuildAsync([Summary("id serwera")]ulong gId, [Summary("id kanału")]ulong chId, [Summary("id wiadomości")]ulong msgId, [Summary("reakcja")]string reaction)
+        {
+            try
+            {
+                var msg = await Context.Client.GetGuild(gId).GetTextChannel(chId).GetMessageAsync(msgId);
+                await msg.AddReactionAsync(Emote.Parse(reaction));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
         [Command("cup")]
         [Summary("wymusza update na kartach")]
         [Remarks("3123 121")]
