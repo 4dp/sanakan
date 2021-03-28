@@ -24,8 +24,8 @@ namespace Sanakan.Preconditions
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(context.Guild.Id);
                 if (gConfig == null) return CheckUser(user);
-                
-                if (gConfig.ModeratorRoles.Any(x => user.Roles.Any(r => r.Id == x.Id)))
+
+                if (gConfig.ModeratorRoles.Any(x => user.Roles.Any(r => r.Id == x.Role)))
                     return PreconditionResult.FromSuccess();
 
                 var role = context.Guild.GetRole(gConfig.AdminRole);
