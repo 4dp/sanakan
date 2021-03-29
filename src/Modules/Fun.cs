@@ -169,10 +169,18 @@ namespace Sanakan.Modules
         [Remarks("kokosek dzida wojtek"), RequireCommandChannel]
         public async Task GetOneFromManyAsync([Summary("opcje z których bot losuje")]params string[] options)
         {
+            if (options.Count() < 2)
+            {
+                await ReplyAsync("", embed: "Podano zbyt mało opcji do wylosowania.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             var emote = Emote.Parse("<a:pinkarrow:826132578016559144>");
+            var allOptions = options.Shuffle().ToList();
+
             await Task.Delay(Services.Fun.GetRandomValue(100, 500));
 
-            await ReplyAsync("", embed: $"{emote} {Services.Fun.GetOneRandomFrom(options)}".ToEmbedMessage(EMType.Success).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+            await ReplyAsync("", embed: $"{emote} {Services.Fun.GetOneRandomFrom(allOptions)}".ToEmbedMessage(EMType.Success).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
         }
 
         [Command("rzut")]

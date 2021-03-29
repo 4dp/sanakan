@@ -1521,11 +1521,11 @@ namespace Sanakan.Modules
 
         [Command("pozycja gracza", RunMode = RunMode.Async)]
         [Summary("bot losuje liczbę dla gracza")]
-        [Remarks("5"), RequireAdminOrModRole]
-        public async Task AssingNumberToUsersAsync([Summary("nazwy graczy")] params string[] players)
+        [Remarks("kokosek dzida"), RequireAdminOrModRole]
+        public async Task AssingNumberToUsersAsync([Summary("nazwy graczy")]params string[] players)
         {
-            var pairs = new List<Tuple<string, int>>();
             var numbers = Enumerable.Range(1, players.Count()).ToList();
+            var pairs = new List<Tuple<string, int>>();
             var playerList = players.ToList();
 
             while (playerList.Count > 0)
