@@ -1479,7 +1479,7 @@ namespace Sanakan.Modules
 
         [Command("loteria", RunMode = RunMode.Async)]
         [Summary("bot losuje osobę spośród tych, co dodali reakcję")]
-        [Remarks("5"), RequireAdminRole]
+        [Remarks("5"), RequireAdminOrModRole]
         public async Task GetRandomUserAsync([Summary("długość w minutach")]uint duration)
         {
             var emote = new Emoji("🎰");
@@ -1495,6 +1495,28 @@ namespace Sanakan.Modules
             await msg.DeleteAsync();
 
             await ReplyAsync("", embed: $"Zwycięzca loterii: {winner.Mention}".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("pary", RunMode = RunMode.Async)]
+        [Summary("bot losuje pary liczb")]
+        [Remarks("5"), RequireAdminOrModRole]
+        public async Task GetRandomPairsAsync([Summary("liczba par")]uint count)
+        {
+            var pairs = new List<Tuple<int, int>>();
+            var total = Enumerable.Range(1, (int) count * 2).ToList();
+
+            while (total.Count > 0)
+            {
+                var first = Services.Fun.GetOneRandomFrom(total);
+                total.Remove(first);
+
+                var second = Services.Fun.GetOneRandomFrom(total);
+                total.Remove(second);
+
+                pairs.Add(new Tuple<int, int>(first, second));
+            }
+
+            await ReplyAsync("", embed: $"**Pary**:\n\n{string.Join("\n", pairs.Select(x => $"{x.Item1} - {x.Item2}"))}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("raport")]
