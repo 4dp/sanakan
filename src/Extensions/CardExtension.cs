@@ -327,6 +327,11 @@ namespace Sanakan.Extensions
                 newAttack += card.AttackBonus;
             }
 
+            if (card.Curse == CardCurse.LoweredStats)
+            {
+                newAttack -= newAttack * 5 / 10;
+            }
+
             if (newAttack > maxAttack)
                 newAttack = maxAttack;
 
@@ -343,6 +348,11 @@ namespace Sanakan.Extensions
             if (card.FromFigure)
             {
                 newDefence += card.DefenceBonus;
+            }
+
+            if (card.Curse == CardCurse.LoweredStats)
+            {
+                newDefence -= newDefence * 5 / 10;
             }
 
             if (newDefence > maxDefence)
@@ -390,6 +400,9 @@ namespace Sanakan.Extensions
         public static bool ValidExpedition(this Card card, CardExpedition expedition, double karma)
         {
             if (card.Expedition != CardExpedition.None)
+                return false;
+
+            if (card.Curse == CardCurse.ExpeditionBlockade)
                 return false;
 
             if (card.InCage || !card.CanFightOnPvEGMwK())

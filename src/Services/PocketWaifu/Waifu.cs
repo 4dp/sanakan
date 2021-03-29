@@ -377,6 +377,9 @@ namespace Sanakan.Services.PocketWaifu
                 for (int i = 0; i < diff; i++) rExp *= 1.5;
             }
 
+            if (toUp.Curse == CardCurse.LoweredExperience || toSac.Curse == CardCurse.LoweredExperience)
+                rExp /= 5;
+
             return rExp;
         }
 
@@ -1240,6 +1243,11 @@ namespace Sanakan.Services.PocketWaifu
 
             var karmaCost = card.GetKarmaCostInExpeditionPerMinute() * duration.Item1;
             var affectionCost = card.GetCostOfExpeditionPerMinute() * duration.Item1 * multiplier;
+
+            if (card.Curse == CardCurse.LoweredExperience)
+            {
+                totalExp /= 5;
+            }
 
             var reward = "";
             bool allowItems = true;
