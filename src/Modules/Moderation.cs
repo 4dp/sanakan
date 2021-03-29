@@ -1519,6 +1519,29 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"**Pary**:\n\n{string.Join("\n", pairs.Select(x => $"{x.Item1} - {x.Item2}"))}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("pozycja gracza", RunMode = RunMode.Async)]
+        [Summary("bot losuje liczbę dla gracza")]
+        [Remarks("5"), RequireAdminOrModRole]
+        public async Task AssingNumberToUsersAsync([Summary("nazwy graczy")] params string[] players)
+        {
+            var pairs = new List<Tuple<string, int>>();
+            var numbers = Enumerable.Range(1, players.Count()).ToList();
+            var playerList = players.ToList();
+
+            while (playerList.Count > 0)
+            {
+                var player = Services.Fun.GetOneRandomFrom(playerList);
+                playerList.Remove(player);
+
+                var number = Services.Fun.GetOneRandomFrom(numbers);
+                numbers.Remove(number);
+
+                pairs.Add(new Tuple<string, int>(player, number));
+            }
+
+            await ReplyAsync("", embed: $"**Numerki**:\n\n{string.Join("\n", pairs.Select(x => $"{x.Item1} - {x.Item2}"))}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("raport")]
         [Alias("report")]
         [Summary("rozwiązuje raport, nie podanie czasu odrzuca go, podanie czasu 0 ostrzega użytkownika")]

@@ -163,6 +163,18 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("wylosuj", RunMode = RunMode.Async)]
+        [Alias("ofm", "one from many")]
+        [Summary("bot losuje jedną rzecz z podanych opcji")]
+        [Remarks("kokosek dzida wojtek"), RequireCommandChannel]
+        public async Task GetOneFromManyAsync([Summary("opcje z których bot losuje")]params string[] options)
+        {
+            var emote = Emote.Parse("<a:pinkarrow:826132578016559144>");
+            await Task.Delay(Services.Fun.GetRandomValue(100, 500));
+
+            await ReplyAsync("", embed: $"{emote} {Services.Fun.GetOneRandomFrom(options)}".ToEmbedMessage(EMType.Success).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+        }
+
         [Command("rzut")]
         [Alias("beat", "toss")]
         [Summary("bot wykonuje rzut monetą, wygrywasz kwotę, o którą się założysz")]
