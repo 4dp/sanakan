@@ -1369,7 +1369,7 @@ namespace Sanakan.Modules
                 }
 
                 var maxExpInOneTime = bUser.GameDeck.ExpContainer.GetMaxExpTransferToCard();
-                if (exp > maxExpInOneTime)
+                if (maxExpInOneTime != -1 && exp > maxExpInOneTime)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} na tym poziomie możesz jednorazowo przelać tylko {maxExpInOneTime} doświadczenia.".ToEmbedMessage(EMType.Error).Build());
                     return;

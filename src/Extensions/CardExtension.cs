@@ -99,6 +99,9 @@ namespace Sanakan.Extensions
 
             switch (lvl)
             {
+                case ExpContainerLevel.Level4:
+                    exp *= 5d;
+                    break;
                 case ExpContainerLevel.Level3:
                     exp *= 2d;
                     break;
@@ -140,15 +143,15 @@ namespace Sanakan.Extensions
             {
                 case Dere.Yami:
                 case Dere.Raito:
-                    cardPower += 15;
-                    break;
-
-                case Dere.Yato:
                     cardPower += 20;
                     break;
 
+                case Dere.Yato:
+                    cardPower += 30;
+                    break;
+
                 case Dere.Tsundere:
-                    cardPower -= 10;
+                    cardPower -= 20;
                     break;
 
                 default:

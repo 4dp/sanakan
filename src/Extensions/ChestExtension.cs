@@ -19,6 +19,9 @@ namespace Sanakan.Extensions
                 case ExpContainerLevel.Level3:
                     return 200;
 
+                case ExpContainerLevel.Level4:
+                    return -1; //unlimited
+
                 default:
                 case ExpContainerLevel.Disabled:
                     return 0;
@@ -36,6 +39,7 @@ namespace Sanakan.Extensions
                     return 100;
 
                 case ExpContainerLevel.Level3:
+                case ExpContainerLevel.Level4:
                     return -1; //unlimited
 
                 default:
@@ -57,6 +61,9 @@ namespace Sanakan.Extensions
                 case ExpContainerLevel.Level3:
                     return 10;
 
+                case ExpContainerLevel.Level4:
+                    return 5;
+
                 default:
                 case ExpContainerLevel.Disabled:
                     return 100;
@@ -72,8 +79,11 @@ namespace Sanakan.Extensions
                 case ExpContainerLevel.Level2:
                     return 1;
 
-                default:
                 case ExpContainerLevel.Level3:
+                    return 2;
+
+                default:
+                case ExpContainerLevel.Level4:
                     return -1; //can't upgrade
             }
         }
@@ -91,8 +101,11 @@ namespace Sanakan.Extensions
                 case ExpContainerLevel.Level2:
                     return 10;
 
-                default:
                 case ExpContainerLevel.Level3:
+                    return 15;
+
+                default:
+                case ExpContainerLevel.Level4:
                     return -1; //can't upgrade
             }
         }
