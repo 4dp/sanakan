@@ -133,7 +133,14 @@ namespace Sanakan.Modules
             try
             {
                 var msg = await Context.Client.GetGuild(gId).GetTextChannel(chId).GetMessageAsync(msgId);
-                await msg.AddReactionAsync(Emote.Parse(reaction));
+                if (Emote.TryParse(reaction, out var emote))
+                {
+                    await msg.AddReactionAsync(emote);
+                }
+                else
+                {
+                    await msg.AddReactionAsync(new Emoji(reaction));
+                }
             }
             catch (Exception ex)
             {
