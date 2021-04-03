@@ -110,6 +110,21 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("semsg", RunMode = RunMode.Async)]
+        [Summary("wysyła wiadomość w formie embed na kanał w danym serwerze")]
+        [Remarks("15188451644 101155483 bot elo ziomki")]
+        public async Task SendEmbedMsgToChannelInGuildAsync([Summary("id serwera")]ulong gId, [Summary("id kanału")]ulong chId, [Summary("typ wiadomości(Neutral/Warning/Success/Error/Info/Bot)")]EMType type, [Summary("treść wiadomości")][Remainder]string msg)
+        {
+            try
+            {
+                await Context.Client.GetGuild(gId).GetTextChannel(chId).SendMessageAsync("", embed: msg.ToEmbedMessage(type).Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
         [Command("r2msg", RunMode = RunMode.Async)]
         [Summary("dodaje reakcje do wiadomości")]
         [Remarks("15188451644 101155483 825724399512453140 <:Redpill:455880209711759400>")]
