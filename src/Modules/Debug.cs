@@ -272,6 +272,11 @@ namespace Sanakan.Modules
         [Command("tranc"), Priority(1)]
         [Summary("przenosi kartę między użytkownikami")]
         [Remarks("Sniku 41231 41232")]
+        public async Task TransferUserCardAsync([Summary("użytkownik")]SocketUser user, [Summary("WIDs")]params ulong[] wids) => await TransferCardAsync(user.Id, wids);
+
+        [Command("tranc"), Priority(1)]
+        [Summary("przenosi kartę między użytkownikami")]
+        [Remarks("Sniku 41231 41232")]
         public async Task TransferCardAsync([Summary("id użytkownika")]ulong userId, [Summary("WIDs")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
@@ -860,6 +865,24 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.ExpCnt} punktów doświadczenia.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("ost"), Priority(1)]
+        [Summary("zmienia liczbę punktów ostrzeżeń")]
+        [Remarks("Jeeda 10000")]
+        public async Task ChangeUserOstAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba ostrzeżeń")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.Warnings += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.Warnings} punktów ostrzeżeń.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

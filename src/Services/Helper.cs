@@ -166,8 +166,14 @@ namespace Sanakan.Services
             };
 
             foreach (var cmd in module.Commands)
+            {
                 if (!string.IsNullOrEmpty(cmd.Name))
-                    subMInfo.Commands.Add("`" + cmd.Name + "`");
+                {
+                    var name = "`" + cmd.Name + "`";
+                    if (!subMInfo.Commands.Contains(name))
+                        subMInfo.Commands.Add(name);
+                }
+            }
 
             return subMInfo;
         }
