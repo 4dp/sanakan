@@ -988,7 +988,7 @@ namespace Sanakan.Modules
         [Command("pomoc", RunMode = RunMode.Async)]
         [Alias("help", "h")]
         [Summary("wypisuje polecenia")]
-        [Remarks("kasuj"), RequireAdminOrModRole]
+        [Remarks("kasuj")]
         public async Task SendHelpAsync([Summary("nazwa polecenia (opcjonalne)")][Remainder]string command = null)
         {
             if (command != null)
