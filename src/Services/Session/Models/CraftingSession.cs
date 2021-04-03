@@ -175,10 +175,10 @@ namespace Sanakan.Services.Session.Models
             }
             else thisItem.Count -= count;
 
-            var thisItem2 = P1.Items.FirstOrDefault(x => x.Type == thisItem.Type);
+            var thisItem2 = P1.Items.FirstOrDefault(x => x.Type == thisItem.Type && x.Quality == thisItem.Quality);
             if (thisItem2 == null)
             {
-                thisItem2 = thisItem.Type.ToItem(count);
+                thisItem2 = thisItem.Type.ToItem(count, thisItem.Quality);
                 P1.Items.Add(thisItem2);
             }
             else thisItem2.Count += count;
@@ -207,10 +207,10 @@ namespace Sanakan.Services.Session.Models
             }
             else thisItem.Count -= count;
 
-            var thisItem2 = Items.FirstOrDefault(x => x.Type == thisItem.Type);
+            var thisItem2 = Items.FirstOrDefault(x => x.Type == thisItem.Type && x.Quality == thisItem.Quality);
             if (thisItem2 == null)
             {
-                thisItem2 = thisItem.Type.ToItem(count);
+                thisItem2 = thisItem.Type.ToItem(count, thisItem.Quality);
                 Items.Add(thisItem2);
             }
             else thisItem2.Count += count;
@@ -260,7 +260,7 @@ namespace Sanakan.Services.Session.Models
 
                             foreach (var item in P1.Items)
                             {
-                                var thisItem = user.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type);
+                                var thisItem = user.GameDeck.Items.FirstOrDefault(x => x.Type == item.Type && x.Quality == item.Quality);
                                 if (thisItem == null)
                                 {
                                     error = true;
@@ -276,11 +276,14 @@ namespace Sanakan.Services.Session.Models
                                 if (thisItem.Count < 1) user.GameDeck.Items.Remove(thisItem);
                             }
 
-                            user.GameDeck.Cards.Add(newCard);
+                            if (!error)
+                            {
+                                user.GameDeck.Cards.Add(newCard);
 
-                            await db.SaveChangesAsync();
+                                await db.SaveChangesAsync();
 
-                            await msg.ModifyAsync(x => x.Embed = $"{Name}\n\n**Utworzono:** {newCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                                await msg.ModifyAsync(x => x.Embed = $"{Name}\n\n**Utworzono:** {newCard.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                            }
                         }
                     }
 

@@ -259,7 +259,7 @@ namespace Sanakan.Extensions
                 case ItemType.AffectionRecoveryNormal:
                     return 15;
                 case ItemType.BetterIncreaseUpgradeCnt:
-                    return 280;
+                    return 500;
                 case ItemType.IncreaseUpgradeCnt:
                     return 200;
                 case ItemType.DereReRoll:
@@ -273,7 +273,7 @@ namespace Sanakan.Extensions
                 case ItemType.IncreaseExpSmall:
                     return 100;
                 case ItemType.IncreaseExpBig:
-                    return 500;
+                    return 400;
                 case ItemType.ChangeStarType:
                     return 50;
                 case ItemType.SetCustomBorder:
