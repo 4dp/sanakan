@@ -977,31 +977,61 @@ namespace Sanakan.Modules
         }
 
         [Command("rmconfig", RunMode = RunMode.Async)]
-        [Summary("wyświetla konfiguracje powiadomień")]
+        [Summary("wyświetla konfiguracje powiadomień na obecnym serwerze")]
         [Remarks("")]
         public async Task ShowRMConfigAsync()
         {
-            await ReplyAsync("", embed: $"{string.Join("\n\n", Config.Get().RMConfig)}".TrimToLength(1900).ToEmbedMessage(EMType.Bot).Build());
+            var serverConfig = Config.Get().RMConfig.Where(x => x.GuildId == Context.Guild.Id || x.GuildId == 0).ToList();
+            if (serverConfig.Count > 0)
+            {
+                await ReplyAsync("", embed: $"**RMC:**\n\n{string.Join("\n\n", serverConfig)}".TrimToLength(1900).ToEmbedMessage(EMType.Bot).Build());
+                return;
+            }
+            await ReplyAsync("", embed: $"**RMC:**\n\nBrak.".ToEmbedMessage(EMType.Bot).Build());
         }
 
         [Command("mrmconfig")]
-        [Summary("zmienia istniejący wpis w konfiguracji powiadomień w odniesieniu do serwera")]
-        [Remarks("News 1232321314 1232412323")]
-        public async Task ChangeRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("id kanału")]ulong channelId, [Summary("id roli")]ulong roleId)
+        [Summary("zmienia istniejący wpis w konfiguracji powiadomień w odniesieniu do serwera, lub tworzy nowy gdy go nie ma")]
+        [Remarks("News 1232321314 1232412323 tak")]
+        public async Task ChangeRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("id kanału")]ulong channelId, [Summary("id roli")]ulong roleId, [Summary("czy zapisać?")]bool save = false)
         {
             var config = Config.Get();
             var thisRM = config.RMConfig.FirstOrDefault(x => x.Type == type && x.GuildId == Context.Guild.Id);
             if (thisRM == null)
             {
-                await ReplyAsync("", embed: "Nie odnaleziono wpisu.".ToEmbedMessage(EMType.Error).Build());
-                return;
+                thisRM = new Config.Model.RichMessageConfig
+                {
+                    GuildId = Context.Guild.Id,
+                    Type = type
+                };
+                config.RMConfig.Add(thisRM);
             }
 
             thisRM.ChannelId = channelId;
             thisRM.RoleId = roleId;
-            Config.Save();
+
+            if (save) Config.Save();
 
             await ReplyAsync("", embed: "Wpis został zmodyfikowany!".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("ignore"), Priority(1)]
+        [Summary("dodaje serwer do ignorowanych lub usuwa go z listy")]
+        [Remarks("News 1232321314 1232412323 tak")]
+        public async Task IgnoreServerAsync()
+        {
+            var config = Config.Get();
+            if (config.BlacklistedGuilds.Contains(Context.Guild.Id))
+            {
+                config.BlacklistedGuilds.Remove(Context.Guild.Id);
+                await ReplyAsync("", embed: "Serwer został usunięty z czarnej listy.".ToEmbedMessage(EMType.Success).Build());
+            }
+            else
+            {
+                config.BlacklistedGuilds.Add(Context.Guild.Id);
+                await ReplyAsync("", embed: "Serwer został dodany do czarnej listy.".ToEmbedMessage(EMType.Success).Build());
+            }
+            Config.Save();
         }
 
         [Command("pomoc", RunMode = RunMode.Async)]
