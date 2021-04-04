@@ -185,7 +185,7 @@ namespace Sanakan.Modules
         [Remarks("1 10 5")]
         public async Task TransferCardAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
         {
-            var emote = new Emoji("🎰");
+            var emote = Emote.Parse("<a:success:467493778752798730>");
             var time = DateTime.Now.AddMinutes(duration);
 
             var mention = "";
@@ -260,10 +260,17 @@ namespace Sanakan.Modules
                         return;
                     }
 
-                    int counter = 0;
                     var cardsIds = new List<string>();
-                    foreach (var thisCard in loteryCards)
+                    var idsToSelect = loteryCards.Select(x => x.Id).ToList();
+
+                    for (int i = 0; i < count; i++)
                     {
+                        if (idsToSelect.Count < 1)
+                            break;
+
+                        var wid = Services.Fun.GetOneRandomFrom(idsToSelect);
+                        var thisCard = loteryCards.FirstOrDefault(x => x.Id == wid);
+
                         cardsIds.Add(thisCard.GetString(false, false, true));
 
                         thisCard.Active = false;
@@ -275,8 +282,7 @@ namespace Sanakan.Modules
                         winnerUser.GameDeck.RemoveCharacterFromWishList(thisCard.Character);
                         winnerUser.GameDeck.RemoveCardFromWishList(thisCard.Id);
 
-                        if (++counter == count)
-                            break;
+                        idsToSelect.Remove(wid);
                     }
 
                     await db.SaveChangesAsync();
@@ -284,6 +290,19 @@ namespace Sanakan.Modules
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
                     await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
+
+                    try
+                    {
+                        var privEmb = new EmbedBuilder()
+                        {
+                            Color = EMType.Info.Color(),
+                            Description = $"Na [loterii]({msg.GetJumpUrl()}) zdobyłeś {cardsIds.Count} kart."
+                        };
+
+                        var pw = await winner.GetOrCreateDMChannelAsync();
+                        if (pw != null) await pw.SendMessageAsync("", embed: privEmb.Build());
+                    }
+                    catch(Exception){}
                 }
             }), Priority.High);
 
