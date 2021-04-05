@@ -196,6 +196,18 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("rozdajm", RunMode = RunMode.Async)]
+        [Summary("rozdaje karty kilka razy")]
+        [Remarks("1 10 5 10")]
+        public async Task GiveawayCardsMultiAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5, [Summary("liczba powtórzeń")]uint repeat = 1)
+        {
+            for (uint i = 0; i < repeat; i++)
+            {
+                await GiveawayCardsAsync(id, count, duration);
+                await Task.Delay(TimeSpan.FromSeconds(10));
+            }
+        }
+
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
