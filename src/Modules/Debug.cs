@@ -95,6 +95,22 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("rmsg", RunMode = RunMode.Async)]
+        [Summary("wysyła wiadomość na kanał w danym serwerze jako odpowiedź do podanej innej wiadomości")]
+        [Remarks("15188451644 101155483 1231231 Nie masz racji!")]
+        public async Task SendResponseMsgToChannelInGuildAsync([Summary("id serwera")]ulong gId, [Summary("id kanału")]ulong chId, [Summary("id wiadomości")]ulong msgId, [Summary("treść wiadomości")][Remainder]string msg)
+        {
+            try
+            {
+                var msg2r = await Context.Client.GetGuild(gId).GetTextChannel(chId).GetMessageAsync(msgId);
+                if (msg2r is IUserMessage umsg) await umsg.ReplyAsync(msg);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
         [Command("smsg", RunMode = RunMode.Async)]
         [Summary("wysyła wiadomość na kanał w danym serwerze")]
         [Remarks("15188451644 101155483 elo ziomki")]
@@ -183,7 +199,7 @@ namespace Sanakan.Modules
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
-        public async Task TransferCardAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
+        public async Task GiveawayCardsAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
         {
             var emote = Emote.Parse("<a:success:467493778752798730>");
             var time = DateTime.Now.AddMinutes(duration);
@@ -286,10 +302,11 @@ namespace Sanakan.Modules
                     }
 
                     await db.SaveChangesAsync();
+                    await msg.DeleteAsync();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
-                    await msg.ModifyAsync(x => x.Embed = $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
+                    msg = await ReplyAsync(embed: $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
 
                     try
                     {
@@ -984,7 +1001,7 @@ namespace Sanakan.Modules
             var serverConfig = Config.Get().RMConfig.Where(x => x.GuildId == Context.Guild.Id || x.GuildId == 0).ToList();
             if (serverConfig.Count > 0)
             {
-                await ReplyAsync("", embed: $"**RMC:**\n\n{string.Join("\n\n", serverConfig)}".TrimToLength(1900).ToEmbedMessage(EMType.Bot).Build());
+                await ReplyAsync("", embed: $"**RMC:**\n{string.Join("\n\n", serverConfig)}".TrimToLength(1900).ToEmbedMessage(EMType.Bot).Build());
                 return;
             }
             await ReplyAsync("", embed: $"**RMC:**\n\nBrak.".ToEmbedMessage(EMType.Bot).Build());
