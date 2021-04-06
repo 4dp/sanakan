@@ -140,6 +140,44 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Zmienia użytkownikowi shindena nick
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <param name="nickname">ksywka użytkownika</param>
+        /// <response code="404">User not found</response>
+        [HttpPost("shinden/{id}/nickname"), Authorize(Policy = "Site")]
+        public async Task ChangeNicknameShindenUserAsync(ulong id, [FromBody, Required]string nickname)
+        {
+            using (var db = new Database.UserContext(_config))
+            {
+                var user = await db.Users.AsQueryable().AsSplitQuery().Where(x => x.Shinden == id).AsNoTracking().FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
+                }
+
+                var guild = _client.GetGuild(245931283031523330);
+                if (guild == null)
+                {
+                    await "Guild not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
+                }
+
+                var userOnGuild = guild.GetUser(user.Id);
+                if (userOnGuild == null)
+                {
+                    await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return;
+                }
+
+                await userOnGuild.ModifyAsync(x => x.Nickname = nickname);
+            }
+
+            await "User nickname changed!".ToResponse(200).ExecuteResultAsync(ControllerContext);
+        }
+
+        /// <summary>
         /// Pełne łączenie użytkownika
         /// </summary>
         /// <param name="id">relacja</param>
