@@ -234,7 +234,7 @@ namespace Sanakan.Modules
             await msg.RemoveReactionAsync(emote, Context.Client.CurrentUser);
 
             var reactions = await msg.GetReactionUsersAsync(emote, 300).FlattenAsync();
-            var users = reactions.ToList();
+            var users = reactions.Shuffle().ToList();
 
             IUser winner = null;
             using (var db = new Database.UserContext(_config))
