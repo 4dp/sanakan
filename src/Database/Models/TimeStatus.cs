@@ -7,7 +7,7 @@ namespace Sanakan.Database.Models
 {
     public enum StatusType
     {
-        Hourly, Daily, Globals, Color, Market, Card, Items, Pvp,    // normal
+        Hourly, Daily, Globals, Color, Market, Card, Packet, Pvp,    // normal
         DPacket, DHourly, DMarket, DUsedItems, DExpeditions, DPvp,  // daily quests
         WDaily, WCardPlus,                                          // weekly quests
     }

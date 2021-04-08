@@ -1260,7 +1260,7 @@ namespace Sanakan.Modules
                         ? card.GetMaxExpToChest(chLvl)
                         : (card.ExpCnt / 2));
 
-                    var incKarma = 0.7 * card.MarketValue;
+                    var incKarma = 0.9 * card.MarketValue;
                     if (incKarma > 0.001 && incKarma < 50)
                         bUser.GameDeck.Karma += incKarma;
 

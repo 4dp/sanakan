@@ -231,16 +231,11 @@ namespace Sanakan.Services.PocketWaifu
             if (UserCounter[author.Id] > charNeeded)
             {
                 UserCounter[author.Id] = 0;
-                _ = Task.Run(async () =>
-                {
-                    SpawnUserPacket(author);
-                    await message.Channel.SendMessageAsync("", embed: $"{author.Mention} otrzymał pakiet losowych kart."
-                        .ToEmbedMessage(EMType.Bot).Build());
-                });
+                SpawnUserPacket(author, message.Channel);
             }
         }
 
-        private void SpawnUserPacket(SocketUser user)
+        private void SpawnUserPacket(SocketUser user, ISocketMessageChannel channel)
         {
             var exe = new Executable($"packet u{user.Id}", new Task(() =>
             {
@@ -248,6 +243,21 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     var botUser = db.GetUserOrCreateAsync(user.Id).Result;
                     if (botUser.IsBlacklisted) return;
+
+                    var pCnt = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Packet);
+                    if (pCnt == null)
+                    {
+                        pCnt = Database.Models.StatusType.Packet.NewTimeStatus();
+                        botUser.TimeStatuses.Add(pCnt);
+                    }
+
+                    if (!pCnt.IsActive())
+                    {
+                        pCnt.EndsAt = DateTime.Now.Date.AddDays(1);
+                        pCnt.IValue = 0;
+                    }
+
+                    if (++pCnt.IValue > 4) return;
 
                     botUser.GameDeck.BoosterPacks.Add(new BoosterPack
                     {
@@ -258,6 +268,11 @@ namespace Sanakan.Services.PocketWaifu
                         CardSourceFromPack = CardSource.Activity
                     });
                     db.SaveChanges();
+
+                    _ = Task.Run(async () =>
+                    {
+                        await channel.SendMessageAsync("", embed: $"{user.Mention} otrzymał pakiet losowych kart.".ToEmbedMessage(EMType.Bot).Build());
+                    });
                 }
             }));
 
