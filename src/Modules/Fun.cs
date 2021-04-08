@@ -56,6 +56,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var mission = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.WDaily);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.WDaily.NewTimeStatus();
+                    botuser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
+
                 daily.EndsAt = DateTime.Now.AddHours(20);
                 botuser.ScCnt += 100;
 

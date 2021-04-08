@@ -1514,6 +1514,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var mission = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.WCardPlus);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.WCardPlus.NewTimeStatus();
+                    botuser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
+
                 freeCard.EndsAt = DateTime.Now.AddHours(22);
 
                 var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
