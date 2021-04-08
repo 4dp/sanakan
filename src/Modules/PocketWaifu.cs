@@ -899,6 +899,14 @@ namespace Sanakan.Modules
                     }
                 }
 
+                var mission = bUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DUsedItems);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DUsedItems.NewTimeStatus();
+                    bUser.TimeStatuses.Add(mission);
+                }
+                mission.Count(itemCnt);
+
                 if (!noCardOperation && card.Dere == Dere.Tsundere)
                     affectionInc *= 1.2;
 
@@ -976,6 +984,14 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                var mission = bUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DPacket);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DPacket.NewTimeStatus();
+                    bUser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
 
                 if (pack.CardSourceFromPack == CardSource.Activity || pack.CardSourceFromPack == CardSource.Migration)
                 {
@@ -1481,11 +1497,7 @@ namespace Sanakan.Modules
                 var freeCard = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Card);
                 if (freeCard == null)
                 {
-                    freeCard = new TimeStatus
-                    {
-                        Type = StatusType.Card,
-                        EndsAt = DateTime.MinValue
-                    };
+                    freeCard = StatusType.Card.NewTimeStatus();
                     botuser.TimeStatuses.Add(freeCard);
                 }
 
@@ -1564,11 +1576,7 @@ namespace Sanakan.Modules
                 var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Market);
                 if (market == null)
                 {
-                    market = new TimeStatus
-                    {
-                        Type = StatusType.Market,
-                        EndsAt = DateTime.MinValue
-                    };
+                    market = StatusType.Market.NewTimeStatus();
                     botuser.TimeStatuses.Add(market);
                 }
 
@@ -1578,6 +1586,14 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} możesz udać się ponownie na rynek za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                var mission = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DMarket);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DMarket.NewTimeStatus();
+                    botuser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
 
                 int nextMarket = 20 - (int)(botuser.GameDeck.Karma / 100);
                 if (nextMarket > 22) nextMarket = 22;
@@ -1676,11 +1692,7 @@ namespace Sanakan.Modules
                 var market = botuser.TimeStatuses.FirstOrDefault(x => x.Type == StatusType.Market);
                 if (market == null)
                 {
-                    market = new TimeStatus
-                    {
-                        Type = StatusType.Market,
-                        EndsAt = DateTime.MinValue
-                    };
+                    market = StatusType.Market.NewTimeStatus();
                     botuser.TimeStatuses.Add(market);
                 }
 
@@ -1690,6 +1702,14 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} możesz udać się ponownie na czarny rynek za {timeTo / 60}h {timeTo % 60}m!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                var mission = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DMarket);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DMarket.NewTimeStatus();
+                    botuser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
 
                 int nextMarket = 20 + (int)(botuser.GameDeck.Karma / 100);
                 if (nextMarket > 22) nextMarket = 22;
@@ -3181,6 +3201,14 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                var mission = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DExpeditions);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DExpeditions.NewTimeStatus();
+                    botUser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
+
                 thisCard.Expedition = expedition;
                 thisCard.ExpeditionDate = DateTime.Now;
 
@@ -3216,11 +3244,7 @@ namespace Sanakan.Modules
                 var pvpDailyMax = duser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Pvp);
                 if (pvpDailyMax == null)
                 {
-                    pvpDailyMax = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Pvp,
-                        EndsAt = DateTime.MinValue
-                    };
+                    pvpDailyMax = Database.Models.StatusType.Pvp.NewTimeStatus();
                     duser.TimeStatuses.Add(pvpDailyMax);
                 }
 
@@ -3298,6 +3322,14 @@ namespace Sanakan.Modules
                     Type = FightType.NewVersus,
                     Result = res
                 });
+
+                var mission = duser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DPvp);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DPvp.NewTimeStatus();
+                    duser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
 
                 var info = duser.GameDeck.CalculatePVPParams(denemy.GameDeck, res);
                 await db.SaveChangesAsync();

@@ -45,11 +45,7 @@ namespace Sanakan.Modules
                 var daily = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Daily);
                 if (daily == null)
                 {
-                    daily = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Daily,
-                        EndsAt = DateTime.MinValue
-                    };
+                    daily = Database.Models.StatusType.Daily.NewTimeStatus();
                     botuser.TimeStatuses.Add(daily);
                 }
 
@@ -137,11 +133,7 @@ namespace Sanakan.Modules
                 var hourly = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Hourly);
                 if (hourly == null)
                 {
-                    hourly = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Hourly,
-                        EndsAt = DateTime.MinValue
-                    };
+                    hourly = Database.Models.StatusType.Hourly.NewTimeStatus();
                     botuser.TimeStatuses.Add(hourly);
                 }
 
@@ -154,6 +146,14 @@ namespace Sanakan.Modules
 
                 hourly.EndsAt = DateTime.Now.AddHours(1);
                 botuser.ScCnt += 5;
+
+                var mission = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DHourly);
+                if (mission == null)
+                {
+                    mission = Database.Models.StatusType.DHourly.NewTimeStatus();
+                    botuser.TimeStatuses.Add(mission);
+                }
+                mission.Count();
 
                 await db.SaveChangesAsync();
 

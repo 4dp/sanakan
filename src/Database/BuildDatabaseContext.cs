@@ -146,6 +146,7 @@ namespace Sanakan.Database
             modelBuilder.Entity<Card>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Active);
 
                 entity.HasOne(e => e.GameDeck)
                     .WithMany(d => d.Cards);

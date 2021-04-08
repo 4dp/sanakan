@@ -211,7 +211,14 @@ namespace Sanakan.Services
             {
                 var cR = user.Roles.FirstOrDefault(x => x.Name == color.ToString());
                 if (cR != null)
+                {
+                    if (cR.Members.Count() == 1)
+                    {
+                        await cR.DeleteAsync();
+                        return;
+                    }
                     await user.RemoveRoleAsync(cR);
+                }
             }
         }
 

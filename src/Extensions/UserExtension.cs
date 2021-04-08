@@ -129,6 +129,22 @@ namespace Sanakan.Extensions
             return user;
         }
 
+        public static List<TimeStatus> CreateOrGetAllDailyQuests(this User user)
+        {
+            var quests = new List<TimeStatus>();
+            foreach (var type in new TimeStatus().GetQuestTypes())
+            {
+                var mission = user.TimeStatuses.FirstOrDefault(x => x.Type == type);
+                if (mission == null)
+                {
+                    mission = type.NewTimeStatus();
+                    user.TimeStatuses.Add(mission);
+                }
+                quests.Add(mission);
+            }
+            return quests;
+        }
+
         public static long CalculatePriceOfIncMaxCardCount(this GameDeck deck, long count)
         {
             long price = 0;

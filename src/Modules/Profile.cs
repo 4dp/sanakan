@@ -429,12 +429,7 @@ namespace Sanakan.Modules
                     var global = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Globals && x.Guild == Context.Guild.Id);
                     if (global == null)
                     {
-                        global = new Database.Models.TimeStatus
-                        {
-                            Type = StatusType.Globals,
-                            Guild = Context.Guild.Id,
-                            EndsAt = DateTime.Now,
-                        };
+                        global = StatusType.Globals.NewTimeStatus(Context.Guild.Id);
                         botuser.TimeStatuses.Add(global);
                     }
 
@@ -484,12 +479,7 @@ namespace Sanakan.Modules
                 var colort = botuser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Color && x.Guild == Context.Guild.Id);
                 if (colort == null)
                 {
-                    colort = new Database.Models.TimeStatus
-                    {
-                        Type = Database.Models.StatusType.Color,
-                        Guild = Context.Guild.Id,
-                        EndsAt = DateTime.Now,
-                    };
+                    colort = StatusType.Color.NewTimeStatus(Context.Guild.Id);
                     botuser.TimeStatuses.Add(colort);
                 }
 
