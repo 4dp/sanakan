@@ -8,6 +8,9 @@ namespace Sanakan.Extensions
 {
     public static class TimeStatusExtension
     {
+        private static Discord.Emote _toClaim = Discord.Emote.Parse("<:icon_empty:829327739034402817>");
+        private static Discord.Emote _claimed = Discord.Emote.Parse("<:icon_full:829327738233421875>");
+
         private static List<StatusType> _dailyQuests = new List<StatusType>()
         {
             StatusType.DExpeditions,
@@ -16,6 +19,12 @@ namespace Sanakan.Extensions
             StatusType.DPacket,
             StatusType.DMarket,
             StatusType.DPvp,
+        };
+
+        private static List<StatusType> _weeklyQuests = new List<StatusType>()
+        {
+            StatusType.WCardPlus,
+            StatusType.WDaily,
         };
 
         public static string Name(this StatusType type)
@@ -46,6 +55,12 @@ namespace Sanakan.Extensions
                 case StatusType.DUsedItems:
                     return "Użyj przedmiot";
 
+                case StatusType.WCardPlus:
+                    return "Odbierz Karte+";
+
+                case StatusType.WDaily:
+                    return "Odbierz drobne";
+
                 default:
                     return "--";
             }
@@ -75,6 +90,9 @@ namespace Sanakan.Extensions
                 case StatusType.DMarket:        return 2;
                 case StatusType.DPvp:           return 5;
 
+                case StatusType.WCardPlus:      return 7;
+                case StatusType.WDaily:         return 7;
+
                 default:
                     return -1;
             }
@@ -91,6 +109,28 @@ namespace Sanakan.Extensions
                 case StatusType.DMarket:        return "<:icon_market:829327738145210399>";
                 case StatusType.DPvp:           return "<:icon_pvp:829327738157662229>";
 
+                case StatusType.WCardPlus:      return "<a:miko:826132578703507526>";
+                case StatusType.WDaily:         return "<a:gamemoney:465528603266777101>";
+
+                default:
+                    return "";
+            }
+        }
+
+        public static string GetRewardString(this StatusType type)
+        {
+            switch (type)
+            {
+                case StatusType.DExpeditions:   return "1 AC";
+                case StatusType.DUsedItems:     return "1 AC";
+                case StatusType.DHourly:        return "100 SC";
+                case StatusType.DPacket:        return "2 AC";
+                case StatusType.DMarket:        return "2 AC";
+                case StatusType.DPvp:           return "200 PC";
+
+                case StatusType.WCardPlus:      return "50 AC";
+                case StatusType.WDaily:         return "1000 SC i 10 AC";
+
                 default:
                     return "";
             }
@@ -98,7 +138,11 @@ namespace Sanakan.Extensions
 
         public static Discord.IEmote Icon(this StatusType type) => Discord.Emote.Parse(type.GetEmoteString());
 
-        public static List<StatusType> GetQuestTypes(this TimeStatus status) => _dailyQuests;
+        public static List<StatusType> GetDailyQuestTypes(this TimeStatus status) => _dailyQuests;
+
+        public static List<StatusType> GetWeeklyQuestTypes(this TimeStatus status) => _weeklyQuests;
+
+        public static bool IsQuest(this StatusType type) => type.IsWeeklyQuestType() || type.IsDailyQuestType();
 
         public static bool IsDailyQuestType(this StatusType type)
         {
@@ -110,6 +154,19 @@ namespace Sanakan.Extensions
                 case StatusType.DPacket:
                 case StatusType.DMarket:
                 case StatusType.DPvp:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsWeeklyQuestType(this StatusType type)
+        {
+            switch (type)
+            {
+                case StatusType.WCardPlus:
+                case StatusType.WDaily:
                     return true;
 
                 default:
@@ -135,7 +192,7 @@ namespace Sanakan.Extensions
 
         public static void Count(this TimeStatus status, int times = 1)
         {
-            if (status.Type.IsDailyQuestType())
+            if (status.Type.IsQuest())
             {
                 if (status.IsActive() && !status.BValue)
                 {
@@ -145,7 +202,12 @@ namespace Sanakan.Extensions
                 {
                     status.IValue = times;
                     status.BValue = false;
-                    status.EndsAt = DateTime.Now.Date.AddDays(1);
+
+                    if (status.Type.IsDailyQuestType())
+                        status.EndsAt = DateTime.Now.Date.AddDays(1);
+
+                    if (status.Type.IsWeeklyQuestType())
+                        status.EndsAt = DateTime.Now.Date.AddDays(7 - (int) DateTime.Now.DayOfWeek);
                 }
             }
 
@@ -153,6 +215,48 @@ namespace Sanakan.Extensions
             if (max > 0 && status.IValue > max)
                 status.IValue = max;
         }
+
+        public static void Claim(this TimeStatus status, User user)
+        {
+            if (status.BValue) return;
+
+            status.BValue = true;
+
+            switch(status.Type)
+            {
+                case StatusType.DExpeditions:
+                case StatusType.DUsedItems:
+                    user.AcCnt += 1;
+                    break;
+
+                case StatusType.DHourly:
+                    user.ScCnt += 100;
+                    break;
+
+                case StatusType.DPacket:
+                case StatusType.DMarket:
+                    user.AcCnt += 2;
+                    break;
+
+                case StatusType.DPvp:
+                    user.GameDeck.PVPCoins += 200;
+                    break;
+
+                case StatusType.WCardPlus:
+                    user.AcCnt += 50;
+                    break;
+
+                case StatusType.WDaily:
+                    user.ScCnt += 1000;
+                    user.AcCnt += 10;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        public static bool IsClaimed(this TimeStatus status) => status.IsActive() && status.BValue;
 
         public static bool CanClaim(this TimeStatus status) => status.IsActive() && !status.BValue
             && status.Type.IsDailyQuestType() && status.IValue >= status.Type.ToComplete();
@@ -174,11 +278,17 @@ namespace Sanakan.Extensions
 
         public static string ToView(this TimeStatus status)
         {
-            if (status.Type.IsDailyQuestType())
+            if (status.Type.IsQuest())
             {
+                long max = status.Type.ToComplete();
                 long actualProgress = status.IsActive() ? status.IValue : 0;
-                string claimed = status.IsActive() ? (status.BValue ? " *C*" : "") : "";
-                return $"{status.Type.Icon()} **{status.Type.Name()}**: [{actualProgress}/{status.Type.ToComplete()}]{claimed}";
+
+                string progress = (actualProgress >= max) ? (status.BValue ? _claimed.ToString() : _toClaim.ToString())
+                    : $"[{actualProgress}/{status.Type.ToComplete()}]";
+
+                string reward = status.IsActive() && status.BValue ? "" : $"\nNagroda: `{status.Type.GetRewardString()}`";
+
+                return $"{status.Type.Icon()} **{status.Type.Name()}** {progress}{reward}";
             }
 
             string dateValue = status.EndsAt.ToShortDateTime();

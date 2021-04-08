@@ -15,6 +15,7 @@ namespace Sanakan.Database.Models
         public ulong Id { get; set; }
         public ulong Shinden { get; set; }
         public bool IsBlacklisted { get; set; }
+        public long AcCnt { get; set; }
         public long TcCnt { get; set; }
         public long ScCnt { get; set; }
         public long Level { get; set; }

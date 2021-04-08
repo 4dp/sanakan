@@ -29,6 +29,7 @@ namespace Sanakan.Extensions
             {
                 Id = id,
                 Level = 1,
+                AcCnt = 0,
                 TcCnt = 0,
                 ScCnt = 100,
                 ExpCnt = 10,
@@ -132,7 +133,23 @@ namespace Sanakan.Extensions
         public static List<TimeStatus> CreateOrGetAllDailyQuests(this User user)
         {
             var quests = new List<TimeStatus>();
-            foreach (var type in new TimeStatus().GetQuestTypes())
+            foreach (var type in new TimeStatus().GetDailyQuestTypes())
+            {
+                var mission = user.TimeStatuses.FirstOrDefault(x => x.Type == type);
+                if (mission == null)
+                {
+                    mission = type.NewTimeStatus();
+                    user.TimeStatuses.Add(mission);
+                }
+                quests.Add(mission);
+            }
+            return quests;
+        }
+
+        public static List<TimeStatus> CreateOrGetAllWeeklyQuests(this User user)
+        {
+            var quests = new List<TimeStatus>();
+            foreach (var type in new TimeStatus().GetWeeklyQuestTypes())
             {
                 var mission = user.TimeStatuses.FirstOrDefault(x => x.Type == type);
                 if (mission == null)

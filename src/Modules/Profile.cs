@@ -12,6 +12,7 @@ using Sanakan.Services.Commands;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
@@ -48,7 +49,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: ($"**Portfel** {usr.Mention}:\n\n{botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**\n\n"
+                await ReplyAsync("", embed: ($"**Portfel** {usr.Mention}:\n\n{botuser?.ScCnt} **SC**\n{botuser?.TcCnt} **TC**\n{botuser?.AcCnt} **AC**\n\n"
                     + $"**PW**:\n{botuser?.GameDeck?.CTCnt} **CT**\n{botuser?.GameDeck?.PVPCoins} **PC**").ToEmbedMessage(EMType.Info).Build());
             }
         }
@@ -275,6 +276,66 @@ namespace Sanakan.Modules
                 {
                     await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
                 }
+            }
+        }
+
+        [Command("misje")]
+        [Alias("quest")]
+        [Summary("wyświetla postęp misji użytkownika")]
+        [Remarks("tak")]
+        public async Task ShowUserQuestsProgressAsync([Summary("czy odebrać nagrody?")]bool claim = false)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(Context.User.Id);
+                var weeklyQuests = botuser.CreateOrGetAllWeeklyQuests();
+                var dailyQuests = botuser.CreateOrGetAllDailyQuests();
+
+                if (claim)
+                {
+                    var rewards = new List<string>();
+                    var allClaimedBefore = dailyQuests.Count(x => x.IsClaimed()) == dailyQuests.Count;
+                    foreach(var d in dailyQuests)
+                    {
+                        if (d.CanClaim())
+                        {
+                            d.Claim(botuser);
+                            rewards.Add(d.Type.GetRewardString());
+                        }
+                    }
+
+                    if (!allClaimedBefore && dailyQuests.Count(x => x.IsClaimed()) == dailyQuests.Count)
+                    {
+                        botuser.AcCnt += 10;
+                        rewards.Add("10 AC");
+                    }
+
+                    foreach(var w in weeklyQuests)
+                    {
+                        if (w.CanClaim())
+                        {
+                            w.Claim(botuser);
+                            rewards.Add(w.Type.GetRewardString());
+                        }
+                    }
+
+                    if (rewards.Count > 0)
+                    {
+                        await ReplyAsync("", embed: $"**Odebrane nagrody:**\n\n{string.Join("\n", rewards)}".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
+                        await db.SaveChangesAsync();
+                        return;
+                    }
+
+                    await ReplyAsync("", embed: "Nie masz nic do odebrania.".ToEmbedMessage(EMType.Error).WithUser(Context.User).Build());
+                    return;
+                }
+
+                string dailyTip = "Za wykonanie wszystkich dzinnych misji można otrzymać 10 AC.";
+                string totalTip = "Dzienne misje odświeżają się o północy, a tygodniowe co niedzielę.";
+                string daily = $"**Dzienne misje:**\n\n{string.Join("\n", dailyQuests.Select(x => x.ToView()))}";
+                string weekly = $"**Tygodniowe misje:**\n\n{string.Join("\n", weeklyQuests.Select(x => x.ToView()))}";
+
+                await ReplyAsync("", embed: $"{daily}\n\n{dailyTip}\n\n\n{weekly}\n\n{totalTip}".ToEmbedMessage(EMType.Bot).WithUser(Context.User).Build());
             }
         }
 
