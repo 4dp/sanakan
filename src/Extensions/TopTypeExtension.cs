@@ -20,6 +20,12 @@ namespace Sanakan.Extensions
                 case TopType.TcCnt:
                     return "TC";
 
+                case TopType.AcCnt:
+                    return "AC";
+
+                case TopType.PcCnt:
+                    return "PC";
+
                 case TopType.Posts:
                     return "liczby wiadomości";
 

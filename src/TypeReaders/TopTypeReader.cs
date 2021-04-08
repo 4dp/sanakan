@@ -27,6 +27,12 @@ namespace Sanakan.TypeReaders
                 case "tc":
                     return Task.FromResult(TypeReaderResult.FromSuccess(TopType.TcCnt));
 
+                case "ac":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.AcCnt));
+
+                case "pc":
+                    return Task.FromResult(TypeReaderResult.FromSuccess(TopType.PcCnt));
+
                 case "posty":
                 case "msg":
                 case "wiadomosci":

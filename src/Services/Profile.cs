@@ -21,7 +21,7 @@ namespace Sanakan.Services
 {
     public enum TopType
     {
-        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower, Card, Karma, KarmaNegative, Pvp, PvpSeason
+        Level, ScCnt, TcCnt, Posts, PostsMonthly, PostsMonthlyCharacter, Commands, Cards, CardsPower, Card, Karma, KarmaNegative, Pvp, PvpSeason, PcCnt, AcCnt
     }
 
     public enum SCurrency
@@ -241,6 +241,12 @@ namespace Sanakan.Services
 
                 case TopType.TcCnt:
                     return list.OrderByDescending(x => x.TcCnt).ToList();
+
+                case TopType.AcCnt:
+                    return list.OrderByDescending(x => x.AcCnt).ToList();
+
+                case TopType.PcCnt:
+                    return list.OrderByDescending(x => x.GameDeck.PVPCoins).ToList();
 
                 case TopType.Posts:
                     return list.OrderByDescending(x => x.MessagesCnt).ToList();

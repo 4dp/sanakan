@@ -207,7 +207,7 @@ namespace Sanakan.Modules
         [Alias("top")]
         [Summary("wyświetla topke użytkowników")]
         [Remarks(""), RequireAnyCommandChannel]
-        public async Task ShowTopAsync([Summary("rodzaj topki (poziom/sc/tc/posty(m/ms)/kart(a/y/ym)/karma(-))/pvp(s)")]TopType type = TopType.Level)
+        public async Task ShowTopAsync([Summary("rodzaj topki (poziom/sc/tc/pc/ac/posty(m/ms)/kart(a/y/ym)/karma(-))/pvp(s)")]TopType type = TopType.Level)
         {
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);

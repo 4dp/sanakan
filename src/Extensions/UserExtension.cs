@@ -465,6 +465,12 @@ namespace Sanakan.Extensions
                 case TopType.TcCnt:
                     return $"{u.TcCnt} **TC**";
 
+                case TopType.AcCnt:
+                    return $"{u.AcCnt} **AC**";
+
+                case TopType.PcCnt:
+                    return $"{u.GameDeck.PVPCoins} **PC**";
+
                 case TopType.Posts:
                     return $"{u.MessagesCnt}";
 
