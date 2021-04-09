@@ -282,7 +282,7 @@ namespace Sanakan.Modules
         [Command("misje")]
         [Alias("quest")]
         [Summary("wyświetla postęp misji użytkownika")]
-        [Remarks("tak")]
+        [Remarks("tak"), RequireAnyCommandChannel]
         public async Task ShowUserQuestsProgressAsync([Summary("czy odebrać nagrody?")]bool claim = false)
         {
             using (var db = new Database.UserContext(Config))
@@ -330,7 +330,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                string dailyTip = "Za wykonanie wszystkich dzinnych misji można otrzymać 10 AC.";
+                string dailyTip = "Za wykonanie wszystkich dziennych misji można otrzymać 10 AC.";
                 string totalTip = "Dzienne misje odświeżają się o północy, a tygodniowe co niedzielę.";
                 string daily = $"**Dzienne misje:**\n\n{string.Join("\n", dailyQuests.Select(x => x.ToView()))}";
                 string weekly = $"**Tygodniowe misje:**\n\n{string.Join("\n", weeklyQuests.Select(x => x.ToView()))}";

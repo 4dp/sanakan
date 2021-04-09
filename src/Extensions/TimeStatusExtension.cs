@@ -198,7 +198,7 @@ namespace Sanakan.Extensions
                 {
                     status.IValue += times;
                 }
-                else
+                else if (!status.IsActive())
                 {
                     status.IValue = times;
                     status.BValue = false;
