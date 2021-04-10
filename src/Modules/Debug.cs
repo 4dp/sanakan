@@ -866,6 +866,24 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("ac"), Priority(1)]
+        [Summary("zmienia AC użytkownika o podaną wartość")]
+        [Remarks("Sniku 10000")]
+        public async Task ChangeUserAcAsync([Summary("użytkownik")]SocketGuildUser user, [Summary("liczba AC")]long amount)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetUserOrCreateAsync(user.Id);
+                botuser.AcCnt += amount;
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
+                await ReplyAsync("", embed: $"{user.Mention} ma teraz {botuser.AcCnt} AC".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("tc"), Priority(1)]
         [Summary("zmienia TC użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]

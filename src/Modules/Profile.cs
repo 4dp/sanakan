@@ -321,6 +321,8 @@ namespace Sanakan.Modules
 
                     if (rewards.Count > 0)
                     {
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users" });
+
                         await ReplyAsync("", embed: $"**Odebrane nagrody:**\n\n{string.Join("\n", rewards)}".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
                         await db.SaveChangesAsync();
                         return;

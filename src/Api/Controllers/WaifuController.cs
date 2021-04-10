@@ -229,6 +229,7 @@ namespace Sanakan.Api.Controllers
                 {
                     {"PC", user.GameDeck.PVPCoins},
                     {"CT", user.GameDeck.CTCnt},
+                    {"AC", user.AcCnt},
                     {"TC", user.TcCnt},
                     {"SC", user.ScCnt},
                 };

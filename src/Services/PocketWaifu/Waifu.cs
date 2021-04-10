@@ -27,6 +27,11 @@ namespace Sanakan.Services.PocketWaifu
         Rarity, Cage, Affection, Attack, Defence, Health, Tag, NoTag, Blocked, Broken, Picture, NoPicture, CustomPicture, Unique
     }
 
+    public enum ShopType
+    {
+        Normal, Pvp, Activity
+    }
+
     public class Waifu
     {
         private const int DERE_TAB_SIZE = ((int) Dere.Yato) + 1;
@@ -354,6 +359,271 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(4699,   ItemType.ChangeCardImage.ToItem()),
                 new ItemWithCost(269999, ItemType.SetCustomImage.ToItem()),
             };
+        }
+
+        public ItemWithCost[] GetItemsWithCostForActivityShop()
+        {
+            return new ItemWithCost[]
+            {
+                new ItemWithCost(10,    ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(70,    ItemType.IncreaseExpBig.ToItem()),
+                new ItemWithCost(700,   ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(1500,  ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(150,   ItemType.RandomBoosterPackSingleE.ToItem()),
+            };
+        }
+
+        public ItemWithCost[] GetItemsWithCostForShop(ShopType type)
+        {
+            switch (type)
+            {
+                case ShopType.Activity:
+                    return GetItemsWithCostForActivityShop();
+
+                case ShopType.Pvp:
+                    return GetItemsWithCostForPVP();
+
+                case ShopType.Normal:
+                default:
+                    return GetItemsWithCost();
+            }
+        }
+
+        public string GetShopName(ShopType type)
+        {
+            switch (type)
+            {
+                case ShopType.Activity:
+                    return "Kiosk";
+
+                case ShopType.Pvp:
+                    return "Koszary";
+
+                case ShopType.Normal:
+                default:
+                    return "Sklepik";
+            }
+        }
+
+        public string GetShopCurrencyName(ShopType type)
+        {
+            switch (type)
+            {
+                case ShopType.Activity:
+                    return "AC";
+
+                case ShopType.Pvp:
+                    return "PC";
+
+                case ShopType.Normal:
+                default:
+                    return "TC";
+            }
+        }
+
+        public void IncreaseMoneySpentOnCookies(ShopType type, User user, int cost)
+        {
+            switch (type)
+            {
+                case ShopType.Normal:
+                    user.Stats.WastedTcOnCookies += cost;
+                    break;
+
+                case ShopType.Pvp:
+                    user.Stats.WastedPuzzlesOnCookies += cost;
+                    break;
+
+                case ShopType.Activity:
+                default:
+                    break;
+            }
+        }
+
+        public void IncreaseMoneySpentOnCards(ShopType type, User user, int cost)
+        {
+            switch (type)
+            {
+                case ShopType.Normal:
+                    user.Stats.WastedTcOnCards += cost;
+                    break;
+
+                case ShopType.Pvp:
+                    user.Stats.WastedPuzzlesOnCards += cost;
+                    break;
+
+                case ShopType.Activity:
+                default:
+                    break;
+            }
+        }
+
+        public void RemoveMoneyFromUser(ShopType type, User user, int cost)
+        {
+            switch (type)
+            {
+                case ShopType.Normal:
+                    user.TcCnt -= cost;
+                    break;
+
+                case ShopType.Pvp:
+                    user.GameDeck.PVPCoins -= cost;
+                    break;
+
+                case ShopType.Activity:
+                    user.AcCnt -= cost;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        public bool CheckIfUserCanBuy(ShopType type, User user, int cost)
+        {
+            switch (type)
+            {
+                case ShopType.Normal:
+                    return user.TcCnt > cost;
+
+                case ShopType.Pvp:
+                    return user.GameDeck.PVPCoins > cost;
+
+                case ShopType.Activity:
+                    return user.AcCnt > cost;
+
+                default:
+                   return false;
+            }
+        }
+
+        public async Task<Embed> ExecuteShopAsync(ShopType type, Config.IConfig config, IUser discordUser, int selectedItem, string specialCmd)
+        {
+            var itemsToBuy = GetItemsWithCostForShop(type);
+            if (selectedItem <= 0)
+            {
+                return GetShopView(itemsToBuy, GetShopName(type), GetShopCurrencyName(type));
+            }
+
+            if (selectedItem > itemsToBuy.Length)
+            {
+                return $"{discordUser.Mention} nie odnaleznino takiego przedmiotu do zakupu.".ToEmbedMessage(EMType.Error).Build();
+            }
+
+            var thisItem = itemsToBuy[--selectedItem];
+            if (specialCmd == "info")
+            {
+                return GetItemShopInfo(thisItem);
+            }
+
+            int itemCount = 0;
+            if (!int.TryParse(specialCmd, out itemCount))
+            {
+                return $"{discordUser.Mention} liczbę poproszę, a nie jakieś bohomazy.".ToEmbedMessage(EMType.Error).Build();
+            }
+
+            ulong boosterPackTitleId = 0;
+            string boosterPackTitleName = "";
+            switch (thisItem.Item.Type)
+            {
+                case ItemType.RandomTitleBoosterPackSingleE:
+                    if (itemCount < 0) itemCount = 0;
+                    var response = await _shClient.Title.GetInfoAsync((ulong)itemCount);
+                    if (!response.IsSuccessStatusCode())
+                    {
+                        return $"{discordUser.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build();
+                    }
+                    var response2 = await _shClient.Title.GetCharactersAsync(response.Body);
+                    if (!response2.IsSuccessStatusCode())
+                    {
+                        return $"{discordUser.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build();
+                    }
+                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
+                    {
+                        return $"{discordUser.Mention} nie można kupić pakietu z tytułu z mniejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build();
+                    }
+                    boosterPackTitleName = $" ({response.Body.Title})";
+                    boosterPackTitleId = response.Body.Id;
+                    itemCount = 1;
+                    break;
+
+                case ItemType.PreAssembledAsuna:
+                case ItemType.PreAssembledGintoki:
+                case ItemType.PreAssembledMegumin:
+                    if (itemCount > 1)
+                    {
+                        return $"{discordUser.Mention} można kupić tylko jeden taki przedmiot.".ToEmbedMessage(EMType.Error).Build();
+                    }
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+
+                default:
+                    if (itemCount < 1) itemCount = 1;
+                    break;
+            }
+
+            var realCost = itemCount * thisItem.Cost;
+            string count = (itemCount > 1) ? $" x{itemCount}" : "";
+
+            using (var db = new Database.UserContext(config))
+            {
+                var bUser = await db.GetUserOrCreateAsync(discordUser.Id);
+                if (!CheckIfUserCanBuy(type, bUser, realCost))
+                {
+                    return $"{discordUser.Mention} nie posiadasz wystarczającej liczby {GetShopCurrencyName(type)}!".ToEmbedMessage(EMType.Error).Build();
+                }
+
+                if (thisItem.Item.Type.IsBoosterPack())
+                {
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        var booster = thisItem.Item.Type.ToBoosterPack();
+                        if (boosterPackTitleId != 0)
+                        {
+                            booster.Title = boosterPackTitleId;
+                            booster.Name += boosterPackTitleName;
+                        }
+                        if (booster != null)
+                        {
+                            booster.CardSourceFromPack = CardSource.PvpShop;
+                            bUser.GameDeck.BoosterPacks.Add(booster);
+                        }
+                    }
+
+                    bUser.Stats.WastedPuzzlesOnCards += realCost;
+                }
+                else if (thisItem.Item.Type.IsPreAssembledFigure())
+                {
+                    if (bUser.GameDeck.Figures.Any(x => x.PAS == thisItem.Item.Type.ToPASType()))
+                    {
+                        return $"{discordUser.Mention} masz już taką figurkę.".ToEmbedMessage(EMType.Error).Build();
+                    }
+
+                    var figure = thisItem.Item.Type.ToPAFigure();
+                    if (figure != null) bUser.GameDeck.Figures.Add(figure);
+
+                    IncreaseMoneySpentOnCards(type, bUser, realCost);
+                }
+                else
+                {
+                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type && x.Quality == thisItem.Item.Quality);
+                    if (inUserItem == null)
+                    {
+                        inUserItem = thisItem.Item.Type.ToItem(itemCount, thisItem.Item.Quality);
+                        bUser.GameDeck.Items.Add(inUserItem);
+                    }
+                    else inUserItem.Count += itemCount;
+
+                    IncreaseMoneySpentOnCookies(type, bUser, realCost);
+                }
+
+                RemoveMoneyFromUser(type, bUser, realCost);
+
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
+
+                return $"{discordUser.Mention} zakupił: _{thisItem.Item.Name}{boosterPackTitleName}{count}_.".ToEmbedMessage(EMType.Success).Build();
+            }
         }
 
         public double GetExpToUpgrade(Card toUp, Card toSac)

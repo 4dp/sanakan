@@ -190,143 +190,16 @@ namespace Sanakan.Modules
         [Remarks("1 info"), RequireWaifuCommandChannel]
         public async Task BuyItemPvPAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4 (liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
         {
-            var itemsToBuy = _waifu.GetItemsWithCostForPVP();
-            if (itemNumber <= 0)
-            {
-                await ReplyAsync("", embed: _waifu.GetShopView(itemsToBuy, "Koszary", "PC"));
-                return;
-            }
+            await ReplyAsync("", embed: await  _waifu.ExecuteShopAsync(ShopType.Pvp, Config, Context.User, itemNumber, info));
+        }
 
-            if (itemNumber > itemsToBuy.Length)
-            {
-                await ReplyAsync("", embed: $"{Context.User.Mention} w koszarach nie ma takiego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            var thisItem = itemsToBuy[--itemNumber];
-            if (info == "info")
-            {
-                await ReplyAsync("", embed: _waifu.GetItemShopInfo(thisItem));
-                return;
-            }
-
-            int itemCount = 0;
-            if (!int.TryParse(info, out itemCount))
-            {
-                await ReplyAsync("", embed: $"{Context.User.Mention} liczbę poproszę, a nie jakieś bohomazy.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            ulong boosterPackTitleId = 0;
-            string boosterPackTitleName = "";
-
-            switch (thisItem.Item.Type)
-            {
-                case ItemType.RandomTitleBoosterPackSingleE:
-                    if (itemCount < 0) itemCount = 0;
-                    var response = await _shclient.Title.GetInfoAsync((ulong)itemCount);
-                    if (!response.IsSuccessStatusCode())
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    var response2 = await _shclient.Title.GetCharactersAsync(response.Body);
-                    if (!response2.IsSuccessStatusCode())
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można kupić pakietu z tytułu z mniejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    boosterPackTitleName = $" ({response.Body.Title})";
-                    boosterPackTitleId = response.Body.Id;
-                    itemCount = 1;
-                    break;
-
-                case ItemType.PreAssembledAsuna:
-                case ItemType.PreAssembledGintoki:
-                case ItemType.PreAssembledMegumin:
-                    if (itemCount > 1)
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} można kupić tylko jeden taki przedmiot.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    if (itemCount < 1) itemCount = 1;
-                    break;
-
-                default:
-                    if (itemCount < 1) itemCount = 1;
-                    break;
-            }
-
-            var realCost = itemCount * thisItem.Cost;
-            string count = (itemCount > 1) ? $" x{itemCount}" : "";
-
-            using (var db = new Database.UserContext(Config))
-            {
-                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (bUser.GameDeck.PVPCoins < realCost)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby PC!".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (thisItem.Item.Type.IsBoosterPack())
-                {
-                    for (int i = 0; i < itemCount; i++)
-                    {
-                        var booster = thisItem.Item.Type.ToBoosterPack();
-                        if (boosterPackTitleId != 0)
-                        {
-                            booster.Title = boosterPackTitleId;
-                            booster.Name += boosterPackTitleName;
-                        }
-                        if (booster != null)
-                        {
-                            booster.CardSourceFromPack = CardSource.PvpShop;
-                            bUser.GameDeck.BoosterPacks.Add(booster);
-                        }
-                    }
-
-                    bUser.Stats.WastedPuzzlesOnCards += realCost;
-                }
-                else if (thisItem.Item.Type.IsPreAssembledFigure())
-                {
-                    if (bUser.GameDeck.Figures.Any(x => x.PAS == thisItem.Item.Type.ToPASType()))
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} masz już taką figurkę.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-
-                    var figure = thisItem.Item.Type.ToPAFigure();
-                    if (figure != null) bUser.GameDeck.Figures.Add(figure);
-
-                    bUser.Stats.WastedPuzzlesOnCards += realCost;
-                }
-                else
-                {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type && x.Quality == thisItem.Item.Quality);
-                    if (inUserItem == null)
-                    {
-                        inUserItem = thisItem.Item.Type.ToItem(itemCount, thisItem.Item.Quality);
-                        bUser.GameDeck.Items.Add(inUserItem);
-                    }
-                    else inUserItem.Count += itemCount;
-
-                    bUser.Stats.WastedPuzzlesOnCookies += realCost;
-                }
-
-                bUser.GameDeck.PVPCoins -= realCost;
-
-                await db.SaveChangesAsync();
-
-                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
-
-                await ReplyAsync("", embed: $"{Context.User.Mention} zakupił: _{thisItem.Item.Name}{boosterPackTitleName}{count}_.".ToEmbedMessage(EMType.Success).Build());
-            }
+        [Command("kiosk")]
+        [Alias("ac shop")]
+        [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
+        [Remarks("1 info"), RequireWaifuCommandChannel]
+        public async Task BuyItemActivityAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4 (liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
+        {
+            await ReplyAsync("", embed: await  _waifu.ExecuteShopAsync(ShopType.Activity, Config, Context.User, itemNumber, info));
         }
 
         [Command("sklepik")]
@@ -335,144 +208,7 @@ namespace Sanakan.Modules
         [Remarks("1 info"), RequireWaifuCommandChannel]
         public async Task BuyItemAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4 (liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
         {
-            var itemsToBuy = _waifu.GetItemsWithCost();
-            if (itemNumber <= 0)
-            {
-                await ReplyAsync("", embed: _waifu.GetShopView(itemsToBuy));
-                return;
-            }
-
-            if (itemNumber > itemsToBuy.Length)
-            {
-                await ReplyAsync("", embed: $"{Context.User.Mention} w sklepiku nie ma takiego przedmiotu.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            var thisItem = itemsToBuy[--itemNumber];
-            if (info == "info")
-            {
-                await ReplyAsync("", embed: _waifu.GetItemShopInfo(thisItem));
-                return;
-            }
-
-            int itemCount = 0;
-            if (!int.TryParse(info, out itemCount))
-            {
-                await ReplyAsync("", embed: $"{Context.User.Mention} liczbę poproszę, a nie jakieś bohomazy.".ToEmbedMessage(EMType.Error).Build());
-                return;
-            }
-
-            ulong boosterPackTitleId = 0;
-            string boosterPackTitleName = "";
-
-            switch (thisItem.Item.Type)
-            {
-                case ItemType.RandomTitleBoosterPackSingleE:
-                    if (itemCount < 0) itemCount = 0;
-                    var response = await _shclient.Title.GetInfoAsync((ulong)itemCount);
-                    if (!response.IsSuccessStatusCode())
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    var response2 = await _shclient.Title.GetCharactersAsync(response.Body);
-                    if (!response2.IsSuccessStatusCode())
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można kupić pakietu z tytułu z mniejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    boosterPackTitleName = $" ({response.Body.Title})";
-                    boosterPackTitleId = response.Body.Id;
-                    itemCount = 1;
-                    break;
-
-                case ItemType.PreAssembledAsuna:
-                case ItemType.PreAssembledGintoki:
-                case ItemType.PreAssembledMegumin:
-                    if (itemCount > 1)
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} można kupić tylko jeden taki przedmiot.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-                    if (itemCount < 1) itemCount = 1;
-                    break;
-
-                default:
-                    if (itemCount < 1) itemCount = 1;
-                    break;
-            }
-
-            var realCost = itemCount * thisItem.Cost;
-            string count = (itemCount > 1) ? $" x{itemCount}" : "";
-
-            using (var db = new Database.UserContext(Config))
-            {
-                var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                if (bUser.Level < 10)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} sklepik jest dostępny od 10 poziomu.".ToEmbedMessage(EMType.Bot).Build());
-                    return;
-                }
-                if (bUser.TcCnt < realCost)
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz wystarczającej liczby TC!".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (thisItem.Item.Type.IsBoosterPack())
-                {
-                    for (int i = 0; i < itemCount; i++)
-                    {
-                        var booster = thisItem.Item.Type.ToBoosterPack();
-                        if (boosterPackTitleId != 0)
-                        {
-                            booster.Title = boosterPackTitleId;
-                            booster.Name += boosterPackTitleName;
-                        }
-                        if (booster != null) bUser.GameDeck.BoosterPacks.Add(booster);
-                    }
-
-                    bUser.Stats.WastedTcOnCards += realCost;
-                }
-                else if (thisItem.Item.Type.IsPreAssembledFigure())
-                {
-                    if (bUser.GameDeck.Figures.Any(x => x.PAS == thisItem.Item.Type.ToPASType()))
-                    {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} masz już taką figurkę.".ToEmbedMessage(EMType.Error).Build());
-                        return;
-                    }
-
-                    var figure = thisItem.Item.Type.ToPAFigure();
-                    if (figure != null) bUser.GameDeck.Figures.Add(figure);
-
-                    bUser.Stats.WastedTcOnCards += realCost;
-                }
-                else
-                {
-                    var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == thisItem.Item.Type && x.Quality == thisItem.Item.Quality);
-                    if (inUserItem == null)
-                    {
-                        inUserItem = thisItem.Item.Type.ToItem(itemCount, thisItem.Item.Quality);
-                        bUser.GameDeck.Items.Add(inUserItem);
-                    }
-                    else inUserItem.Count += itemCount;
-
-                    bUser.Stats.WastedTcOnCookies += realCost;
-                }
-
-                bUser.TcCnt -= realCost;
-
-                await db.SaveChangesAsync();
-
-                QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
-
-                await ReplyAsync("", embed: $"{Context.User.Mention} zakupił: _{thisItem.Item.Name}{boosterPackTitleName}{count}_.".ToEmbedMessage(EMType.Success).Build());
-            }
+            await ReplyAsync("", embed: await  _waifu.ExecuteShopAsync(ShopType.Normal, Config, Context.User, itemNumber, info));
         }
 
         [Command("użyj")]
@@ -1207,7 +943,7 @@ namespace Sanakan.Modules
 
                 if (card.Rarity == Rarity.SSS)
                 {
-                    if (++bUser.Stats.UpgradedToSSS % 10 == 0 && card.RestartCnt < 1)
+                    if (bUser.Stats.UpgradedToSSS++ % 10 == 0 && card.RestartCnt < 1)
                     {
                         var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
                         if (inUserItem == null)
