@@ -2986,9 +2986,9 @@ namespace Sanakan.Modules
                 }
 
                 var canFight = duser.GameDeck.CanFightPvP();
-                if (canFight != 0)
+                if (canFight != DeckPowerStatus.Ok)
                 {
-                    var err = (canFight == -1) ? "słabą" : "silną";
+                    var err = (canFight == DeckPowerStatus.TooLow) ? "słabą" : "silną";
                     await ReplyAsync("", embed: $"{Context.User.Mention} masz zbyt {err} talie ({duser.GameDeck.GetDeckPower().ToString("F")}).".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }

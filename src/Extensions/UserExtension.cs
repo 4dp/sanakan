@@ -9,6 +9,11 @@ using System.Linq;
 
 namespace Sanakan.Extensions
 {
+    public enum DeckPowerStatus
+    {
+        Ok, TooLow, TooHigh
+    }
+
     public static class UserExtension
     {
         public const double MAX_DECK_POWER = 800;
@@ -234,13 +239,12 @@ namespace Sanakan.Extensions
         public static bool ReachedDailyMaxPVPCount(this GameDeck deck)
             => deck.PVPDailyGamesPlayed >= 10;
 
-        public static int CanFightPvP(this GameDeck deck)
+        public static DeckPowerStatus CanFightPvP(this GameDeck deck)
         {
-            var power = deck.GetDeckPower();
-
-            if (power > deck.GetMaxDeckPower()) return 1;
-            if (power < deck.GetMinDeckPower()) return -1;
-            return 0;
+            deck.DeckPower = deck.CalculateDeckPower();
+            if (deck.DeckPower > deck.GetMaxDeckPower()) return DeckPowerStatus.TooHigh;
+            if (deck.DeckPower < deck.GetMinDeckPower()) return DeckPowerStatus.TooLow;
+            return DeckPowerStatus.Ok;
         }
 
         public static bool CanFightPvPs(this GameDeck deck)

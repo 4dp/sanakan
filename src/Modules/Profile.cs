@@ -212,6 +212,7 @@ namespace Sanakan.Modules
             var session = new ListSession<string>(Context.User, Context.Client.CurrentUser);
             await _session.KillSessionIfExistAsync(session);
 
+            var building = await ReplyAsync("", embed: $"🔨 Trwa budowanie topki...".ToEmbedMessage(EMType.Bot).Build());
             using (var db = new Database.UserContext(Config))
             {
                 var users = await db.GetCachedAllUsersAsync();
@@ -225,6 +226,7 @@ namespace Sanakan.Modules
                 Title = $"Topka {type.Name()}"
             };
 
+            await building.DeleteAsync();
             var msg = await ReplyAsync("", embed: session.BuildPage(0));
             await msg.AddReactionsAsync(new[] { new Emoji("⬅"), new Emoji("➡") });
 
@@ -264,7 +266,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var allUsers = await db.GetCachedAllUsersAsync();
+                var allUsers = await db.GetCachedAllUsersLiteAsync();
                 var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
                 if (botUser == null)
                 {
@@ -272,6 +274,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                botUser.GameDeck = await db.GetCachedUserGameDeckAsync(usr.Id);
                 using (var stream = await _profile.GetProfileImageAsync(usr, botUser, allUsers.OrderByDescending(x => x.ExpCnt).ToList().IndexOf(botUser) + 1))
                 {
                     await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");

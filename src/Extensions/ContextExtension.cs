@@ -63,6 +63,16 @@ namespace Sanakan.Extensions
                 .Include(x => x.GameDeck).ThenInclude(x => x.Figures).AsNoTracking().AsSplitQuery().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
         }
 
+        public static async Task<List<User>> GetCachedAllUsersLiteAsync(this Database.UserContext context)
+        {
+            return (await context.Users.AsQueryable().AsNoTracking().AsSplitQuery().FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1) })).ToList();
+        }
+
+        public static async Task<GameDeck> GetCachedUserGameDeckAsync(this Database.UserContext context, ulong userId)
+        {
+            return (await context.GameDecks.AsQueryable().Where(x => x.UserId == userId).Include(x => x.Cards).AsNoTracking().AsSplitQuery().FromCacheAsync(new string[] { $"user-{userId}", "users" })).FirstOrDefault();
+        }
+
         public static async Task<List<User>> GetCachedAllUsersAsync(this Database.UserContext context)
         {
             return (await context.Users.AsQueryable().Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats).Include(x => x.GameDeck).ThenInclude(x => x.Wishes)
@@ -74,7 +84,7 @@ namespace Sanakan.Extensions
 
         public static async Task<List<GameDeck>> GetCachedPlayersForPVP(this Database.UserContext context, ulong ignore = 1)
         {
-            return (await context.GameDecks.AsQueryable().Where(x => x.DeckPower > UserExtension.MIN_DECK_POWER && x.DeckPower < UserExtension.MAX_DECK_POWER && x.UserId != ignore).AsNoTracking().AsSplitQuery().FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6) })).ToList();
+            return (await context.GameDecks.AsQueryable().Where(x => x.DeckPower > UserExtension.MIN_DECK_POWER && x.DeckPower < UserExtension.MAX_DECK_POWER && x.UserId != ignore).AsNoTracking().AsSplitQuery().FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2) })).ToList();
         }
 
         public static async Task<User> GetUserOrCreateAsync(this Database.UserContext context, ulong userId)

@@ -308,9 +308,10 @@ namespace Sanakan.Services
 
         public async Task<Stream> GetProfileImageAsync(SocketGuildUser user, Database.Models.User botUser, long topPosition)
         {
-            var response = await _shClient.User.GetAsync(botUser.Shinden);
+            bool isConnected = botUser.Shinden != 0;
+            var response = _shClient.User.GetAsync(botUser.Shinden);
 
-            using (var image = await _img.GetUserProfileAsync(response.Body, botUser, user.GetAvatarUrl()?.Split("?")[0] ?? "https://i.imgur.com/xVIMQiB.jpg",
+            using (var image = await _img.GetUserProfileAsync(isConnected ? (await response).Body : null, botUser, user.GetAvatarUrl()?.Split("?")[0] ?? "https://i.imgur.com/xVIMQiB.jpg",
                 topPosition, user.Nickname ?? user.Username, user.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Discord.Color.DarkerGrey))
             {
                 return image.ToPngStream();
