@@ -96,7 +96,8 @@ namespace Sanakan.Services.Commands
 
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
-            string prefix = _config.Get().Prefix;
+            var conf = _config.Get();
+            string prefix = conf.Prefix;
             var context = new SocketCommandContext(_client, msg);
             if (context.Guild != null)
             {
@@ -110,8 +111,9 @@ namespace Sanakan.Services.Commands
             int argPos = 0;
             if (msg.HasStringPrefix(prefix, ref argPos, StringComparison.OrdinalIgnoreCase))
             {
-                if (_config.Get().BlacklistedGuilds.Any(x => x == (context.Guild?.Id ?? 0)))
-                    return;
+                var isDev = conf.Dev.Any(x => x == context.User.Id);
+                var isOnBlacklist = conf.BlacklistedGuilds.Any(x => x == (context.Guild?.Id ?? 0));
+                if (isOnBlacklist && !isDev) return;
 
                 var res = await _cmd.GetExecutableCommandAsync(context, argPos, _provider);
                 if (res.IsSuccess())
