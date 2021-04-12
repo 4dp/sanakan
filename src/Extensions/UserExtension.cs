@@ -53,6 +53,7 @@ namespace Sanakan.Extensions
                     CTCnt = 0,
                     Karma = 0,
                     PVPCoins = 0,
+                    DeckPower = 0,
                     PVPWinStreak = 0,
                     ItemsDropped = 0,
                     GlobalPVPRank = 0,
@@ -332,7 +333,11 @@ namespace Sanakan.Extensions
             return $"**{coins.ToString("+0;-#")}** PC **{gRank.ToString("+0;-#")}** GR  **{sRank.ToString("+0;-#")}** SR";
         }
 
-        public static double GetDeckPower(this GameDeck deck)
+        public static double GetDeckPower(this GameDeck deck) => deck.DeckPower;
+
+        public static bool NeedToSetDeckAgain(this GameDeck deck) => deck.DeckPower == -1;
+
+        public static double CalculateDeckPower(this GameDeck deck)
             => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
 
         public static double GetMaxDeckPower(this GameDeck _) => 800;

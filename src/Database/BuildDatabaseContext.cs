@@ -122,6 +122,7 @@ namespace Sanakan.Database
             modelBuilder.Entity<GameDeck>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.DeckPower);
 
                 entity.HasOne(e => e.User)
                     .WithOne(u => u.GameDeck);

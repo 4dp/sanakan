@@ -16,6 +16,7 @@ namespace Sanakan.Database.Models
         public bool WishlistIsPrivate { get; set; }
 
         public long PVPCoins { get; set; }
+        public double DeckPower { get; set; }
         public long PVPWinStreak { get; set; }
         public long GlobalPVPRank { get; set; }
         public long SeasonalPVPRank { get; set; }

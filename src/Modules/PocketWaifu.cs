@@ -2584,12 +2584,14 @@ namespace Sanakan.Modules
                     thisCard.Active = false;
                 }
 
+                bUser.GameDeck.DeckPower = active.Sum(x => x.GetCardPower());
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 var message = thisCard.Active ? "aktywował: " : "dezaktywował: ";
-                var power = $"**Moc talii**: {active.Sum(x => x.GetCardPower()).ToString("F")}";
+                var power = $"**Moc talii**: {bUser.GameDeck.DeckPower.ToString("F")}";
                 await ReplyAsync("", embed: $"{Context.User.Mention} {message}{thisCard.GetString(false, false, true)}\n\n{power}".ToEmbedMessage(EMType.Success).Build());
             }
         }
@@ -2977,6 +2979,12 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var duser = await db.GetUserOrCreateAsync(Context.User.Id);
+                if (duser.GameDeck.NeedToSetDeckAgain())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} musisz na nowo ustawić swóją talie!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 var canFight = duser.GameDeck.CanFightPvP();
                 if (canFight != 0)
                 {
@@ -3010,8 +3018,7 @@ namespace Sanakan.Modules
                     duser.GameDeck.SeasonalPVPRank = 0;
                 }
 
-                var playersWithActiveCards = await db.GetCachedPlayersWithActiveCards();
-                var allPvpPlayers = playersWithActiveCards.Where(x => x.CanFightPvPs() && x.UserId != duser.Id).ToList();
+                var allPvpPlayers = await db.GetCachedPlayersForPVP(duser.Id);
                 if (allPvpPlayers.Count < 10)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} zbyt mała liczba graczy ma utworzoną poprawną talię!".ToEmbedMessage(EMType.Error).Build());
