@@ -74,7 +74,7 @@ namespace Sanakan.Extensions
 
         public static async Task<List<GameDeck>> GetCachedPlayersForPVP(this Database.UserContext context, ulong ignore = 1)
         {
-            return (await context.GameDecks.AsQueryable().Where(x => x.DeckPower > x.GetMinDeckPower() && x.DeckPower < x.GetMaxDeckPower() && x.UserId != ignore).AsNoTracking().AsSplitQuery().FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6) })).ToList();
+            return (await context.GameDecks.AsQueryable().Where(x => x.DeckPower > UserExtension.MIN_DECK_POWER && x.DeckPower < UserExtension.MAX_DECK_POWER && x.UserId != ignore).AsNoTracking().AsSplitQuery().FromCacheAsync(new MemoryCacheEntryOptions{ AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6) })).ToList();
         }
 
         public static async Task<User> GetUserOrCreateAsync(this Database.UserContext context, ulong userId)

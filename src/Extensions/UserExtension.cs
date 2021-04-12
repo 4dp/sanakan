@@ -11,6 +11,9 @@ namespace Sanakan.Extensions
 {
     public static class UserExtension
     {
+        public const double MAX_DECK_POWER = 800;
+        public const double MIN_DECK_POWER = 200;
+
         public static bool SendAnyMsgInMonth(this User u)
             => (u.MessagesCnt - u.MessagesCntAtDate) > 0;
 
@@ -340,9 +343,9 @@ namespace Sanakan.Extensions
         public static double CalculateDeckPower(this GameDeck deck)
             => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
 
-        public static double GetMaxDeckPower(this GameDeck _) => 800;
+        public static double GetMaxDeckPower(this GameDeck _) => MAX_DECK_POWER;
 
-        public static double GetMinDeckPower(this GameDeck _) => 200;
+        public static double GetMinDeckPower(this GameDeck _) => MIN_DECK_POWER;
 
         public static int LimitOfCardsOnExpedition(this GameDeck _) => 10;
 
