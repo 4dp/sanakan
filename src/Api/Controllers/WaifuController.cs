@@ -689,7 +689,6 @@ namespace Sanakan.Api.Controllers
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    Console.WriteLine("START");
                     var botUser = await db.GetUserOrCreateAsync(discordId);
 
                     botUser.Stats.OpenedBoosterPacks += packs.Count;
@@ -705,8 +704,6 @@ namespace Sanakan.Api.Controllers
 
                     await db.SaveChangesAsync();
 
-                    Console.WriteLine("KONIEC");
-
                     QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                 }
             }));
@@ -718,7 +715,6 @@ namespace Sanakan.Api.Controllers
             }
 
             await exe.WaitAsync();
-            Console.WriteLine("DALEJ");
 
             return cards;
         }
