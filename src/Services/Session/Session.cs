@@ -34,7 +34,7 @@ namespace Sanakan.Services.Session
             OnSyncEnd = null;
             Id = null;
         }
-        
+
         // Session
         public string Id { get; set; }
         public RunMode RunMode { get; set; }
@@ -93,10 +93,10 @@ namespace Sanakan.Services.Session
 
         public IExecutable GetExecutable(SessionContext context)
         {
-            return new Executable($"session-{this}", new Task<bool>(() => 
+            return new Executable($"session-{this}", new Task<Task>(() =>
             {
                 if (OnExecute == null)
-                    return true;
+                    return Task.FromResult(true);
 
                 try
                 {
@@ -110,7 +110,7 @@ namespace Sanakan.Services.Session
                        });
                     }
 
-                    return res;
+                    return Task.FromResult(res);
                 }
                 catch (Exception ex)
                 {
@@ -119,7 +119,7 @@ namespace Sanakan.Services.Session
                         string sessionName = Id ?? this.ToString();
                         _logger.Log($"In {sessionName} session: {ex}");
                     }
-                    return false;
+                    return Task.FromResult(false);
                 }
             }));
         }

@@ -263,7 +263,7 @@ namespace Sanakan.Modules
                 }
             }
 
-            var exe = new Executable("lotery", new Task(async () =>
+            var exe = new Executable("lotery", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(Config))
                 {

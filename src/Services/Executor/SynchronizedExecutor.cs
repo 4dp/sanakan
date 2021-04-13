@@ -42,15 +42,14 @@ namespace Sanakan.Services.Executor
             _provider = provider;
         }
 
-        public async Task<bool> TryAdd(IExecutable task, TimeSpan timeout)
+        public Task<bool> TryAdd(IExecutable task, TimeSpan timeout)
         {
             _logger.Log($"Executor: adding new task, on pool: {_queue.Count} /hi: {_hiQueue.Count}");
             if (AddToQueue(task, timeout))
             {
-                await Task.CompletedTask;
-                return true;
+                return Task.FromResult(true);
             }
-            return false;
+            return Task.FromResult(false);
         }
 
         public async Task RunWorker()

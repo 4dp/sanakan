@@ -217,9 +217,9 @@ namespace Sanakan.Services
             return experience;
         }
 
-        private Task CreateUserTask(SocketGuildUser user)
+        private Task<Task> CreateUserTask(SocketGuildUser user)
         {
-            return new Task(() =>
+            return new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -227,19 +227,19 @@ namespace Sanakan.Services
                     {
                         var bUser = new Database.Models.User().Default(user.Id);
                         db.Users.Add(bUser);
-                        db.SaveChanges();
+                        await db.SaveChangesAsync();
                     }
                 }
             });
         }
 
-        private Task CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters, bool calculateExp)
+        private Task<Task> CreateTask(SocketGuildUser user, ISocketMessageChannel channel, long exp, ulong messages, ulong commands, ulong characters, bool calculateExp)
         {
-            return new Task(() =>
+            return new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    var usr = db.GetUserOrCreateAsync(user.Id).Result;
+                    var usr = await db.GetUserOrCreateAsync(user.Id);
                     if (usr == null) return;
 
                     if ((DateTime.Now - usr.MeasureDate.AddMonths(1)).TotalSeconds > 1)
@@ -289,7 +289,7 @@ namespace Sanakan.Services
                         }
                     });
 
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                 }
             });
         }

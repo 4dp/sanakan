@@ -293,12 +293,6 @@ namespace Sanakan.Services.Session.Models
 
                     return true;
                 }
-
-                try
-                {
-                    await msg.RemoveReactionAsync(reaction.Emote, context.User);
-                }
-                catch (Exception) { }
             }
 
             return end;

@@ -7,12 +7,12 @@ namespace Sanakan.Services.Executor
 {
     public class Executable : IExecutable
     {
-        private Task _task { get; set; }
+        private Task<Task> _task { get; set; }
 
         private readonly string _name;
         private readonly Priority _priority;
 
-        public Executable(string name, Task task, Priority priority = Priority.Normal)
+        public Executable(string name, Task<Task> task, Priority priority = Priority.Normal)
         {
             _name = name;
             _task = task;
@@ -23,9 +23,10 @@ namespace Sanakan.Services.Executor
 
         public string GetName() => _name;
 
-        public void Wait() => _task.Wait();
+        public void Wait() => _task.Unwrap().Wait();
+        public async Task WaitAsync() => await _task.Unwrap();
 
-        public async Task<bool> ExecuteAsync(IServiceProvider provider)
+        public async Task<Task<bool>> ExecuteAsync(IServiceProvider provider)
         {
             try
             {
@@ -33,12 +34,12 @@ namespace Sanakan.Services.Executor
 
                 await _task.ConfigureAwait(false);
 
-                if (_task is Task<bool> bTask)
+                if (_task.Unwrap() is Task<bool> bTask)
                 {
-                    return bTask.Result;
+                    return Task.FromResult(bTask.Result);
                 }
 
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {

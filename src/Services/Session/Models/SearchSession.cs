@@ -37,7 +37,7 @@ namespace Sanakan.Services.Session.Models
             var content = context.Message?.Content;
             if (content == null) return false;
 
-            if (content.ToLower() == "koniec") 
+            if (content.ToLower() == "koniec")
                 return true;
 
             if (int.TryParse(content, out int number))
@@ -63,7 +63,7 @@ namespace Sanakan.Services.Session.Models
                     }
                 }
             }
-            
+
             return false;
         }
 

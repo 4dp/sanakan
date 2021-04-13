@@ -270,7 +270,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable($"api-repair oc{oldId} c{newId}", new Task(() =>
+            var exe = new Executable($"api-repair oc{oldId} c{newId}", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -283,7 +283,7 @@ namespace Sanakan.Api.Controllers
                         userRelease.Add($"user-{card.GameDeckId}");
                     }
 
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     QueryCacheManager.ExpireTag(userRelease.ToArray());
                 }
@@ -301,7 +301,7 @@ namespace Sanakan.Api.Controllers
         [HttpPost("cards/character/{id}/update"), Authorize(Policy = "Site")]
         public async Task UpdateCardInfoAsync(ulong id, [FromBody]Models.CharacterCardInfoUpdate newData)
         {
-            var exe = new Executable($"update cards-{id} img", new Task(() =>
+            var exe = new Executable($"update cards-{id} img", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
@@ -329,7 +329,7 @@ namespace Sanakan.Api.Controllers
                         userRelease.Add($"user-{card.GameDeckId}");
                     }
 
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     QueryCacheManager.ExpireTag(userRelease.ToArray());
                 }
@@ -361,7 +361,7 @@ namespace Sanakan.Api.Controllers
                 return;
             }
 
-            var exe = new Executable($"update cards-{id}", new Task(() =>
+            var exe = new Executable($"update cards-{id}", new Task<Task>(async () =>
                 {
                     using (var db = new Database.UserContext(_config))
                     {
@@ -382,7 +382,7 @@ namespace Sanakan.Api.Controllers
                             userRelease.Add($"user-{card.GameDeckId}");
                         }
 
-                        db.SaveChanges();
+                        await db.SaveChangesAsync();
 
                         QueryCacheManager.ExpireTag(userRelease.ToArray());
                     }
@@ -537,16 +537,16 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-packet u{id}", new Task(() =>
+                var exe = new Executable($"api-packet u{id}", new Task<Task>(async () =>
                 {
                     using (var dbs = new Database.UserContext(_config))
                     {
-                        var botUser = dbs.GetUserOrCreateAsync(id).Result;
+                        var botUser = await dbs.GetUserOrCreateAsync(id);
 
                         foreach (var pack in packs)
                             botUser.GameDeck.BoosterPacks.Add(pack);
 
-                        dbs.SaveChanges();
+                        await dbs.SaveChangesAsync();
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                     }
@@ -597,16 +597,16 @@ namespace Sanakan.Api.Controllers
                 }
 
                 var discordId = user.Id;
-                var exe = new Executable($"api-packet u{discordId}", new Task(() =>
+                var exe = new Executable($"api-packet u{discordId}", new Task<Task>(async () =>
                 {
                     using (var dbs = new Database.UserContext(_config))
                     {
-                        var botUser = dbs.GetUserOrCreateAsync(discordId).Result;
+                        var botUser = await dbs.GetUserOrCreateAsync(discordId);
 
                         foreach (var pack in packs)
                             botUser.GameDeck.BoosterPacks.Add(pack);
 
-                        dbs.SaveChanges();
+                        await dbs.SaveChangesAsync();
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                     }
@@ -638,7 +638,8 @@ namespace Sanakan.Api.Controllers
         /// <returns>karty</returns>
         /// <response code="404">User not found</response>
         /// <response code="406">User has no space</response>
-        /// <response code="500">Model is Invalid</response>
+        /// <response code="500">Model/Data is Invalid</response>
+        /// <response code="503">Command queue is full</response>
         [HttpPost("shinden/{id}/boosterpack/open"), Authorize(Policy = "Site")]
         public async Task<List<Card>> GiveShindenUserAPacksAndOpenAsync(ulong id, [FromBody]List<Models.CardBoosterPack> boosterPacks)
         {
@@ -684,10 +685,11 @@ namespace Sanakan.Api.Controllers
                 cards.AddRange(await _waifu.OpenBoosterPackAsync(null, pack));
             }
 
-            var exe = new Executable($"api-packet-open u{discordId}", new Task(async () =>
+            var exe = new Executable($"api-packet-open u{discordId}", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
+                    Console.WriteLine("START");
                     var botUser = await db.GetUserOrCreateAsync(discordId);
 
                     botUser.Stats.OpenedBoosterPacks += packs.Count;
@@ -703,13 +705,20 @@ namespace Sanakan.Api.Controllers
 
                     await db.SaveChangesAsync();
 
+                    Console.WriteLine("KONIEC");
+
                     QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                 }
             }));
 
-            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+            if (!await _executor.TryAdd(exe, TimeSpan.FromSeconds(1)))
+            {
+                await "Command queue is full".ToResponse(503).ExecuteResultAsync(ControllerContext);
+                return null;
+            }
 
-            exe.Wait();
+            await exe.WaitAsync();
+            Console.WriteLine("DALEJ");
 
             return cards;
         }
@@ -758,7 +767,7 @@ namespace Sanakan.Api.Controllers
                         bPackName = pack.Name;
                     }
 
-                    var exe = new Executable($"api-packet-open u{discordId}", new Task(async () =>
+                    var exe = new Executable($"api-packet-open u{discordId}", new Task<Task>(async () =>
                     {
                         using (var db = new Database.UserContext(_config))
                         {
@@ -845,15 +854,15 @@ namespace Sanakan.Api.Controllers
                         }
                     }
 
-                    var exe = new Executable($"api-deck u{discordId}", new Task(() =>
+                    var exe = new Executable($"api-deck u{discordId}", new Task<Task>(async () =>
                     {
                         using (var db = new Database.UserContext(_config))
                         {
-                            var botUser = db.GetUserOrCreateAsync(discordId).Result;
+                            var botUser = await db.GetUserOrCreateAsync(discordId);
                             var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
                             thisCard.Active = !thisCard.Active;
 
-                            db.SaveChanges();
+                            await db.SaveChangesAsync();
 
                             QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
                         }

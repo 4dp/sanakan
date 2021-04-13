@@ -73,7 +73,7 @@ namespace Sanakan.Services.Session
 
         public async Task KillSessionIfExistAsync<T>(T session) where T : ISession
         {
-            var thisSession = _sessions.FirstOrDefault(x => x.IsOwner(session.GetOwner()) 
+            var thisSession = _sessions.FirstOrDefault(x => x.IsOwner(session.GetOwner())
                 && ((x.GetId() == null) ? (x is T) : (x.GetId() == session.GetId())));
 
             if (thisSession != null) await DisposeAsync(thisSession).ConfigureAwait(false);
@@ -82,7 +82,7 @@ namespace Sanakan.Services.Session
         public bool SessionExist<T>(T session) where T : ISession
             => _sessions.Where(x => x.IsOwner(session.GetParticipants()))
                 .Any(x => ((x.GetId() == null) ? (x is T) : (x.GetId() == session.GetId())));
-        
+
         private async Task DisposeAsync(ISession session)
         {
             await _semaphore.WaitAsync();
@@ -111,13 +111,13 @@ namespace Sanakan.Services.Session
                 }
 
                 session.WithLogger(_logger);
-                
+
                 switch (session.GetRunMode())
                 {
                     case RunMode.Async:
                         _ = Task.Run(async () =>
                         {
-                            if (await session.GetExecutable(context).ExecuteAsync(_provider).ConfigureAwait(false))
+                            if (await session.GetExecutable(context).ExecuteAsync(_provider).Unwrap().ConfigureAwait(false))
                                 await DisposeAsync(session).ConfigureAwait(false);
                         });
                         break;
@@ -139,7 +139,7 @@ namespace Sanakan.Services.Session
 
             if (msg.Author.IsBot || msg.Author.IsWebhook) return;
 
-            var userSessions = _sessions.FindAll(x => x.IsOwner(message.Author) 
+            var userSessions = _sessions.FindAll(x => x.IsOwner(message.Author)
                 && x.GetEventType().HasFlag(ExecuteOn.Message));
 
             if (userSessions.Count == 0) return;

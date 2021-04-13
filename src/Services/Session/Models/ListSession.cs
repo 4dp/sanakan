@@ -88,12 +88,6 @@ namespace Sanakan.Services.Session.Models
 
                     RestartTimer();
                 }
-
-                try
-                {
-                    await msg.RemoveReactionAsync(reaction.Emote, GetOwner());
-                }
-                catch (Exception) { }
             }
 
             return false;

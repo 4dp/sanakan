@@ -132,18 +132,18 @@ namespace Sanakan.Services.PocketWaifu
         private Executable GetSafariExe(EmbedBuilder embed, IUserMessage msg, Card newCard,
             SafariImage pokeImage, ICharacterInfo character, ITextChannel trashChannel, IUser winner)
         {
-            return new Executable("safari", new Task(() =>
+            return new Executable("safari", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    var botUser = db.GetUserOrCreateAsync(winner.Id).Result;
+                    var botUser = await db.GetUserOrCreateAsync(winner.Id);
 
                     newCard.FirstIdOwner = winner.Id;
                     newCard.Affection += botUser.GameDeck.AffectionFromKarma();
                     botUser.GameDeck.RemoveCharacterFromWishList(newCard.Character);
 
                     botUser.GameDeck.Cards.Add(newCard);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
 
@@ -157,7 +157,7 @@ namespace Sanakan.Services.PocketWaifu
                             GuildId = trashChannel?.Guild?.Id ?? 0,
                             Type = Database.Models.Analytics.UserAnalyticsEventType.Card
                         });
-                        dba.SaveChanges();
+                        await dba.SaveChangesAsync();
                     }
                 }
 
@@ -237,11 +237,11 @@ namespace Sanakan.Services.PocketWaifu
 
         private void SpawnUserPacket(SocketUser user, ISocketMessageChannel channel)
         {
-            var exe = new Executable($"packet u{user.Id}", new Task(() =>
+            var exe = new Executable($"packet u{user.Id}", new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    var botUser = db.GetUserOrCreateAsync(user.Id).Result;
+                    var botUser = await db.GetUserOrCreateAsync(user.Id);
                     if (botUser.IsBlacklisted) return;
 
                     var pCnt = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Packet);
@@ -267,7 +267,7 @@ namespace Sanakan.Services.PocketWaifu
                         Name = "Pakiet kart za aktywność",
                         CardSourceFromPack = CardSource.Activity
                     });
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     _ = Task.Run(async () =>
                     {

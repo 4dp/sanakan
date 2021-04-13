@@ -107,12 +107,12 @@ namespace Sanakan.Services
             var thisUser = _client.Guilds.FirstOrDefault(x => x.Id == user.Id);
             if (thisUser != null) return;
 
-            var moveTask = new Task(() =>
+            var moveTask = new Task<Task>(async () =>
             {
                 using (var db = new Database.UserContext(_config))
                 {
-                    var duser = db.GetUserOrCreateAsync(user.Id).Result;
-                    var fakeu = db.GetUserOrCreateAsync(1).Result;
+                    var duser = await db.GetUserOrCreateAsync(user.Id);
+                    var fakeu = await db.GetUserOrCreateAsync(1);
 
                     foreach (var card in duser.GameDeck.Cards)
                     {
@@ -124,7 +124,7 @@ namespace Sanakan.Services
 
                     db.Users.Remove(duser);
 
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                     QueryCacheManager.ExpireTag(new string[] { "users" });
                 }

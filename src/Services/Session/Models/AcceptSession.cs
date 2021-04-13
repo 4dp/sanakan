@@ -57,12 +57,6 @@ namespace Sanakan.Services.Session.Models
                 {
                     return await Actions?.OnDecline(context);
                 }
-
-                try
-                {
-                    await msg.RemoveReactionAsync(reaction.Emote, GetOwner());
-                }
-                catch (Exception) { }
             }
 
             return false;

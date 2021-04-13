@@ -252,14 +252,14 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-register u{id.DiscordUserId}", new Task(() =>
+                var exe = new Executable($"api-register u{id.DiscordUserId}", new Task<Task>(async () =>
                 {
                     using (var dbs = new Database.UserContext(_config))
                     {
-                        botUser = dbs.GetUserOrCreateAsync(id.DiscordUserId).Result;
+                        botUser = await dbs.GetUserOrCreateAsync(id.DiscordUserId);
                         botUser.Shinden = sUser.Id;
 
-                        dbs.SaveChanges();
+                        await dbs.SaveChangesAsync();
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }
@@ -288,7 +288,7 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-tc u{id} ({value})", new Task(() =>
+                var exe = new Executable($"api-tc u{id} ({value})", new Task<Task>(async () =>
                 {
                     using (var dbc = new Database.AnalyticsContext(_config))
                     {
@@ -301,7 +301,7 @@ namespace Sanakan.Api.Controllers
                             Source = Database.Models.Analytics.TransferSource.ByDiscordId,
                         });
 
-                        dbc.SaveChanges();
+                        await dbc.SaveChangesAsync();
                     }
 
                     using (var dbs = new Database.UserContext(_config))
@@ -338,7 +338,7 @@ namespace Sanakan.Api.Controllers
                     return;
                 }
 
-                var exe = new Executable($"api-tc su{id} ({value})", new Task(() =>
+                var exe = new Executable($"api-tc su{id} ({value})", new Task<Task>(async () =>
                 {
                     using (var dbc = new Database.AnalyticsContext(_config))
                     {
@@ -351,7 +351,7 @@ namespace Sanakan.Api.Controllers
                             Source = Database.Models.Analytics.TransferSource.ByShindenId,
                         });
 
-                        dbc.SaveChanges();
+                        await dbc.SaveChangesAsync();
                     }
 
                     using (var dbs = new Database.UserContext(_config))
@@ -359,7 +359,7 @@ namespace Sanakan.Api.Controllers
                         user = dbs.Users.FirstOrDefault(x => x.Shinden == id);
                         user.TcCnt += value;
 
-                        dbs.SaveChanges();
+                        await dbs.SaveChangesAsync();
 
                         QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }

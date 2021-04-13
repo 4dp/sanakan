@@ -108,7 +108,7 @@ namespace Sanakan.Extensions
 
         public static IActionResult ToResponse(this string str, int Code = 200)
         {
-            return new ObjectResult(new { message = str, success = (Code == 200) }) { StatusCode = Code };
+            return new ObjectResult(new { message = str, success = (Code >= 200 && Code < 300) }) { StatusCode = Code };
         }
 
         public static IActionResult ToResponseRich(this string str, ulong msgId)
