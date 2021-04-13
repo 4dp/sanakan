@@ -631,11 +631,96 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Otwiera pakiety i dodaje użytkownikowi karty wylosowane z nich
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <param name="boosterPacks">model pakietu</param>
+        /// <returns>karty</returns>
+        /// <response code="404">User not found</response>
+        /// <response code="406">User has no space</response>
+        /// <response code="500">Model is Invalid</response>
+        [HttpPost("shinden/{id}/boosterpack/open"), Authorize(Policy = "Site")]
+        public async Task<List<Card>> GiveShindenUserAPacksAndOpenAsync(ulong id, [FromBody]List<Models.CardBoosterPack> boosterPacks)
+        {
+            if (boosterPacks?.Count < 1)
+            {
+                await "Model is Invalid".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                return null;
+            }
+
+            var packs = new List<BoosterPack>();
+            foreach (var pack in boosterPacks)
+            {
+                var rPack = pack.ToRealPack();
+                if (rPack != null) packs.Add(rPack);
+            }
+
+            if (packs.Count < 1)
+            {
+                await "Data is Invalid".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                return null;
+            }
+
+            ulong discordId = 0;
+            using (var db = new Database.UserContext(_config))
+            {
+                var bUser = await db.Users.AsQueryable().Where(x => x.Shinden == id).Include(x => x.GameDeck).ThenInclude(x => x.Cards).AsNoTracking().AsSplitQuery().FirstOrDefaultAsync();
+                if (bUser == null)
+                {
+                    await "User not found".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+                if (bUser.GameDeck.Cards.Count + packs.Sum(x => x.CardCnt) > bUser.GameDeck.MaxNumberOfCards)
+                {
+                    await "User has no space left in deck".ToResponse(406).ExecuteResultAsync(ControllerContext);
+                    return null;
+                }
+                discordId = bUser.Id;
+            }
+
+            var cards = new List<Card>();
+            foreach (var pack in packs)
+            {
+                cards.AddRange(await _waifu.OpenBoosterPackAsync(null, pack));
+            }
+
+            var exe = new Executable($"api-packet-open u{discordId}", new Task(async () =>
+            {
+                using (var db = new Database.UserContext(_config))
+                {
+                    var botUser = await db.GetUserOrCreateAsync(discordId);
+
+                    botUser.Stats.OpenedBoosterPacks += packs.Count;
+
+                    foreach (var card in cards)
+                    {
+                        card.Affection += botUser.GameDeck.AffectionFromKarma();
+                        card.FirstIdOwner = botUser.Id;
+
+                        botUser.GameDeck.Cards.Add(card);
+                        botUser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+                }
+            }));
+
+            await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
+
+            exe.Wait();
+
+            return cards;
+        }
+
+        /// <summary>
         /// Otwiera pakiet użytkownika (wymagany Bearer od użytkownika)
         /// </summary>
         /// <param name="packNumber">numer pakietu</param>
         /// <response code="403">The appropriate claim was not found</response>
         /// <response code="404">User not found</response>
+        /// <response code="406">User has no space</response>
         [HttpPost("boosterpack/open/{packNumber}"), Authorize(Policy = "Player")]
         public async Task<List<Card>> OpenAPackAsync(int packNumber)
         {
@@ -665,7 +750,7 @@ namespace Sanakan.Api.Controllers
 
                         if (botUserCh.GameDeck.Cards.Count + pack.CardCnt > botUserCh.GameDeck.MaxNumberOfCards)
                         {
-                            await "User has no space left in deck!".ToResponse(401).ExecuteResultAsync(ControllerContext);
+                            await "User has no space left in deck!".ToResponse(406).ExecuteResultAsync(ControllerContext);
                             return null;
                         }
 
@@ -715,7 +800,6 @@ namespace Sanakan.Api.Controllers
                     await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
 
                     exe.Wait();
-                    await Task.Delay(2000);
 
                     return cards;
                 }

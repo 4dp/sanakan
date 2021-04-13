@@ -31,7 +31,7 @@ namespace Sanakan.Services.Executor
             {
                 _task.Start();
 
-                await Task.CompletedTask;
+                await _task.ConfigureAwait(false);
 
                 if (_task is Task<bool> bTask)
                 {
