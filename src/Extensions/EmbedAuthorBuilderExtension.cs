@@ -24,7 +24,7 @@ namespace Sanakan.Extensions
             else
                 builder.WithName($"{user.Username}{id}");
 
-            return builder.WithIconUrl(user.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg");
+            return builder.WithIconUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
         }
     }
 }

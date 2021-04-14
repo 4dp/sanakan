@@ -207,7 +207,7 @@ namespace Sanakan.Services
             return new EmbedBuilder
             {
                 Author = new EmbedAuthorBuilder().WithUser(user),
-                ThumbnailUrl = user.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg",
+                ThumbnailUrl = user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl(),
                 Fields = GetInfoUserFields(user),
                 Color = EMType.Info.Color(),
             }.Build();
@@ -273,17 +273,19 @@ namespace Sanakan.Services
 
         public Embed GetInfoAboutServer(SocketGuild guild)
         {
-            return new EmbedBuilder
+            var author = new EmbedAuthorBuilder().WithName(guild.Name);
+            if (guild.IconUrl != null) author.WithIconUrl(guild.IconUrl);
+
+            var embed = new EmbedBuilder
             {
-                ThumbnailUrl = guild.IconUrl.Split('?')[0] ?? "https://i.imgur.com/xVIMQiB.jpg",
-                Author = new EmbedAuthorBuilder
-                {
-                    IconUrl = guild.IconUrl ?? "https://i.imgur.com/xVIMQiB.jpg",
-                    Name = guild.Name
-                },
                 Fields = GetInfoGuildFields(guild),
                 Color = EMType.Info.Color(),
-            }.Build();
+                Author = author,
+            };
+
+            if (guild.IconUrl != null) embed.WithThumbnailUrl(guild.IconUrl);
+
+            return embed.Build();
         }
 
         private List<EmbedFieldBuilder> GetInfoGuildFields(SocketGuild guild)

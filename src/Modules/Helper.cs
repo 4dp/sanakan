@@ -130,7 +130,7 @@ namespace Sanakan.Modules
             var usr = (user ?? Context.User);
             var embed = new EmbedBuilder
             {
-                ImageUrl = usr.GetAvatarUrl() ?? "https://i.imgur.com/xVIMQiB.jpg",
+                ImageUrl = usr.GetAvatarUrl() ?? usr.GetDefaultAvatarUrl(),
                 Author = new EmbedAuthorBuilder().WithUser(usr),
                 Color = EMType.Info.Color(),
             };
