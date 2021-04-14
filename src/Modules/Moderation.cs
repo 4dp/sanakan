@@ -1454,8 +1454,12 @@ namespace Sanakan.Modules
                                 if (duser.Shinden != 0)
                                 {
                                     var res = await _shClient.User.GetAsync(duser.Shinden);
-                                    if (res.Body.Name != realNick)
-                                        nickRep = $"**Nick:** ❗ {res.Body.Name}";
+                                    if (res.IsSuccessStatusCode())
+                                    {
+                                        if (res.Body.Name != realNick)
+                                            nickRep = $"**Nick:** ❗ {res.Body.Name}";
+                                    }
+                                    else nickRep = $"**Nick:** ❗ D: {duser.Shinden}";
                                 }
                                 else
                                 {
