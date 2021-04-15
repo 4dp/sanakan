@@ -217,6 +217,7 @@ namespace Sanakan.Modules
             var time = DateTime.Now.AddMinutes(duration);
 
             var mention = "";
+            SocketRole mutedRole = null;
             using (var db = new Database.GuildConfigContext(_config))
             {
                 var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
@@ -224,6 +225,8 @@ namespace Sanakan.Modules
                 {
                     var wRole = Context.Guild.GetRole(config.WaifuRole);
                     if (wRole != null) mention = wRole.Mention;
+
+                    mutedRole = Context.Guild.GetRole(config.MuteRole);
                 }
             }
 
@@ -251,15 +254,21 @@ namespace Sanakan.Modules
                         return;
                     }
 
+                    bool muted = false;
                     var selected = Services.Fun.GetOneRandomFrom(users);
-                    var dUser = await db.GetCachedFullUserAsync(selected.Id);
+                    if (mutedRole != null && selected is SocketGuildUser su)
+                    {
+                        if (su.Roles.Any(x => x.Id == mutedRole.Id))
+                            muted = true;
+                    }
 
-                    if (dUser != null)
+                    var dUser = await db.GetCachedFullUserAsync(selected.Id);
+                    if (dUser != null && !muted)
                     {
                         if (!dUser.IsBlacklisted)
                             winner = selected;
                     }
-                    else users.Remove(selected);
+                    users.Remove(selected);
                 }
             }
 

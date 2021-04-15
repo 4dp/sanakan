@@ -45,7 +45,7 @@ namespace Sanakan.Services.PocketWaifu
 #endif
         }
 
-        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention, bool noExp)
+        private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention, bool noExp, SocketRole muteRole)
         {
             if (!ServerCounter.Any(x => x.Key == spawnChannel.GuildId))
             {
@@ -70,12 +70,12 @@ namespace Sanakan.Services.PocketWaifu
             ServerCounter[spawnChannel.GuildId] += 1;
             _ = Task.Run(async () =>
             {
-                await SpawnCardAsync(spawnChannel, trashChannel, mention);
+                await SpawnCardAsync(spawnChannel, trashChannel, mention, muteRole);
             });
         }
 
         private void RunSafari(EmbedBuilder embed, IUserMessage msg, Card newCard,
-            SafariImage pokeImage, ICharacterInfo character, ITextChannel trashChannel)
+            SafariImage pokeImage, ICharacterInfo character, ITextChannel trashChannel, SocketRole mutedRole)
         {
             _ = Task.Run(async () =>
             {
@@ -102,17 +102,24 @@ namespace Sanakan.Services.PocketWaifu
                                 return;
                             }
 
+                            bool muted = false;
                             var selected = Fun.GetOneRandomFrom(users);
+                            if (mutedRole != null && selected is SocketGuildUser su)
+                            {
+                                if (su.Roles.Any(x => x.Id == mutedRole.Id))
+                                    muted = true;
+                            }
+
                             var dUser = await db.GetCachedFullUserAsync(selected.Id);
 
-                            if (dUser != null)
+                            if (dUser != null && !muted)
                             {
                                 if (!dUser.IsBlacklisted && dUser.GameDeck.MaxNumberOfCards > dUser.GameDeck.Cards.Count)
                                 {
                                     winner = selected;
                                 }
                             }
-                            else users.Remove(selected);
+                            users.Remove(selected);
                         }
                     }
 
@@ -187,7 +194,7 @@ namespace Sanakan.Services.PocketWaifu
             }));
         }
 
-        private async Task SpawnCardAsync(ITextChannel spawnChannel, ITextChannel trashChannel, string mention)
+        private async Task SpawnCardAsync(ITextChannel spawnChannel, ITextChannel trashChannel, string mention, SocketRole muteRole)
         {
             var character = await _waifu.GetRandomCharacterAsync();
             if (character == null)
@@ -211,7 +218,7 @@ namespace Sanakan.Services.PocketWaifu
             };
 
             var msg = await spawnChannel.SendMessageAsync(mention, embed: embed.Build());
-            RunSafari(embed, msg, newCard, pokeImage, character, trashChannel);
+            RunSafari(embed, msg, newCard, pokeImage, character, trashChannel, muteRole);
             await msg.AddReactionAsync(ClaimEmote);
         }
 
@@ -335,7 +342,9 @@ namespace Sanakan.Services.PocketWaifu
                     var wRole = user.Guild.GetRole(config.WaifuRole);
                     if (wRole != null) mention = wRole.Mention;
 
-                    HandleGuildAsync(sch, tch, config.SafariLimit, mention, noExp);
+                    var muteRole = user.Guild.GetRole(config.MuteRole);
+
+                    HandleGuildAsync(sch, tch, config.SafariLimit, mention, noExp, muteRole);
                 }
             }
         }
