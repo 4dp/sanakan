@@ -181,6 +181,8 @@ namespace Sanakan.Services
             if (saved < SAVE_AT && !CheckLastSave(user.Id)) return;
 
             var fullP = (long) Math.Floor(saved);
+            if (fullP < 1) return;
+
             _exp[message.Author.Id] -= fullP;
             _saved[user.Id] = DateTime.Now;
 
