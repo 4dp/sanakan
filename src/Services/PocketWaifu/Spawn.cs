@@ -264,7 +264,7 @@ namespace Sanakan.Services.PocketWaifu
                         pCnt.IValue = 0;
                     }
 
-                    if (++pCnt.IValue > 4) return;
+                    if (++pCnt.IValue > 3) return;
 
                     botUser.GameDeck.BoosterPacks.Add(new BoosterPack
                     {
@@ -279,25 +279,25 @@ namespace Sanakan.Services.PocketWaifu
                     _ = Task.Run(async () =>
                     {
                         await channel.SendMessageAsync("", embed: $"{user.Mention} otrzymał pakiet losowych kart.".ToEmbedMessage(EMType.Bot).Build());
+
+                        var gUser = user as SocketGuildUser;
+                        using (var dba = new Database.AnalyticsContext(_config))
+                        {
+                            dba.UsersData.Add(new Database.Models.Analytics.UserAnalytics
+                            {
+                                Value = 1,
+                                UserId = user.Id,
+                                MeasureDate = DateTime.Now,
+                                GuildId = gUser?.Guild?.Id ?? 0,
+                                Type = Database.Models.Analytics.UserAnalyticsEventType.Pack
+                            });
+                            await dba.SaveChangesAsync();
+                        }
                     });
                 }
             }));
 
             _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
-
-            var gUser = user as SocketGuildUser;
-            using (var db = new Database.AnalyticsContext(_config))
-            {
-                db.UsersData.Add(new Database.Models.Analytics.UserAnalytics
-                {
-                    Value = 1,
-                    UserId = user.Id,
-                    MeasureDate = DateTime.Now,
-                    GuildId = gUser?.Guild?.Id ?? 0,
-                    Type = Database.Models.Analytics.UserAnalyticsEventType.Pack
-                });
-                db.SaveChanges();
-            }
         }
 
         private long GetMessageRealLenght(SocketUserMessage message)

@@ -14,7 +14,7 @@ namespace Sanakan.Services
 {
     public class ExperienceManager
     {
-        private const double SAVE_AT = 3;
+        private const double SAVE_AT = 5;
         private const double LM = 0.35;
 
         private Dictionary<ulong, double> _exp;
@@ -180,7 +180,7 @@ namespace Sanakan.Services
             var saved = _exp[user.Id];
             if (saved < SAVE_AT && !CheckLastSave(user.Id)) return;
 
-            var fullP = (long)Math.Floor(saved);
+            var fullP = (long) Math.Floor(saved);
             _exp[message.Author.Id] -= fullP;
             _saved[user.Id] = DateTime.Now;
 
@@ -217,6 +217,25 @@ namespace Sanakan.Services
             return experience;
         }
 
+        private long CheckFloodAndReturnExp(long exp, Database.Models.User botUser)
+        {
+            var fMn = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.Flood);
+            if (fMn == null)
+            {
+                fMn = Database.Models.StatusType.Flood.NewTimeStatus();
+                botUser.TimeStatuses.Add(fMn);
+            }
+
+            if (!fMn.IsActive())
+                fMn.IValue = 101;
+
+            fMn.EndsAt = DateTime.Now.Date.AddMinutes(10);
+            if (--fMn.IValue < 20) fMn.IValue = 20;
+            double ratio = fMn.IValue / 100d;
+
+            return (long) (exp * ratio);
+        }
+
         private Task<Task> CreateUserTask(SocketGuildUser user)
         {
             return new Task<Task>(async () =>
@@ -250,6 +269,9 @@ namespace Sanakan.Services
                     }
                     else
                         usr.CharacterCntFromDate += characters;
+
+                    exp = CheckFloodAndReturnExp(exp, usr);
+                    if (exp < 1) exp = 1;
 
                     usr.ExpCnt += exp;
                     usr.MessagesCnt += messages;
