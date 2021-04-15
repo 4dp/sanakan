@@ -231,7 +231,7 @@ namespace Sanakan.Services
             if (!fMn.IsActive())
                 fMn.IValue = 101;
 
-            fMn.EndsAt = DateTime.Now.Date.AddMinutes(10);
+            fMn.EndsAt = DateTime.Now.AddMinutes(10);
             if (--fMn.IValue < 20) fMn.IValue = 20;
             double ratio = fMn.IValue / 100d;
 
