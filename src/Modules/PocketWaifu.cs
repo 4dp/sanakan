@@ -327,9 +327,9 @@ namespace Sanakan.Modules
 
                 double karmaChange = 0;
                 bool consumeItem = true;
-                double affectionInc = 0;
-                var bonusFromQ = 0.1 * (int) item.Quality;
                 var cnt = (itemCnt > 1) ? $"x{itemCnt}" : "";
+                var bonusFromQ = item.Quality.GetQualityModifier();
+                double affectionInc = item.Type.BaseAffection() * itemCnt;
                 var textRelation = noCardOperation ? "" : card.GetAffectionString();
                 var cardString = noCardOperation ? "" : " na " + card.GetString(false, false, true);
                 var embed = new EmbedBuilder
@@ -342,25 +342,21 @@ namespace Sanakan.Modules
                 switch (item.Type)
                 {
                     case ItemType.AffectionRecoveryGreat:
-                        affectionInc = 1.6 * itemCnt;
                         karmaChange += 0.3 * itemCnt;
                         embed.Description += "Bardzo powiększyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryBig:
-                        affectionInc = 1 * itemCnt;
                         karmaChange += 0.1 * itemCnt;
                         embed.Description += "Znacznie powiększyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoveryNormal:
-                        affectionInc = 0.12 * itemCnt;
                         karmaChange += 0.01 * itemCnt;
                         embed.Description += "Powiększyła się relacja z kartą!";
                         break;
 
                     case ItemType.AffectionRecoverySmall:
-                        affectionInc = 0.02 * itemCnt;
                         karmaChange += 0.001 * itemCnt;
                         embed.Description += "Powiększyła się trochę relacja z kartą!";
                         break;
@@ -370,7 +366,6 @@ namespace Sanakan.Modules
                         exS += exS * bonusFromQ;
 
                         card.ExpCnt += exS;
-                        affectionInc = 0.15 * itemCnt;
                         karmaChange += 0.1 * itemCnt;
                         embed.Description += "Twoja karta otrzymała odrobinę punktów doświadczenia!";
                         break;
@@ -380,7 +375,6 @@ namespace Sanakan.Modules
                         exB += exB * bonusFromQ;
 
                         card.ExpCnt += exB;
-                        affectionInc = 0.25 * itemCnt;
                         karmaChange += 0.3 * itemCnt;
                         embed.Description += "Twoja karta otrzymała punkty doświadczenia!";
                         break;
@@ -395,7 +389,6 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: "Nie rozpoznano typu gwiazdki!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
-                        affectionInc = 0.3 * itemCnt;
                         karmaChange += 0.001 * itemCnt;
                         embed.Description += "Zmieniono typ gwiazdki!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -431,7 +424,6 @@ namespace Sanakan.Modules
                             }
                             card.CustomImage = turl;
                         }
-                        affectionInc = 0.1 * itemCnt;
                         karmaChange += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek.";
                         _waifu.DeleteCardImageIfExist(card);
@@ -449,7 +441,6 @@ namespace Sanakan.Modules
                             return;
                         }
                         card.CustomImage = detail;
-                        affectionInc = 0.5 * itemCnt;
                         consumeItem = !card.FromFigure;
                         karmaChange += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek. Pamiętaj jednak, że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
@@ -468,7 +459,6 @@ namespace Sanakan.Modules
                             return;
                         }
                         card.CustomBorder = detail;
-                        affectionInc = 0.4 * itemCnt;
                         karmaChange += 0.001 * itemCnt;
                         embed.Description += "Ustawiono nowy obrazek jako ramkę. Pamiętaj jednak, że dodanie nieodpowiedniego obrazka może skutkować skasowaniem karty!";
                         _waifu.DeleteCardImageIfExist(card);
@@ -538,7 +528,6 @@ namespace Sanakan.Modules
                         }
                         karmaChange += itemCnt;
                         card.UpgradesCnt += itemCnt;
-                        affectionInc = 0.7 * itemCnt;
                         embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
                         break;
 
@@ -548,7 +537,6 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: $"{Context.User.Mention} na tej karcie ciąży klątwa!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
-                        affectionInc = 0.1 * itemCnt;
                         karmaChange += 0.02 * itemCnt;
                         card.Dere = _waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
@@ -556,7 +544,6 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.CardParamsReRoll:
-                        affectionInc = 0.2 * itemCnt;
                         karmaChange += 0.03 * itemCnt;
                         card.Attack = _waifu.RandomizeAttack(card.Rarity);
                         card.Defence = _waifu.RandomizeDefence(card.Rarity);
@@ -565,7 +552,6 @@ namespace Sanakan.Modules
                         break;
 
                     case ItemType.CheckAffection:
-                        affectionInc = 0.2;
                         karmaChange -= 0.01;
                         embed.Description += $"Relacja wynosi: `{card.Affection.ToString("F")}`";
                         break;

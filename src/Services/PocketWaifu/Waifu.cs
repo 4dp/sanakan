@@ -501,13 +501,13 @@ namespace Sanakan.Services.PocketWaifu
             switch (type)
             {
                 case ShopType.Normal:
-                    return user.TcCnt > cost;
+                    return user.TcCnt >= cost;
 
                 case ShopType.Pvp:
-                    return user.GameDeck.PVPCoins > cost;
+                    return user.GameDeck.PVPCoins >= cost;
 
                 case ShopType.Activity:
-                    return user.AcCnt > cost;
+                    return user.AcCnt >= cost;
 
                 default:
                    return false;
@@ -1581,6 +1581,7 @@ namespace Sanakan.Services.PocketWaifu
             card.ExpCnt += totalExp;
             card.Affection -= affectionCost;
 
+            double minAff = 0;
             reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp ({card.ExpCnt.ToString("F")})\n";
             for (int i = 0; i < totalItemsCnt && allowItems; i++)
             {
@@ -1588,6 +1589,8 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     var newItem = RandomizeItemForExpedition(card.Expedition);
                     if (newItem == null) break;
+
+                    minAff += newItem.BaseAffection();
 
                     var thisItem = user.GameDeck.Items.FirstOrDefault(x => x.Type == newItem.Type && x.Quality == newItem.Quality);
                     if (thisItem == null)
@@ -1608,7 +1611,7 @@ namespace Sanakan.Services.PocketWaifu
 
             if (showStats)
             {
-                reward += $"\n\nRT: {duration.Item1.ToString("F")} E: {totalExp.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
+                reward += $"\n\nRT: {duration.Item1.ToString("F")} E: {totalExp.ToString("F")} AI: {minAff.ToString("F")} A: {affectionCost.ToString("F")} K: {karmaCost.ToString("F")} MI: {totalItemsCnt}";
             }
 
             card.Expedition = CardExpedition.None;

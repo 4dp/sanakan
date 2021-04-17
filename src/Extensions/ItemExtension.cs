@@ -165,6 +165,42 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static double GetQualityModifier(this Quality quality) => 0.1 * (int) quality;
+
+        public static double BaseAffection(this Item item)
+        {
+            var aff = item.Type.BaseAffection();
+            if (item.Type.HasDifferentQualities())
+            {
+                aff += aff * item.Quality.GetQualityModifier();
+            }
+            return aff;
+        }
+
+        public static double BaseAffection(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.AffectionRecoveryGreat:   return 1.6;
+                case ItemType.AffectionRecoveryBig:     return 1;
+                case ItemType.AffectionRecoveryNormal:  return 0.12;
+                case ItemType.AffectionRecoverySmall:   return 0.02;
+                case ItemType.BetterIncreaseUpgradeCnt: return 1.7;
+                case ItemType.IncreaseUpgradeCnt:       return 0.7;
+                case ItemType.DereReRoll:               return 0.1;
+                case ItemType.CardParamsReRoll:         return 0.2;
+                case ItemType.CheckAffection:           return 0.2;
+                case ItemType.SetCustomImage:           return 0.5;
+                case ItemType.IncreaseExpSmall:         return 0.15;
+                case ItemType.IncreaseExpBig:           return 0.25;
+                case ItemType.ChangeStarType:           return 0.3;
+                case ItemType.SetCustomBorder:          return 0.4;
+                case ItemType.ChangeCardImage:          return 0.1;
+
+                default: return 0;
+            }
+        }
+
         public static bool CanUseWithoutCard(this ItemType type)
         {
             switch (type)
