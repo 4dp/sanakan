@@ -259,7 +259,7 @@ namespace Sanakan.Extensions
         public static bool IsClaimed(this TimeStatus status) => status.IsActive() && status.BValue;
 
         public static bool CanClaim(this TimeStatus status) => status.IsActive() && !status.BValue
-            && status.Type.IsDailyQuestType() && status.IValue >= status.Type.ToComplete();
+            && status.Type.IsQuest() && status.IValue >= status.Type.ToComplete();
 
         public static double RemainingMinutes(this TimeStatus status)
             => (status.EndsAt - DateTime.Now).TotalMinutes;
