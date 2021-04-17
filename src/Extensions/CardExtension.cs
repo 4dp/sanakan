@@ -380,6 +380,7 @@ namespace Sanakan.Extensions
                 case CardSource.PvpShop: return "Koszary";
                 case CardSource.Figure: return "Figurka";
                 case CardSource.Expedition: return "Wyprawa";
+                case CardSource.ActivityShop: return "Kiosk";
 
                 default:
                 case CardSource.Other: return "Inne";

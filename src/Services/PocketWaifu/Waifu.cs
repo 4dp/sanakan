@@ -339,6 +339,7 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(659,   ItemType.SetCustomBorder.ToItem()),
                 new ItemWithCost(149,   ItemType.ChangeStarType.ToItem()),
                 new ItemWithCost(99,    ItemType.RandomBoosterPackSingleE.ToItem()),
+                new ItemWithCost(999,   ItemType.BigRandomBoosterPackE.ToItem()),
                 new ItemWithCost(1199,  ItemType.RandomTitleBoosterPackSingleE.ToItem()),
                 new ItemWithCost(199,   ItemType.RandomNormalBoosterPackB.ToItem()),
                 new ItemWithCost(499,   ItemType.RandomNormalBoosterPackA.ToItem()),
@@ -365,11 +366,12 @@ namespace Sanakan.Services.PocketWaifu
         {
             return new ItemWithCost[]
             {
-                new ItemWithCost(10,    ItemType.AffectionRecoveryBig.ToItem()),
-                new ItemWithCost(70,    ItemType.IncreaseExpBig.ToItem()),
-                new ItemWithCost(700,   ItemType.IncreaseUpgradeCnt.ToItem()),
-                new ItemWithCost(1500,  ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(6,     ItemType.AffectionRecoveryBig.ToItem()),
+                new ItemWithCost(65,    ItemType.IncreaseExpBig.ToItem()),
+                new ItemWithCost(500,   ItemType.IncreaseUpgradeCnt.ToItem()),
+                new ItemWithCost(1800,  ItemType.SetCustomImage.ToItem()),
                 new ItemWithCost(150,   ItemType.RandomBoosterPackSingleE.ToItem()),
+                new ItemWithCost(1500,  ItemType.BigRandomBoosterPackE.ToItem()),
             };
         }
 
@@ -386,6 +388,22 @@ namespace Sanakan.Services.PocketWaifu
                 case ShopType.Normal:
                 default:
                     return GetItemsWithCost();
+            }
+        }
+
+        public CardSource GetBoosterpackSource(ShopType type)
+        {
+            switch (type)
+            {
+                case ShopType.Activity:
+                    return CardSource.ActivityShop;
+
+                case ShopType.Pvp:
+                    return CardSource.PvpShop;
+
+                default:
+                case ShopType.Normal:
+                    return CardSource.Shop;
             }
         }
 
@@ -584,7 +602,7 @@ namespace Sanakan.Services.PocketWaifu
                         }
                         if (booster != null)
                         {
-                            booster.CardSourceFromPack = CardSource.PvpShop;
+                            booster.CardSourceFromPack = GetBoosterpackSource(type);
                             bUser.GameDeck.BoosterPacks.Add(booster);
                         }
                     }

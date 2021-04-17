@@ -20,7 +20,7 @@ namespace Sanakan.Database.Models
 
     public enum CardSource
     {
-        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop, Figure, Expedition
+        Activity, Safari, Shop, GodIntervention, Api, Other, Migration, PvE, Daily, Crafting, PvpShop, Figure, Expedition, ActivityShop
     }
 
     public enum StarStyle

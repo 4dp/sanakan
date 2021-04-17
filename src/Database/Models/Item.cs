@@ -40,7 +40,9 @@ namespace Sanakan.Database.Models
         FigureRightArmPart,
         FigureLeftLegPart,
         FigureRightLegPart,
-        FigureClothesPart
+        FigureClothesPart,
+
+        BigRandomBoosterPackE,
     }
 
     public class Item
