@@ -681,9 +681,9 @@ namespace Sanakan.Modules
 
         [Command("pakiet")]
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
-        [Summary("wypisuje dostępne pakiety/otwiera pakiet")]
+        [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task UpgradeCardAsync([Summary("nr pakietu kart")]int numberOfPack = 0)
+        public async Task UpgradeCardAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -707,17 +707,24 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var pack = bUser.GameDeck.BoosterPacks.ToArray()[numberOfPack - 1];
-                if (bUser.GameDeck.Cards.Count + pack.CardCnt > bUser.GameDeck.MaxNumberOfCards)
+                if (bUser.GameDeck.BoosterPacks.Count < (count + numberOfPack - 1) || count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz już miejsca na kolejną kartę!".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz tylu pakietów.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
-                if (cards.Count < pack.CardCnt)
+                var packs = bUser.GameDeck.BoosterPacks.ToList().GetRange(numberOfPack - 1, count);
+                var cardsCount = packs.Sum(x => x.CardCnt);
+
+                if (cardsCount > 20)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} suma kart z otwieranych pakietów nie może być większa jak dwadzieścia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (bUser.GameDeck.Cards.Count + cardsCount > bUser.GameDeck.MaxNumberOfCards)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie masz już miejsca na kolejną kartę!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
@@ -727,24 +734,37 @@ namespace Sanakan.Modules
                     mission = Database.Models.StatusType.DPacket.NewTimeStatus();
                     bUser.TimeStatuses.Add(mission);
                 }
-                mission.Count();
 
-                if (pack.CardSourceFromPack == CardSource.Activity || pack.CardSourceFromPack == CardSource.Migration)
+                var totalCards = new List<Card>();
+                foreach (var pack in packs)
                 {
-                    bUser.Stats.OpenedBoosterPacksActivity += 1;
-                }
-                else
-                {
-                    bUser.Stats.OpenedBoosterPacks += 1;
-                }
+                    var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
+                    if (cards.Count < pack.CardCnt)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
 
-                bUser.GameDeck.BoosterPacks.Remove(pack);
+                    mission.Count();
 
-                foreach (var card in cards)
-                {
-                    bUser.GameDeck.RemoveCharacterFromWishList(card.Character);
-                    card.Affection += bUser.GameDeck.AffectionFromKarma();
-                    bUser.GameDeck.Cards.Add(card);
+                    if (pack.CardSourceFromPack == CardSource.Activity || pack.CardSourceFromPack == CardSource.Migration)
+                    {
+                        bUser.Stats.OpenedBoosterPacksActivity += 1;
+                    }
+                    else
+                    {
+                        bUser.Stats.OpenedBoosterPacks += 1;
+                    }
+
+                    bUser.GameDeck.BoosterPacks.Remove(pack);
+
+                    foreach (var card in cards)
+                    {
+                        bUser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                        card.Affection += bUser.GameDeck.AffectionFromKarma();
+                        bUser.GameDeck.Cards.Add(card);
+                        totalCards.Add(card);
+                    }
                 }
 
                 await db.SaveChangesAsync();
@@ -752,10 +772,14 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 string openString = "";
-                foreach (var card in cards)
+                foreach (var card in totalCards)
                     openString += $"{card.GetString(false, false, true)}\n";
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} z pakietu **{pack.Name}** wypadło:\n\n{openString.TrimToLength(1900)}".ToEmbedMessage(EMType.Success).Build());
+                string packString = $"{count} pakietów";
+                if (count == 1)
+                    packString = $"pakietu **{packs.First().Name}**";
+
+                await ReplyAsync("", embed: $"{Context.User.Mention} z {packString} wypadło:\n\n{openString.TrimToLength(1950)}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
