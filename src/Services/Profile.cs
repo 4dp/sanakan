@@ -311,7 +311,7 @@ namespace Sanakan.Services
             bool isConnected = botUser.Shinden != 0;
             var response = _shClient.User.GetAsync(botUser.Shinden);
 
-            using (var image = await _img.GetUserProfileAsync(isConnected ? (await response).Body : null, botUser, user.GetAvatarUrl()?.Split("?")[0] ?? user.GetDefaultAvatarUrl(),
+            using (var image = await _img.GetUserProfileAsync(isConnected ? (await response).Body : null, botUser, user.GetUserOrDefaultAvatarUrl(),
                 topPosition, user.Nickname ?? user.Username, user.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Discord.Color.DarkerGrey))
             {
                 return image.ToPngStream();

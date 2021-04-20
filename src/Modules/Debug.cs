@@ -773,7 +773,7 @@ namespace Sanakan.Modules
             if (usr == null) return;
 
             using (var badge = await _img.GetLevelUpBadgeAsync("Very very long nickname of trolly user",
-                2154, usr.GetAvatarUrl(), usr.Roles.OrderByDescending(x => x.Position).First().Color))
+                2154, usr.GetUserOrDefaultAvatarUrl(), usr.Roles.OrderByDescending(x => x.Position).First().Color))
             {
                 using (var badgeStream = badge.ToPngStream())
                 {

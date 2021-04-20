@@ -470,7 +470,7 @@ namespace Sanakan.Services
                 ImageUrl = image,
                 Footer = new EmbedFooterBuilder
                 {
-                    IconUrl = who.GetAvatarUrl() ?? who.GetDefaultAvatarUrl(),
+                    IconUrl = who.GetUserOrDefaultAvatarUrl(),
                     Text = $"Przez: {who.Nickname ?? who.Username}",
                 },
             }.Build();
