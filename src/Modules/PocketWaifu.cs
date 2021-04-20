@@ -204,8 +204,8 @@ namespace Sanakan.Modules
 
         [Command("sklepik")]
         [Alias("shop", "p2w")]
-        [Summary("listowanie/zakup przedmiotu/wypisanie informacji")]
-        [Remarks("1 info"), RequireWaifuCommandChannel]
+        [Summary("listowanie/zakup przedmiotu/wypisanie informacji (du użycia wymagany 10 lvl)")]
+        [Remarks("1 info"), RequireWaifuCommandChannel, RequireLevel(10)]
         public async Task BuyItemAsync([Summary("nr przedmiotu")]int itemNumber = 0, [Summary("info/4 (liczba przedmiotów do zakupu/id tytułu)")]string info = "0")
         {
             await ReplyAsync("", embed: await  _waifu.ExecuteShopAsync(ShopType.Normal, Config, Context.User, itemNumber, info));

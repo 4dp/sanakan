@@ -104,6 +104,11 @@ namespace Sanakan.Extensions
             return user;
         }
 
+        public static async Task<User> GetBaseUserAndDontTrackAsync(this Database.UserContext context, ulong userId)
+        {
+            return await context.Users.AsQueryable().AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(x => x.Id == userId);
+        }
+
         public static async Task<User> GetUserAndDontTrackAsync(this Database.UserContext context, ulong userId)
         {
             return await context.Users.AsQueryable().Include(x => x.Stats).Include(x => x.SMConfig).Include(x => x.TimeStatuses).Include(x => x.GameDeck).ThenInclude(x => x.PvPStats).Include(x => x.GameDeck).ThenInclude(x => x.Wishes)
