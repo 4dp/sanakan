@@ -1241,7 +1241,7 @@ namespace Sanakan.Modules
         [Alias("free card")]
         [Summary("dostajesz jedną darmową kartę")]
         [Remarks(""), RequireWaifuCommandChannel]
-        public async Task GetFreeCardAsync()
+        public async Task GetFreeCardAsync([Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -1287,9 +1287,16 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
+                var wishStr = "";
+                if (checkWishlists)
+                {
+                    var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
+                    wishStr = (wishlists.Count > 0) ? "💗 " : "🤍 ";
+                }
+
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś {card.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} otrzymałeś {wishStr}{card.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).Build());
             }
         }
 
