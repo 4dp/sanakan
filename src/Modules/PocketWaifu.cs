@@ -669,7 +669,7 @@ namespace Sanakan.Modules
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task UpgradeCardAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1)
+        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -758,12 +758,18 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 string openString = "";
-                foreach (var card in totalCards)
-                    openString += $"{card.GetString(false, false, true)}\n";
-
                 string packString = $"{count} pakietów";
-                if (count == 1)
-                    packString = $"pakietu **{packs.First().Name}**";
+                if (count == 1) packString = $"pakietu **{packs.First().Name}**";
+
+                foreach (var card in totalCards)
+                {
+                    if (checkWishlists && count == 1)
+                    {
+                        var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
+                        openString += (wishlists.Count > 0) ? "💗 " : "🤍 ";
+                    }
+                    openString += $"{card.GetString(false, false, true)}\n";
+                }
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} z {packString} wypadło:\n\n{openString.TrimToLength(1950)}".ToEmbedMessage(EMType.Success).Build());
             }
