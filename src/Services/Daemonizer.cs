@@ -34,7 +34,7 @@ namespace Sanakan.Services
         {
             _cts.Cancel();
             _cts = new CancellationTokenSource();
-            
+
             return Task.CompletedTask;
         }
 
@@ -51,22 +51,21 @@ namespace Sanakan.Services
         private async Task CheckStateAsync()
         {
             if (!_config.Get().Demonization) return;
+            _logger.Log("Disconnected! Running demonization check.");
             if (_client.ConnectionState == ConnectionState.Connected) return;
 
             var timeout = Task.Delay(_timeout);
             var connect = _client.StartAsync();
             var task = await Task.WhenAny(timeout, connect);
 
-            if (task == timeout)
+            if (task != timeout && connect.IsCompletedSuccessfully)
             {
-                _logger.Log("Timeout! Shutting down!");
-                Environment.Exit(1);
+                _logger.Log("Reconnected!");
+                return;
             }
-            else if (connect.IsFaulted)
-            {
-                _logger.Log("Relogin attempt failed! Shutting down!");
-                Environment.Exit(1);
-            }
+
+            _logger.Log("Timeout! Shutting down!");
+            Environment.Exit(1);
         }
     }
 }
