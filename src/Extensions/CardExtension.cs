@@ -677,7 +677,7 @@ namespace Sanakan.Extensions
 
         public static double GetCostOfExpeditionPerMinute(this Card card, CardExpedition expedition = CardExpedition.None)
         {
-            return GetCostOfExpeditionPerMinuteRaw(card, expedition) * card.Rarity.ValueModifierReverse();
+            return GetCostOfExpeditionPerMinuteRaw(card, expedition) * card.Rarity.ValueModifierReverse() * card.Dere.ValueModifierReverse();
         }
 
         public static double GetCostOfExpeditionPerMinuteRaw(this Card card, CardExpedition expedition = CardExpedition.None)
@@ -692,17 +692,13 @@ namespace Sanakan.Extensions
                 case CardExpedition.ExtremeItemWithExp:
                     return 0.17;
 
-                case CardExpedition.DarkItems:
                 case CardExpedition.DarkExp:
-                    return 0.11;
-
-                case CardExpedition.DarkItemWithExp:
-                    return 0.06;
-
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
+                case CardExpedition.DarkItems:
                     return 0.12;
 
+                case CardExpedition.DarkItemWithExp:
                 case CardExpedition.LightItemWithExp:
                     return 0.07;
 
@@ -720,7 +716,7 @@ namespace Sanakan.Extensions
             switch (card.Expedition)
             {
                 case CardExpedition.NormalItemWithExp:
-                    return 0.0007;
+                    return 0.0009;
 
                 case CardExpedition.ExtremeItemWithExp:
                     return 0.028;
@@ -793,6 +789,16 @@ namespace Sanakan.Extensions
             return (t < 0.1) ? 0.1 : t;
         }
 
+        public static double ValueModifier(this Dere dere)
+        {
+            switch (dere)
+            {
+                case Dere.Tsundere: return 0.6;
+
+                default: return 1;
+            }
+        }
+
         public static double ValueModifier(this Rarity rarity)
         {
             switch (rarity)
@@ -808,6 +814,11 @@ namespace Sanakan.Extensions
                 case Rarity.SSS:
                 default: return 1.3;
             }
+        }
+
+        public static double ValueModifierReverse(this Dere dere)
+        {
+            return 2d - dere.ValueModifier();
         }
 
         public static double ValueModifierReverse(this Rarity rarity)

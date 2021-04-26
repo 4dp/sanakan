@@ -605,7 +605,7 @@ namespace Sanakan.Modules
                 }
 
                 if (!noCardOperation && card.Character == bUser.GameDeck.Waifu)
-                    affectionInc *= 1.2;
+                    affectionInc *= 1.15;
 
                 if (!noCardOperation)
                 {
@@ -616,7 +616,7 @@ namespace Sanakan.Modules
                         {
                             var ordered = response.Body.Points.OrderByDescending(x => x.Points);
                             if (ordered.Any(x => x.Name == embed.Author.Name))
-                                affectionInc *= 1.2;
+                                affectionInc *= 1.1;
                         }
                     }
                 }

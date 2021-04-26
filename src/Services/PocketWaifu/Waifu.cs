@@ -88,8 +88,8 @@ namespace Sanakan.Services.PocketWaifu
                     {ItemType.AffectionRecoverySmall,   new Tuple<int, int>(0,    1999)},
                     {ItemType.AffectionRecoveryNormal,  new Tuple<int, int>(1999, 5999)},
                     {ItemType.DereReRoll,               new Tuple<int, int>(-1,   -2)},
-                    {ItemType.CardParamsReRoll,         new Tuple<int, int>(5999, 6249)},
-                    {ItemType.AffectionRecoveryBig,     new Tuple<int, int>(6249, 8149)},
+                    {ItemType.CardParamsReRoll,         new Tuple<int, int>(5999, 6449)},
+                    {ItemType.AffectionRecoveryBig,     new Tuple<int, int>(6449, 8149)},
                     {ItemType.AffectionRecoveryGreat,   new Tuple<int, int>(8149, 8949)},
                     {ItemType.IncreaseUpgradeCnt,       new Tuple<int, int>(8949, 9049)},
                     {ItemType.IncreaseExpSmall,         new Tuple<int, int>(9049, 9849)},
@@ -1451,12 +1451,12 @@ namespace Sanakan.Services.PocketWaifu
 
                 case CardExpedition.LightItemWithExp:
                 case CardExpedition.DarkItemWithExp:
-                    cnt = 4.5;
+                    cnt = 4.2;
                     break;
 
                 case CardExpedition.DarkItems:
                 case CardExpedition.LightItems:
-                    cnt = 8.8;
+                    cnt = 7.2;
                     break;
 
                 case CardExpedition.LightExp:
@@ -1497,7 +1497,7 @@ namespace Sanakan.Services.PocketWaifu
 
                 case CardExpedition.LightExp:
                 case CardExpedition.DarkExp:
-                    baseExp = 12.6;
+                    baseExp = 11.6;
                     break;
 
                 case CardExpedition.DarkItems:
