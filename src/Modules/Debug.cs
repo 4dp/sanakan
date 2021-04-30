@@ -313,6 +313,7 @@ namespace Sanakan.Modules
                         thisCard.Active = false;
                         thisCard.InCage = false;
                         thisCard.TagList.Clear();
+                        thisCard.Expedition = CardExpedition.None;
 
                         thisCard.GameDeckId = winnerUser.GameDeck.Id;
 
@@ -382,6 +383,7 @@ namespace Sanakan.Modules
                     thisCard.InCage = false;
                     thisCard.TagList.Clear();
                     thisCard.GameDeckId = userId;
+                    thisCard.Expedition = CardExpedition.None;
                 }
 
                 await db.SaveChangesAsync();

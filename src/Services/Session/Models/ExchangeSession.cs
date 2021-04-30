@@ -361,10 +361,10 @@ namespace Sanakan.Services.Session.Models
                             var exchangeRateP1 = divP2 / ((P1.Cards.Count == 0) ? (divP2 * 0.5) : divP1);
                             var exchangeRateP2 = divP1 / ((P2.Cards.Count == 0) ? (divP1 * 0.5) : divP2);
 
-                            if (exchangeRateP1 > 10) exchangeRateP1 = 10;
+                            if (exchangeRateP1 > 1) exchangeRateP1 = 1;
                             if (exchangeRateP1 < 0.0001) exchangeRateP1 = 0.001;
 
-                            if (exchangeRateP2 > 10) exchangeRateP2 = 10;
+                            if (exchangeRateP2 > 1) exchangeRateP2 = 1;
                             if (exchangeRateP2 < 0.0001) exchangeRateP2 = 0.001;
 
                             foreach (var c in P1.Cards)
@@ -376,8 +376,13 @@ namespace Sanakan.Services.Session.Models
                                     card.TagList.Clear();
                                     card.Affection -= 1.5;
 
+                                    if (card.ExpCnt > 1)
+                                        card.ExpCnt *= 0.3;
+
                                     var valueDiff = card.MarketValue - exchangeRateP1;
                                     var changed = card.MarketValue - valueDiff * 0.8;
+                                    if (changed < 0.0001) changed = 0.0001;
+                                    if (changed > 1) changed = 1;
                                     card.MarketValue = changed;
 
                                     if (card.FirstIdOwner == 0)
@@ -401,8 +406,13 @@ namespace Sanakan.Services.Session.Models
                                     card.TagList.Clear();
                                     card.Affection -= 1.5;
 
+                                    if (card.ExpCnt > 1)
+                                        card.ExpCnt *= 0.3;
+
                                     var valueDiff = card.MarketValue - exchangeRateP2;
                                     var changed = card.MarketValue - valueDiff * 0.8;
+                                    if (changed < 0.0001) changed = 0.0001;
+                                    if (changed > 1) changed = 1;
                                     card.MarketValue = changed;
 
                                     if (card.FirstIdOwner == 0)

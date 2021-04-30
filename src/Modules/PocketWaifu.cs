@@ -1012,8 +1012,8 @@ namespace Sanakan.Modules
                         ? card.GetMaxExpToChest(chLvl)
                         : (card.ExpCnt / 2));
 
-                    var incKarma = 0.9 * card.MarketValue;
-                    if (incKarma > 0.001 && incKarma < 50)
+                    var incKarma = 1 * card.MarketValue;
+                    if (incKarma > 0.001 && incKarma < 1.5)
                         bUser.GameDeck.Karma += incKarma;
 
                     bUser.Stats.ReleasedCards += 1;
@@ -1074,11 +1074,11 @@ namespace Sanakan.Modules
                         : card.ExpCnt);
 
                     var incKarma = 1 * card.MarketValue;
-                    if (incKarma > 0.001 && incKarma < 50)
+                    if (incKarma > 0.001 && incKarma < 1.5)
                         bUser.GameDeck.Karma -= incKarma;
 
                     var incCt = card.GetValue() * card.MarketValue;
-                    if (incCt > 0 && incCt < 100)
+                    if (incCt > 0 && incCt < 50)
                         bUser.GameDeck.CTCnt += (long) incCt;
 
                     bUser.Stats.DestroyedCards += 1;
