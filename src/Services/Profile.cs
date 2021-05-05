@@ -267,7 +267,7 @@ namespace Sanakan.Services
                     return list.OrderByDescending(x => x.GameDeck.Cards.Count).ToList();
 
                 case TopType.CardsPower:
-                    return list.OrderByDescending(x => x.GameDeck.Cards.Sum(c => c.GetCardPower())).ToList();
+                    return list.OrderByDescending(x => x.GameDeck.Cards.Sum(c => c.CardPower)).ToList();
 
                 case TopType.Karma:
                     return list.OrderByDescending(x => x.GameDeck.Karma).ToList();

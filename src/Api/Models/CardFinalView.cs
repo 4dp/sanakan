@@ -170,7 +170,7 @@ namespace Sanakan.Api.Models
                 AnimeTitle = card.Title ?? "????",
                 UltimateQuality = card.Quality,
                 CreatedAt = card.CreationDate,
-                CardPower = card.GetCardPower(),
+                CardPower = card.CardPower,
                 Value = card.GetThreeStateMarketValue(),
                 ExpCntForNextLevel = card.ExpToUpgrade(),
                 HasCustomImage = card.CustomImage != null,

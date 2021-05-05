@@ -648,6 +648,8 @@ namespace Sanakan.Modules
 
                     bUser.GameDeck.Karma += karmaChange;
                     card.Affection += affectionInc;
+
+                    _ = card.CalculateCardPower();
                 }
 
                 var newTextRelation = noCardOperation ? "" : card.GetAffectionString();
@@ -828,6 +830,8 @@ namespace Sanakan.Modules
 
                 card.Affection = card.RestartCnt * -0.2;
 
+                _ = card.CalculateCardPower();
+
                 if (card.RestartCnt > 1 && card.RestartCnt % 10 == 0 && card.RestartCnt <= 100)
                 {
                     var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
@@ -956,6 +960,8 @@ namespace Sanakan.Modules
                 card.Rarity = --card.Rarity;
                 card.Affection += 1;
                 card.ExpCnt = 0;
+
+                _ = card.CalculateCardPower();
 
                 if (card.Rarity == Rarity.SSS)
                 {
@@ -1386,6 +1392,8 @@ namespace Sanakan.Modules
                 market.EndsAt = DateTime.Now.AddHours(nextMarket);
                 card.Affection += 0.1;
 
+                _ = card.CalculateCardPower();
+
                 string reward = "";
                 for (int i = 0; i < itemCnt; i++)
                 {
@@ -1502,6 +1510,8 @@ namespace Sanakan.Modules
                 market.EndsAt = DateTime.Now.AddHours(nextMarket);
                 card.Affection -= 0.2;
 
+                _ = card.CalculateCardPower();
+
                 string reward = "";
                 for (int i = 0; i < itemCnt; i++)
                 {
@@ -1590,6 +1600,8 @@ namespace Sanakan.Modules
                     _waifu.DeleteCardImageIfExist(card);
                 }
 
+                _ = cardToUp.CalculateCardPower();
+
                 await db.SaveChangesAsync();
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
@@ -1646,6 +1658,8 @@ namespace Sanakan.Modules
 
                         var span = DateTime.Now - card.CreationDate;
                         if (span.TotalDays > 5) card.Affection -= (int)span.TotalDays * 0.1;
+
+                        _ = card.CalculateCardPower();
                     }
                 }
                 else
@@ -1664,10 +1678,14 @@ namespace Sanakan.Modules
                     var span = DateTime.Now - thisCard.CreationDate;
                     if (span.TotalDays > 5) thisCard.Affection -= (int)span.TotalDays * 0.1;
 
+                    _ = thisCard.CalculateCardPower();
+
                     foreach (var card in cardsInCage)
                     {
                         if (card.Id != thisCard.Id)
                             card.Affection -= 0.3;
+
+                        _ = card.CalculateCardPower();
                     }
                 }
 
@@ -1992,7 +2010,7 @@ namespace Sanakan.Modules
         [Alias("who wants", "kc", "ww")]
         [Summary("wyszukuje na listach życzeń użytkowników danej karty, pomija tytuły")]
         [Remarks("51545"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid)
+        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -2010,7 +2028,21 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+                string usersStr = "";
+                if (showNames)
+                {
+                    foreach(var deck in wishlists)
+                    {
+                        var dUser = Context.Client.GetUser(deck.Id);
+                        if (dUser != null) usersStr += $"{dUser.Username}\n";
+                    }
+                }
+                else
+                {
+                    usersStr = string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"));
+                }
+
+                await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {usersStr}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
             }
         }
 
@@ -2018,7 +2050,7 @@ namespace Sanakan.Modules
         [Alias("who wants anime", "kca", "wwa")]
         [Summary("wyszukuje na wishlistach danego anime")]
         [Remarks("21"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id)
+        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var response = await _shclient.Title.GetInfoAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -2036,7 +2068,21 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                await ReplyAsync("", embed: $"**Karty z {response.Body.Title} chcą:**\n\n {string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"))}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+                string usersStr = "";
+                if (showNames)
+                {
+                    foreach(var deck in wishlists)
+                    {
+                        var dUser = Context.Client.GetUser(deck.Id);
+                        if (dUser != null) usersStr += $"{dUser.Username}\n";
+                    }
+                }
+                else
+                {
+                    usersStr = string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"));
+                }
+
+                await ReplyAsync("", embed: $"**Karty z {response.Body.Title} chcą:**\n\n {usersStr}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
             }
         }
 
@@ -2607,7 +2653,7 @@ namespace Sanakan.Modules
                     thisCard.Active = false;
                 }
 
-                bUser.GameDeck.DeckPower = active.Sum(x => x.GetCardPower());
+                bUser.GameDeck.DeckPower = active.Sum(x => x.CalculateCardPower());
 
                 await db.SaveChangesAsync();
 
@@ -2923,6 +2969,7 @@ namespace Sanakan.Modules
 
                 var oldName = thisCard.Expedition;
                 var message = _waifu.EndExpedition(botUser, thisCard);
+                _ = thisCard.CalculateCardPower();
 
                 await db.SaveChangesAsync();
 
@@ -3130,7 +3177,11 @@ namespace Sanakan.Modules
                     if (bUser.GameDeck.Waifu != 0)
                     {
                         var prevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
-                        foreach (var card in prevWaifus) card.Affection -= 5;
+                        foreach (var card in prevWaifus)
+                        {
+                            card.Affection -= 5;
+                            _ = card.CalculateCardPower();
+                        }
 
                         bUser.GameDeck.Waifu = 0;
                         await db.SaveChangesAsync();
@@ -3154,7 +3205,11 @@ namespace Sanakan.Modules
                 }
 
                 var allPrevWaifus = bUser.GameDeck.Cards.Where(x => x.Character == bUser.GameDeck.Waifu);
-                foreach (var card in allPrevWaifus) card.Affection -= 5;
+                foreach (var card in allPrevWaifus)
+                {
+                    card.Affection -= 5;
+                    _ = card.CalculateCardPower();
+                }
 
                 bUser.GameDeck.Waifu = thisCard.Character;
                 await db.SaveChangesAsync();

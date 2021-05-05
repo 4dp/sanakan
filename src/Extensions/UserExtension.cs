@@ -345,7 +345,7 @@ namespace Sanakan.Extensions
         public static bool NeedToSetDeckAgain(this GameDeck deck) => deck.DeckPower == -1;
 
         public static double CalculateDeckPower(this GameDeck deck)
-            => deck.Cards.Where(x => x.Active).Sum(x => x.GetCardPower());
+            => deck.Cards.Where(x => x.Active).Sum(x => x.CalculateCardPower());
 
         public static double GetMaxDeckPower(this GameDeck _) => MAX_DECK_POWER;
 
@@ -404,7 +404,7 @@ namespace Sanakan.Extensions
 
         public static double GetStrongestCardPower(this GameDeck deck)
         {
-            return deck.Cards.OrderByDescending(x => x.GetCardPower()).FirstOrDefault()?.GetCardPower() ?? 0;
+            return deck.Cards.OrderByDescending(x => x.CardPower).FirstOrDefault()?.CardPower ?? 0;
         }
 
         public static List<ulong> GetTitlesWishList(this GameDeck deck)
@@ -496,7 +496,7 @@ namespace Sanakan.Extensions
                     return $"{u.CommandsCnt}";
 
                 case TopType.Card:
-                    return u.GameDeck.Cards.OrderByDescending(x => x.GetCardPower())?.FirstOrDefault()?.GetString(false, false, true) ?? "---";
+                    return u.GameDeck.Cards.OrderByDescending(x => x.CardPower)?.FirstOrDefault()?.GetString(false, false, true) ?? "---";
 
                 case TopType.Cards:
                     return $"{u.GameDeck.Cards.Count}";

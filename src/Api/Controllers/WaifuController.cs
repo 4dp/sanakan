@@ -117,8 +117,15 @@ namespace Sanakan.Api.Controllers
                 var cards = await query.ToListAsync();
                 if (filter.IncludeTags != null)
                 {
-                    foreach (var iTag in filter.IncludeTags)
-                        cards = cards.Where(x => x.HasTag(iTag)).ToList();
+                    if (filter.FilterTagsMethod == FilterTagsMethodType.And)
+                    {
+                        foreach (var iTag in filter.IncludeTags)
+                            cards = cards.Where(x => x.HasTag(iTag)).ToList();
+                    }
+                    else
+                    {
+                        cards = cards.Where(x => x.HasAnyTag(filter.IncludeTags)).ToList();
+                    }
                 }
 
                 if (filter.ExcludeTags != null)

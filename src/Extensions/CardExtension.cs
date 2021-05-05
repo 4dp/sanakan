@@ -122,7 +122,7 @@ namespace Sanakan.Extensions
 
         public static bool HasCustomBorder(this Card card) => card.CustomBorder != null;
 
-        public static double GetCardPower(this Card card)
+        public static double CalculateCardPower(this Card card)
         {
             var cardPower = card.GetHealthWithPenalty() * 0.018;
             cardPower += card.GetAttackWithBonus() * 0.019;
@@ -161,12 +161,19 @@ namespace Sanakan.Extensions
             if (cardPower < 1)
                 cardPower = 1;
 
+            card.CardPower = cardPower;
+
             return cardPower;
         }
 
         public static bool HasTag(this Card card, string tag)
         {
             return card.TagList.Any(x => x.Name.Equals(tag, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public static bool HasAnyTag(this Card card, IEnumerable<string> tags)
+        {
+            return card.TagList.Any(x => tags.Any(t => t.Equals(x.Name, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         public static MarketValue GetThreeStateMarketValue(this Card card)

@@ -9,7 +9,13 @@ namespace Sanakan.Api.Models
     public enum OrderType
     {
         Id, IdDes, Name, NameDes, Rarity, RarityDes, Title, TitleDes, Health, HealthDes, HealthBase, HealthBaseDes,
-        Atack, AtackDes, Defence, DefenceDes, Exp, ExpDes, Dere, DereDes, Picture, PictureDes, Relation, RelationDes
+        Atack, AtackDes, Defence, DefenceDes, Exp, ExpDes, Dere, DereDes, Picture, PictureDes, Relation, RelationDes,
+        CardPower, CardPowerDes
+    }
+
+    public enum FilterTagsMethodType
+    {
+        And, Or
     }
 
     /// <summary>
@@ -33,6 +39,10 @@ namespace Sanakan.Api.Models
         /// Tagi jakich karta ma nie mieć
         /// </summary>
         public List<string> ExcludeTags { get; set; }
+        /// <summary>
+        /// W jaki sposów filtrować po tagach
+        /// </summary>
+        public FilterTagsMethodType FilterTagsMethod { get; set; }
 
         public static IQueryable<Card> Use(OrderType type, IQueryable<Card> query)
         {
@@ -62,6 +72,10 @@ namespace Sanakan.Api.Models
                     return query.OrderBy(x => x.Health);
                 case OrderType.HealthBaseDes:
                     return query.OrderByDescending(x => x.Health);
+                case OrderType.CardPower:
+                    return query.OrderBy(x => x.CardPower);
+                case OrderType.CardPowerDes:
+                    return query.OrderByDescending(x => x.CardPower);
                 case OrderType.Relation:
                     return query.OrderBy(x => x.Affection);
                 case OrderType.RelationDes:
