@@ -784,6 +784,9 @@ namespace Sanakan.Services.PocketWaifu
                 card.Image = character.PictureUrl;
 
             card.Health = RandomizeHealth(card);
+
+            _ = card.CalculateCardPower();
+
             return card;
         }
 
