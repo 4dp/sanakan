@@ -1269,9 +1269,8 @@ namespace Sanakan.Services.PocketWaifu
         public async Task<string> GetSafariViewAsync(SafariImage info, Card card, ITextChannel trashChannel)
         {
             string uri = info != null ? info.Uri(SafariImage.Type.Truth) : SafariImage.DefaultUri(SafariImage.Type.Truth);
-            var cardUri = await GetCardUrlIfExistAsync(card);
 
-            using (var cardImage = await _img.GetWaifuCardAsync(cardUri, card))
+            using (var cardImage = await _img.GetWaifuCardAsync(card))
             {
                 int posX = info != null ? info.GetX() : SafariImage.DefaultX();
                 int posY = info != null ? info.GetY() : SafariImage.DefaultY();
