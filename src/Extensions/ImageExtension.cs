@@ -15,7 +15,7 @@ namespace Sanakan.Extensions
 {
     public static class ImageExtension
     {
-        private static IImageEncoder _jpgEncoder = new JpegEncoder() { Quality = 93 };
+        private static IImageEncoder _jpgEncoder = new JpegEncoder() { Quality = 85 };
         private static IImageEncoder _pngEncoder = new PngEncoder();
 
         public static Stream ToJpgStream<T>(this Image<T> img) where T : struct, IPixel<T>
@@ -42,13 +42,20 @@ namespace Sanakan.Extensions
             return path;
         }
 
-        public static string SaveToPath<T>(this Image<T> img, string path, int width, int height) where T : struct, IPixel<T>
+        public static string SaveToPath<T>(this Image<T> img, string path, int width, int height = 0) where T : struct, IPixel<T>
         {
             var extension = path.Split(".").Last().ToLower();
             var encoder = (extension == "png") ? _pngEncoder : _jpgEncoder;
             img.Mutate(x => x.Resize(new Size(width, height)));
             img.Save(path, encoder);
             return path;
+        }
+
+        public static Image<T> ResizeAsNew<T>(this Image<T> img, int width, int height = 0) where T : struct, IPixel<T>
+        {
+            var nImg = img.Clone();
+            nImg.Mutate(x => x.Resize(new Size(width, height)));
+            return nImg;
         }
 
         public static void Round(this IImageProcessingContext<Rgba32> img, float radius)

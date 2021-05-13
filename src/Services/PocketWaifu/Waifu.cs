@@ -32,6 +32,11 @@ namespace Sanakan.Services.PocketWaifu
         Normal, Pvp, Activity
     }
 
+    public enum CardImageType
+    {
+        Normal, Small, Profile
+    }
+
     public class Waifu
     {
         private const int DERE_TAB_SIZE = ((int) Dere.Yato) + 1;
@@ -993,17 +998,10 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GetWaifuProfileImageAsync(Card card, ITextChannel trashCh)
         {
-            using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
-            {
-                cardImage.SaveToPath($"{Dir.CardsInProfiles}/{card.Id}.png");
-
-                using (var stream = cardImage.ToPngStream())
-                {
-                    var fs = await trashCh.SendFileAsync(stream, $"{card.Id}.png");
-                    var im = fs.Attachments.FirstOrDefault();
-                    return im.Url;
-                }
-            }
+            var uri = await GenerateAndSaveCardAsync(card, CardImageType.Profile);
+            var fs = await trashCh.SendFileAsync(uri);
+            var im = fs.Attachments.FirstOrDefault();
+            return im.Url;
         }
 
         public List<Embed> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention)
@@ -1182,7 +1180,7 @@ namespace Sanakan.Services.PocketWaifu
             return cardsFromPack;
         }
 
-        public async Task<string> GenerateAndSaveCardAsync(Card card, bool small = false)
+        public async Task<string> GenerateAndSaveCardAsync(Card card, CardImageType type = CardImageType.Normal)
         {
             string imageLocation = $"{Dir.Cards}/{card.Id}.png";
             string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
@@ -1190,19 +1188,27 @@ namespace Sanakan.Services.PocketWaifu
 
             using (var image = await _img.GetWaifuCardAsync(card))
             {
-                image.SaveToPath(imageLocation);
-                image.SaveToPath(sImageLocation, 133, 0);
+                image.SaveToPath(imageLocation, 300);
+                image.SaveToPath(sImageLocation, 133);
             }
 
-            if (!File.Exists(pImageLocation))
+            using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
-                using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
-                {
-                    cardImage.SaveToPath($"{Dir.CardsInProfiles}/{card.Id}.png");
-                }
+                cardImage.SaveToPath(pImageLocation, 380);
             }
 
-            return small ? sImageLocation : imageLocation;
+            switch (type)
+            {
+                case CardImageType.Small:
+                    return sImageLocation;
+
+                case CardImageType.Profile:
+                    return pImageLocation;
+
+                default:
+                case CardImageType.Normal:
+                    return imageLocation;
+            }
         }
 
         public void DeleteCardImageIfExist(Card card)
