@@ -84,9 +84,9 @@ namespace Sanakan.Api.Models
                     return query.OrderBy(x => x.Title);
                 case OrderType.TitleDes:
                     return query.OrderByDescending(x => x.Title);
-                case OrderType.Rarity:
-                    return query.OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality);
                 case OrderType.RarityDes:
+                    return query.OrderBy(x => x.Rarity).ThenByDescending(x => x.Quality);
+                case OrderType.Rarity:
                     return query.OrderByDescending(x => x.Rarity).ThenBy(x => x.Quality);
                 case OrderType.Name:
                     return query.OrderBy(x => x.Name);
