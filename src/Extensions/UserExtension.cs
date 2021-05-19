@@ -422,10 +422,15 @@ namespace Sanakan.Extensions
             return deck.Wishes.Where(x => x.Type == WishlistObjectType.Character).Select(x => x.ObjectId).ToList();
         }
 
-        public static void RemoveCharacterFromWishList(this GameDeck deck, ulong id)
+        public static bool RemoveCharacterFromWishList(this GameDeck deck, ulong id)
         {
             var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Character && x.ObjectId == id);
-            if (en != null) deck.Wishes.Remove(en);
+            if (en != null)
+            {
+                deck.Wishes.Remove(en);
+                return true;
+            }
+            return false;
         }
 
         public static void RemoveFromWaifu(this GameDeck deck, Card card)

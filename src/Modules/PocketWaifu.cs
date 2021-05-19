@@ -724,6 +724,8 @@ namespace Sanakan.Modules
                 }
 
                 var totalCards = new List<Card>();
+                var charactersOnWishlist = new List<ulong>();
+
                 foreach (var pack in packs)
                 {
                     var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
@@ -748,7 +750,10 @@ namespace Sanakan.Modules
 
                     foreach (var card in cards)
                     {
-                        bUser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                        if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character))
+                        {
+                            charactersOnWishlist.Add(card.Id);
+                        }
                         card.Affection += bUser.GameDeck.AffectionFromKarma();
                         bUser.GameDeck.Cards.Add(card);
                         totalCards.Add(card);
@@ -768,7 +773,7 @@ namespace Sanakan.Modules
                     if (checkWishlists && count == 1)
                     {
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                        openString += (wishlists.Count > 0) ? "💗 " : "🤍 ";
+                        openString += charactersOnWishlist.Any(x => x == card.Id) ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
                     }
                     openString += $"{card.GetString(false, false, true)}\n";
                 }
@@ -1285,7 +1290,7 @@ namespace Sanakan.Modules
                 var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
-                botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                bool wasOnWishlist = botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
 
@@ -1297,7 +1302,7 @@ namespace Sanakan.Modules
                 if (checkWishlists)
                 {
                     var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                    wishStr = (wishlists.Count > 0) ? "💗 " : "🤍 ";
+                    wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
                 }
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
