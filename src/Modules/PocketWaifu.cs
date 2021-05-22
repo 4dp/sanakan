@@ -724,7 +724,7 @@ namespace Sanakan.Modules
                 }
 
                 var totalCards = new List<Card>();
-                var charactersOnWishlist = new List<ulong>();
+                var charactersOnWishlist = new List<string>();
 
                 foreach (var pack in packs)
                 {
@@ -752,7 +752,7 @@ namespace Sanakan.Modules
                     {
                         if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character))
                         {
-                            charactersOnWishlist.Add(card.Id);
+                            charactersOnWishlist.Add(card.Name);
                         }
                         card.Affection += bUser.GameDeck.AffectionFromKarma();
                         bUser.GameDeck.Cards.Add(card);
@@ -773,7 +773,7 @@ namespace Sanakan.Modules
                     if (checkWishlists && count == 1)
                     {
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                        openString += charactersOnWishlist.Any(x => x == card.Id) ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
+                        openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
                     }
                     openString += $"{card.GetString(false, false, true)}\n";
                 }
