@@ -1584,12 +1584,21 @@ namespace Sanakan.Modules
                 if (duration == -1)
                 {
                     if (reportMsg != null)
+                    {
+                        try
+                        {
+                            var rEmbedBuilder = reportMsg?.Embeds?.FirstOrDefault().ToEmbedBuilder();
+
+                            rEmbedBuilder.Color = EMType.Info.Color();
+                            rEmbedBuilder.Fields.FirstOrDefault(x => x.Name == "Id zgloszenia:").Value = "Odrzucone!";
+                            await ReplyAsync("", embed: rEmbedBuilder.Build());
+                        }
+                        catch (Exception) { }
                         await reportMsg.DeleteAsync();
+                    }
 
                     config.Raports.Remove(raport);
                     await db.SaveChangesAsync();
-
-                    await ReplyAsync("", embed: $"Odrzucono zgłoszenie.".ToEmbedMessage(EMType.Success).Build());
                     return;
                 }
                 if (duration < 0) return;
