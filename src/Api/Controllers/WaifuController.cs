@@ -115,7 +115,7 @@ namespace Sanakan.Api.Controllers
                 query = CardsQueryFilter.Use(filter.OrderBy, query);
 
                 var cards = await query.ToListAsync();
-                if (filter.IncludeTags != null)
+                if (filter.IncludeTags != null && filter.IncludeTags.Count > 0)
                 {
                     if (filter.FilterTagsMethod == FilterTagsMethodType.And)
                     {
