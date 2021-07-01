@@ -702,6 +702,18 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono próg `{count}` znaków na pakiet. `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("chpe"), Priority(1)]
+        [Summary("ustawia liczbę znaków na punkt doświadczenia")]
+        [Remarks("true")]
+        public async Task SetCharCntPerExpAsync([Summary("liczba znaków")]long count, [Summary("true/false - czy zapisać")]bool save = false)
+        {
+            var config = Config.Get();
+            config.Exp.CharPerPoint = count;
+            if (save) Config.Save();
+
+            await ReplyAsync("", embed: $"Ustawiono próg `{count}` znaków na punkt doświadczenia. `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("tsafari"), Priority(1)]
         [Summary("wyłącza/załącza safari")]
         [Remarks("true")]
