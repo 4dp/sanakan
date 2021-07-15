@@ -74,6 +74,23 @@ namespace Sanakan.Api.Controllers
         }
 
         /// <summary>
+        /// Pobieranie nazwę użytkownika z shindena
+        /// </summary>
+        /// <param name="id">id użytkownika shindena</param>
+        /// <returns>nazwa użytkownika</returns>
+        [HttpGet("shinden/{id}/username")]
+        public async Task<string> GetShindenUsernameByShindenId(ulong id)
+        {
+            var res = await _shClient.User.GetAsync(id);
+            if (!res.IsSuccessStatusCode())
+            {
+                await "User not found!".ToResponse(404).ExecuteResultAsync(ControllerContext);
+                return null;
+            }
+            return res.Body.Name;
+        }
+
+        /// <summary>
         /// Pobieranie użytkownika bota
         /// </summary>
         /// <param name="id">id użytkownika shindena</param>
