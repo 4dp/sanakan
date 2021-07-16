@@ -135,10 +135,37 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("karta obrazek", RunMode = RunMode.Async)]
+        [Alias("card image", "ci", "ko")]
+        [Summary("pozwala wyświetlić obrazek karty")]
+        [Remarks("685 nie"), RequireAnyCommandChannelOrLevel(40)]
+        public async Task ShowCardImageAsync([Summary("WID")]ulong wid, [Summary("czy wyświetlić statystyki?")]bool showStats = true)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var card = db.Cards.Include(x => x.GameDeck).Include(x => x.ArenaStats).Include(x => x.TagList).AsNoTracking().FirstOrDefault(x => x.Id == wid);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} taka karta nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                SocketUser user = Context.Guild.GetUser(card.GameDeck.UserId);
+                if (user == null) user = Context.Client.GetUser(card.GameDeck.UserId);
+
+                using (var cdb = new Database.GuildConfigContext(Config))
+                {
+                    var gConfig = await cdb.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                    var trashChannel = Context.Guild.GetTextChannel(gConfig.WaifuConfig.TrashCommandsChannel);
+                    await ReplyAsync("", embed: await _waifu.BuildCardImageAsync(card, trashChannel, user, showStats));
+                }
+            }
+        }
+
         [Command("karta-", RunMode = RunMode.Async)]
         [Alias("card-")]
         [Summary("pozwala wyświetlić kartę w prostej postaci")]
-        [Remarks("685"), RequireWaifuCommandChannel]
+        [Remarks("685"), RequireAnyCommandChannelOrLevel(40)]
         public async Task ShowCardStringAsync([Summary("WID")]ulong wid)
         {
             using (var db = new Database.UserContext(Config))
@@ -1251,8 +1278,8 @@ namespace Sanakan.Modules
         [Command("karta+")]
         [Alias("free card")]
         [Summary("dostajesz jedną darmową kartę")]
-        [Remarks(""), RequireWaifuCommandChannel]
-        public async Task GetFreeCardAsync([Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false)
+        [Remarks(""), RequireAnyCommandChannelOrLevel(40)]
+        public async Task GetFreeCardAsync()
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -1298,12 +1325,8 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
-                var wishStr = "";
-                if (checkWishlists)
-                {
-                    var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                    wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
-                }
+                var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
+                var wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
 

@@ -49,7 +49,7 @@ namespace Sanakan.Preconditions
                 }
             }
 
-            return PreconditionResult.FromError($"|IMAGE|https://i.imgur.com/YEuawi2.gif");
+            return PreconditionResult.FromError($"|IMAGE|https://i.imgur.com/YEuawi2.gif|Wymagany poziom do użycia polecenia: {_level}!");
         }
     }
 }

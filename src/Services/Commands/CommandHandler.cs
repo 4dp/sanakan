@@ -183,9 +183,10 @@ namespace Sanakan.Services.Commands
                 case CommandError.UnmetPrecondition:
                     if (result.ErrorReason.StartsWith("|IMAGE|"))
                     {
-                        var emb = new EmbedBuilder()
-                            .WithImageUrl(result.ErrorReason.Remove(0, 7))
-                            .WithColor(EMType.Error.Color());
+                        var emb = new EmbedBuilder().WithColor(EMType.Error.Color());
+                        var splited = result.ErrorReason.Split("|");
+                        if (splited.Length > 3) emb.WithDescription(splited[3]).WithImageUrl(splited[2]);
+                        else emb.WithImageUrl(result.ErrorReason.Remove(0, 7));
 
                         await context.Channel.SendMessageAsync("", embed: emb.Build());
                     }

@@ -1292,6 +1292,37 @@ namespace Sanakan.Services.PocketWaifu
             return msg.Attachments.First().Url;
         }
 
+        public async Task<Embed> BuildCardImageAsync(Card card, ITextChannel trashChannel, SocketUser owner, bool showStats)
+        {
+            string imageUrl = null;
+            if (showStats)
+            {
+                imageUrl = await GetCardUrlIfExistAsync(card, true);
+                if (imageUrl != null)
+                {
+                    var msg = await trashChannel.SendFileAsync(imageUrl);
+                    imageUrl = msg.Attachments.First().Url;
+                }
+            }
+            else
+            {
+                imageUrl = await GetWaifuProfileImageAsync(card, trashChannel);
+            }
+
+            string ownerString = ((owner as SocketGuildUser)?.Nickname ?? owner?.Username) ?? "????";
+
+            return new EmbedBuilder
+            {
+                ImageUrl = imageUrl,
+                Color = EMType.Info.Color(),
+                Description = card.GetString(false, false, true, false, false),
+                Footer = new EmbedFooterBuilder
+                {
+                    Text = $"Należy do: {ownerString}"
+                },
+            }.Build();
+        }
+
         public async Task<Embed> BuildCardViewAsync(Card card, ITextChannel trashChannel, SocketUser owner)
         {
             string imageUrl = await GetCardUrlIfExistAsync(card, true);
