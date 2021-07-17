@@ -368,20 +368,32 @@ namespace Sanakan.Modules
 
             riddles = riddles.Shuffle().ToList();
             var riddle = riddles.FirstOrDefault();
-            riddle.Answers = riddle.Answers.OrderBy(x => x.Number).ToList();
 
+            riddle.RandomizeAnswers();
             var msg = await ReplyAsync(riddle.Get());
             await msg.AddReactionsAsync(riddle.GetEmotes());
 
             await Task.Delay(15000);
 
+            int answers = 0;
             var react = await msg.GetReactionUsersAsync(riddle.GetRightEmote(), 100).FlattenAsync();
+            foreach (var addR in riddle.GetEmotes())
+            {
+                var re = await msg.GetReactionUsersAsync(addR, 100).FlattenAsync();
+                if (re.Any(x => x.Id == Context.User.Id)) answers++;
+            }
+
             await msg.RemoveAllReactionsAsync();
 
-            if (react.Any(x => x.Id == Context.User.Id))
+            if (react.Any(x => x.Id == Context.User.Id) && answers < 2)
+            {
                 await ReplyAsync("", false, $"{Context.User.Mention} zgadłeś!".ToEmbedMessage(EMType.Success).Build());
-            else
-                await ReplyAsync("", false, $"{Context.User.Mention} pudło!".ToEmbedMessage(EMType.Error).Build());
+            }
+            else if (answers > 1)
+            {
+                await ReplyAsync("", false, $"{Context.User.Mention} wybrałeś więcej jak jedną odpowiedź!".ToEmbedMessage(EMType.Error).Build());
+            }
+            else await ReplyAsync("", false, $"{Context.User.Mention} pudło!".ToEmbedMessage(EMType.Error).Build());
         }
     }
 }

@@ -28,6 +28,24 @@ namespace Sanakan.Extensions
             return new Discord.Emoji("\u0039\u20E3");
         }
 
+        public static void RandomizeAnswers(this Question q)
+        {
+            var numbersColeration = new List<Tuple<int, int>>();
+            var possibleAnswers = q.Answers.Select(x => x.Number).ToList();
+
+            foreach (var answer in q.Answers)
+            {
+                var num = Services.Fun.GetOneRandomFrom(possibleAnswers);
+                possibleAnswers.Remove(num);
+
+                numbersColeration.Add(new Tuple<int, int>(num, answer.Number));
+                answer.Number = num;
+            }
+
+            q.Answer = numbersColeration.First(x => x.Item2 == q.Answer).Item1;
+            q.Answers = q.Answers.OrderBy(x => x.Number).ToList();
+        }
+
         public static string Get(this Question q)
         {
             string str = $"**{q.Content}**\n\n";
