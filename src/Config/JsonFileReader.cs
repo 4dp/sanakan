@@ -36,7 +36,7 @@ namespace Sanakan.Config
         {
             if (_path != null && path == DEFAULT)
                 path = _path;
-                
+
             using (StreamWriter sw = File.CreateText(path))
             {
                 using (JsonWriter writer = new JsonTextWriter(sw))

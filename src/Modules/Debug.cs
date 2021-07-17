@@ -4,6 +4,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -687,6 +688,51 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { "users" });
 
                 await ReplyAsync("", embed: $"Nowy tytuł to: `{thisCard.Title}`".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("delq"), Priority(1)]
+        [Summary("kasuje zagadkę o podanym id")]
+        [Remarks("20}")]
+        public async Task RemoveQuizAsync([Summary("id zagadki")]ulong id)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var question = db.Questions.FirstOrDefault(x => x.Id == id);
+                if (question == null)
+                {
+                    await ReplyAsync("", embed: $"Zagadka o ID: `{id}` nie istnieje!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                db.Questions.Remove(question);
+                await db.SaveChangesAsync();
+
+                QueryCacheManager.ExpireTag(new string[] { $"quiz" });
+                await ReplyAsync("", embed: $"Zagadka o ID: `{id}` została skasowana!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("addq"), Priority(1)]
+        [Summary("dodaje nową zagadkę")]
+        [Remarks("{...}")]
+        public async Task AddNewQuizAsync([Summary("zagadka w formie jsona")][Remainder]string json)
+        {
+            try
+            {
+                var question = JsonConvert.DeserializeObject<Question>(json);
+                using (var db = new Database.UserContext(Config))
+                {
+                    db.Questions.Add(question);
+                    await db.SaveChangesAsync();
+
+                    QueryCacheManager.ExpireTag(new string[] { $"quiz" });
+                    await ReplyAsync("", embed: $"Nowy zagadka dodana, jej ID to: `{question.Id}`".ToEmbedMessage(EMType.Success).Build());
+                }
+            }
+            catch (Exception)
+            {
+                await ReplyAsync("", embed: $"Coś poszło nie tak przy parsowaniu jsona!".ToEmbedMessage(EMType.Error).Build());
             }
         }
 
