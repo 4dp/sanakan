@@ -2456,6 +2456,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (tag.Contains(" "))
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 foreach (var thisCard in cardsSelected)
                 {
                     if (!thisCard.HasTag(tag))
@@ -2515,6 +2521,12 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (tag.Contains(" "))
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 foreach (var card in untaggedCards)
                     card.TagList.Add(new CardTag{ Name = tag });
 
@@ -2540,6 +2552,12 @@ namespace Sanakan.Modules
                 if (cards.Count < 1)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono nieoznaczonych kart.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                if (newTag.Contains(" "))
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 

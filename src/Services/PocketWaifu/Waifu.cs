@@ -737,6 +737,61 @@ namespace Sanakan.Services.PocketWaifu
             });
         }
 
+        public Card GenerateFakeNewCard(string name, string title, string image, Rarity rarity)
+        {
+            var card = new Card
+            {
+                Defence = RandomizeDefence(rarity),
+                ArenaStats = new CardArenaStats(),
+                Attack = RandomizeAttack(rarity),
+                Expedition = CardExpedition.None,
+                QualityOnStart = Quality.Broken,
+                ExpeditionDate = DateTime.Now,
+                PAS = PreAssembledFigure.None,
+                TagList = new List<CardTag>(),
+                CreationDate = DateTime.Now,
+                StarStyle = StarStyle.Full,
+                Source = CardSource.Other,
+                Quality = Quality.Broken,
+                Title = title ?? "????",
+                Dere = RandomizeDere(),
+                Curse = CardCurse.None,
+                RarityOnStart = rarity,
+                CustomBorder = null,
+                FromFigure = false,
+                CustomImage = null,
+                IsTradable = true,
+                FirstIdOwner = 1,
+                DefenceBonus = 0,
+                HealthBonus = 0,
+                AttackBonus = 0,
+                UpgradesCnt = 2,
+                LastIdOwner = 0,
+                MarketValue = 1,
+                Rarity = rarity,
+                EnhanceCnt = 0,
+                Unique = false,
+                InCage = false,
+                RestartCnt = 0,
+                Active = false,
+                Character = 1,
+                Affection = 0,
+                Image = null,
+                Name = name,
+                Health = 0,
+                ExpCnt = 0,
+            };
+
+            if (!string.IsNullOrEmpty(image))
+                card.Image = image;
+
+            card.Health = RandomizeHealth(card);
+
+            _ = card.CalculateCardPower();
+
+            return card;
+        }
+
         public Card GenerateNewCard(IUser user, ICharacterInfo character, Rarity rarity)
         {
             var card = new Card
@@ -1598,6 +1653,10 @@ namespace Sanakan.Services.PocketWaifu
                 if (e == EventType.LoseCard)
                 {
                     user.StoreExpIfPossible(totalExp);
+                }
+                if (e == EventType.Fight && !allowItems)
+                {
+                    totalExp /= 6;
                 }
             }
 

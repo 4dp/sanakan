@@ -10,8 +10,8 @@ namespace Sanakan.Services.PocketWaifu
 {
     public enum EventType
     {
-        MoreItems, MoreExp, IncAtk, IncDef, AddReset, NewCard,  // +
-        None, ChangeDere, DecAtk, DecDef, DecAff, LoseCard      // -
+        MoreItems, MoreExp, IncAtk, IncDef, AddReset, NewCard,     // +
+        None, ChangeDere, DecAtk, DecDef, DecAff, LoseCard, Fight  // -
     }
 
     public class Events
@@ -36,6 +36,7 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.DecDef,      new Tuple<int, int>(-9,   -10)},
                     {EventType.DecAff,      new Tuple<int, int>(-11,  -12)},
                     {EventType.LoseCard,    new Tuple<int, int>(-13,  -14)},
+                    {EventType.Fight,       new Tuple<int, int>(-15,  -16)},
                 }
             },
             {CardExpedition.ExtremeItemWithExp, new Dictionary<EventType, Tuple<int, int>>
@@ -51,6 +52,7 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.DecDef,      new Tuple<int, int>(6200, 7400)},
                     {EventType.DecAff,      new Tuple<int, int>(7400, 9000)},
                     {EventType.LoseCard,    new Tuple<int, int>(9000, 10000)},
+                    {EventType.Fight,       new Tuple<int, int>(-1,  -2)},
                 }
             },
             {CardExpedition.DarkItemWithExp, new Dictionary<EventType, Tuple<int, int>>
@@ -60,12 +62,13 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(2500, 5000)},
                     {EventType.IncDef,      new Tuple<int, int>(5000, 7000)},
                     {EventType.AddReset,    new Tuple<int, int>(-1,   -2)},
-                    {EventType.NewCard,     new Tuple<int, int>(7000, 7300)},
+                    {EventType.Fight,       new Tuple<int, int>(7000, 7300)},
                     {EventType.ChangeDere,  new Tuple<int, int>(7300, 7900)},
                     {EventType.DecAtk,      new Tuple<int, int>(7900, 8500)},
                     {EventType.DecDef,      new Tuple<int, int>(8500, 9000)},
                     {EventType.DecAff,      new Tuple<int, int>(9000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-3,   -4)},
+                    {EventType.NewCard,     new Tuple<int, int>(-5,   -6)},
                 }
             },
             {CardExpedition.LightItemWithExp, new Dictionary<EventType, Tuple<int, int>>
@@ -75,12 +78,13 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(2500, 5000)},
                     {EventType.IncDef,      new Tuple<int, int>(5000, 7000)},
                     {EventType.AddReset,    new Tuple<int, int>(-1,   -2)},
-                    {EventType.NewCard,     new Tuple<int, int>(7000, 7300)},
+                    {EventType.Fight,       new Tuple<int, int>(7000, 7300)},
                     {EventType.ChangeDere,  new Tuple<int, int>(7300, 7900)},
                     {EventType.DecAtk,      new Tuple<int, int>(7900, 8500)},
                     {EventType.DecDef,      new Tuple<int, int>(8500, 9000)},
                     {EventType.DecAff,      new Tuple<int, int>(9000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-3,   -4)},
+                    {EventType.NewCard,     new Tuple<int, int>(-5,   -6)},
                 }
             },
             {CardExpedition.DarkItems, new Dictionary<EventType, Tuple<int, int>>
@@ -90,12 +94,13 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(0,    2200)},
                     {EventType.IncDef,      new Tuple<int, int>(2200, 4100)},
                     {EventType.AddReset,    new Tuple<int, int>(-5,   -6)},
-                    {EventType.NewCard,     new Tuple<int, int>(4100, 4400)},
+                    {EventType.Fight,       new Tuple<int, int>(4100, 4400)},
                     {EventType.ChangeDere,  new Tuple<int, int>(4400, 5400)},
                     {EventType.DecAtk,      new Tuple<int, int>(5400, 6600)},
                     {EventType.DecDef,      new Tuple<int, int>(6600, 8000)},
                     {EventType.DecAff,      new Tuple<int, int>(8000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
+                    {EventType.NewCard,     new Tuple<int, int>(-9,   -10)},
                 }
             },
             {CardExpedition.LightItems, new Dictionary<EventType, Tuple<int, int>>
@@ -105,12 +110,13 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(0,    2200)},
                     {EventType.IncDef,      new Tuple<int, int>(2200, 4100)},
                     {EventType.AddReset,    new Tuple<int, int>(-5,   -6)},
-                    {EventType.NewCard,     new Tuple<int, int>(4100, 4400)},
+                    {EventType.Fight,       new Tuple<int, int>(4100, 4400)},
                     {EventType.ChangeDere,  new Tuple<int, int>(4400, 5400)},
                     {EventType.DecAtk,      new Tuple<int, int>(5400, 6600)},
                     {EventType.DecDef,      new Tuple<int, int>(6600, 8000)},
                     {EventType.DecAff,      new Tuple<int, int>(8000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
+                    {EventType.NewCard,     new Tuple<int, int>(-9,   -10)},
                 }
             },
             {CardExpedition.DarkExp, new Dictionary<EventType, Tuple<int, int>>
@@ -120,12 +126,13 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(0,    2200)},
                     {EventType.IncDef,      new Tuple<int, int>(2200, 4100)},
                     {EventType.AddReset,    new Tuple<int, int>(-5,   -6)},
-                    {EventType.NewCard,     new Tuple<int, int>(4100, 4400)},
+                    {EventType.Fight,       new Tuple<int, int>(4100, 4400)},
                     {EventType.ChangeDere,  new Tuple<int, int>(4400, 5400)},
                     {EventType.DecAtk,      new Tuple<int, int>(5400, 6600)},
                     {EventType.DecDef,      new Tuple<int, int>(6600, 8000)},
                     {EventType.DecAff,      new Tuple<int, int>(8000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
+                    {EventType.NewCard,     new Tuple<int, int>(-9,   -10)},
                 }
             },
             {CardExpedition.LightExp, new Dictionary<EventType, Tuple<int, int>>
@@ -135,21 +142,24 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.IncAtk,      new Tuple<int, int>(0,    2200)},
                     {EventType.IncDef,      new Tuple<int, int>(2200, 4100)},
                     {EventType.AddReset,    new Tuple<int, int>(-5,   -6)},
-                    {EventType.NewCard,     new Tuple<int, int>(4100, 4400)},
+                    {EventType.Fight,       new Tuple<int, int>(4100, 4400)},
                     {EventType.ChangeDere,  new Tuple<int, int>(4400, 5400)},
                     {EventType.DecAtk,      new Tuple<int, int>(5400, 6600)},
                     {EventType.DecDef,      new Tuple<int, int>(6600, 8000)},
                     {EventType.DecAff,      new Tuple<int, int>(8000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
+                    {EventType.LoseCard,    new Tuple<int, int>(-9,   -10)},
                 }
             }
         };
 
         private ShindenClient _shClient;
+        private Waifu _waifu;
 
-        public Events(ShindenClient client)
+        public Events(ShindenClient client, Waifu waifu)
         {
             _shClient = client;
+            _waifu = waifu;
         }
 
         private EventType CheckChanceBasedOnTime(CardExpedition expedition, Tuple<double, double> duration)
@@ -221,6 +231,10 @@ namespace Sanakan.Services.PocketWaifu
                 case int n when (n < c[EventType.LoseCard].Item2
                                 && n >= c[EventType.LoseCard].Item1):
                     return EventType.LoseCard;
+
+                case int n when (n < c[EventType.Fight].Item2
+                                && n >= c[EventType.Fight].Item1):
+                    return EventType.Fight;
 
                 default: return EventType.None;
             }
@@ -333,6 +347,17 @@ namespace Sanakan.Services.PocketWaifu
                     msg += $"Wydarzenie: Zmniejszenie obrony do {card.Defence}.\n";
                 }
                 break;
+
+                case EventType.Fight:
+                {
+                    var enemyCard = _waifu.GenerateFakeNewCard("Miecu", "Bajeczka", null, _waifu.RandomizeRarity());
+                    var result = _waifu.GetFightWinner(card, enemyCard);
+
+                    string resStr = result == FightWinner.Card1 ? "zwycięstwo!" : "przegrana!";
+                    msg += $"Wydarzenie: Walka, wynik: {resStr}\n";
+
+                    return result == FightWinner.Card1;
+                }
 
                 case EventType.LoseCard:
                 {
