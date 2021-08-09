@@ -565,15 +565,15 @@ namespace Sanakan.Modules
                             return;
                         }
                         karmaChange += 0.02 * itemCnt;
-                        card.Dere = _waifu.RandomizeDere();
+                        card.Dere = Waifu.RandomizeDere();
                         embed.Description += $"Nowy charakter to: {card.Dere}!";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 
                     case ItemType.CardParamsReRoll:
                         karmaChange += 0.03 * itemCnt;
-                        card.Attack = _waifu.RandomizeAttack(card.Rarity);
-                        card.Defence = _waifu.RandomizeDefence(card.Rarity);
+                        card.Attack = Waifu.RandomizeAttack(card.Rarity);
+                        card.Defence = Waifu.RandomizeDefence(card.Rarity);
                         embed.Description += $"Nowa moc karty to: 🔥{card.GetAttackWithBonus()} 🛡{card.GetDefenceWithBonus()}!";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
@@ -852,9 +852,9 @@ namespace Sanakan.Modules
 
                 bUser.GameDeck.Karma -= 5;
 
-                card.Defence = _waifu.RandomizeDefence(Rarity.E);
-                card.Attack = _waifu.RandomizeAttack(Rarity.E);
-                card.Dere = _waifu.RandomizeDere();
+                card.Defence = Waifu.RandomizeDefence(Rarity.E);
+                card.Attack = Waifu.RandomizeAttack(Rarity.E);
+                card.Dere = Waifu.RandomizeDere();
                 card.Rarity = Rarity.E;
                 card.UpgradesCnt = 2;
                 card.RestartCnt += 1;

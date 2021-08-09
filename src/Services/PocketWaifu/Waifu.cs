@@ -157,7 +157,7 @@ namespace Sanakan.Services.PocketWaifu
             _shClient = client;
         }
 
-        public double GetDereDmgMultiplier(Card atk, Card def) => _dereDmgRelation[(int)def.Dere, (int)atk.Dere];
+        static public double GetDereDmgMultiplier(Card atk, Card def) => _dereDmgRelation[(int)def.Dere, (int)atk.Dere];
 
         public bool GetEventSate() => CharId.EventEnabled;
 
@@ -236,7 +236,7 @@ namespace Sanakan.Services.PocketWaifu
             }
         }
 
-        public Rarity RandomizeRarity()
+        static public Rarity RandomizeRarity()
         {
             var num = Fun.GetRandomValue(1000);
             if (num < 5)   return Rarity.SS;
@@ -676,7 +676,7 @@ namespace Sanakan.Services.PocketWaifu
             return rExp;
         }
 
-        public FightWinner GetFightWinner(Card card1, Card card2)
+        static public FightWinner GetFightWinner(Card card1, Card card2)
         {
             var FAcard1 = GetFA(card1, card2);
             var FAcard2 = GetFA(card2, card1);
@@ -693,7 +693,7 @@ namespace Sanakan.Services.PocketWaifu
             return winner;
         }
 
-        public double GetFA(Card target, Card enemy)
+        static public double GetFA(Card target, Card enemy)
         {
             double atk1 = target.GetAttackWithBonus();
             if (!target.HasImage()) atk1 -= atk1 * 20 / 100;
@@ -713,16 +713,16 @@ namespace Sanakan.Services.PocketWaifu
             return realAtk1;
         }
 
-        public int RandomizeAttack(Rarity rarity)
+        static public int RandomizeAttack(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetAttackMin(), rarity.GetAttackMax() + 1);
 
-        public int RandomizeDefence(Rarity rarity)
+        static public int RandomizeDefence(Rarity rarity)
             => Fun.GetRandomValue(rarity.GetDefenceMin(), rarity.GetDefenceMax() + 1);
 
-        public int RandomizeHealth(Card card)
+        static public int RandomizeHealth(Card card)
             => Fun.GetRandomValue(card.Rarity.GetHealthMin(), card.GetHealthMax() + 1);
 
-        public Dere RandomizeDere()
+        static public Dere RandomizeDere()
         {
             return Fun.GetOneRandomFrom(new List<Dere>()
             {
@@ -737,7 +737,7 @@ namespace Sanakan.Services.PocketWaifu
             });
         }
 
-        public Card GenerateFakeNewCard(string name, string title, string image, Rarity rarity)
+        static public Card GenerateFakeNewCard(string name, string title, string image, Rarity rarity)
         {
             var card = new Card
             {

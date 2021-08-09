@@ -148,18 +148,16 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.DecDef,      new Tuple<int, int>(6600, 8000)},
                     {EventType.DecAff,      new Tuple<int, int>(8000, 10000)},
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
-                    {EventType.LoseCard,    new Tuple<int, int>(-9,   -10)},
+                    {EventType.NewCard,     new Tuple<int, int>(-9,   -10)},
                 }
             }
         };
 
         private ShindenClient _shClient;
-        private Waifu _waifu;
 
-        public Events(ShindenClient client, Waifu waifu)
+        public Events(ShindenClient client)
         {
             _shClient = client;
-            _waifu = waifu;
         }
 
         private EventType CheckChanceBasedOnTime(CardExpedition expedition, Tuple<double, double> duration)
@@ -350,8 +348,8 @@ namespace Sanakan.Services.PocketWaifu
 
                 case EventType.Fight:
                 {
-                    var enemyCard = _waifu.GenerateFakeNewCard("Miecu", "Bajeczka", null, _waifu.RandomizeRarity());
-                    var result = _waifu.GetFightWinner(card, enemyCard);
+                    var enemyCard = Waifu.GenerateFakeNewCard("Miecu", "Bajeczka", null, Waifu.RandomizeRarity());
+                    var result = Waifu.GetFightWinner(card, enemyCard);
 
                     string resStr = result == FightWinner.Card1 ? "zwycięstwo!" : "przegrana!";
                     msg += $"Wydarzenie: Walka, wynik: {resStr}\n";
