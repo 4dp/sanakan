@@ -917,6 +917,39 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("ctou"), Priority(1)]
+        [Summary("zamienia kartę na ultimate")]
+        [Remarks("54861 Zeta")]
+        public async Task MakeUltimateCardAsync([Summary("wid karty")]ulong id, [Summary("jakość karty")]Quality quality,
+            [Summary("dodatkowy atak")]int atk = 0, [Summary("dodatkowa obrona")]int def = 0, [Summary("dodatkowe hp")]int hp = 0)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var card = await db.Cards.AsQueryable().Include(x => x.TagList).AsSingleQuery().FirstOrDefaultAsync(x => x.Id == id);
+                if (card == null)
+                {
+                    await ReplyAsync("", embed: "W bazie nie ma takiej karty!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                card.FromFigure = true;
+                card.Quality = quality;
+                card.Unique = true;
+
+                if (atk != 0) card.AttackBonus = atk;
+                if (def != 0) card.DefenceBonus = def;
+                if (hp != 0) card.HealthBonus = hp;
+
+                await db.SaveChangesAsync();
+
+                _waifu.DeleteCardImageIfExist(card);
+
+                QueryCacheManager.ExpireTag(new string[] { $"user-{card.GameDeckId}", "users" });
+
+                await ReplyAsync("", embed: $"Utworzono: {card.GetString(false, false, true)}.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("sc"), Priority(1)]
         [Summary("zmienia SC użytkownika o podaną wartość")]
         [Remarks("Sniku 10000")]

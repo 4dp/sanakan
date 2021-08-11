@@ -919,6 +919,20 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(352, 600)));
         }
 
+        private void ApplyEpsilonStats(Image<Rgba32> image, Card card)
+        {
+            var aphFont = new Font(_latoBold, 28);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80 }; // TODO: rotate hp
+            image.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex("#40ff40"), new Point(59, 365)));
+            image.Mutate(x => x.DrawText(ops, $"{atk}", aphFont, Rgba32.FromHex("#da4e00"), new Point(64, 432)));
+            image.Mutate(x => x.DrawText(ops, $"{def}", aphFont, Rgba32.FromHex("#00a4ff"), new Point(55, 485)));
+        }
+
         private void ApplyZetaStats(Image<Rgba32> image, Card card)
         {
             var aphFont = new Font(_digital, 28);
@@ -979,6 +993,8 @@ namespace Sanakan.Services
                 case Quality.Gamma: ApplyGammaStats(image, card);
                     break;
                 case Quality.Delta: ApplyDeltaStats(image, card);
+                    break;
+                case Quality.Epsilon: ApplyEpsilonStats(image, card);
                     break;
                 case Quality.Zeta: ApplyZetaStats(image, card);
                     break;

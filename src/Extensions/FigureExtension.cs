@@ -10,14 +10,15 @@ namespace Sanakan.Extensions
         {
             switch (q)
             {
-                case Quality.Alpha:  return "α";
-                case Quality.Beta:   return "β";
-                case Quality.Gamma:  return "γ";
-                case Quality.Delta:  return "Δ";
-                case Quality.Zeta:   return "ζ";
-                case Quality.Lambda: return "λ";
-                case Quality.Sigma:  return "Σ";
-                case Quality.Omega:  return "Ω";
+                case Quality.Alpha:   return "α";
+                case Quality.Beta:    return "β";
+                case Quality.Gamma:   return "γ";
+                case Quality.Delta:   return "Δ";
+                case Quality.Epsilon: return "ε";
+                case Quality.Zeta:    return "ζ";
+                case Quality.Lambda:  return "λ";
+                case Quality.Sigma:   return "Σ";
+                case Quality.Omega:   return "Ω";
 
                 default:
                 case Quality.Broken:
