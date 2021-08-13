@@ -395,14 +395,14 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("rmc"), Priority(1)]
+        [Command("rmcards"), Priority(1)]
         [Summary("kasuje podane karty")]
         [Remarks("41231 41232")]
-        public async Task RemoveCardAsync([Summary("WIDs")]params ulong[] wids)
+        public async Task RemoveCardsAsync([Summary("WIDs")]params ulong[] wids)
         {
             using (var db = new Database.UserContext(Config))
             {
-                var thisCards = db.Cards.AsQueryable().Include(x => x.TagList).AsSingleQuery().Where(x => wids.Contains(x.Id)).ToList();
+                var thisCards = db.Cards.AsQueryable().Include(x => x.TagList).Include(x => x.ArenaStats).AsSingleQuery().Where(x => wids.Contains(x.Id)).ToList();
                 if (thisCards.Count < 1)
                 {
                     await ReplyAsync("", embed: "Nie odnaleziono kart!".ToEmbedMessage(EMType.Bot).Build());
@@ -410,16 +410,17 @@ namespace Sanakan.Modules
                 }
 
                 string reply = $"Karta {thisCards.First().GetString(false, false, true)} została skasowana.";
-                if (thisCards.Count > 1) reply = $"Stasowano {thisCards.Count} kart.";
+                if (thisCards.Count > 1) reply = $"Skasowano {thisCards.Count} kart.";
 
                 foreach (var thisCard in thisCards)
                 {
-                    thisCard.GameDeckId = 1;
+                    _waifu.DeleteCardImageIfExist(thisCard);
+                    db.Cards.Remove(thisCard);
                 }
 
                 await db.SaveChangesAsync();
 
-                QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users" });
+                QueryCacheManager.ExpireTag(new string[] { "users" });
 
                 await ReplyAsync("", embed: reply.ToEmbedMessage(EMType.Success).Build());
             }
@@ -919,7 +920,7 @@ namespace Sanakan.Modules
 
         [Command("ctou"), Priority(1)]
         [Summary("zamienia kartę na ultimate")]
-        [Remarks("54861 Zeta")]
+        [Remarks("54861 Zeta 100 100 1000")]
         public async Task MakeUltimateCardAsync([Summary("wid karty")]ulong id, [Summary("jakość karty")]Quality quality,
             [Summary("dodatkowy atak")]int atk = 0, [Summary("dodatkowa obrona")]int def = 0, [Summary("dodatkowe hp")]int hp = 0)
         {
@@ -932,12 +933,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                card.PAS = PreAssembledFigure.None;
+                card.Rarity = Rarity.SSS;
                 card.FromFigure = true;
                 card.Quality = quality;
-                card.Unique = true;
 
-                if (atk != 0) card.AttackBonus = atk;
                 if (def != 0) card.DefenceBonus = def;
+                if (atk != 0) card.AttackBonus = atk;
                 if (hp != 0) card.HealthBonus = hp;
 
                 await db.SaveChangesAsync();
