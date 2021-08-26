@@ -11,14 +11,14 @@ namespace Sanakan.Services.Executor
 {
     public class SynchronizedExecutor : IExecutor
     {
-        private const int QueueLength = 60;
+        private const int QueueLength = 100;
 
         private IServiceProvider _provider;
         private ILogger _logger;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private BlockingCollection<IExecutable> _queue = new BlockingCollection<IExecutable>(QueueLength);
-        private BlockingCollection<IExecutable> _hiQueue = new BlockingCollection<IExecutable>(QueueLength / 2);
+        private BlockingCollection<IExecutable> _hiQueue = new BlockingCollection<IExecutable>(QueueLength);
 
         private Timer _timer;
         private CancellationTokenSource _cts { get; set; }

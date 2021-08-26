@@ -360,6 +360,16 @@ namespace Sanakan.Api.Controllers
 
                 var exe = new Executable($"api-tc su{id} ({value})", new Task<Task>(async () =>
                 {
+                    using (var dbs = new Database.UserContext(_config))
+                    {
+                        user = dbs.Users.FirstOrDefault(x => x.Shinden == id);
+                        user.TcCnt += value;
+
+                        await dbs.SaveChangesAsync();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
+                    }
+
                     using (var dbc = new Database.AnalyticsContext(_config))
                     {
                         dbc.TransferData.Add(new Database.Models.Analytics.TransferAnalytics()
@@ -372,16 +382,6 @@ namespace Sanakan.Api.Controllers
                         });
 
                         await dbc.SaveChangesAsync();
-                    }
-
-                    using (var dbs = new Database.UserContext(_config))
-                    {
-                        user = dbs.Users.FirstOrDefault(x => x.Shinden == id);
-                        user.TcCnt += value;
-
-                        await dbs.SaveChangesAsync();
-
-                        QueryCacheManager.ExpireTag(new string[] { $"user-{user.Id}", "users" });
                     }
                 }), Priority.High);
 
