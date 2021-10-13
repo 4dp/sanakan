@@ -29,7 +29,7 @@ namespace Sanakan.Extensions
                 case ItemType.RandomBoosterPackSingleE:
                     return "Dodaje nowy pakiet z dwiema losowymi kartami.\n\nWykluczone jakości to: SS, S i A.";
                 case ItemType.BigRandomBoosterPackE:
-                    return "Dodaje nowy pakiet z dwudziestoma losowymi kartami.\n\nWykluczone jakości to: SS, S i A.";
+                    return "Dodaje nowy pakiet z dwudziestoma losowymi kartami.\n\nWykluczone jakości to: SS i S.";
                 case ItemType.RandomTitleBoosterPackSingleE:
                     return "Dodaje nowy pakiet z dwiema losowymi, niewymienialnymi kartami z tytułu podanego przez kupującego.\n\nWykluczone jakości to: SS i S.";
                 case ItemType.AffectionRecoverySmall:
