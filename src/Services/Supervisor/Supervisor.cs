@@ -17,8 +17,8 @@ namespace Sanakan.Services.Supervisor
     {
         private enum Action { None, Ban, Mute, Warn }
 
-        private const int MAX_TOTAL = 13;
-        private const int MAX_SPECIFIED = 8;
+        private const int MAX_TOTAL = 12;
+        private const int MAX_SPECIFIED = 6;
 
         private const int COMMAND_MOD = 2;
         private const int UNCONNECTED_MOD = -2;
@@ -142,10 +142,11 @@ namespace Sanakan.Services.Supervisor
                 var notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
 
                 bool hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole || x.Id == gConfig.MuteRole) || gConfig.UserRole == 0;
-                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole);
+                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole && !thisMessage.IsBannable());
                 await MakeActionAsync(action, user, message, userRole, muteRole, notifChannel);
             }
         }
+
 
         private async Task MakeActionAsync(Action action, SocketGuildUser user, SocketUserMessage message, SocketRole userRole, SocketRole muteRole, ITextChannel notifChannel)
         {
@@ -171,7 +172,7 @@ namespace Sanakan.Services.Supervisor
                     break;
 
                 case Action.Ban:
-                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban) spam/flood");
+                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban) spam/flood/scam");
                     break;
 
                 default:
