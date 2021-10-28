@@ -24,7 +24,9 @@ namespace Sanakan.Services.Supervisor
         private const int UNCONNECTED_MOD = -2;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim _semaphoreJoin = new SemaphoreSlim(1, 1);
         private Dictionary<ulong, Dictionary<ulong, SupervisorEntity>> _guilds;
+        private Dictionary<ulong, Dictionary<string, SupervisorJoinEntity>> _guildsJoin;
 
         private DiscordSocketClient _client;
         private Moderator _moderator;
@@ -40,6 +42,7 @@ namespace Sanakan.Services.Supervisor
             _logger = logger;
 
             _guilds = new Dictionary<ulong, Dictionary<ulong, SupervisorEntity>>();
+            _guildsJoin = new Dictionary<ulong, Dictionary<string, SupervisorJoinEntity>>();
 
             _timer = new Timer(async _ =>
             {
@@ -59,6 +62,7 @@ namespace Sanakan.Services.Supervisor
             TimeSpan.FromMinutes(5));
 #if !DEBUG
             _client.MessageReceived += HandleMessageAsync;
+            _client.UserJoined += UserJoinedAsync;
 #endif
         }
 
@@ -243,10 +247,99 @@ namespace Sanakan.Services.Supervisor
                     foreach (var uId in guild.Value)
                         _guilds[guild.Key][uId] = new SupervisorEntity();
                 }
+
+                var toClean2 = new Dictionary<ulong, List<string>>();
+                foreach (var guild in _guildsJoin)
+                {
+                    var usrs = new List<string>();
+                    foreach (var susspect in guild.Value)
+                    {
+                        if (!susspect.Value.IsValid())
+                            usrs.Add(susspect.Key);
+                    }
+                    toClean2.Add(guild.Key, usrs);
+                }
+
+                foreach (var guild in toClean2)
+                {
+                    foreach (var nick in guild.Value)
+                        _guildsJoin[guild.Key][nick] = new SupervisorJoinEntity();
+                }
+
             }
             catch (Exception ex)
             {
                 _logger.Log($"Supervisor: autovalidate error {ex}");
+            }
+        }
+
+        private async Task UserJoinedAsync(SocketGuildUser user)
+        {
+            if (!_config.Get().Supervision) return;
+
+            var usr = user as SocketGuildUser;
+            if (usr == null) return;
+
+            if (usr.IsBot || usr.IsWebhook) return;
+
+            if (_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+                return;
+
+            _ = Task.Run(async () =>
+            {
+                await _semaphoreJoin.WaitAsync();
+
+                try
+                {
+                    await AnalizeJoin(usr);
+                }
+                finally
+                {
+                    _semaphoreJoin.Release();
+                }
+            });
+
+            await Task.CompletedTask;
+        }
+
+        private async Task AnalizeJoin(SocketGuildUser user)
+        {
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                var gConfig = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
+                if (gConfig == null) return;
+
+                if (!gConfig.Supervision) return;
+
+                if (!_guildsJoin.Any(x => x.Key == user.Guild.Id))
+                {
+                    _guildsJoin.Add(user.Guild.Id, new Dictionary<string, SupervisorJoinEntity>());
+                    return;
+                }
+
+                var guild = _guildsJoin[user.Guild.Id];
+                if (!guild.Any(x => x.Key == user.Username))
+                {
+                    guild.Add(user.Username, new SupervisorJoinEntity(user.Id));
+                    return;
+                }
+
+                var susspect = guild[user.Username];
+                if (!susspect.IsValid())
+                {
+                    susspect = new SupervisorJoinEntity(user.Id);
+                    return;
+                }
+
+                susspect.Add(user.Id);
+                if (susspect.IsBannable())
+                {
+                    foreach(var toBan in susspect.GetUsersToBan())
+                    {
+                        var thisUser = user.Guild.GetUser(toBan);
+                        await user.Guild.AddBanAsync(thisUser, 1, $"Supervisor(ban) raid/scam [{user.Nickname}]");
+                    }
+                }
             }
         }
     }
