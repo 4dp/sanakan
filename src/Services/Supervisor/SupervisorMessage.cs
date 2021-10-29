@@ -10,7 +10,7 @@ namespace Sanakan.Services.Supervisor
     {
         private static List<string> BannableStrings = new List<string>()
         {
-            "dliscord.com/", ".gift/", "discorl.com/", "dliscord-giveaway.ru/"
+            "dliscord.com/", ".gift/", "discorl.com/", "dliscord-giveaway.ru/", "dlscordniltro.com"
         };
 
         public SupervisorMessage(string content, int count = 1)
