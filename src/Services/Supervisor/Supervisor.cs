@@ -145,8 +145,12 @@ namespace Sanakan.Services.Supervisor
                 var userRole = user.Guild.GetRole(gConfig.UserRole);
                 var notifChannel = user.Guild.GetTextChannel(gConfig.NotificationChannel);
 
+                bool isBannable = thisMessage.IsBannable();
+                if (_config.Get().GiveBanForUrlSpam)
+                    isBannable |= thisMessage.ContainsUrl();
+
                 bool hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole || x.Id == gConfig.MuteRole) || gConfig.UserRole == 0;
-                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole && !thisMessage.IsBannable());
+                var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole && !isBannable);
                 await MakeActionAsync(action, user, message, userRole, muteRole, notifChannel);
             }
         }

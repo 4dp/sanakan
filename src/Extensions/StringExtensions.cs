@@ -47,6 +47,9 @@ namespace Sanakan.Extensions
             return new Regex($@"\[/?({string.Join('|', _bbCodes)})(=[^\]]*)?\]", RegexOptions.Compiled | RegexOptions.IgnoreCase).Replace(s, "");
         }
 
+        public static List<string> GetURLs(this string s) =>
+            new Regex(@"(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?", RegexOptions.Compiled | RegexOptions.IgnoreCase).Matches(s).Select(x => x.Value).ToList();
+
         public static bool IsURLToImage(this string s)
         {
             var http = s.Split(':').FirstOrDefault();

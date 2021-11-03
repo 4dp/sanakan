@@ -17,6 +17,7 @@ namespace Sanakan.Config.Model
         public ConfigExp Exp { get; set; }
         public List<ulong> Dev { get; set; }
         public JwtConfig Jwt { get; set; }
+        public bool GiveBanForUrlSpam { get; set; }
         public List<SanakanApiKey> ApiKeys { get; set; }
         public List<RichMessageConfig> RMConfig { get; set; }
         public List<ulong> BlacklistedGuilds { get; set; }

@@ -761,6 +761,17 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: $"Ustawiono próg `{count}` znaków na punkt doświadczenia. `Zapisano: {save.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
+        [Command("turlban"), Priority(1)]
+        [Summary("wyłącza/załącza banowanie za spam url")]
+        [Remarks("")]
+        public async Task ToggleSafariAsync()
+        {
+            var config = Config.Get();
+            config.GiveBanForUrlSpam = !config.GiveBanForUrlSpam;
+
+            await ReplyAsync("", embed: $"Banowanko: `{config.SafariEnabled.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("tsafari"), Priority(1)]
         [Summary("wyłącza/załącza safari")]
         [Remarks("true")]
