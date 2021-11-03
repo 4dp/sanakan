@@ -769,7 +769,7 @@ namespace Sanakan.Modules
             var config = Config.Get();
             config.GiveBanForUrlSpam = !config.GiveBanForUrlSpam;
 
-            await ReplyAsync("", embed: $"Banowanko: `{config.SafariEnabled.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
+            await ReplyAsync("", embed: $"Banowanko: `{config.GiveBanForUrlSpam.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("tsafari"), Priority(1)]
