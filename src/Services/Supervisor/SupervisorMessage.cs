@@ -29,6 +29,14 @@ namespace Sanakan.Services.Supervisor
         public bool ContainsUrl() => Content.GetURLs().Count > 0;
         public bool IsBannable() => BannableStrings.Any(x => Content.Contains(x));
         public bool IsValid() => (DateTime.Now - PreviousOccurrence).TotalMinutes <= 1;
-        public int Inc() => ++Count;
+        public int Inc()
+        {
+            if ((DateTime.Now - PreviousOccurrence).TotalMinutes > 10)
+                Count = 0;
+
+            PreviousOccurrence = DateTime.Now;
+
+            return ++Count;
+        }
     }
 }
