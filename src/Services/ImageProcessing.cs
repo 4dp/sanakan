@@ -793,6 +793,34 @@ namespace Sanakan.Services
             return characterImg;
         }
 
+        private bool HasCustomBorderString(Card card)
+        {
+            switch (card.Quality)
+            {
+                case Quality.Gamma: return true;
+                default: return false;
+            }
+        }
+
+        private string GetCustomBorderString(Card card)
+        {
+            switch (card.Quality)
+            {
+                case Quality.Gamma:
+                    {
+                        var totalPower = card.GetHealthWithPenalty();
+                        totalPower += card.GetDefenceWithBonus();
+                        totalPower += card.GetAttackWithBonus();
+
+                        if (totalPower > 5000) return $"./Pictures/PW/CG/{card.Quality}/Border_2.png";
+                        if (totalPower > 2000) return $"./Pictures/PW/CG/{card.Quality}/Border_1.png";
+                        return $"./Pictures/PW/CG/{card.Quality}/Border_0.png";
+                    }
+
+                default: return $"./Pictures/PW/CG/{card.Quality}/Border.png";
+            }
+        }
+
         private Image<Rgba32> GenerateBorder(Card card)
         {
             var borderStr = $"./Pictures/PW/{card.Rarity}.png";
@@ -802,6 +830,9 @@ namespace Sanakan.Services
             {
                 borderStr = $"./Pictures/PW/CG/{card.Quality}/Border.png";
                 dereStr = $"./Pictures/PW/CG/{card.Quality}/Dere/{card.Dere}.png";
+
+                if (HasCustomBorderString(card))
+                    borderStr = GetCustomBorderString(card);
             }
 
             var img = Image.Load(borderStr);
@@ -824,7 +855,7 @@ namespace Sanakan.Services
                 if (stream == null)
                     return GenerateBorder(card);
 
-                return  Image.Load(stream);
+                return Image.Load(stream);
             }
         }
 
@@ -885,16 +916,16 @@ namespace Sanakan.Services
 
         private void ApplyGammaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 37);
+            var aphFont = new Font(_latoBold, 26);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
             int atk = card.GetAttackWithBonus();
 
             // TODO: center numbers
-            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#a90079"), new Point(196, 495)));
-            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#19615e"), new Point(282, 545)));
-            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#318b19"), new Point(90, 545)));
+            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#c9282c"), new Point(115, 593)));
+            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#1d64d5"), new Point(155, 565)));
+            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#318b19"), new Point(300, 593)));
         }
 
         private void ApplyDeltaStats(Image<Rgba32> image, Card card)
@@ -986,19 +1017,26 @@ namespace Sanakan.Services
 
             switch (card.Quality)
             {
-                case Quality.Alpha:ApplyAlphaStats(image, card);
+                case Quality.Alpha:
+                    ApplyAlphaStats(image, card);
                     break;
-                case Quality.Beta: ApplyBetaStats(image, card);
+                case Quality.Beta:
+                    ApplyBetaStats(image, card);
                     break;
-                case Quality.Gamma: ApplyGammaStats(image, card);
+                case Quality.Gamma:
+                    ApplyGammaStats(image, card);
                     break;
-                case Quality.Delta: ApplyDeltaStats(image, card);
+                case Quality.Delta:
+                    ApplyDeltaStats(image, card);
                     break;
-                case Quality.Epsilon: ApplyEpsilonStats(image, card);
+                case Quality.Epsilon:
+                    ApplyEpsilonStats(image, card);
                     break;
-                case Quality.Zeta: ApplyZetaStats(image, card);
+                case Quality.Zeta:
+                    ApplyZetaStats(image, card);
                     break;
-                case Quality.Lambda: ApplyLambdaStats(image, card);
+                case Quality.Lambda:
+                    ApplyLambdaStats(image, card);
                     break;
 
                 default:
@@ -1090,7 +1128,7 @@ namespace Sanakan.Services
             {
                 using (var back = Image.Load(backBorderStr))
                 {
-                     image.Mutate(x => x.DrawImage(back, new Point(0, 0), 1));
+                    image.Mutate(x => x.DrawImage(back, new Point(0, 0), 1));
                 }
             }
         }
