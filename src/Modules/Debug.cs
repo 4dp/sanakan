@@ -768,6 +768,7 @@ namespace Sanakan.Modules
         {
             var config = Config.Get();
             config.GiveBanForUrlSpam = !config.GiveBanForUrlSpam;
+            Config.Save();
 
             await ReplyAsync("", embed: $"Banowanko: `{config.GiveBanForUrlSpam.GetYesNo()}`".ToEmbedMessage(EMType.Success).Build());
         }
