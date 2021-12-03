@@ -338,11 +338,11 @@ namespace Sanakan.Services.Session.Models
                             var user1 = await db.GetUserOrCreateAsync(P1.User.Id);
                             var user2 = await db.GetUserOrCreateAsync(P2.User.Id);
 
-                            double avgValueP1 = P1.Cards.Sum(x => x.MarketValue) / ((P1.Cards.Count == 0) ? 1 : P1.Cards.Count);
-                            double avgValueP2 = P2.Cards.Sum(x => x.MarketValue) / ((P2.Cards.Count == 0) ? 1 : P2.Cards.Count);
+                            double avgValueP1 = P1.Cards.GetAvgValue();
+                            double avgValueP2 = P2.Cards.GetAvgValue();
 
-                            double avgRarP1 = P1.Cards.Sum(x => (int) x.Rarity) / ((P1.Cards.Count == 0) ? 1 : P1.Cards.Count);
-                            double avgRarP2 = P2.Cards.Sum(x => (int) x.Rarity) / ((P2.Cards.Count == 0) ? 1 : P2.Cards.Count);
+                            double avgRarP1 = P1.Cards.GetAvgRarity();
+                            double avgRarP2 = P2.Cards.GetAvgRarity();
                             var avgRarDif = avgRarP1 - avgRarP2;
 
                             if (avgRarDif > 0)
@@ -355,8 +355,8 @@ namespace Sanakan.Services.Session.Models
                                 avgValueP2 /= avgRarDif + 1;
                             }
 
-                            var divP1 = P1.Cards.Count / ((avgValueP1 <= 0) ? 1 : avgValueP1);
-                            var divP2 = P2.Cards.Count / ((avgValueP2 <= 0) ? 1 : avgValueP2);
+                            var divP1 = P1.Cards.Count * ((avgValueP1 <= 0) ? 1 : avgValueP1);
+                            var divP2 = P2.Cards.Count * ((avgValueP2 <= 0) ? 1 : avgValueP2);
 
                             var exchangeRateP1 = divP2 / ((P1.Cards.Count == 0) ? (divP2 * 0.5) : divP1);
                             var exchangeRateP2 = divP1 / ((P2.Cards.Count == 0) ? (divP1 * 0.5) : divP2);
@@ -379,7 +379,7 @@ namespace Sanakan.Services.Session.Models
                                     if (card.ExpCnt > 1)
                                         card.ExpCnt *= 0.3;
 
-                                    var valueDiff = card.MarketValue - exchangeRateP1;
+                                    var valueDiff = exchangeRateP1 - card.MarketValue;
                                     var changed = card.MarketValue + valueDiff * 0.8;
                                     if (changed < 0.0001) changed = 0.0001;
                                     if (changed > 1) changed = 1;
@@ -409,7 +409,7 @@ namespace Sanakan.Services.Session.Models
                                     if (card.ExpCnt > 1)
                                         card.ExpCnt *= 0.3;
 
-                                    var valueDiff = card.MarketValue - exchangeRateP2;
+                                    var valueDiff = exchangeRateP2 - card.MarketValue;
                                     var changed = card.MarketValue + valueDiff * 0.8;
                                     if (changed < 0.0001) changed = 0.0001;
                                     if (changed > 1) changed = 1;

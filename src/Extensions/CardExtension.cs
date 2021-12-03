@@ -852,5 +852,17 @@ namespace Sanakan.Extensions
             foreach (var c in clist) list.Add(c.ToView());
             return list;
         }
+
+        public static double GetAvgValue(this List<Card> cards)
+        {
+            if (cards.Count < 1) return 0.01;
+            return cards.Average(x => x.MarketValue);
+        }
+
+        public static double GetAvgRarity(this List<Card> cards)
+        {
+            if (cards.Count < 1) return (int) Rarity.E;
+            return cards.Average(x => (int) x.Rarity);
+        }
     }
 }
