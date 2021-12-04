@@ -43,6 +43,7 @@ namespace Sanakan.Database.Models
         FigureClothesPart,
 
         BigRandomBoosterPackE,
+        ResetCardValue,
     }
 
     public class Item

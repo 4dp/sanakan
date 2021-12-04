@@ -558,6 +558,12 @@ namespace Sanakan.Modules
                         embed.Description += $"Zwiększono liczbę ulepszeń do {card.UpgradesCnt}!";
                         break;
 
+                    case ItemType.ResetCardValue:
+                        karmaChange += 0.5;
+                        card.MarketValue = 1;
+                        embed.Description += "Wartość karty została zresetowana.";
+                        break;
+
                     case ItemType.DereReRoll:
                         if (card.Curse == CardCurse.DereBlockade)
                         {
