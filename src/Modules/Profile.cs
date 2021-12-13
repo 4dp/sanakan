@@ -564,7 +564,7 @@ namespace Sanakan.Modules
                         }
                         else
                         {
-                            await _profile.RomoveUserColorAsync(user);
+                            await _profile.RomoveUserColorAsync(user, color);
                             colort.EndsAt = DateTime.Now.AddMonths(1);
                         }
 

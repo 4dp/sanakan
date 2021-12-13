@@ -203,12 +203,14 @@ namespace Sanakan.Services
             return true;
         }
 
-        public async Task RomoveUserColorAsync(SocketGuildUser user)
+        public async Task RomoveUserColorAsync(SocketGuildUser user, FColor ignored = FColor.None)
         {
             if (user == null) return;
 
             foreach(uint color in Enum.GetValues(typeof(FColor)))
             {
+                if (color == (uint) ignored) continue;
+
                 var cR = user.Roles.FirstOrDefault(x => x.Name == color.ToString());
                 if (cR != null)
                 {
