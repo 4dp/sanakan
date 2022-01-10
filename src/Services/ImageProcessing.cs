@@ -1046,10 +1046,10 @@ namespace Sanakan.Services
 
             var thetaColor = GetThetaStatColorString(card);
 
-            var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80 };
-            image.Mutate(x => x.DrawText(ops, atk.ToString("D4"), aphFont, Rgba32.FromHex(thetaColor), new Point(356, 518)));
-            image.Mutate(x => x.DrawText(ops, def.ToString("D4"), aphFont, Rgba32.FromHex(thetaColor), new Point(356, 556)));
-            image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex(thetaColor), new Point(342, 593)));
+            var ops = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Right };
+            image.Mutate(x => x.DrawText(ops, $"{atk}", aphFont, Rgba32.FromHex(thetaColor), new Point(410, 517)));
+            image.Mutate(x => x.DrawText(ops, $"{def}", aphFont, Rgba32.FromHex(thetaColor), new Point(410, 554)));
+            image.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex(thetaColor), new Point(410, 591)));
         }
 
         private string GetStatsString(Card card)
