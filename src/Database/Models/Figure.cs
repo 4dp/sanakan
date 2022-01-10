@@ -14,6 +14,7 @@ namespace Sanakan.Database.Models
         Delta   = 4,
         Epsilon = 5,
         Zeta    = 6,
+        Theta   = 8,
         Lambda  = 11,
         Sigma   = 18,
         Omega   = 24
