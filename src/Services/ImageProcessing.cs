@@ -1035,6 +1035,7 @@ namespace Sanakan.Services
                     return "#ffffff";
             }
         }
+
         private void ApplyThetaStats(Image<Rgba32> image, Card card)
         {
             var aphFont = new Font(_digital, 28);
@@ -1049,64 +1050,20 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText(ops, atk.ToString("D4"), aphFont, Rgba32.FromHex(thetaColor), new Point(356, 518)));
             image.Mutate(x => x.DrawText(ops, def.ToString("D4"), aphFont, Rgba32.FromHex(thetaColor), new Point(356, 556)));
             image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex(thetaColor), new Point(342, 593)));
-
         }
 
-        private bool HasCustomStatsString(Card card)
+        private string GetStatsString(Card card)
         {
             switch (card.Quality)
             {
-                case Quality.Theta: return true;
-                default: return false;
-            }
-        }
-
-        private string GetCustomStatsString(Card card)
-        {
-            switch (card.Quality)
-            {
-                case Quality.Theta:
-                    {
-                        switch (card.Dere)
-                        {
-                            case Database.Models.Dere.Bodere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Bodere_Stats.png";
-                            case Database.Models.Dere.Dandere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Dandere_Stats.png";
-                            case Database.Models.Dere.Deredere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Deredere_Stats.png";
-                            case Database.Models.Dere.Kamidere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Kamidere_Stats.png";
-                            case Database.Models.Dere.Kuudere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Kuudere_Stats.png";
-                            case Database.Models.Dere.Mayadere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Mayadere_Stats.png";
-                            case Database.Models.Dere.Raito:
-                                return $"./Pictures/PW/CG/{card.Quality}/Raito_Stats.png";
-                            case Database.Models.Dere.Tsundere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Tsundere_Stats.png";
-                            case Database.Models.Dere.Yami:
-                                return $"./Pictures/PW/CG/{card.Quality}/Yami_Stats.png";
-                            case Database.Models.Dere.Yandere:
-                                return $"./Pictures/PW/CG/{card.Quality}/Yandere_Stats.png";
-                            case Database.Models.Dere.Yato:
-                                return $"./Pictures/PW/CG/{card.Quality}/Yato_Stats.png";
-                            default:
-                                return $"./Pictures/PW/CG/{card.Quality}/Stats.png";
-                        }
-                    }
-
+                case Quality.Theta: return $"./Pictures/PW/CG/{card.Quality}/{card.Dere}_Stats.png";
                 default: return $"./Pictures/PW/CG/{card.Quality}/Stats.png";
             }
         }
 
         private void ApplyUltimateStats(Image<Rgba32> image, Card card)
         {
-            var statsStr = $"./Pictures/PW/CG/{card.Quality}/Stats.png";
-
-            if (HasCustomStatsString(card))
-                statsStr = GetCustomStatsString(card);
-
+            var statsStr = GetStatsString(card);
             if (File.Exists(statsStr))
             {
                 using (var stats = Image.Load(statsStr))
