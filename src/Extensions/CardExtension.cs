@@ -433,8 +433,10 @@ namespace Sanakan.Extensions
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateHard:
                 case CardExpedition.UltimateMedium:
+                    return card.Rarity == Rarity.SSS;
+
                 case CardExpedition.UltimateHardcore:
-                    return card.FromFigure;
+                    return card.Rarity == Rarity.SSS && !card.HasTag("ulubione");
 
                 case CardExpedition.LightExp:
                 case CardExpedition.LightItems:
@@ -498,10 +500,13 @@ namespace Sanakan.Extensions
                     return $"heroiczn{end}";
 
                 case CardExpedition.UltimateEasy:
+                    return $"niezwykł{end} (E)";
                 case CardExpedition.UltimateMedium:
+                    return $"niezwykł{end} (M)";
                 case CardExpedition.UltimateHard:
+                    return $"niezwykł{end} (H)";
                 case CardExpedition.UltimateHardcore:
-                    return $"niezwykł{end}";
+                    return $"niezwykł{end} (HH)";
 
                 default:
                 case CardExpedition.None:
@@ -617,6 +622,70 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static void IncAttackBy(this Card card, int value)
+        {
+            if (card.FromFigure)
+            {
+                card.AttackBonus += value;
+            }
+            else
+            {
+                var max = card.Rarity.GetAttackMax();
+                card.Attack += value;
+
+                if (card.Attack > max)
+                    card.Attack = max;
+            }
+        }
+
+        public static void DecAttackBy(this Card card, int value)
+        {
+            if (card.FromFigure)
+            {
+                card.AttackBonus -= value;
+            }
+            else
+            {
+                var min = card.Rarity.GetAttackMin();
+                card.Attack -= value;
+
+                if (card.Attack < min)
+                    card.Attack = min;
+            }
+        }
+
+        public static void IncDefenceBy(this Card card, int value)
+        {
+            if (card.FromFigure)
+            {
+                card.DefenceBonus += value;
+            }
+            else
+            {
+                var max = card.Rarity.GetDefenceMax();
+                card.Defence += value;
+
+                if (card.Defence > max)
+                    card.Defence = max;
+            }
+        }
+
+        public static void DecDefenceBy(this Card card, int value)
+        {
+            if (card.FromFigure)
+            {
+                card.DefenceBonus -= value;
+            }
+            else
+            {
+                var min = card.Rarity.GetDefenceMin();
+                card.Defence -= value;
+
+                if (card.Defence < min)
+                    card.Defence = min;
+            }
+        }
+
         public static string GetImage(this Card card) => card.CustomImage ?? card.Image;
 
         public static async Task Update(this Card card, IUser user, Shinden.ShindenClient client)
@@ -709,11 +778,17 @@ namespace Sanakan.Extensions
                 case CardExpedition.LightItemWithExp:
                     return 0.07;
 
-                default:
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
+                    return 1;
+
                 case CardExpedition.UltimateHard:
+                    return 2;
+
                 case CardExpedition.UltimateHardcore:
+                    return 0.5;
+
+                default:
                     return 0;
             }
         }
@@ -780,11 +855,16 @@ namespace Sanakan.Extensions
                     if (addOFK > 10) addOFK = 10;
                     break;
 
-                default:
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
                 case CardExpedition.UltimateHard:
                 case CardExpedition.UltimateHardcore:
+                    param *= (int) card.Quality + 10;
+                    affOffset = 0;
+                    addOFK = 0;
+                    break;
+
+                default:
                     return 0;
             }
 

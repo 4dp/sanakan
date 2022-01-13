@@ -66,12 +66,19 @@ namespace Sanakan.TypeReaders
                     return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.LightItems));
 
                 case "ue":
+                case "sandbox":
+                case "piaskownica":
                     return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.UltimateEasy));
                 case "um":
+                case "spacer":
+                case "stroll":
                     return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.UltimateMedium));
                 case "uh":
+                case "sprint":
                     return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.UltimateHard));
                 case "uhh":
+                case "maraton":
+                case "marathon":
                     return Task.FromResult(TypeReaderResult.FromSuccess(CardExpedition.UltimateHardcore));
 
                 default:

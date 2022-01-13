@@ -150,6 +150,54 @@ namespace Sanakan.Services.PocketWaifu
                     {EventType.LoseCard,    new Tuple<int, int>(-7,   -8)},
                     {EventType.NewCard,     new Tuple<int, int>(-9,   -10)},
                 }
+            },
+            {CardExpedition.UltimateMedium, new Dictionary<EventType, Tuple<int, int>>
+                {
+                    {EventType.MoreItems,   new Tuple<int, int>(-1,   -2)},
+                    {EventType.MoreExp,     new Tuple<int, int>(-3,   -4)},
+                    {EventType.IncAtk,      new Tuple<int, int>(0,    2499)},
+                    {EventType.IncDef,      new Tuple<int, int>(2500, 4999)},
+                    {EventType.AddReset,    new Tuple<int, int>(-5,   -6)},
+                    {EventType.Fight,       new Tuple<int, int>(-7,   -8)},
+                    {EventType.ChangeDere,  new Tuple<int, int>(-9,   -10)},
+                    {EventType.DecAtk,      new Tuple<int, int>(5000, 7499)},
+                    {EventType.DecDef,      new Tuple<int, int>(7500, 10000)},
+                    {EventType.DecAff,      new Tuple<int, int>(-11,  -12)},
+                    {EventType.LoseCard,    new Tuple<int, int>(-13,  -14)},
+                    {EventType.NewCard,     new Tuple<int, int>(-15,  -16)},
+                }
+            },
+            {CardExpedition.UltimateHard, new Dictionary<EventType, Tuple<int, int>>
+                {
+                    {EventType.MoreItems,   new Tuple<int, int>(-1,   -2)},
+                    {EventType.MoreExp,     new Tuple<int, int>(-3,   -4)},
+                    {EventType.IncAtk,      new Tuple<int, int>(-5,   -6)},
+                    {EventType.IncDef,      new Tuple<int, int>(-7,   -8)},
+                    {EventType.AddReset,    new Tuple<int, int>(-9,   -10)},
+                    {EventType.Fight,       new Tuple<int, int>(-11,  -12)},
+                    {EventType.ChangeDere,  new Tuple<int, int>(-13,  -14)},
+                    {EventType.DecAtk,      new Tuple<int, int>(0,    4999)},
+                    {EventType.DecDef,      new Tuple<int, int>(5000, 10000)},
+                    {EventType.DecAff,      new Tuple<int, int>(-15,  -16)},
+                    {EventType.LoseCard,    new Tuple<int, int>(-17,  -18)},
+                    {EventType.NewCard,     new Tuple<int, int>(-19,  -20)},
+                }
+            },
+            {CardExpedition.UltimateHardcore, new Dictionary<EventType, Tuple<int, int>>
+                {
+                    {EventType.MoreItems,   new Tuple<int, int>(-1,   -2)},
+                    {EventType.MoreExp,     new Tuple<int, int>(-3,   -4)},
+                    {EventType.IncAtk,      new Tuple<int, int>(-5,   -6)},
+                    {EventType.IncDef,      new Tuple<int, int>(-7,   -8)},
+                    {EventType.AddReset,    new Tuple<int, int>(-9,   -10)},
+                    {EventType.Fight,       new Tuple<int, int>(-11,  -12)},
+                    {EventType.ChangeDere,  new Tuple<int, int>(-13,  -14)},
+                    {EventType.DecAtk,      new Tuple<int, int>(0,    1999)},
+                    {EventType.DecDef,      new Tuple<int, int>(2000, 3999)},
+                    {EventType.DecAff,      new Tuple<int, int>(4000, 8999)},
+                    {EventType.LoseCard,    new Tuple<int, int>(9000, 10000)},
+                    {EventType.NewCard,     new Tuple<int, int>(-15,  -16)},
+                }
             }
         };
 
@@ -265,25 +313,15 @@ namespace Sanakan.Services.PocketWaifu
 
                 case EventType.IncAtk:
                 {
-                    var max = card.Rarity.GetAttackMax();
-                    card.Attack += aVal;
-
-                    if (card.Attack > max)
-                        card.Attack = max;
-
-                    msg += $"Wydarzenie: Zwiększenie ataku do {card.Attack}.\n";
+                    card.IncAttackBy(aVal);
+                    msg += $"Wydarzenie: Zwiększenie ataku do {card.GetAttackWithBonus()}.\n";
                 }
                 break;
 
                 case EventType.IncDef:
                 {
-                    var max = card.Rarity.GetDefenceMax();
-                    card.Defence += aVal;
-
-                    if (card.Defence > max)
-                        card.Defence = max;
-
-                    msg += $"Wydarzenie: Zwiększenie obrony do {card.Defence}.\n";
+                    card.IncDefenceBy(aVal);
+                    msg += $"Wydarzenie: Zwiększenie obrony do {card.GetDefenceWithBonus()}.\n";
                 }
                 break;
 
@@ -324,25 +362,15 @@ namespace Sanakan.Services.PocketWaifu
 
                 case EventType.DecAtk:
                 {
-                    var min = card.Rarity.GetAttackMin();
-                    card.Attack -= aVal;
-
-                    if (card.Attack < min)
-                        card.Attack = min;
-
-                    msg += $"Wydarzenie: Zmniejszenie ataku do {card.Attack}.\n";
+                    card.DecAttackBy(aVal);
+                    msg += $"Wydarzenie: Zmniejszenie ataku do {card.GetAttackWithBonus()}.\n";
                 }
                 break;
 
                 case EventType.DecDef:
                 {
-                    var min = card.Rarity.GetDefenceMin();
-                    card.Defence -= aVal;
-
-                    if (card.Defence < min)
-                        card.Defence = min;
-
-                    msg += $"Wydarzenie: Zmniejszenie obrony do {card.Defence}.\n";
+                    card.DecDefenceBy(aVal);
+                    msg += $"Wydarzenie: Zmniejszenie obrony do {card.GetDefenceWithBonus()}.\n";
                 }
                 break;
 

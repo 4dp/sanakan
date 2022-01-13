@@ -58,6 +58,19 @@ namespace Sanakan.Services.PocketWaifu
             { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    1,    0.5,   1     }, //Yato
         };
 
+        private static List<ItemType> _ultimateExpeditionItems = new List<ItemType>
+        {
+            ItemType.FigureBodyPart,
+            ItemType.FigureClothesPart,
+            ItemType.FigureHeadPart,
+            ItemType.FigureLeftArmPart,
+            ItemType.FigureLeftLegPart,
+            ItemType.FigureRightArmPart,
+            ItemType.FigureRightLegPart,
+            ItemType.FigureUniversalPart,
+            ItemType.FigureSkeleton
+        };
+
         private static Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>> _chanceOfItemsInExpedition = new Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>>
         {
             {CardExpedition.NormalItemWithExp, new Dictionary<ItemType, Tuple<int, int>>
@@ -315,9 +328,8 @@ namespace Sanakan.Services.PocketWaifu
             return Quality.Broken;
         }
 
-        public Quality RandomizeItemQualityFromExpedition()
+        private Quality RandomizeItemQualityFromExpeditionDefault(int num)
         {
-            var num = Fun.GetRandomValue(100000);
             if (num < 5) return Quality.Omega;
             if (num < 50) return Quality.Sigma;
             if (num < 200) return Quality.Lambda;
@@ -327,6 +339,53 @@ namespace Sanakan.Services.PocketWaifu
             if (num < 10000) return Quality.Beta;
             if (num < 20000) return Quality.Alpha;
             return Quality.Broken;
+        }
+
+        public Quality RandomizeItemQualityFromExpedition(CardExpedition type)
+        {
+            var num = Fun.GetRandomValue(100000);
+            switch (type)
+            {
+                case CardExpedition.UltimateEasy:
+                    if (num < 3000) return Quality.Delta;
+                    if (num < 25000) return Quality.Gamma;
+                    if (num < 45000) return Quality.Beta;
+                    return Quality.Alpha;
+
+                case CardExpedition.UltimateMedium:
+                    if (num < 1000) return Quality.Zeta;
+                    if (num < 2000) return Quality.Epsilon;
+                    if (num < 5000) return Quality.Delta;
+                    if (num < 35000) return Quality.Gamma;
+                    if (num < 55000) return Quality.Beta;
+                    return Quality.Alpha;
+
+                case CardExpedition.UltimateHard:
+                    if (num < 50) return Quality.Sigma;
+                    if (num < 200) return Quality.Lambda;
+                    if (num < 600) return Quality.Theta;
+                    if (num < 1500) return Quality.Zeta;
+                    if (num < 5000) return Quality.Epsilon;
+                    if (num < 12000) return Quality.Delta;
+                    if (num < 25000) return Quality.Gamma;
+                    if (num < 45000) return Quality.Beta;
+                    return Quality.Alpha;
+
+                case CardExpedition.UltimateHardcore:
+                    if (num < 50) return Quality.Omega;
+                    if (num < 150) return Quality.Sigma;
+                    if (num < 2000) return Quality.Lambda;
+                    if (num < 5000) return Quality.Theta;
+                    if (num < 10000) return Quality.Zeta;
+                    if (num < 20000) return Quality.Epsilon;
+                    if (num < 30000) return Quality.Delta;
+                    if (num < 50000) return Quality.Gamma;
+                    if (num < 80000) return Quality.Beta;
+                    return Quality.Alpha;
+
+                default:
+                    return RandomizeItemQualityFromExpeditionDefault(num);
+            }
         }
 
         public ItemWithCost[] GetItemsWithCost()
@@ -1741,11 +1800,17 @@ namespace Sanakan.Services.PocketWaifu
                 case CardExpedition.DarkExp:
                     return Services.Fun.TakeATry(5);
 
+                case CardExpedition.UltimateMedium:
+                    return Services.Fun.TakeATry(6);
+
+                case CardExpedition.UltimateHard:
+                    return Services.Fun.TakeATry(2);
+
+                case CardExpedition.UltimateHardcore:
+                    return Services.Fun.TakeATry(4);
+
                 default:
                 case CardExpedition.UltimateEasy:
-                case CardExpedition.UltimateMedium:
-                case CardExpedition.UltimateHard:
-                case CardExpedition.UltimateHardcore:
                     return false;
             }
         }
@@ -1773,16 +1838,32 @@ namespace Sanakan.Services.PocketWaifu
             return value + (duration * baseValue);
         }
 
+        private static ItemType GetItemFromUltimateExpedition()
+        {
+            return Fun.GetOneRandomFrom(_ultimateExpeditionItems);
+        }
+
         private Item RandomizeItemForExpedition(CardExpedition expedition)
         {
-            var c = _chanceOfItemsInExpedition[expedition];
-
             var quality = Quality.Broken;
             if (expedition.HasDifferentQualitiesOnExpedition())
             {
-                quality = RandomizeItemQualityFromExpedition();
+                quality = RandomizeItemQualityFromExpedition(expedition);
             }
 
+            switch (expedition)
+            {
+                case CardExpedition.UltimateEasy:
+                case CardExpedition.UltimateMedium:
+                case CardExpedition.UltimateHard:
+                case CardExpedition.UltimateHardcore:
+                    return GetItemFromUltimateExpedition().ToItem(1, quality);
+
+                default:
+                break;
+            }
+
+            var c = _chanceOfItemsInExpedition[expedition];
             switch (Fun.GetRandomValue(10000))
             {
                 case int n when (n < c[ItemType.AffectionRecoverySmall].Item2
