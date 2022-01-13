@@ -1615,13 +1615,17 @@ namespace Sanakan.Services.PocketWaifu
 
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
-                    return 5.4;
+                    cnt = 1.4;
+                    break;
 
                 case CardExpedition.UltimateHard:
-                    return 8.5;
+                    cnt =  2.3;
+                    break;
+
 
                 case CardExpedition.UltimateHardcore:
-                    return 10.5;
+                    cnt =  3.2;
+                    break;
 
                 default:
                 case CardExpedition.LightExp:
@@ -1930,15 +1934,19 @@ namespace Sanakan.Services.PocketWaifu
                 case CardExpedition.ExtremeItemWithExp:
                     return true;
 
-                case CardExpedition.LightExp:
-                case CardExpedition.DarkExp:
-                    return false;
-
-                default:
                 case CardExpedition.UltimateEasy:
+                    return !Services.Fun.TakeATry(15);
+
                 case CardExpedition.UltimateMedium:
+                    return !Services.Fun.TakeATry(20);
+
                 case CardExpedition.UltimateHard:
                 case CardExpedition.UltimateHardcore:
+                    return true;
+
+                default:
+                case CardExpedition.LightExp:
+                case CardExpedition.DarkExp:
                     return false;
             }
         }
