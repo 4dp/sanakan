@@ -1613,15 +1613,19 @@ namespace Sanakan.Services.PocketWaifu
                     cnt = 7.2;
                     break;
 
-                case CardExpedition.LightExp:
-                case CardExpedition.DarkExp:
-                    return 0;
-
-                default:
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
+                    return 5.4;
+
                 case CardExpedition.UltimateHard:
+                    return 8.5;
+
                 case CardExpedition.UltimateHardcore:
+                    return 10.5;
+
+                default:
+                case CardExpedition.LightExp:
+                case CardExpedition.DarkExp:
                     return 0;
             }
 
