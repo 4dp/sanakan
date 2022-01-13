@@ -859,7 +859,7 @@ namespace Sanakan.Extensions
                 case CardExpedition.UltimateMedium:
                 case CardExpedition.UltimateHard:
                 case CardExpedition.UltimateHardcore:
-                    param *= (int) card.Quality + 10;
+                    param *= (int) card.Quality + 2;
                     affOffset = 0;
                     addOFK = 0;
                     break;

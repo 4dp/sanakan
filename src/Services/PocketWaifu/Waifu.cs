@@ -1622,9 +1622,8 @@ namespace Sanakan.Services.PocketWaifu
                     cnt =  2.3;
                     break;
 
-
                 case CardExpedition.UltimateHardcore:
-                    cnt =  3.2;
+                    cnt =  1.1;
                     break;
 
                 default:
