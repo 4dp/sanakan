@@ -622,6 +622,31 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static void DecAffectionOnExpeditionBy(this Card card, double value)
+        {
+            card.Affection -= value;
+
+            switch (card.Expedition)
+            {
+                case CardExpedition.UltimateEasy:
+                {
+                    if (card.Affection < 0)
+                        card.Affection = 0;
+                }
+                break;
+
+                case CardExpedition.UltimateMedium:
+                {
+                    if (card.Affection < -100)
+                        card.Affection = -100;
+                }
+                break;
+
+                default:
+                break;
+            }
+        }
+
         public static void IncAttackBy(this Card card, int value)
         {
             if (card.FromFigure)

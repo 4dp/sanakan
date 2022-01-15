@@ -1744,7 +1744,7 @@ namespace Sanakan.Services.PocketWaifu
             }
 
             card.ExpCnt += totalExp;
-            card.Affection -= affectionCost;
+            card.DecAffectionOnExpeditionBy(affectionCost);
 
             double minAff = 0;
             reward += $"Zdobywa:\n+{totalExp.ToString("F")} exp ({card.ExpCnt.ToString("F")})\n";
