@@ -806,7 +806,7 @@ namespace Sanakan.Modules
                     if (checkWishlists && count == 1)
                     {
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                        openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
+                        openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
                     }
                     openString += $"{card.GetString(false, false, true)}\n";
                 }
@@ -1332,7 +1332,7 @@ namespace Sanakan.Modules
                 await db.SaveChangesAsync();
 
                 var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                var wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? "💗 " : "🤍 ");
+                var wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
 
