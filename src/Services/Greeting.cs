@@ -88,19 +88,19 @@ namespace Sanakan.Services
             }
         }
 
-        private async Task UserLeftAsync(SocketGuildUser user)
+        private async Task UserLeftAsync(SocketGuild guild, SocketUser user)
         {
             if (user.IsBot || user.IsWebhook) return;
 
-            if (!_config.Get().BlacklistedGuilds.Any(x => x == user.Guild.Id))
+            if (!_config.Get().BlacklistedGuilds.Any(x => x == guild.Id))
             {
                 using (var db = new Database.GuildConfigContext(_config))
                 {
-                    var config = await db.GetCachedGuildFullConfigAsync(user.Guild.Id);
+                    var config = await db.GetCachedGuildFullConfigAsync(guild.Id);
                     if (config?.GoodbyeMessage == null) return;
                     if (config.GoodbyeMessage == "off") return;
 
-                    await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), user.Guild.GetTextChannel(config.GreetingChannel));
+                    await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), guild.GetTextChannel(config.GreetingChannel));
                 }
             }
 
@@ -138,7 +138,7 @@ namespace Sanakan.Services
             if (channel != null) await channel.SendMessageAsync(message);
         }
 
-        private string ReplaceTags(SocketGuildUser user, string message)
-            => message.Replace("^nick", user.Nickname ?? user.Username).Replace("^mention", user.Mention);
+        private string ReplaceTags(SocketUser user, string message)
+            => message.Replace("^nick", user.Username).Replace("^mention", user.Mention);
     }
 }
