@@ -339,7 +339,7 @@ namespace Sanakan.Modules
                             Description = $"Na [loterii]({msg.GetJumpUrl()}) zdobyłeś {cardsIds.Count} kart."
                         };
 
-                        var pw = await winner.GetOrCreateDMChannelAsync();
+                        var pw = await winner.CreateDMChannelAsync();
                         if (pw != null) await pw.SendMessageAsync("", embed: privEmb.Build());
                     }
                     catch(Exception){}

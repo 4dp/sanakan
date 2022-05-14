@@ -147,7 +147,7 @@ namespace Sanakan.Services.Session
             await RunSessions(userSessions, new SessionContext(new SocketCommandContext(_client, msg))).ConfigureAwait(false);
         }
 
-        private async Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        private async Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
         {
             if (!reaction.User.IsSpecified) return;
             var user = reaction.User.Value;
@@ -162,16 +162,19 @@ namespace Sanakan.Services.Session
             var thisUser = _client.GetUser(user.Id);
             if (thisUser == null) return;
 
-            var msg = await channel.GetMessageAsync(message.Id);
+            var chan = await channel.GetOrDownloadAsync() as ISocketMessageChannel;
+            if (chan == null) return;
+
+            var msg = await chan.GetMessageAsync(message.Id);
             if (msg == null) return;
 
             var thisMessage = msg as SocketUserMessage;
             if (thisMessage == null) return;
 
-            await RunSessions(userSessions, new SessionContext(channel, thisUser, thisMessage, _client, reaction, true)).ConfigureAwait(false);
+            await RunSessions(userSessions, new SessionContext(chan, thisUser, thisMessage, _client, reaction, true)).ConfigureAwait(false);
         }
 
-        private async Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        private async Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
         {
             if (!reaction.User.IsSpecified) return;
             var user = reaction.User.Value;
@@ -186,13 +189,16 @@ namespace Sanakan.Services.Session
             var thisUser = _client.GetUser(user.Id);
             if (thisUser == null) return;
 
-            var msg = await channel.GetMessageAsync(message.Id);
+            var chan = await channel.GetOrDownloadAsync() as ISocketMessageChannel;
+            if (chan == null) return;
+
+            var msg = await chan.GetMessageAsync(message.Id);
             if (msg == null) return;
 
             var thisMessage = msg as SocketUserMessage;
             if (thisMessage == null) return;
 
-            await RunSessions(userSessions, new SessionContext(channel, thisUser, thisMessage, _client, reaction, false)).ConfigureAwait(false);
+            await RunSessions(userSessions, new SessionContext(chan, thisUser, thisMessage, _client, reaction, false)).ConfigureAwait(false);
         }
 
         private void ToggleAutoValidation(bool on)

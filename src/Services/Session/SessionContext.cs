@@ -18,7 +18,7 @@ namespace Sanakan.Services.Session
             User = context.User;
         }
 
-        public SessionContext(ISocketMessageChannel channel, SocketUser user, SocketUserMessage message, 
+        public SessionContext(ISocketMessageChannel channel, SocketUser user, SocketUserMessage message,
             DiscordSocketClient client, SocketReaction reaction, bool reactionAdded)
         {
             ReactionAdded = reactionAdded ? reaction : null;

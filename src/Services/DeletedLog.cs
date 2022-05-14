@@ -47,7 +47,7 @@ namespace Sanakan.Services
             await Task.CompletedTask;
         }
 
-        private async Task HandleDeletedMsgAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
+        private async Task HandleDeletedMsgAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel)
         {
             if (!message.HasValue) return;
 

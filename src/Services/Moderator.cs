@@ -357,7 +357,7 @@ namespace Sanakan.Services
         {
             try
             {
-                var dm = await user.GetOrCreateDMChannelAsync();
+                var dm = await user.CreateDMChannelAsync();
                 if (dm != null)
                 {
                     await dm.SendMessageAsync($"Elo! Otrzymałeś ostrzeżenie o treści:\n {reason}\n\nPozdrawiam serdecznie!".TrimToLength(2000));
@@ -413,7 +413,7 @@ namespace Sanakan.Services
 
             try
             {
-                var dm = await user.GetOrCreateDMChannelAsync();
+                var dm = await user.CreateDMChannelAsync();
                 if (dm != null)
                 {
                     await dm.SendMessageAsync($"Elo! Zostałeś ukarany mutem na {info.DurationInHours/24} dni {info.DurationInHours%24} godzin.\n\nPodany powód: {info.Reason}\n\nPozdrawiam serdecznie!".TrimToLength(2000));

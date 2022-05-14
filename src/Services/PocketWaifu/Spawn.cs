@@ -183,7 +183,7 @@ namespace Sanakan.Services.PocketWaifu
                             Description = $"Na [polowaniu]({msg.GetJumpUrl()}) zdobyłeś: {newCard.GetString(false, false, true)}"
                         };
 
-                        var priv = await winner.GetOrCreateDMChannelAsync();
+                        var priv = await winner.CreateDMChannelAsync();
                         if (priv != null) await priv.SendMessageAsync("", false, privEmb.Build());
                     }
                     catch (Exception ex)

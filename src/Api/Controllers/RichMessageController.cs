@@ -124,7 +124,7 @@ namespace Sanakan.Api.Controllers
                     var user = _client.GetUser(rmc.ChannelId);
                     if (user == null) continue;
 
-                    var pwCh = await user.GetOrCreateDMChannelAsync();
+                    var pwCh = await user.CreateDMChannelAsync();
                     var pwm = await pwCh.SendMessageAsync("", embed: message.ToEmbed());
 
                     msgList.Add(pwm.Id);

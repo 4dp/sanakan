@@ -45,7 +45,7 @@ namespace Sanakan.Modules
 
                     try
                     {
-                        var dm = await Context.User.GetOrCreateDMChannelAsync();
+                        var dm = await Context.User.CreateDMChannelAsync();
                         foreach (var ep in episodes)
                         {
                             await dm.SendMessageAsync("", false, ep.ToEmbed());

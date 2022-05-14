@@ -78,7 +78,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     var msg = await dm.SendMessageAsync("", embed: session.BuildPage(0));
                     await msg.AddReactionsAsync( new [] { new Emoji("⬅"), new Emoji("➡") });
 
@@ -1887,7 +1887,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in await _waifu.GetContentOfWishlist(c, p, t))
                     {
                         await dm.SendMessageAsync("", embed: emb);
@@ -1953,7 +1953,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
@@ -2025,7 +2025,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
@@ -2664,7 +2664,7 @@ namespace Sanakan.Modules
 
                     try
                     {
-                        var dm = await Context.User.GetOrCreateDMChannelAsync();
+                        var dm = await Context.User.CreateDMChannelAsync();
                         await dm.SendMessageAsync("", embed: _waifu.GetActiveList(active));
                         await dm.CloseAsync();
 
@@ -2749,7 +2749,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in msgs)
                     {
                         await dm.SendMessageAsync("", embed: emb);
@@ -2799,7 +2799,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);
@@ -2846,7 +2846,7 @@ namespace Sanakan.Modules
 
                 try
                 {
-                    var dm = await Context.User.GetOrCreateDMChannelAsync();
+                    var dm = await Context.User.CreateDMChannelAsync();
                     foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
                     {
                         await dm.SendMessageAsync("", embed: emb);

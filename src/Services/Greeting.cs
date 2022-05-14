@@ -77,7 +77,7 @@ namespace Sanakan.Services
 
                 try
                 {
-                    var pw = await user.GetOrCreateDMChannelAsync();
+                    var pw = await user.CreateDMChannelAsync();
                     await pw.SendMessageAsync(ReplaceTags(user, config.WelcomeMessagePW));
                     await pw.CloseAsync();
                 }
