@@ -81,6 +81,7 @@ namespace Sanakan
 
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
+                GatewayIntents = GatewayIntents.All,
                 AlwaysDownloadUsers = true,
                 MessageCacheSize = 200,
             });
