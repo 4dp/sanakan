@@ -1,12 +1,13 @@
 ﻿#pragma warning disable 1591
 
+using System.Linq;
 using Sanakan.Database.Models;
 
 namespace Sanakan.Extensions
 {
     public static class FigureExtension
     {
-        public static string ToName(this Quality q)
+        public static string ToName(this Quality q, string broken = "")
         {
             switch (q)
             {
@@ -23,7 +24,26 @@ namespace Sanakan.Extensions
 
                 default:
                 case Quality.Broken:
-                    return "";
+                    return broken;
+            }
+        }
+
+        public static string ToName(this FigurePart p)
+        {
+            switch (p)
+            {
+                case FigurePart.Body:     return "Tułów";
+                case FigurePart.Clothes:  return "Ciuchy";
+                case FigurePart.Head:     return "Głowa";
+                case FigurePart.LeftArm:  return "Lewa ręka";
+                case FigurePart.LeftLeg:  return "Lewa noga";
+                case FigurePart.RightArm: return "Prawa ręka";
+                case FigurePart.RightLeg: return "Prawa noga";
+                case FigurePart.All:      return "Uniwersalna";
+
+                default:
+                case FigurePart.None:
+                    return "brak";
             }
         }
 
@@ -144,6 +164,30 @@ namespace Sanakan.Extensions
 
             figure.PartExp = 0;
             return true;
+        }
+
+        public static string IsActive(this Figure fig)
+        {
+            return fig.IsFocus ? "**A**" : "";
+        }
+
+        public static string GetFiguresList(this GameDeck deck)
+        {
+            if (deck.Figures.Count < 1) return "Nie posiadasz figurek.";
+
+            return string.Join("\n", deck.Figures.Select(x => $"**[{x.Id}]** *{x.SkeletonQuality.ToName()}* [{x.Name}]({Shinden.API.Url.GetCharacterURL(x.Character)}) {x.IsActive()}"));
+        }
+
+        public static string GetDesc(this Figure fig)
+        {
+            var name =  $"[{fig.Name}]({Shinden.API.Url.GetCharacterURL(fig.Character)})";
+
+            return $"**[{fig.Id}] Figurka {fig.SkeletonQuality.ToName()}**\n{name}\n*{fig.ExpCnt} exp*\n\n"
+                + $"**Aktywna część:**\n {fig.FocusedPart.ToName()} *{fig.PartExp} exp*\n\n"
+                + $"**Części:**\n*Głowa*: {fig.HeadQuality.ToName("brak")}\n*Tułów*: {fig.BodyQuality.ToName("brak")}\n"
+                + $"*Prawa ręka*: {fig.RightArmQuality.ToName("brak")}\n*Lewa ręka*: {fig.LeftArmQuality.ToName("brak")}\n"
+                + $"*Prawa noga*: {fig.RightLegQuality.ToName("brak")}\n*Lewa noga*: {fig.LeftLegQuality.ToName("brak")}\n"
+                + $"*Ciuchy*: {fig.ClothesQuality.ToName("brak")}";
         }
     }
 }

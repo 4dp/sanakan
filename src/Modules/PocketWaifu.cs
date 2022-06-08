@@ -162,6 +162,68 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("figurki")]
+        [Alias("figures")]
+        [Summary("pozwala wyświetlić liste figurę/ustawić aktywną figurkę")]
+        [Remarks("2"), RequireWaifuCommandChannel]
+        public async Task ShowFigureListAsync([Summary("ID")]ulong id = 0)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var deck = db.GameDecks.Include(x => x.Figures).FirstOrDefault(x => x.Id == Context.User.Id);
+                if (id > 0)
+                {
+                    var oldFig = deck.Figures.FirstOrDefault(x => x.IsFocus);
+                    var fig = deck.Figures.FirstOrDefault(x => x.Id == id);
+                    if (fig == null)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} taka figurka nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                    if (oldFig != null)
+                    {
+                        if (fig.Id == oldFig.Id)
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} ta figurką już jest wybrana.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+
+                        oldFig.IsFocus = false;
+                    }
+
+                    fig.IsFocus = true;
+
+                    await db.SaveChangesAsync();
+
+                    await ReplyAsync("", embed: $"{Context.User.Mention} ustawiono figurkę {fig.Id} jako aktywną.".ToEmbedMessage(EMType.Success).Build());
+                }
+                else
+                {
+                    await ReplyAsync("", embed: deck.GetFiguresList().TrimToLength(2000).ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+                }
+            }
+        }
+
+        [Command("figurka", RunMode = RunMode.Async)]
+        [Alias("figure")]
+        [Summary("pozwala wyświetlić figurkę")]
+        [Remarks("2"), RequireWaifuCommandChannel]
+        public async Task ShowFigureAsync([Summary("ID")]ulong id = 0)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var deck = db.GameDecks.Include(x => x.Figures).Where(x => x.Id == Context.User.Id).AsNoTracking().FirstOrDefault();
+                var fig = deck.Figures.FirstOrDefault(x => x.Id == id || x.IsFocus);
+                if (fig == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} taka figurka nie istnieje.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: fig.GetDesc().TrimToLength(2000).ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+            }
+        }
+
         [Command("karta-", RunMode = RunMode.Async)]
         [Alias("card-")]
         [Summary("pozwala wyświetlić kartę w prostej postaci")]
