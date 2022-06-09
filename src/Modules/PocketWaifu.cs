@@ -204,6 +204,11 @@ namespace Sanakan.Modules
             }
         }
 
+        //TODO: select figure part
+        //TODO: collect exp for part
+        //TODO: collect exp for figure
+        //TODO: end creating figure
+
         [Command("figurka", RunMode = RunMode.Async)]
         [Alias("figure")]
         [Summary("pozwala wyświetlić figurkę")]
