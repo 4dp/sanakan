@@ -82,8 +82,9 @@ namespace Sanakan
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 GatewayIntents = GatewayIntents.All,
+                LogLevel = LogSeverity.Error,
                 AlwaysDownloadUsers = true,
-                MessageCacheSize = 200,
+                MessageCacheSize = 200
             });
 
             _client.Log += log =>
@@ -94,7 +95,7 @@ namespace Sanakan
 
             var tmpCnf = _config.Get();
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
-                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger);
+                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger, LogLevel.Error);
 
             _helper = new Helper(_config);
             _events = new Events(_shindenClient);
