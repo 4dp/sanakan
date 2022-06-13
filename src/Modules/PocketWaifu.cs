@@ -437,7 +437,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Expedition != CardExpedition.None && !noCardOperation)
+                if (!noCardOperation && card.Expedition != CardExpedition.None)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -742,7 +742,7 @@ namespace Sanakan.Modules
                             var expFromPart = item.ToExpForPart(activeFigure.SkeletonQuality);
                             activeFigure.PartExp += expFromPart;
 
-                            embed.Description += $"Dodano do wybranej części figurki {expFromPart.ToString("F")} punktów doświadczenia. W sumie posiada ich {activeFigure.PartExp.ToString("F")}.";
+                            embed.Description += $"Dodano do wybranej części figurki {expFromPart.ToString("F")} punktów konstrukcji. W sumie posiada ich {activeFigure.PartExp.ToString("F")}.";
                         }
                         else
                         {
