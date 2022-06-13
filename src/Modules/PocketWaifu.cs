@@ -224,7 +224,7 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} podano niepoprawną część figurki.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
-                if (fig.GetQualityOffPart(part) != Quality.Broken)
+                if (fig.GetQualityOfPart(part) != Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} dana część została już zainstalowana do figurki i nie można zbierać na nią doświadczenia.".ToEmbedMessage(EMType.Error).Build());
                     return;
