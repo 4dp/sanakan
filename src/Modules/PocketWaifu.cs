@@ -208,7 +208,7 @@ namespace Sanakan.Modules
         [Alias("select part")]
         [Summary("pozwala wybrać część w aktywnej figurcje do przekazywania doświadczenia")]
         [Remarks("lewa noga"), RequireWaifuCommandChannel]
-        public async Task SelectActiveFigurePartAsync([Summary("część")]FigurePart part)
+        public async Task SelectActiveFigurePartAsync([Summary("część")][Remainder]FigurePart part)
         {
             using (var db = new Database.UserContext(Config))
             {
