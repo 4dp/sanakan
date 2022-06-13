@@ -237,7 +237,6 @@ namespace Sanakan.Modules
             }
         }
 
-        //TODO: collect exp for part
         //TODO: collect exp for figure
         //TODO: end creating figure
 
@@ -369,6 +368,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                bool itemToExp = false;
+                if (detail.EndsWith("!exp"))
+                {
+                    itemToExp = true;
+                    detail = detail.Remove(detail.Length - 4);
+                }
+
                 var dis = int.TryParse(detail, out itemCnt);
                 if (itemCnt < 1)
                 {
@@ -395,6 +401,17 @@ namespace Sanakan.Modules
                         if (dis) imgCnt = itemCnt;
                         if (imgCnt < 0) imgCnt = 0;
                         itemCnt = 1;
+                        break;
+
+                    case ItemType.FigureUniversalPart:
+                    case ItemType.FigureHeadPart:
+                    case ItemType.FigureBodyPart:
+                    case ItemType.FigureLeftArmPart:
+                    case ItemType.FigureRightArmPart:
+                    case ItemType.FigureLeftLegPart:
+                    case ItemType.FigureRightLegPart:
+                    case ItemType.FigureClothesPart:
+                        if (!itemToExp) goto default;
                         break;
 
                     default:
@@ -713,22 +730,39 @@ namespace Sanakan.Modules
                     case ItemType.FigureRightArmPart:
                     case ItemType.FigureRightLegPart:
                     case ItemType.FigureUniversalPart:
-                        if (!activeFigure.CanAddPart(item))
+                        if (itemToExp)
                         {
-                            await ReplyAsync("", embed: $"{Context.User.Mention} część, którą próbujesz dodać ma zbyt niską jakość.".ToEmbedMessage(EMType.Error).Build());
-                            return;
+                            var itemPartType = item.Type.GetPartType();
+                            if (activeFigure.FocusedPart != itemPartType && itemPartType != FigurePart.All)
+                            {
+                                await ReplyAsync("", embed: $"{Context.User.Mention} typy części się nie zgadzają.".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+
+                            var expFromPart = item.ToExpForPart(activeFigure.SkeletonQuality);
+                            activeFigure.PartExp += expFromPart;
+
+                            embed.Description += $"Dodano do wybranej części figurki {expFromPart.ToString("F")} punktów doświadczenia. W sumie posiada ich {activeFigure.PartExp.ToString("F")}.";
                         }
-                        if (!activeFigure.HasEnoughPointsToAddPart(item))
+                        else
                         {
-                            await ReplyAsync("", embed: $"{Context.User.Mention} aktywowana część ma zbyt małą ilość punktów konstrukcji, wymagana to {activeFigure.ConstructionPointsToInstall(item)}.".ToEmbedMessage(EMType.Error).Build());
-                            return;
+                            if (!activeFigure.CanAddPart(item))
+                            {
+                                await ReplyAsync("", embed: $"{Context.User.Mention} część, którą próbujesz dodać ma zbyt niską jakość.".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            if (!activeFigure.HasEnoughPointsToAddPart(item))
+                            {
+                                await ReplyAsync("", embed: $"{Context.User.Mention} aktywowana część ma zbyt małą ilość punktów konstrukcji, wymagana to {activeFigure.ConstructionPointsToInstall(item)}.".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            if (!activeFigure.AddPart(item))
+                            {
+                                await ReplyAsync("", embed: $"{Context.User.Mention} coś poszło nie tak.".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            embed.Description += $"Dodano część do figurki.";
                         }
-                        if (!activeFigure.AddPart(item))
-                        {
-                            await ReplyAsync("", embed: $"{Context.User.Mention} coś poszło nie tak.".ToEmbedMessage(EMType.Error).Build());
-                            return;
-                        }
-                        embed.Description += $"Dodano część do figurki.";
                         break;
 
                     default:

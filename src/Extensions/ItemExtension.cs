@@ -495,6 +495,16 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static double ToExpForPart(this Item item, Quality skeleton)
+        {
+            double diff = ((int) skeleton - (int) item.Quality) / 10f;
+            if (diff <= 0)
+            {
+                return 1 + item.Quality.ToValue() * -diff;
+            }
+            return 1 / (diff + 2);
+        }
+
         public static Figure ToFigure(this Item item, Card card)
         {
             if (item.Type != ItemType.FigureSkeleton || card.Rarity != Rarity.SSS)
