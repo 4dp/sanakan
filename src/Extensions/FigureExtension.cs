@@ -92,8 +92,11 @@ namespace Sanakan.Extensions
         }
 
         public static Quality GetQualityOfFocusedPart(this Figure figure)
+            => figure.GetQualityOffPart(figure.FocusedPart);
+
+        public static Quality GetQualityOffPart(this Figure figure, FigurePart part)
         {
-            switch (figure.FocusedPart)
+            switch (part)
             {
                 case FigurePart.Body:
                     return figure.BodyQuality;

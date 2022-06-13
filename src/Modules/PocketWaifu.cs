@@ -204,7 +204,39 @@ namespace Sanakan.Modules
             }
         }
 
-        //TODO: select figure part
+        [Command("wybierz element")]
+        [Alias("select part")]
+        [Summary("pozwala wybrać część w aktywnej figurcje do przekazywania doświadczenia")]
+        [Remarks("lewa noga"), RequireWaifuCommandChannel]
+        public async Task SelectActiveFigurePartAsync([Summary("część")]FigurePart part)
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var deck = db.GameDecks.Include(x => x.Figures).Where(x => x.Id == Context.User.Id).FirstOrDefault();
+                var fig = deck.Figures.FirstOrDefault(x => x.IsFocus);
+                if (fig == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} żadna figurka nie jest aktywna.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (part == FigurePart.None || part == FigurePart.All || fig.FocusedPart == part)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} podano niepoprawną część figurki.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (fig.GetQualityOffPart(part) != Quality.Broken)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} dana część została już zainstalowana do figurki i nie można zbierać na nią doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                fig.FocusedPart = part;
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Wybrana część to: {part.ToName()}".ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+            }
+        }
+
         //TODO: collect exp for part
         //TODO: collect exp for figure
         //TODO: end creating figure
