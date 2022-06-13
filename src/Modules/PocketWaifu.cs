@@ -231,6 +231,8 @@ namespace Sanakan.Modules
                 }
 
                 fig.FocusedPart = part;
+                fig.PartExp = 0;
+
                 await db.SaveChangesAsync();
 
                 await ReplyAsync("", embed: $"Wybrana część to: {part.ToName()}".ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
