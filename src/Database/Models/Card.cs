@@ -82,6 +82,7 @@ namespace Sanakan.Database.Models
         public double MarketValue { get; set; }
         public CardCurse Curse { get; set; }
         public double CardPower { get; set; }
+        public int WhoWantsCount {get; set; }
 
         public int EnhanceCnt { get; set; }
         public bool FromFigure { get; set; }

@@ -141,6 +141,10 @@ namespace Sanakan.Api.Models
         /// Tagi znajdujące się na karcie
         /// </summary>
         public List<string> Tags { get; set; }
+        /// <summary>
+        /// Liczba kc karty
+        /// </summary>
+        public int WhoWantsCount { get; set; }
 
         public static CardFinalView ConvertFromRaw(Card card)
         {
@@ -171,6 +175,7 @@ namespace Sanakan.Api.Models
                 UltimateQuality = card.Quality,
                 CreatedAt = card.CreationDate,
                 CardPower = card.CardPower,
+                WhoWantsCount = card.WhoWantsCount,
                 Value = card.GetThreeStateMarketValue(),
                 ExpCntForNextLevel = card.ExpToUpgrade(),
                 HasCustomImage = card.CustomImage != null,
