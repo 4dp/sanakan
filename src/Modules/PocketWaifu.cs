@@ -943,7 +943,7 @@ namespace Sanakan.Modules
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
                         if (destroyCards > 0)
                         {
-                            if (wishlists.Count < destroyCards)
+                            if (wishlists.Count < destroyCards && !charactersOnWishlist.Any(x => x == card.Name))
                             {
                                 openString += "🖤 ";
                                 toRemove.Add(card);
