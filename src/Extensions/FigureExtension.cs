@@ -18,6 +18,7 @@ namespace Sanakan.Extensions
                 case Quality.Epsilon: return "ε";
                 case Quality.Zeta:    return "ζ";
                 case Quality.Theta:   return "Θ";
+                case Quality.Jota:    return "ι";
                 case Quality.Lambda:  return "λ";
                 case Quality.Sigma:   return "Σ";
                 case Quality.Omega:   return "Ω";
