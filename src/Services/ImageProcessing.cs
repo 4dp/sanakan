@@ -978,6 +978,20 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex("#40ff40"), new Point(328, 593)));
         }
 
+        private void ApplyJotaStats(Image<Rgba32> image, Card card)
+        {
+            var aphFont = new Font(_latoBold, 28);
+
+            int hp = card.GetHealthWithPenalty();
+            int def = card.GetDefenceWithBonus();
+            int atk = card.GetAttackWithBonus();
+
+            // TODO: center numbers
+            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#da4e00"), new Point(342, 538)));
+            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#00a4ff"), new Point(342, 565)));
+            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#40ff40"), new Point(328, 593)));
+        }
+
         private void ApplyLambdaStats(Image<Rgba32> image, Card card)
         {
             var aphFont = new Font(_latoBold, 28);
@@ -1056,8 +1070,18 @@ namespace Sanakan.Services
         {
             switch (card.Quality)
             {
+                case Quality.Jota: return $"./Pictures/PW/CG/{card.Quality}/Stats/{card.Dere}_Stats.png";
                 case Quality.Theta: return $"./Pictures/PW/CG/{card.Quality}/{card.Dere}_Stats.png";
                 default: return $"./Pictures/PW/CG/{card.Quality}/Stats.png";
+            }
+        }
+
+        private string GetBorderBackString(Card card)
+        {
+            switch (card.Quality)
+            {
+                case Quality.Jota: return $"./Pictures/PW/CG/{card.Quality}/Border/{card.Dere}_Border.png";
+                default: return  $"./Pictures/PW/CG/{card.Quality}/BorderBack.png";
             }
         }
 
@@ -1091,6 +1115,9 @@ namespace Sanakan.Services
                     break;
                 case Quality.Zeta:
                     ApplyZetaStats(image, card);
+                    break;
+                case Quality.Jota:
+                    ApplyJotaStats(image, card);
                     break;
                 case Quality.Lambda:
                     ApplyLambdaStats(image, card);
@@ -1182,7 +1209,7 @@ namespace Sanakan.Services
         private void ApplyBorderBack(Image<Rgba32> image, Card card)
         {
             var isFromFigureOriginalBorder = !card.HasCustomBorder() && card.FromFigure;
-            var backBorderStr = $"./Pictures/PW/CG/{card.Quality}/BorderBack.png";
+            var backBorderStr = GetBorderBackString(card);
 
             if (isFromFigureOriginalBorder && File.Exists(backBorderStr))
             {
