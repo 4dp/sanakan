@@ -1291,8 +1291,8 @@ namespace Sanakan.Modules
 
         [Command("skrzynia")]
         [Alias("chest")]
-        [Summary("przenosi doświadczenie z skrzyni do karty (kosztuje CT)")]
-        [Remarks("2154"), RequireWaifuCommandChannel]
+        [Summary("przenosi doświadczenie z skrzyni do karty lub figurki gdy podane wid 0(kosztuje CT)")]
+        [Remarks("2154 10"), RequireWaifuCommandChannel]
         public async Task TransferExpFromChestAsync([Summary("WID")]ulong id, [Summary("liczba doświadczenia")]uint exp)
         {
             using (var db = new Database.UserContext(Config))
@@ -1304,17 +1304,32 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
-                if (card == null)
+                Figure focusedFigure = null;
+                if (id == 0)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
-                    return;
+                    focusedFigure = bUser.GameDeck.Figures.FirstOrDefault(x => x.IsFocus);
+                    if (focusedFigure == null)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz aktywnej figurki.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
                 }
 
-                if (card.FromFigure)
+                Card card = null;
+                if (focusedFigure == null)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} na tą kartę nie można przenieść doświadczenia.".ToEmbedMessage(EMType.Error).Build());
-                    return;
+                    card = bUser.GameDeck.Cards.FirstOrDefault(x => x.Id == id);
+                    if (card == null)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz takiej karty.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    if (card.FromFigure)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} na tą kartę nie można przenieść doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
                 }
 
                 var maxExpInOneTime = bUser.GameDeck.ExpContainer.GetMaxExpTransferToCard();
@@ -1337,7 +1352,15 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                card.ExpCnt += exp;
+                if (focusedFigure == null)
+                {
+                    card.ExpCnt += exp;
+                }
+                else
+                {
+                    focusedFigure.ExpCnt += exp;
+                }
+
                 bUser.GameDeck.ExpContainer.ExpCount -= exp;
                 bUser.GameDeck.CTCnt -= cost;
 
@@ -1345,7 +1368,7 @@ namespace Sanakan.Modules
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
-                await ReplyAsync("", embed: $"{Context.User.Mention} przeniesiono doświadczenie na kartę.".ToEmbedMessage(EMType.Success).Build());
+                await ReplyAsync("", embed: $"{Context.User.Mention} przeniesiono doświadczenie na kartę lub figurkę.".ToEmbedMessage(EMType.Success).Build());
             }
         }
 

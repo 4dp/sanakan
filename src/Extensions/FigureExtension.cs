@@ -188,7 +188,7 @@ namespace Sanakan.Extensions
             var name =  $"[{fig.Name}]({Shinden.API.Url.GetCharacterURL(fig.Character)})";
 
             return $"**[{fig.Id}] Figurka {fig.SkeletonQuality.ToName()}**\n{name}\n*{fig.ExpCnt} exp*\n\n"
-                + $"**Aktywna część:**\n {fig.FocusedPart.ToName()} *{fig.PartExp} exp*\n\n"
+                + $"**Aktywna część:**\n {fig.FocusedPart.ToName()} *{fig.PartExp} pk*\n\n"
                 + $"**Części:**\n*Głowa*: {fig.HeadQuality.ToName("brak")}\n*Tułów*: {fig.BodyQuality.ToName("brak")}\n"
                 + $"*Prawa ręka*: {fig.RightArmQuality.ToName("brak")}\n*Lewa ręka*: {fig.LeftArmQuality.ToName("brak")}\n"
                 + $"*Prawa noga*: {fig.RightLegQuality.ToName("brak")}\n*Lewa noga*: {fig.LeftLegQuality.ToName("brak")}\n"
