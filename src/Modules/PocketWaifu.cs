@@ -838,7 +838,7 @@ namespace Sanakan.Modules
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false, [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0)
+        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false, [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -968,14 +968,25 @@ namespace Sanakan.Modules
                     var chLvl = bUser.GameDeck.ExpContainer.Level;
                     foreach(var c in toRemove)
                     {
-                        bUser.StoreExpIfPossible((c.ExpCnt > c.GetMaxExpToChest(chLvl))
-                            ? c.GetMaxExpToChest(chLvl)
-                            : c.ExpCnt);
+                        if (changeToRelease)
+                        {
+                            bUser.StoreExpIfPossible(((c.ExpCnt / 2) > c.GetMaxExpToChest(chLvl))
+                                ? c.GetMaxExpToChest(chLvl)
+                                : (c.ExpCnt / 2));
 
-                        bUser.GameDeck.Karma -= 1;
-                        bUser.GameDeck.CTCnt += (long) c.GetValue();
-                        bUser.Stats.DestroyedCards += 1;
+                            bUser.GameDeck.Karma += 1;
+                            bUser.Stats.ReleasedCards += 1;
+                        }
+                        else
+                        {
+                            bUser.StoreExpIfPossible((c.ExpCnt > c.GetMaxExpToChest(chLvl))
+                                ? c.GetMaxExpToChest(chLvl)
+                                : c.ExpCnt);
 
+                            bUser.GameDeck.Karma -= 1;
+                            bUser.GameDeck.CTCnt += (long) c.GetValue();
+                            bUser.Stats.DestroyedCards += 1;
+                        }
                         bUser.GameDeck.Cards.Remove(c);
                     }
 
