@@ -978,18 +978,65 @@ namespace Sanakan.Services
             image.Mutate(x => x.DrawText(ops, hp.ToString("D5"), aphFont, Rgba32.FromHex("#40ff40"), new Point(328, 593)));
         }
 
+        private String GetJotaStatColorString(Card card)
+        {
+            switch (card.Dere)
+            {
+                case Database.Models.Dere.Bodere:
+                    return "#de1218";
+                case Database.Models.Dere.Dandere:
+                    return "#00ff7d";
+                case Database.Models.Dere.Deredere:
+                    return "#032ee0";
+                case Database.Models.Dere.Kamidere:
+                    return "#75d400";
+                case Database.Models.Dere.Kuudere:
+                    return "#008cff";
+                case Database.Models.Dere.Mayadere:
+                    return "#dc0090";
+                case Database.Models.Dere.Raito:
+                    return "#dfdfdf";
+                case Database.Models.Dere.Tsundere:
+                    return "#ff0056";
+                case Database.Models.Dere.Yami:
+                    return "#898989";
+                case Database.Models.Dere.Yandere:
+                    return "#f2c400";
+                case Database.Models.Dere.Yato:
+                    return "#5e5e5e";
+                default:
+                    return "#ffffff";
+            }
+        }
+
         private void ApplyJotaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 28);
+            var aphFont = new Font(_latoBold, 22);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
             int atk = card.GetAttackWithBonus();
 
-            // TODO: center numbers
-            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#da4e00"), new Point(342, 538)));
-            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#00a4ff"), new Point(342, 565)));
-            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#40ff40"), new Point(328, 593)));
+            var jotaColor = GetJotaStatColorString(card);
+
+            var ops = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Center };
+            using (var atkImg = new Image<Rgba32>(120, 40))
+            {
+                atkImg.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex(jotaColor), new Point(1)));
+                atkImg.Mutate(x => x.Rotate(-10));
+
+                image.Mutate(x => x.DrawImage(atkImg, new Point(106, 546), 1));
+            }
+
+            using (var defImg = new Image<Rgba32>(120, 40))
+            {
+                defImg.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex(jotaColor), new Point(1)));
+                defImg.Mutate(x => x.Rotate(10));
+
+                image.Mutate(x => x.DrawImage(defImg, new Point(310, 558), 1));
+            }
+
+            image.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex(jotaColor), new Point(238, 586)));
         }
 
         private void ApplyLambdaStats(Image<Rgba32> image, Card card)
