@@ -239,7 +239,6 @@ namespace Sanakan.Modules
             }
         }
 
-        //TODO: collect exp for figure
         //TODO: end creating figure
 
         [Command("figurka", RunMode = RunMode.Async)]
@@ -839,7 +838,7 @@ namespace Sanakan.Modules
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false)
+        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false, [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -936,15 +935,51 @@ namespace Sanakan.Modules
                 string packString = $"{count} pakietów";
                 if (count == 1) packString = $"pakietu **{packs.First().Name}**";
 
+                var toRemove = new List<Card>();
                 foreach (var card in totalCards)
                 {
                     if (checkWishlists && count == 1)
                     {
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                        openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
-                        card.WhoWantsCount = wishlists.Count;
+                        if (destroyCards > 0)
+                        {
+                            if (wishlists.Count < destroyCards)
+                            {
+                                openString += "🖤 ";
+                                toRemove.Add(card);
+                            }
+                            else
+                            {
+                                openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
+                                card.WhoWantsCount = wishlists.Count;
+                            }
+                        }
+                        else
+                        {
+                            openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
+                            card.WhoWantsCount = wishlists.Count;
+                        }
                     }
                     openString += $"{card.GetString(false, false, true)}\n";
+                }
+
+                if (toRemove.Count > 0)
+                {
+                    var chLvl = bUser.GameDeck.ExpContainer.Level;
+                    foreach(var c in toRemove)
+                    {
+                        bUser.StoreExpIfPossible((c.ExpCnt > c.GetMaxExpToChest(chLvl))
+                            ? c.GetMaxExpToChest(chLvl)
+                            : c.ExpCnt);
+
+                        bUser.GameDeck.Karma -= 1;
+                        bUser.GameDeck.CTCnt += (long) c.GetValue();
+                        bUser.Stats.DestroyedCards += 1;
+
+                        bUser.GameDeck.Cards.Remove(c);
+                    }
+
+                    await db.SaveChangesAsync();
                 }
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} z {packString} wypadło:\n\n{openString.TrimToLength(1950)}".ToEmbedMessage(EMType.Success).Build());
