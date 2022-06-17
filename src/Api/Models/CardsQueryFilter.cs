@@ -10,7 +10,7 @@ namespace Sanakan.Api.Models
     {
         Id, IdDes, Name, NameDes, Rarity, RarityDes, Title, TitleDes, Health, HealthDes, HealthBase, HealthBaseDes,
         Atack, AtackDes, Defence, DefenceDes, Exp, ExpDes, Dere, DereDes, Picture, PictureDes, Relation, RelationDes,
-        CardPower, CardPowerDes
+        CardPower, CardPowerDes, WhoWantsCount, WhoWantsCountDes
     }
 
     public enum FilterTagsMethodType
@@ -76,6 +76,10 @@ namespace Sanakan.Api.Models
                     return query.OrderBy(x => x.CardPower);
                 case OrderType.CardPowerDes:
                     return query.OrderByDescending(x => x.CardPower);
+                case OrderType.WhoWantsCount:
+                    return query.OrderBy(x => x.WhoWantsCount);
+                case OrderType.WhoWantsCountDes:
+                    return query.OrderByDescending(x => x.WhoWantsCount);
                 case OrderType.Relation:
                     return query.OrderBy(x => x.Affection);
                 case OrderType.RelationDes:
