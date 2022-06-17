@@ -1,5 +1,7 @@
 ﻿#pragma warning disable 1591
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Sanakan.Database.Models;
 
@@ -87,6 +89,97 @@ namespace Sanakan.Extensions
                 default:
                     return "";
             }
+        }
+
+        public static bool CanCreateUltimateCard(this Figure figure)
+        {
+            bool canCreate = true;
+            canCreate &= figure.SkeletonQuality != Quality.Broken;
+            canCreate &= figure.HeadQuality     != Quality.Broken;
+            canCreate &= figure.BodyQuality     != Quality.Broken;
+            canCreate &= figure.LeftArmQuality  != Quality.Broken;
+            canCreate &= figure.RightArmQuality != Quality.Broken;
+            canCreate &= figure.LeftLegQuality  != Quality.Broken;
+            canCreate &= figure.RightLegQuality != Quality.Broken;
+            canCreate &= figure.ClothesQuality  != Quality.Broken;
+            canCreate &= figure.ExpCnt >= CardExtension.ExpToUpgrade(Rarity.SSS, true, figure.SkeletonQuality);
+            return canCreate;
+        }
+
+        public static Quality GetAvgQuality(this Figure figure)
+        {
+            double tavg = ((int)figure.SkeletonQuality) * 10;
+            double pavg = (int)figure.HeadQuality;
+            pavg += (int)figure.BodyQuality;
+            pavg += (int)figure.LeftArmQuality;
+            pavg += (int)figure.RightArmQuality;
+            pavg += (int)figure.LeftLegQuality;
+            pavg += (int)figure.RightLegQuality;
+            pavg += (int)figure.ClothesQuality;
+            tavg += pavg / 7;
+
+            int rAvg = (int)Math.Floor(tavg / 10);
+            var eQ = Quality.Broken;
+
+            foreach (int v in Enum.GetValues(typeof(Quality)))
+            {
+                if (v > rAvg) break;
+                eQ = (Quality)v;
+            }
+
+            return eQ;
+        }
+
+        public static Card ToCard(this Figure figure)
+        {
+            var quality = figure.GetAvgQuality();
+            var card = new Card
+            {
+                ArenaStats = new CardArenaStats(),
+                FirstIdOwner = figure.GameDeckId,
+                Expedition = CardExpedition.None,
+                LastIdOwner = figure.GameDeckId,
+                RestartCnt = figure.RestartCnt,
+                ExpeditionDate = DateTime.Now,
+                PAS = PreAssembledFigure.None,
+                TagList = new List<CardTag>(),
+                Character = figure.Character,
+                CreationDate = DateTime.Now,
+                StarStyle = StarStyle.Full,
+                Source = CardSource.Figure,
+                RarityOnStart = Rarity.SSS,
+                QualityOnStart = quality,
+                Defence = figure.Defence,
+                Health = figure.Health,
+                Curse = CardCurse.None,
+                Attack = figure.Attack,
+                Title = figure.Title,
+                Rarity = Rarity.SSS,
+                CustomBorder = null,
+                CustomImage = null,
+                Name = figure.Name,
+                Dere = figure.Dere,
+                Quality = quality,
+                FromFigure = true,
+                IsTradable = true,
+                WhoWantsCount = 0,
+                DefenceBonus = 0,
+                HealthBonus = 0,
+                AttackBonus = 0,
+                UpgradesCnt = 0,
+                MarketValue = 1,
+                EnhanceCnt = 0,
+                Unique = false,
+                InCage = false,
+                Active = false,
+                Affection = 0,
+                Image = null,
+                ExpCnt = 0,
+            };
+
+            _ = card.CalculateCardPower();
+
+            return card;
         }
 
         public static int ConstructionPointsToInstall(this Figure figure, Item part)
@@ -188,8 +281,8 @@ namespace Sanakan.Extensions
         {
             var name =  $"[{fig.Name}]({Shinden.API.Url.GetCharacterURL(fig.Character)})";
 
-            return $"**[{fig.Id}] Figurka {fig.SkeletonQuality.ToName()}**\n{name}\n*{fig.ExpCnt} exp*\n\n"
-                + $"**Aktywna część:**\n {fig.FocusedPart.ToName()} *{fig.PartExp} pk*\n\n"
+            return $"**[{fig.Id}] Figurka {fig.SkeletonQuality.ToName()}**\n{name}\n*{fig.ExpCnt.ToString("F")} / {CardExtension.ExpToUpgrade(Rarity.SSS, true, fig.SkeletonQuality)} exp*\n\n"
+                + $"**Aktywna część:**\n {fig.FocusedPart.ToName()} *{fig.PartExp.ToString("F")} pk*\n\n"
                 + $"**Części:**\n*Głowa*: {fig.HeadQuality.ToName("brak")}\n*Tułów*: {fig.BodyQuality.ToName("brak")}\n"
                 + $"*Prawa ręka*: {fig.RightArmQuality.ToName("brak")}\n*Lewa ręka*: {fig.LeftArmQuality.ToName("brak")}\n"
                 + $"*Prawa noga*: {fig.RightLegQuality.ToName("brak")}\n*Lewa noga*: {fig.LeftLegQuality.ToName("brak")}\n"

@@ -180,6 +180,11 @@ namespace Sanakan.Modules
                         await ReplyAsync("", embed: $"{Context.User.Mention} taka figurka nie istnieje.".ToEmbedMessage(EMType.Error).Build());
                         return;
                     }
+                    if (fig.IsComplete)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie można aktywować skończonej figurki.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
                     if (oldFig != null)
                     {
                         if (fig.Id == oldFig.Id)
@@ -239,7 +244,39 @@ namespace Sanakan.Modules
             }
         }
 
-        //TODO: end creating figure
+        [Command("figurka koniec")]
+        [Alias("figure end")]
+        [Summary("zamienia aktywną figurkę w kartę ultimate")]
+        [Remarks(""), RequireWaifuCommandChannel]
+        public async Task EndCreatingFigureAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var deck = db.GameDecks.Include(x => x.Figures).Include(x => x.Cards).ThenInclude(x => x.ArenaStats).Where(x => x.Id == Context.User.Id).FirstOrDefault();
+                var fig = deck.Figures.FirstOrDefault(x => x.IsFocus);
+                if (fig == null)
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} żadna figurka nie jest aktywna.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+                if (!fig.CanCreateUltimateCard())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie można utowrzyć katy ultimate, brakuje części lub doświadczenia.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = fig.ToCard();
+                deck.Cards.Add(card);
+
+                fig.CompletionDate = DateTime.Now;
+                fig.IsComplete = true;
+                fig.IsFocus = false;
+
+                await db.SaveChangesAsync();
+
+                await ReplyAsync("", embed: $"Utworzono nową kartę ultimate: {card.GetString(false, false, true)}".ToEmbedMessage(EMType.Success).WithAuthor(new EmbedAuthorBuilder().WithUser(Context.User)).Build());
+            }
+        }
 
         [Command("figurka", RunMode = RunMode.Async)]
         [Alias("figure")]
@@ -710,6 +747,11 @@ namespace Sanakan.Modules
                         if (card.Rarity != Rarity.SSS)
                         {
                             await ReplyAsync("", embed: $"{Context.User.Mention} karta musi być rangi **SSS**.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+                        }
+                        if (bUser.GameDeck.Figures.Any(x => x.Character == card.Character))
+                        {
+                            await ReplyAsync("", embed: $"{Context.User.Mention} już posiadasz figurkę tej postaci.".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
                         karmaChange -= 1;

@@ -514,22 +514,27 @@ namespace Sanakan.Extensions
             }
         }
 
-        public static double ExpToUpgrade(this Card card)
+        public static double ExpToUpgrade(this Rarity r, bool fromFigure = false, Quality q = Quality.Broken)
         {
-            switch (card.Rarity)
+            switch (r)
             {
                 case Rarity.SSS:
-                    if (card.FromFigure)
+                    if (fromFigure)
                     {
-                        return 120 * (int) card.Quality;
+                        return 1000 + (120 * (int)q);
                     }
                     return 1000;
                 case Rarity.SS:
                     return 100;
 
                 default:
-                    return 30 + (4 * (7 - (int)card.Rarity));
+                    return 30 + (4 * (7 - (int)r));
             }
+        }
+
+        public static double ExpToUpgrade(this Card card)
+        {
+            return card.Rarity.ExpToUpgrade(card.FromFigure, card.Quality);
         }
 
         public static int GetAttackMin(this Rarity rarity)
