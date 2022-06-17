@@ -783,7 +783,7 @@ namespace Sanakan.Modules
                             }
 
                             var expFromPart = item.ToExpForPart(activeFigure.SkeletonQuality);
-                            activeFigure.PartExp += expFromPart;
+                            activeFigure.PartExp += expFromPart * itemCnt;
 
                             embed.Description += $"Dodano do wybranej części figurki {expFromPart.ToString("F")} punktów konstrukcji. W sumie posiada ich {activeFigure.PartExp.ToString("F")}.";
                         }
