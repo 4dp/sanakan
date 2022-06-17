@@ -616,7 +616,7 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: "Nie wykryto obrazka! Upewnij się, że podałeś poprawny adres!".ToEmbedMessage(EMType.Error).Build());
                             return;
                         }
-                        if (card.Image == null)
+                        if (card.Image == null && !card.FromFigure)
                         {
                             await ReplyAsync("", embed: "Aby ustawić własny obrazek, karta musi posiadać wcześniej ustawiony główny (na stronie)!".ToEmbedMessage(EMType.Error).Build());
                             return;
@@ -1131,14 +1131,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.FromFigure)
-                {
-                    _waifu.DeleteCardImageIfExist(card);
-                    await ReplyAsync("", embed: $"{Context.User.Mention} tej karty nie można zaktualizować.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (defaultImage)
+                if (defaultImage && !card.FromFigure)
                     card.CustomImage = null;
 
                 try
