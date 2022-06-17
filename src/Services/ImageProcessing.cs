@@ -922,10 +922,10 @@ namespace Sanakan.Services
             int def = card.GetDefenceWithBonus();
             int atk = card.GetAttackWithBonus();
 
-            // TODO: center numbers
-            image.Mutate(x => x.DrawText($"{atk}", aphFont, Rgba32.FromHex("#c9282c"), new Point(115, 593)));
-            image.Mutate(x => x.DrawText($"{def}", aphFont, Rgba32.FromHex("#1d64d5"), new Point(155, 565)));
-            image.Mutate(x => x.DrawText($"{hp}", aphFont, Rgba32.FromHex("#318b19"), new Point(300, 593)));
+            var ops = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Center };
+            image.Mutate(x => x.DrawText(ops, $"{atk}", aphFont, Rgba32.FromHex("#c9282c"), new Point(145, 593)));
+            image.Mutate(x => x.DrawText(ops, $"{def}", aphFont, Rgba32.FromHex("#1d64d5"), new Point(185, 565)));
+            image.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex("#318b19"), new Point(345, 593)));
         }
 
         private void ApplyDeltaStats(Image<Rgba32> image, Card card)
@@ -945,9 +945,9 @@ namespace Sanakan.Services
                 image.Mutate(x => x.DrawImage(hpImg, new Point(333, 490), 1));
             }
 
-            // TODO: center numbers
-            image.Mutate(x => x.DrawText($"{atk}", adFont, Rgba32.FromHex("#78261a"), new Point(62, 600)));
-            image.Mutate(x => x.DrawText($"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(352, 600)));
+            var ops = new TextGraphicsOptions() { HorizontalAlignment = HorizontalAlignment.Center };
+            image.Mutate(x => x.DrawText(ops, $"{atk}", adFont, Rgba32.FromHex("#78261a"), new Point(92, 600)));
+            image.Mutate(x => x.DrawText(ops, $"{def}", adFont, Rgba32.FromHex("#00527f"), new Point(382, 600)));
         }
 
         private void ApplyEpsilonStats(Image<Rgba32> image, Card card)
@@ -958,10 +958,17 @@ namespace Sanakan.Services
             int def = card.GetDefenceWithBonus();
             int atk = card.GetAttackWithBonus();
 
-            var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80 }; // TODO: rotate hp
-            image.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex("#40ff40"), new Point(59, 365)));
-            image.Mutate(x => x.DrawText(ops, $"{atk}", aphFont, Rgba32.FromHex("#da4e00"), new Point(64, 432)));
-            image.Mutate(x => x.DrawText(ops, $"{def}", aphFont, Rgba32.FromHex("#00a4ff"), new Point(55, 485)));
+            var ops = new TextGraphicsOptions() { ApplyKerning = true, DpiX = 80};
+            using (var defImg = new Image<Rgba32>(120, 40))
+            {
+                defImg.Mutate(x => x.DrawText(ops, $"{hp}", aphFont, Rgba32.FromHex("#40ff40"), new Point(1)));
+                defImg.Mutate(x => x.Rotate(-4));
+
+                image.Mutate(x => x.DrawImage(defImg, new Point(59, 358), 1));
+            }
+
+            image.Mutate(x => x.DrawText(ops, $"{atk}", aphFont, Rgba32.FromHex("#da4e00"), new Point(70, 432)));
+            image.Mutate(x => x.DrawText(ops, $"{def}", aphFont, Rgba32.FromHex("#00a4ff"), new Point(54, 485)));
         }
 
         private void ApplyZetaStats(Image<Rgba32> image, Card card)
