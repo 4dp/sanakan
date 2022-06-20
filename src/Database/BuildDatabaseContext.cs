@@ -360,6 +360,8 @@ namespace Sanakan.Database
                 entity.HasKey(e => e.Id);
             });
 
+            // add trigger after update
+            // UPDATE `Cards` SET `WhoWantsCount` = NEW.Count WHERE `Character` = NEW.Id
             modelBuilder.Entity<WishlistCount>(entity =>
             {
                 entity.HasKey(e => e.Id);
