@@ -367,64 +367,69 @@ namespace Sanakan.Services.Session.Models
                             if (exchangeRateP2 > 1) exchangeRateP2 = 10;
                             if (exchangeRateP2 < 0.0001) exchangeRateP2 = 0.001;
 
-                            foreach (var c in P1.Cards)
+                            using (var dba = new Database.AnalyticsContext(_config))
                             {
-                                var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
-                                if (card != null)
+                                bool save = false;
+                                foreach (var c in P1.Cards)
                                 {
-                                    card.Active = false;
-                                    card.TagList.Clear();
-                                    card.Affection -= 1.5;
+                                    var card = user1.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
+                                    if (card != null)
+                                    {
+                                        card.Active = false;
+                                        card.TagList.Clear();
+                                        card.Affection -= 1.5;
 
-                                    if (card.ExpCnt > 1)
-                                        card.ExpCnt *= 0.3;
+                                        if (card.ExpCnt > 1)
+                                            card.ExpCnt *= 0.3;
 
-                                    var valueDiff = exchangeRateP1 - card.MarketValue;
-                                    var changed = card.MarketValue + valueDiff * 0.8;
-                                    if (changed < 0.0001) changed = 0.0001;
-                                    if (changed > 1) changed = 1;
-                                    card.MarketValue = changed;
+                                        var valueDiff = exchangeRateP1 - card.MarketValue;
+                                        var changed = card.MarketValue + valueDiff * 0.8;
+                                        if (changed < 0.0001) changed = 0.0001;
+                                        if (changed > 1) changed = 1;
+                                        card.MarketValue = changed;
 
-                                    if (card.FirstIdOwner == 0)
-                                        card.FirstIdOwner = user1.Id;
+                                        if (card.FirstIdOwner == 0)
+                                            card.FirstIdOwner = user1.Id;
 
-                                    user1.GameDeck.RemoveFromWaifu(card);
+                                        user1.GameDeck.RemoveFromWaifu(card);
 
-                                    card.GameDeckId = user2.GameDeck.Id;
+                                        card.GameDeckId = user2.GameDeck.Id;
 
-                                    user2.GameDeck.RemoveCharacterFromWishList(card.Character);
-                                    user2.GameDeck.RemoveCardFromWishList(card.Id);
+                                        save = user2.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
+                                        user2.GameDeck.RemoveCardFromWishList(card.Id);
+                                    }
                                 }
-                            }
 
-                            foreach (var c in P2.Cards)
-                            {
-                                var card = user2.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
-                                if (card != null)
+                                foreach (var c in P2.Cards)
                                 {
-                                    card.Active = false;
-                                    card.TagList.Clear();
-                                    card.Affection -= 1.5;
+                                    var card = user2.GameDeck.Cards.FirstOrDefault(x => x.Id == c.Id);
+                                    if (card != null)
+                                    {
+                                        card.Active = false;
+                                        card.TagList.Clear();
+                                        card.Affection -= 1.5;
 
-                                    if (card.ExpCnt > 1)
-                                        card.ExpCnt *= 0.3;
+                                        if (card.ExpCnt > 1)
+                                            card.ExpCnt *= 0.3;
 
-                                    var valueDiff = exchangeRateP2 - card.MarketValue;
-                                    var changed = card.MarketValue + valueDiff * 0.8;
-                                    if (changed < 0.0001) changed = 0.0001;
-                                    if (changed > 1) changed = 1;
-                                    card.MarketValue = changed;
+                                        var valueDiff = exchangeRateP2 - card.MarketValue;
+                                        var changed = card.MarketValue + valueDiff * 0.8;
+                                        if (changed < 0.0001) changed = 0.0001;
+                                        if (changed > 1) changed = 1;
+                                        card.MarketValue = changed;
 
-                                    if (card.FirstIdOwner == 0)
-                                        card.FirstIdOwner = user2.Id;
+                                        if (card.FirstIdOwner == 0)
+                                            card.FirstIdOwner = user2.Id;
 
-                                    user2.GameDeck.RemoveFromWaifu(card);
+                                        user2.GameDeck.RemoveFromWaifu(card);
 
-                                    card.GameDeckId = user1.GameDeck.Id;
+                                        card.GameDeckId = user1.GameDeck.Id;
 
-                                    user1.GameDeck.RemoveCharacterFromWishList(card.Character);
-                                    user1.GameDeck.RemoveCardFromWishList(card.Id);
+                                        save = user1.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
+                                        user1.GameDeck.RemoveCardFromWishList(card.Id);
+                                    }
                                 }
+                                if (save) await dba.SaveChangesAsync();
                             }
 
                             await db.SaveChangesAsync();

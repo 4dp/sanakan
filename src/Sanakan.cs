@@ -2,6 +2,7 @@
 
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sanakan.Api;
 using Sanakan.Config;
@@ -14,6 +15,7 @@ using Sanakan.Services.Supervisor;
 using Shinden;
 using Shinden.Logger;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sanakan

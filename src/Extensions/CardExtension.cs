@@ -963,6 +963,12 @@ namespace Sanakan.Extensions
             return list;
         }
 
+        public static Card UpdateWWCount(this Card card, Database.Models.Analytics.WishlistCount ww)
+        {
+            card.WhoWantsCount = ww.Count;
+            return card;
+        }
+
         public static double GetAvgValue(this List<Card> cards)
         {
             if (cards.Count < 1) return 0.01;

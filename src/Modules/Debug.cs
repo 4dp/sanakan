@@ -301,27 +301,32 @@ namespace Sanakan.Modules
                     var cardsIds = new List<string>();
                     var idsToSelect = loteryCards.Select(x => x.Id).ToList();
 
-                    for (int i = 0; i < count; i++)
+                    using (var dba = new Database.AnalyticsContext(Config))
                     {
-                        if (idsToSelect.Count < 1)
-                            break;
+                        bool save = false;
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (idsToSelect.Count < 1)
+                                break;
 
-                        var wid = Services.Fun.GetOneRandomFrom(idsToSelect);
-                        var thisCard = loteryCards.FirstOrDefault(x => x.Id == wid);
+                            var wid = Services.Fun.GetOneRandomFrom(idsToSelect);
+                            var thisCard = loteryCards.FirstOrDefault(x => x.Id == wid);
 
-                        cardsIds.Add(thisCard.GetString(false, false, true));
+                            cardsIds.Add(thisCard.GetString(false, false, true));
 
-                        thisCard.Active = false;
-                        thisCard.InCage = false;
-                        thisCard.TagList.Clear();
-                        thisCard.Expedition = CardExpedition.None;
+                            thisCard.Active = false;
+                            thisCard.InCage = false;
+                            thisCard.TagList.Clear();
+                            thisCard.Expedition = CardExpedition.None;
 
-                        thisCard.GameDeckId = winnerUser.GameDeck.Id;
+                            thisCard.GameDeckId = winnerUser.GameDeck.Id;
 
-                        winnerUser.GameDeck.RemoveCharacterFromWishList(thisCard.Character);
-                        winnerUser.GameDeck.RemoveCardFromWishList(thisCard.Id);
+                            save = winnerUser.GameDeck.RemoveCharacterFromWishList(thisCard.Character, dba);
+                            winnerUser.GameDeck.RemoveCardFromWishList(thisCard.Id);
 
-                        idsToSelect.Remove(wid);
+                            idsToSelect.Remove(wid);
+                        }
+                        if (save) await dba.SaveChangesAsync();
                     }
 
                     await db.SaveChangesAsync();
@@ -920,7 +925,11 @@ namespace Sanakan.Modules
                 var botuser = await db.GetUserOrCreateAsync(user.Id);
                 botuser.GameDeck.Cards.Add(card);
 
-                botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                using (var dba = new Database.AnalyticsContext(Config))
+                {
+                    if (botuser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
+                        await dba.SaveChangesAsync();
+                }
 
                 await db.SaveChangesAsync();
 

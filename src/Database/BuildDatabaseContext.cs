@@ -59,6 +59,7 @@ namespace Sanakan.Database
         public DbSet<SystemAnalytics> SystemData { get; set; }
         public DbSet<TransferAnalytics> TransferData { get; set; }
         public DbSet<CommandsAnalytics> CommandsData { get; set; }
+        public DbSet<WishlistCount> WishlistCountData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -148,6 +149,7 @@ namespace Sanakan.Database
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.Active);
+                entity.HasIndex(e => e.Character);
 
                 entity.HasOne(e => e.GameDeck)
                     .WithMany(d => d.Cards);
@@ -354,6 +356,11 @@ namespace Sanakan.Database
             });
 
             modelBuilder.Entity<CommandsAnalytics>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<WishlistCount>(entity =>
             {
                 entity.HasKey(e => e.Id);
             });

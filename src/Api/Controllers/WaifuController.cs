@@ -106,13 +106,14 @@ namespace Sanakan.Api.Controllers
                 }
 
                 var query = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
-
                 if (!string.IsNullOrEmpty(filter.SearchText))
                 {
                     query = query.Where(x => x.Name.Contains(filter.SearchText) || x.Title.Contains(filter.SearchText));
                 }
 
                 query = CardsQueryFilter.Use(filter.OrderBy, query);
+
+                query = query.Join(db.WishlistCountData, x => x.Character, x => x.Id, (card, ww) => card.UpdateWWCount(ww));
 
                 var cards = await query.ToListAsync();
                 if (filter.IncludeTags != null && filter.IncludeTags.Count > 0)
@@ -700,13 +701,18 @@ namespace Sanakan.Api.Controllers
 
                     botUser.Stats.OpenedBoosterPacks += packs.Count;
 
-                    foreach (var card in cards)
+                    using (var dba = new Database.AnalyticsContext(_config))
                     {
-                        card.Affection += botUser.GameDeck.AffectionFromKarma();
-                        card.FirstIdOwner = botUser.Id;
+                        bool save = false;
+                        foreach (var card in cards)
+                        {
+                            card.Affection += botUser.GameDeck.AffectionFromKarma();
+                            card.FirstIdOwner = botUser.Id;
 
-                        botUser.GameDeck.Cards.Add(card);
-                        botUser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                            botUser.GameDeck.Cards.Add(card);
+                            save = botUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
+                        }
+                        if (save) await dba.SaveChangesAsync();
                     }
 
                     await db.SaveChangesAsync();
@@ -794,13 +800,18 @@ namespace Sanakan.Api.Controllers
                                 botUser.Stats.OpenedBoosterPacks += 1;
                             }
 
-                            foreach (var card in cards)
+                            using (var dba = new Database.AnalyticsContext(_config))
                             {
-                                card.Affection += botUser.GameDeck.AffectionFromKarma();
-                                card.FirstIdOwner = botUser.Id;
+                                bool save = false;
+                                foreach (var card in cards)
+                                {
+                                    card.Affection += botUser.GameDeck.AffectionFromKarma();
+                                    card.FirstIdOwner = botUser.Id;
 
-                                botUser.GameDeck.Cards.Add(card);
-                                botUser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                                    botUser.GameDeck.Cards.Add(card);
+                                    save = botUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
+                                }
+                                if (save) await dba.SaveChangesAsync();
                             }
 
                             await db.SaveChangesAsync();

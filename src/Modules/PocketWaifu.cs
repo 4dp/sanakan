@@ -957,15 +957,20 @@ namespace Sanakan.Modules
 
                     bUser.GameDeck.BoosterPacks.Remove(pack);
 
-                    foreach (var card in cards)
+                    using (var dba = new Database.AnalyticsContext(Config))
                     {
-                        if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character))
+                        bool save = false;
+                        foreach (var card in cards)
                         {
-                            charactersOnWishlist.Add(card.Name);
+                            if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
+                            {
+                                charactersOnWishlist.Add(card.Name);
+                            }
+                            card.Affection += bUser.GameDeck.AffectionFromKarma();
+                            bUser.GameDeck.Cards.Add(card);
+                            totalCards.Add(card);
                         }
-                        card.Affection += bUser.GameDeck.AffectionFromKarma();
-                        bUser.GameDeck.Cards.Add(card);
-                        totalCards.Add(card);
+                        if (save) await dba.SaveChangesAsync();
                     }
                 }
 
@@ -1566,7 +1571,15 @@ namespace Sanakan.Modules
                 var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
-                bool wasOnWishlist = botuser.GameDeck.RemoveCharacterFromWishList(card.Character);
+                bool wasOnWishlist = false;
+                using (var dba = new Database.AnalyticsContext(Config))
+                {
+                    if (botuser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
+                    {
+                        wasOnWishlist = true;
+                        await dba.SaveChangesAsync();
+                    }
+                }
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
 
@@ -1991,8 +2004,15 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                foreach (var obj in objs)
-                    bUser.GameDeck.Wishes.Remove(obj);
+                using (var dba = new Database.AnalyticsContext(Config))
+                {
+                    foreach (var obj in objs)
+                    {
+                        await dba.CreateOrChangeWishlistCountByAsync(obj.ObjectId, obj.ObjectName, -1);
+                        bUser.GameDeck.Wishes.Remove(obj);
+                    }
+                    await dba.SaveChangesAsync();
+                }
 
                 await db.SaveChangesAsync();
 
@@ -2062,6 +2082,11 @@ namespace Sanakan.Modules
                         }
                         response = res2.Body.ToString();
                         obj.ObjectName = response;
+                        using (var dba = new Database.AnalyticsContext(Config))
+                        {
+                            await dba.CreateOrChangeWishlistCountByAsync(obj.ObjectId, obj.ObjectName);
+                            await dba.SaveChangesAsync();
+                        }
                         break;
                 }
 

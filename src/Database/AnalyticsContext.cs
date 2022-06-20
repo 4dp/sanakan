@@ -20,6 +20,7 @@ namespace Sanakan.Database
         public DbSet<SystemAnalytics> SystemData { get; set; }
         public DbSet<TransferAnalytics> TransferData { get; set; }
         public DbSet<CommandsAnalytics> CommandsData { get; set; }
+        public DbSet<WishlistCount> WishlistCountData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -147,15 +147,14 @@ namespace Sanakan.Services.PocketWaifu
 
                     newCard.FirstIdOwner = winner.Id;
                     newCard.Affection += botUser.GameDeck.AffectionFromKarma();
-                    botUser.GameDeck.RemoveCharacterFromWishList(newCard.Character);
-
-                    botUser.GameDeck.Cards.Add(newCard);
-                    await db.SaveChangesAsync();
-
-                    QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
-
                     using (var dba = new Database.AnalyticsContext(_config))
                     {
+                        botUser.GameDeck.RemoveCharacterFromWishList(newCard.Character, dba);
+                        botUser.GameDeck.Cards.Add(newCard);
+                        await db.SaveChangesAsync();
+
+                        QueryCacheManager.ExpireTag(new string[] { $"user-{botUser.Id}", "users" });
+
                         dba.UsersData.Add(new Database.Models.Analytics.UserAnalytics
                         {
                             Value = 1,

@@ -112,6 +112,7 @@ namespace Sanakan.Services
             _config = config;
             _img = img;
 
+#if !DEBUG
             _timer = new Timer(async _ =>
             {
                 try
@@ -132,6 +133,7 @@ namespace Sanakan.Services
             null,
             TimeSpan.FromMinutes(1),
             TimeSpan.FromMinutes(1));
+#endif
         }
 
         private async Task CyclicCheckAsync(Database.UserContext context, Database.GuildConfigContext guildContext)

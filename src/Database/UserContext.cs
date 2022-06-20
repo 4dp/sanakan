@@ -35,6 +35,7 @@ namespace Sanakan.Database
         public DbSet<Figure> Figures { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
+        public DbSet<Models.Analytics.WishlistCount> WishlistCountData { get; set; }
 
         public DbSet<GuildOptions> Guilds { get; set; }
 

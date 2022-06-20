@@ -127,5 +127,52 @@ namespace Sanakan.Extensions
         {
             return (await context.Questions.AsQueryable().Include(x => x.Answers).AsNoTracking().AsSplitQuery().FromCacheAsync(new string[] { $"quiz" })).FirstOrDefault(x => x.Id == id);
         }
+
+        public static Database.Models.Analytics.WishlistCount CreateOrChangeWishlistCountBy(this Database.AnalyticsContext context, ulong id, string name, int by = 1)
+        {
+            var ww = context.WishlistCountData.AsQueryable().FirstOrDefault(x => x.Id == id);
+            if (ww == null)
+            {
+                ww = new Database.Models.Analytics.WishlistCount
+                {
+                    Id = id,
+                    Name = name,
+                    Count = by < 0 ? 0 : by
+                };
+                context.WishlistCountData.Add(ww);
+                return ww;
+            }
+
+            ww.Count += by;
+            if (ww.Count < 0)
+                ww.Count = 0;
+
+            return ww;
+        }
+
+        public static async Task<Database.Models.Analytics.WishlistCount> CreateOrChangeWishlistCountByAsync(this Database.AnalyticsContext context, ulong id, string name, int by = 1)
+        {
+            var ww = await context.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == id);
+            if (ww == null)
+            {
+                ww = new Database.Models.Analytics.WishlistCount
+                {
+                    Id = id,
+                    Name = name,
+                    Count = by < 0 ? 0 : by
+                };
+                await context.WishlistCountData.AddAsync(ww);
+                return ww;
+            }
+
+            ww.Count += by;
+            if (ww.Name is null)
+                ww.Name = name;
+
+            if (ww.Count < 0)
+                ww.Count = 0;
+
+            return ww;
+        }
     }
 }

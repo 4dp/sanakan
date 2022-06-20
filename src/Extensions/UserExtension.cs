@@ -422,11 +422,12 @@ namespace Sanakan.Extensions
             return deck.Wishes.Where(x => x.Type == WishlistObjectType.Character).Select(x => x.ObjectId).ToList();
         }
 
-        public static bool RemoveCharacterFromWishList(this GameDeck deck, ulong id)
+        public static bool RemoveCharacterFromWishList(this GameDeck deck, ulong id, Database.AnalyticsContext db)
         {
             var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Character && x.ObjectId == id);
             if (en != null)
             {
+                db.CreateOrChangeWishlistCountBy(en.ObjectId, en.ObjectName, -1);
                 deck.Wishes.Remove(en);
                 return true;
             }
