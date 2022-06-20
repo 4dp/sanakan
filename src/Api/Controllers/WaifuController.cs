@@ -113,8 +113,6 @@ namespace Sanakan.Api.Controllers
 
                 query = CardsQueryFilter.Use(filter.OrderBy, query);
 
-                query = query.Join(db.WishlistCountData, x => x.Character, x => x.Id, (card, ww) => card.UpdateWWCount(ww));
-
                 var cards = await query.ToListAsync();
                 if (filter.IncludeTags != null && filter.IncludeTags.Count > 0)
                 {
