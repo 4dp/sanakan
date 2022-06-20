@@ -151,8 +151,11 @@ namespace Sanakan.Extensions
         }
 
         public static async Task<Database.Models.Analytics.WishlistCount> CreateOrChangeWishlistCountByAsync(this Database.AnalyticsContext context, ulong id, string name, int by = 1)
+            => await context.WishlistCountData.CreateOrChangeWishlistCountByAsync(id, name, by);
+
+        public static async Task<Database.Models.Analytics.WishlistCount> CreateOrChangeWishlistCountByAsync(this DbSet<Database.Models.Analytics.WishlistCount> wwCount, ulong id, string name, int by = 1, bool setTo = false)
         {
-            var ww = await context.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == id);
+            var ww = await wwCount.AsQueryable().FirstOrDefaultAsync(x => x.Id == id);
             if (ww == null)
             {
                 ww = new Database.Models.Analytics.WishlistCount
@@ -161,16 +164,20 @@ namespace Sanakan.Extensions
                     Name = name,
                     Count = by < 0 ? 0 : by
                 };
-                await context.WishlistCountData.AddAsync(ww);
+                await wwCount.AddAsync(ww);
                 return ww;
             }
 
-            ww.Count += by;
-            if (ww.Name is null)
-                ww.Name = name;
+            if (setTo)
+                ww.Count = by;
+            else
+                ww.Count += by;
 
             if (ww.Count < 0)
                 ww.Count = 0;
+
+            if (ww.Name is null)
+                ww.Name = name;
 
             return ww;
         }

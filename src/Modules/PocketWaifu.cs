@@ -1143,8 +1143,8 @@ namespace Sanakan.Modules
                 {
                     await card.Update(Context.User, _shclient);
 
-                    var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                    card.WhoWantsCount = wishlists.Count;
+                    var wCount = await db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).CountAsync();
+                    await db.WishlistCountData.CreateOrChangeWishlistCountByAsync(card.Character, card.Name, wCount, true);
 
                     await db.SaveChangesAsync();
                     _waifu.DeleteCardImageIfExist(card);
