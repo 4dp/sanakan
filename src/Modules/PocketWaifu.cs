@@ -880,8 +880,15 @@ namespace Sanakan.Modules
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false, [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false)
+        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false,
+            [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podenym tagiem")]string tag = "")
         {
+            if (!string.IsNullOrEmpty(tag) && tag.Contains(" "))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
@@ -987,23 +994,27 @@ namespace Sanakan.Modules
                 {
                     if (checkWishlists && count == 1)
                     {
+                        bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
                         var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
                         if (destroyCards > 0)
                         {
-                            if (wishlists.Count < destroyCards && !charactersOnWishlist.Any(x => x == card.Name))
+                            if (wishlists.Count < destroyCards && !isOnUserWishlist)
                             {
                                 openString += "🖤 ";
                                 toRemove.Add(card);
                             }
                             else
                             {
-                                openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
+                                openString += isOnUserWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
                                 card.WhoWantsCount = wishlists.Count;
+
+                                if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
+                                    card.TagList.Add(new CardTag{ Name = tag });
                             }
                         }
                         else
                         {
-                            openString += charactersOnWishlist.Any(x => x == card.Name) ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
+                            openString += isOnUserWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
                             card.WhoWantsCount = wishlists.Count;
                         }
                     }
