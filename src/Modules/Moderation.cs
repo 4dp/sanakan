@@ -109,8 +109,9 @@ namespace Sanakan.Modules
                 using (var mdb = new Database.ManagmentContext(Config))
                 {
                     var usr = Context.User as SocketGuildUser;
-                    var info = await _moderation.BanUserAysnc(user, mdb, duration, reason);
+                    var info = await _moderation.GetBanUserInfoAysnc(user, duration, reason);
                     await _moderation.NotifyAboutPenaltyAsync(user, notifChannel, info, $"{usr.Nickname ?? usr.Username}");
+                    await _moderation.ExecuteBanUserAysnc(user, info, mdb);
                 }
             }
 
