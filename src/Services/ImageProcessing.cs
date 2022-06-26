@@ -205,23 +205,23 @@ namespace Sanakan.Services
             else if (topPos > 3)
                 posColor = defFontColor;
 
-            profilePic.Mutate(x => x.DrawText(nickname, nickFont, GetOrCreateColor("#a7a7a7"), new Point(132, 144 + (int)((30 - nickFont.Size) / 2))));
-            profilePic.Mutate(x => x.DrawText(rangName, rangFont, defFontColor, new Point(132, 174)));
+            profilePic.Mutate(x => x.DrawText(nickname, nickFont, GetOrCreateColor("#a7a7a7"), new Point(132, 147 + (int)((30 - nickFont.Size) / 2))));
+            profilePic.Mutate(x => x.DrawText(rangName, rangFont, defFontColor, new Point(132, 177)));
 
             var mLevel = TextMeasurer.Measure($"{botUser.Level}", new TextOptions(levelFont));
-            profilePic.Mutate(x => x.DrawText($"{botUser.Level}", levelFont, defFontColor, new Point((int)(125 - mLevel.Width) / 2, 200)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.Level}", levelFont, defFontColor, new Point((int)(125 - mLevel.Width) / 2, 203)));
 
             var mTopPos = TextMeasurer.Measure($"{topPos}", new TextOptions(levelFont));
-            profilePic.Mutate(x => x.DrawText($"{topPos}", levelFont, posColor, new Point((int)(125 - mTopPos.Width) / 2, 278)));
+            profilePic.Mutate(x => x.DrawText($"{topPos}", levelFont, posColor, new Point((int)(125 - mTopPos.Width) / 2, 281)));
 
             var mScOwn = TextMeasurer.Measure($"{botUser.ScCnt}", new TextOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText($"{botUser.ScCnt}", rangFont, defFontColor, new Point((int)(125 - mScOwn.Width) / 2, 359)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.ScCnt}", rangFont, defFontColor, new Point((int)(125 - mScOwn.Width) / 2, 362)));
 
             var mTcOwn = TextMeasurer.Measure($"{botUser.TcCnt}", new TextOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText($"{botUser.TcCnt}", rangFont, defFontColor, new Point((int)(125 - mTcOwn.Width) / 2, 399)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.TcCnt}", rangFont, defFontColor, new Point((int)(125 - mTcOwn.Width) / 2, 401)));
 
             var mMsg = TextMeasurer.Measure($"{botUser.MessagesCnt}", new TextOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 439)));
+            profilePic.Mutate(x => x.DrawText($"{botUser.MessagesCnt}", rangFont, defFontColor, new Point((int)(125 - mMsg.Width) / 2, 442)));
 
             if (botUser.GameDeck.Waifu != 0 && botUser.ShowWaifuInProfile)
             {
@@ -260,7 +260,7 @@ namespace Sanakan.Services
 
             string expText = $"EXP: {expOnLvl} / {lvlExp}";
             var mExp = TextMeasurer.Measure(expText, new TextOptions(rangFont));
-            profilePic.Mutate(x => x.DrawText(expText, rangFont, GetOrCreateColor("#ffffff"), new Point(135 + ((int)(305 - mExp.Width) / 2), 198)));
+            profilePic.Mutate(x => x.DrawText(expText, rangFont, GetOrCreateColor("#ffffff"), new Point(135 + ((int)(305 - mExp.Width) / 2), 201)));
 
             using (var inside = GetProfileInside(shindenUser, botUser))
             {
@@ -362,7 +362,7 @@ namespace Sanakan.Services
 
             int jumpY = 18;
             int row2X = 45;
-            int startY = 6;
+            int startY = 9;
             int startX = 205;
             var font1 = GetFontSize(_latoBold, 18, $"SUM", 100);
             var font2 = GetFontSize(_latoLight, 18, "10000", 130);
@@ -418,7 +418,7 @@ namespace Sanakan.Services
             var font = GetFontSize(_latoBold, 32, name, 360);
 
             var badge = new Image<Rgba32>(450, 65);
-            badge.Mutate(x => x.DrawText(name, font, GetOrCreateColor("#A4A4A4"), new Point(72, (int)((58 - font.Size) / 2))));
+            badge.Mutate(x => x.DrawText(name, font, GetOrCreateColor("#A4A4A4"), new Point(72, 3 + (int)((58 - font.Size) / 2))));
 
             using (var border = new Image<Rgba32>(3, 57))
             {
@@ -461,7 +461,7 @@ namespace Sanakan.Services
                 }
             }
 
-            startPointY += 18;
+            startPointY += 21;
             startPointX += 110;
             int ySecondStart = startPointY;
             int fontSizeAndInterline = 10 + 6;
@@ -584,7 +584,7 @@ namespace Sanakan.Services
             var titleFont = GetOrCreateFont(_latoBold, 10);
             var nameFont = GetOrCreateFont(_latoBold, 16);
             var fColor = GetOrCreateColor("#9A9A9A");
-            int startY = 19;
+            int startY = 22;
 
             var image = new Image<Rgba32>(175, 248);
             image.Mutate(x => x.DrawText($"Ostatnio obejrzane:", nameFont, fColor, new Point(0, 5)));
@@ -706,8 +706,8 @@ namespace Sanakan.Services
             baseImg.Mutate(x => x.BackgroundColor(GetOrCreateColor("#36393e")));
             baseImg.Mutate(x => x.DrawText(msgText1, textFont, Color.Gray, new Point(98 + (int)lvlLength.Width, 75)));
             baseImg.Mutate(x => x.DrawText(name, nickNameFont, GetOrCreateColor(nickNameColor), new Point(98, 10)));
-            baseImg.Mutate(x => x.DrawText(msgText2, textFont, Color.Gray, new Point(98, 27)));
-            baseImg.Mutate(x => x.DrawText($"{ulvl}", lvlFont, Color.Gray, new Point(96, 55)));
+            baseImg.Mutate(x => x.DrawText(msgText2, textFont, Color.Gray, new Point(98, 30)));
+            baseImg.Mutate(x => x.DrawText($"{ulvl}", lvlFont, Color.Gray, new Point(96, 58)));
 
             using (var colorRec = new Image<Rgba32>(82, 82))
             {
