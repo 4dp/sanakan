@@ -1,4 +1,5 @@
 ﻿#pragma warning disable 1591
+#pragma warning disable 0169
 
 using Discord;
 using Discord.WebSocket;
