@@ -34,21 +34,25 @@ namespace Sanakan.Extensions
             return stream;
         }
 
+        //TODO: add ToWebpStream<T>()
+
         public static string SaveToPath<T>(this Image<T> img, string path) where T : struct, IPixel<T>
         {
             var extension = path.Split(".").Last().ToLower();
-            var encoder = (extension == "png") ? _pngEncoder : _jpgEncoder;
+            var encoder = extension switch
+            {
+                "jpg" => _jpgEncoder,
+                "png" => _pngEncoder,
+                _ => _pngEncoder //TODO: change to webp
+            };
             img.Save(path, encoder);
             return path;
         }
 
         public static string SaveToPath<T>(this Image<T> img, string path, int width, int height = 0) where T : struct, IPixel<T>
         {
-            var extension = path.Split(".").Last().ToLower();
-            var encoder = (extension == "png") ? _pngEncoder : _jpgEncoder;
             img.Mutate(x => x.Resize(new Size(width, height)));
-            img.Save(path, encoder);
-            return path;
+            return SaveToPath(img, path);
         }
 
         public static Image<T> ResizeAsNew<T>(this Image<T> img, int width, int height = 0) where T : struct, IPixel<T>

@@ -1299,6 +1299,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GenerateAndSaveCardAsync(Card card, CardImageType type = CardImageType.Normal)
         {
+            //TODO: change to webp
             string imageLocation = $"{Dir.Cards}/{card.Id}.png";
             string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
             string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.png";
@@ -1330,12 +1331,25 @@ namespace Sanakan.Services.PocketWaifu
 
         public void DeleteCardImageIfExist(Card card)
         {
-            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
-            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
-            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.png";
+            string imageLocationOld = $"{Dir.Cards}/{card.Id}.png";
+            string sImageLocationOld = $"{Dir.CardsMiniatures}/{card.Id}.png";
+            string pImageLocationOld = $"{Dir.CardsInProfiles}/{card.Id}.png";
+
+            string imageLocation = $"{Dir.Cards}/{card.Id}.webp";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.webp";
+            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.webp";
 
             try
             {
+                if (File.Exists(imageLocationOld))
+                    File.Delete(imageLocationOld);
+
+                if (File.Exists(sImageLocationOld))
+                    File.Delete(sImageLocationOld);
+
+                if (File.Exists(pImageLocationOld))
+                    File.Delete(pImageLocationOld);
+
                 if (File.Exists(imageLocation))
                     File.Delete(imageLocation);
 
@@ -1350,6 +1364,7 @@ namespace Sanakan.Services.PocketWaifu
 
         private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false, bool force = false)
         {
+            //TODO: change to webp
             string imageUrl = null;
             string imageLocation = $"{Dir.Cards}/{card.Id}.png";
             string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";

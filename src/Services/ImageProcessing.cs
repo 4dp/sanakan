@@ -27,10 +27,13 @@ namespace Sanakan.Services
         private FontFamily _latoRegular = new FontCollection().Install("Fonts/Lato-Regular.ttf");
 
         private readonly ShindenClient _shclient;
+        private Dictionary<(FontFamily, float), Font> _fonts;
+        private readonly string[] _extensions = new[] { "png", "jpg", "jpeg", "gif", "webp" };
 
         public ImageProcessing(ShindenClient shinden)
         {
             _shclient = shinden;
+            _fonts = new Dictionary<(FontFamily, float), Font>();
         }
 
         private async Task<Stream> GetImageFromUrlAsync(string url, bool fixExt = false)
@@ -46,8 +49,7 @@ namespace Sanakan.Services
                     if (fixExt)
                     {
                         var splited = url.Split(".");
-                        var exts = new[] { "png", "jpeg", "gif", "jpg" };
-                        foreach (var ext in exts)
+                        foreach (var ext in _extensions)
                         {
                             splited[splited.Length - 1] = ext;
                             res = await client.GetAsync(string.Join(".", splited));
@@ -59,11 +61,23 @@ namespace Sanakan.Services
                 }
                 catch (Exception)
                 {
-                    return null;
+                    return Stream.Null;
                 }
             }
 
             return null;
+        }
+
+        private Font GetOrCreateFont(FontFamily family, float size)
+        {
+            if (_fonts.ContainsKey((family, size)))
+                return _fonts[(family, size)];
+            else
+            {
+                var font = new Font(family, size);
+                _fonts.Add((family, size), font);
+                return font;
+            }
         }
 
         private Font GetFontSize(FontFamily fontFamily, float size, string text, float maxWidth)
@@ -74,7 +88,7 @@ namespace Sanakan.Services
             while (measured.Width > maxWidth)
             {
                 if (--size < 1) break;
-                font = new Font(fontFamily, size);
+                font = GetOrCreateFont(fontFamily, size);
                 measured = TextMeasurer.Measure(text, new RendererOptions(font));
             }
 
@@ -133,8 +147,8 @@ namespace Sanakan.Services
             string colorRank = color.RawValue.ToString("X6");
 
             var nickFont = GetFontSize(_latoBold, 28, nickname, 290);
-            var rangFont = new Font(_latoRegular, 16);
-            var levelFont = new Font(_latoBold, 40);
+            var rangFont = GetOrCreateFont(_latoRegular, 16);
+            var levelFont = GetOrCreateFont(_latoBold, 40);
 
             var template = Image.Load("./Pictures/profileBody.png");
             var profilePic = new Image<Rgba32>(template.Width, template.Height);
@@ -436,7 +450,7 @@ namespace Sanakan.Services
             startPointX += 110;
             int ySecondStart = startPointY;
             int fontSizeAndInterline = 10 + 6;
-            var font = new Font(_latoBold, 13);
+            var font = GetOrCreateFont(_latoBold, 13);
             int xSecondRow = startPointX + 200;
             var fontColor = Rgba32.FromHex("#727272");
 
@@ -547,8 +561,8 @@ namespace Sanakan.Services
 
         private async Task<Image<Rgba32>> GetLastRWList(List<ILastReaded> lastRead, List<ILastWatched> lastWatch)
         {
-            var titleFont = new Font(_latoBold, 10);
-            var nameFont = new Font(_latoBold, 16);
+            var titleFont = GetOrCreateFont(_latoBold, 10);
+            var nameFont = GetOrCreateFont(_latoBold, 16);
             var fColor = Rgba32.FromHex("#9A9A9A");
             int startY = 25;
 
@@ -654,9 +668,9 @@ namespace Sanakan.Services
             var msgText1 = "POZIOM";
             var msgText2 = "Awansuje na:";
 
-            var textFont = new Font(_latoRegular, 16);
-            var nickNameFont = new Font(_latoBold, 22);
-            var lvlFont = new Font(_latoBold, 36);
+            var textFont = GetOrCreateFont(_latoRegular, 16);
+            var nickNameFont = GetOrCreateFont(_latoBold, 22);
+            var lvlFont = GetOrCreateFont(_latoBold, 36);
 
             var msgText1Length = TextMeasurer.Measure(msgText1, new RendererOptions(textFont));
             var msgText2Length = TextMeasurer.Measure(msgText2, new RendererOptions(textFont));
@@ -702,7 +716,7 @@ namespace Sanakan.Services
 
         public Image<Rgba32> GetFColorsView(SCurrency currency)
         {
-            var message = new Font(_latoRegular, 16);
+            var message = GetOrCreateFont(_latoRegular, 16);
             var firstColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
             var secondColumnMaxLength = TextMeasurer.Measure("A", new RendererOptions(message));
 
@@ -861,8 +875,8 @@ namespace Sanakan.Services
 
         private void ApplyAlphaStats(Image<Rgba32> image, Card card)
         {
-            var adFont = new Font(_latoBold, 36);
-            var hpFont = new Font(_latoBold, 32);
+            var adFont = GetOrCreateFont(_latoBold, 36);
+            var hpFont = GetOrCreateFont(_latoBold, 32);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -882,8 +896,8 @@ namespace Sanakan.Services
 
         private void ApplyBetaStats(Image<Rgba32> image, Card card)
         {
-            var adFont = new Font(_latoBold, 36);
-            var hpFont = new Font(_latoBold, 29);
+            var adFont = GetOrCreateFont(_latoBold, 36);
+            var hpFont = GetOrCreateFont(_latoBold, 29);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -916,7 +930,7 @@ namespace Sanakan.Services
 
         private void ApplyGammaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 26);
+            var aphFont = GetOrCreateFont(_latoBold, 26);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -930,8 +944,8 @@ namespace Sanakan.Services
 
         private void ApplyDeltaStats(Image<Rgba32> image, Card card)
         {
-            var hpFont = new Font(_latoBold, 34);
-            var adFont = new Font(_latoBold, 26);
+            var hpFont = GetOrCreateFont(_latoBold, 34);
+            var adFont = GetOrCreateFont(_latoBold, 26);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -952,7 +966,7 @@ namespace Sanakan.Services
 
         private void ApplyEpsilonStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 28);
+            var aphFont = GetOrCreateFont(_latoBold, 28);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -973,7 +987,7 @@ namespace Sanakan.Services
 
         private void ApplyZetaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_digital, 28);
+            var aphFont = GetOrCreateFont(_digital, 28);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -1018,7 +1032,7 @@ namespace Sanakan.Services
 
         private void ApplyJotaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 22);
+            var aphFont = GetOrCreateFont(_latoBold, 22);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -1048,7 +1062,7 @@ namespace Sanakan.Services
 
         private void ApplyLambdaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_latoBold, 28);
+            var aphFont = GetOrCreateFont(_latoBold, 28);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -1106,7 +1120,7 @@ namespace Sanakan.Services
 
         private void ApplyThetaStats(Image<Rgba32> image, Card card)
         {
-            var aphFont = new Font(_digital, 28);
+            var aphFont = GetOrCreateFont(_digital, 28);
 
             int hp = card.GetHealthWithPenalty();
             int def = card.GetDefenceWithBonus();
@@ -1246,7 +1260,7 @@ namespace Sanakan.Services
             if (health < 10) startXHp += 15;
             if (health > 99) startXHp -= 15;
 
-            var numFont = new Font(_latoBold, 54);
+            var numFont = GetOrCreateFont(_latoBold, 54);
             image.Mutate(x => x.DrawText($"{health}", numFont, Rgba32.FromHex("#000000"), new Point(startXHp, 190)));
             image.Mutate(x => x.DrawText($"{attack}", numFont, Rgba32.FromHex("#000000"), new Point(startXAtk, 320)));
             image.Mutate(x => x.DrawText($"{defence}", numFont, Rgba32.FromHex("#000000"), new Point(startXDef, 440)));
@@ -1337,7 +1351,7 @@ namespace Sanakan.Services
                 Xil = 76;
             }
 
-            var nameFont = new Font(_latoBold, 34);
+            var nameFont = GetOrCreateFont(_latoBold, 34);
             var img = (image != null) ? Image.Load(image.Uri((int)info.Side)) : Image.Load((DuelImage.DefaultUri((int)info.Side)));
 
             win.Mutate(x => x.Resize(new ResizeOptions
