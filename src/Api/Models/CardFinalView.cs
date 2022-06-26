@@ -180,10 +180,10 @@ namespace Sanakan.Api.Models
                 ExpCntForNextLevel = card.ExpToUpgrade(),
                 HasCustomImage = card.CustomImage != null,
                 HasCustomBorder = card.CustomBorder != null,
-                ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.png",
+                ImageUrl = $"https://cdn2.shinden.eu/{card.Id}.webp",
                 IsOnExpedition = card.Expedition != CardExpedition.None,
-                SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.png",
-                ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.png",
+                SmallImageUrl = $"https://cdn2.shinden.eu/small/{card.Id}.webp",
+                ProfileImageUrl = $"https://cdn2.shinden.eu/profile/{card.Id}.webp",
                 Tags = card.TagList.Select(x => x.Name).ToList()
             };
         }

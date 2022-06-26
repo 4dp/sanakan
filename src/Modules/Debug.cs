@@ -853,9 +853,9 @@ namespace Sanakan.Modules
             using (var badge = await _img.GetLevelUpBadgeAsync("Very very long nickname of trolly user",
                 2154, usr.GetUserOrDefaultAvatarUrl(), usr.Roles.OrderByDescending(x => x.Position).First().Color))
             {
-                using (var badgeStream = badge.ToPngStream())
+                using (var badgeStream = badge.ToWebpStream())
                 {
-                    await Context.Channel.SendFileAsync(badgeStream, $"{usr.Id}.png");
+                    await Context.Channel.SendFileAsync(badgeStream, $"{usr.Id}.webp");
                 }
             }
         }
