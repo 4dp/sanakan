@@ -482,7 +482,7 @@ namespace Sanakan.Api.Controllers
         [HttpGet("card/{id}")]
         public async Task GetCardAsync(ulong id)
         {
-            if (!System.IO.File.Exists($"{Services.Dir.CardsMiniatures}/{id}.png") || !System.IO.File.Exists($"{Services.Dir.Cards}/{id}.png") || !System.IO.File.Exists($"{Services.Dir.CardsInProfiles}/{id}.png"))
+            if (!System.IO.File.Exists($"{Services.Dir.CardsMiniatures}/{id}.webp") || !System.IO.File.Exists($"{Services.Dir.Cards}/{id}.webp") || !System.IO.File.Exists($"{Services.Dir.CardsInProfiles}/{id}.webp"))
             {
                 using (var db = new Database.UserContext(_config))
                 {

@@ -1299,20 +1299,19 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<string> GenerateAndSaveCardAsync(Card card, CardImageType type = CardImageType.Normal)
         {
-            //TODO: change to webp
-            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
-            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
-            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.png";
+            string imageLocation = $"{Dir.Cards}/{card.Id}.webp";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.webp";
+            string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.webp";
 
             using (var image = await _img.GetWaifuCardAsync(card))
             {
-                image.SaveToPath(imageLocation, 300);
-                image.SaveToPath(sImageLocation, 133);
+                image.SaveToPath(imageLocation);
+                image.SaveToPath(sImageLocation);
             }
 
             using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
             {
-                cardImage.SaveToPath(pImageLocation, 380);
+                cardImage.SaveToPath(pImageLocation);
             }
 
             switch (type)
@@ -1364,10 +1363,9 @@ namespace Sanakan.Services.PocketWaifu
 
         private async Task<string> GetCardUrlIfExistAsync(Card card, bool defaultStr = false, bool force = false)
         {
-            //TODO: change to webp
             string imageUrl = null;
-            string imageLocation = $"{Dir.Cards}/{card.Id}.png";
-            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.png";
+            string imageLocation = $"{Dir.Cards}/{card.Id}.webp";
+            string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.webp";
 
             if (!File.Exists(imageLocation) || !File.Exists(sImageLocation) || force)
             {

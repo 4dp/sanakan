@@ -3,22 +3,24 @@
 using System.IO;
 using System.Linq;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
-using SixLabors.Shapes;
 
 namespace Sanakan.Extensions
 {
     public static class ImageExtension
     {
         private static IImageEncoder _jpgEncoder = new JpegEncoder() { Quality = 85 };
+        private static IImageEncoder _webpEncoder = new WebpEncoder();
         private static IImageEncoder _pngEncoder = new PngEncoder();
 
-        public static Stream ToJpgStream<T>(this Image<T> img) where T : struct, IPixel<T>
+        public static Stream ToJpgStream(this Image img)
         {
             var stream = new MemoryStream();
             img.Save(stream, _jpgEncoder);
@@ -26,7 +28,7 @@ namespace Sanakan.Extensions
             return stream;
         }
 
-        public static Stream ToPngStream<T>(this Image<T> img) where T : struct, IPixel<T>
+        public static Stream ToPngStream(this Image img)
         {
             var stream = new MemoryStream();
             img.Save(stream, _pngEncoder);
@@ -34,39 +36,45 @@ namespace Sanakan.Extensions
             return stream;
         }
 
-        //TODO: add ToWebpStream<T>()
+        public static Stream ToWebpStream(this Image img)
+        {
+            var stream = new MemoryStream();
+            img.Save(stream, _webpEncoder);
+            stream.Seek(0, SeekOrigin.Begin);
+            return stream;
+        }
 
-        public static string SaveToPath<T>(this Image<T> img, string path) where T : struct, IPixel<T>
+        public static string SaveToPath(this Image img, string path)
         {
             var extension = path.Split(".").Last().ToLower();
             var encoder = extension switch
             {
-                "jpg" => _jpgEncoder,
+                "webp" => _webpEncoder,
                 "png" => _pngEncoder,
-                _ => _pngEncoder //TODO: change to webp
+                _ => _jpgEncoder
             };
             img.Save(path, encoder);
             return path;
         }
 
-        public static string SaveToPath<T>(this Image<T> img, string path, int width, int height = 0) where T : struct, IPixel<T>
+        public static string SaveToPath(this Image img, string path, int width, int height = 0)
         {
             img.Mutate(x => x.Resize(new Size(width, height)));
             return SaveToPath(img, path);
         }
 
-        public static Image<T> ResizeAsNew<T>(this Image<T> img, int width, int height = 0) where T : struct, IPixel<T>
+        public static Image<T> ResizeAsNew<T>(this Image<T> img, int width, int height = 0) where T : unmanaged, IPixel<T>
         {
             var nImg = img.Clone();
             nImg.Mutate(x => x.Resize(new Size(width, height)));
             return nImg;
         }
 
-        public static void Round(this IImageProcessingContext<Rgba32> img, float radius)
+        public static void Round(this IImageProcessingContext img, float radius)
         {
             var size = img.GetCurrentSize();
-            var gOptions = new GraphicsOptions(true) { AlphaCompositionMode = PixelAlphaCompositionMode.DestOut };
-            img.Fill(gOptions, Rgba32.Black, BuildCorners(size.Width, size.Height, radius));
+            var gOptions = new DrawingOptions{ GraphicsOptions = new GraphicsOptions { AlphaCompositionMode = PixelAlphaCompositionMode.DestOut } };
+            img.Fill(gOptions, Color.Black, BuildCorners(size.Width, size.Height, radius));
         }
 
         private static IPathCollection BuildCorners(int imageWidth, int imageHeight, float cornerRadius)

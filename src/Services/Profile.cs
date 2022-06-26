@@ -8,7 +8,6 @@ using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Shinden;
 using Shinden.Logger;
-using SixLabors.Primitives;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -333,7 +332,7 @@ namespace Sanakan.Services
             try
             {
                 if (File.Exists(path)) File.Delete(path);
-                await _img.SaveImageFromUrlAsync(imgUrl, path, new Size(width, height), streach);
+                await _img.SaveImageFromUrlAsync(imgUrl, path, new SixLabors.ImageSharp.Size(width, height), streach);
             }
             catch (Exception)
             {
