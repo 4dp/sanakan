@@ -31,7 +31,7 @@ namespace Sanakan.Services
         private Dictionary<(FontFamily, float), Font> _fonts;
         private Dictionary<string, Color> _colors;
         private readonly string[] _extensions = new[] { "png", "jpg", "jpeg", "gif", "webp" };
-        
+
         public ImageProcessing(ShindenClient shinden)
         {
             _shclient = shinden;
@@ -584,10 +584,10 @@ namespace Sanakan.Services
             var titleFont = GetOrCreateFont(_latoBold, 10);
             var nameFont = GetOrCreateFont(_latoBold, 16);
             var fColor = GetOrCreateColor("#9A9A9A");
-            int startY = 22;
+            int startY = 24;
 
-            var image = new Image<Rgba32>(175, 248);
-            image.Mutate(x => x.DrawText($"Ostatnio obejrzane:", nameFont, fColor, new Point(0, 5)));
+            var image = new Image<Rgba32>(175, 250);
+            image.Mutate(x => x.DrawText($"Ostatnio obejrzane:", nameFont, fColor, new Point(0, 4)));
             if (lastWatch != null)
             {
                 int max = -1;
@@ -608,8 +608,8 @@ namespace Sanakan.Services
                 }
             }
 
-            startY += 122;
-            image.Mutate(x => x.DrawText($"Ostatnio przeczytane:", nameFont, fColor, new Point(0, 127)));
+            startY += 128;
+            image.Mutate(x => x.DrawText($"Ostatnio przeczytane:", nameFont, fColor, new Point(0, 131)));
             if (lastRead != null)
             {
                 int max = -1;
@@ -705,9 +705,9 @@ namespace Sanakan.Services
 
             baseImg.Mutate(x => x.BackgroundColor(GetOrCreateColor("#36393e")));
             baseImg.Mutate(x => x.DrawText(msgText1, textFont, Color.Gray, new Point(98 + (int)lvlLength.Width, 75)));
-            baseImg.Mutate(x => x.DrawText(name, nickNameFont, GetOrCreateColor(nickNameColor), new Point(98, 10)));
+            baseImg.Mutate(x => x.DrawText(name, nickNameFont, GetOrCreateColor(nickNameColor), new Point(98, 5)));
             baseImg.Mutate(x => x.DrawText(msgText2, textFont, Color.Gray, new Point(98, 30)));
-            baseImg.Mutate(x => x.DrawText($"{ulvl}", lvlFont, Color.Gray, new Point(96, 58)));
+            baseImg.Mutate(x => x.DrawText($"{ulvl}", lvlFont, Color.Gray, new Point(96, 55)));
 
             using (var colorRec = new Image<Rgba32>(82, 82))
             {
@@ -765,7 +765,7 @@ namespace Sanakan.Services
                 }
             }
 
-            int posY = 5;
+            int posY = 2;
             int posX = 0;
             int realWidth = (int)(firstColumnMaxLength.Width + secondColumnMaxLength.Width + 20);
             int realHeight = (int)(firstColumnMaxLength.Height + 2) * (inFirstColumn + 1);
@@ -778,7 +778,7 @@ namespace Sanakan.Services
             {
                 if (inFirstColumn + 1 == i)
                 {
-                    posY = 5;
+                    posY = 2;
                     posX = (int)firstColumnMaxLength.Width + 10;
                 }
 
