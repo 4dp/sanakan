@@ -162,13 +162,13 @@ namespace Sanakan.Services.Session
             var thisUser = _client.GetUser(user.Id);
             if (thisUser == null) return;
 
-            var chan = await channel.GetOrDownloadAsync() as ISocketMessageChannel;
+            var chan = await channel.GetOrDownloadAsync();
             if (chan == null) return;
 
             var msg = await chan.GetMessageAsync(message.Id);
             if (msg == null) return;
 
-            var thisMessage = msg as SocketUserMessage;
+            var thisMessage = msg as IUserMessage;
             if (thisMessage == null) return;
 
             await RunSessions(userSessions, new SessionContext(chan, thisUser, thisMessage, _client, reaction, true)).ConfigureAwait(false);
@@ -189,13 +189,13 @@ namespace Sanakan.Services.Session
             var thisUser = _client.GetUser(user.Id);
             if (thisUser == null) return;
 
-            var chan = await channel.GetOrDownloadAsync() as ISocketMessageChannel;
+            var chan = await channel.GetOrDownloadAsync();
             if (chan == null) return;
 
             var msg = await chan.GetMessageAsync(message.Id);
             if (msg == null) return;
 
-            var thisMessage = msg as SocketUserMessage;
+            var thisMessage = msg as IUserMessage;
             if (thisMessage == null) return;
 
             await RunSessions(userSessions, new SessionContext(chan, thisUser, thisMessage, _client, reaction, false)).ConfigureAwait(false);

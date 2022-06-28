@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -159,7 +158,7 @@ namespace Sanakan.Services.Session.Models
             }
         }
 
-        private async Task HandleAddAsync(int number, long count, SocketUserMessage message)
+        private async Task HandleAddAsync(int number, long count, IUserMessage message)
         {
             if (number >= Items.Count)
             {
@@ -191,7 +190,7 @@ namespace Sanakan.Services.Session.Models
             }
         }
 
-        private async Task HandleDeleteAsync(int number, long count, SocketUserMessage message)
+        private async Task HandleDeleteAsync(int number, long count, IUserMessage message)
         {
             if (number >= P1.Items.Count)
             {

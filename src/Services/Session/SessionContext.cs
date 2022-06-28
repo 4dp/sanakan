@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 1591
 
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
@@ -18,7 +19,7 @@ namespace Sanakan.Services.Session
             User = context.User;
         }
 
-        public SessionContext(ISocketMessageChannel channel, SocketUser user, SocketUserMessage message,
+        public SessionContext(IMessageChannel channel, SocketUser user, IUserMessage message,
             DiscordSocketClient client, SocketReaction reaction, bool reactionAdded)
         {
             ReactionAdded = reactionAdded ? reaction : null;
@@ -33,9 +34,9 @@ namespace Sanakan.Services.Session
         public SocketReaction ReactionRemoved { get; private set; }
         public SocketReaction ReactionAdded { get; private set; }
 
-        public ISocketMessageChannel Channel { get; private set; }
+        public IMessageChannel Channel { get; private set; }
         public DiscordSocketClient Client { get; private set; }
-        public SocketUserMessage Message { get; private set; }
+        public IUserMessage Message { get; private set; }
         public SocketUser User { get; private set; }
     }
 }
