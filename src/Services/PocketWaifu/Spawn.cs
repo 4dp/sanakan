@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -147,6 +148,10 @@ namespace Sanakan.Services.PocketWaifu
 
                     newCard.FirstIdOwner = winner.Id;
                     newCard.Affection += botUser.GameDeck.AffectionFromKarma();
+
+                    var wwc = await db.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == newCard.Character);
+                    newCard.WhoWantsCount = wwc?.Count ?? 0;
+
                     using (var dba = new Database.AnalyticsContext(_config))
                     {
                         botUser.GameDeck.RemoveCharacterFromWishList(newCard.Character, dba);

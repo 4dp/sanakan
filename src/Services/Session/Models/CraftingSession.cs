@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Microsoft.EntityFrameworkCore;
 using Sanakan.Config;
 using Sanakan.Database.Models;
 using Sanakan.Extensions;
@@ -253,6 +254,9 @@ namespace Sanakan.Services.Session.Models
                         {
                             var user = await db.GetUserOrCreateAsync(P1.User.Id);
                             var newCard = _waifu.GenerateNewCard(P1.User, await _waifu.GetRandomCharacterAsync(), GetRarityFromValue(GetValue()));
+
+                            var wwc = await db.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == newCard.Character);
+                            newCard.WhoWantsCount = wwc?.Count ?? 0;
 
                             newCard.Source = CardSource.Crafting;
                             newCard.Affection = user.GameDeck.AffectionFromKarma();

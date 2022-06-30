@@ -707,6 +707,9 @@ namespace Sanakan.Api.Controllers
                             card.Affection += botUser.GameDeck.AffectionFromKarma();
                             card.FirstIdOwner = botUser.Id;
 
+                            var wwc = await db.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == card.Character);
+                            card.WhoWantsCount = wwc?.Count ?? 0;
+
                             botUser.GameDeck.Cards.Add(card);
                             save = botUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
                         }
@@ -805,6 +808,9 @@ namespace Sanakan.Api.Controllers
                                 {
                                     card.Affection += botUser.GameDeck.AffectionFromKarma();
                                     card.FirstIdOwner = botUser.Id;
+
+                                    var wwc = await db.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == card.Character);
+                                    card.WhoWantsCount = wwc?.Count ?? 0;
 
                                     botUser.GameDeck.Cards.Add(card);
                                     save = botUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba);
