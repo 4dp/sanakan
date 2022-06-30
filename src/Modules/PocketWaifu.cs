@@ -880,7 +880,7 @@ namespace Sanakan.Modules
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
-        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = false,
+        public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = true,
             [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podenym tagiem")]string tag = "")
         {
             if (!string.IsNullOrEmpty(tag) && tag.Contains(" "))
