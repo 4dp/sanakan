@@ -876,6 +876,12 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("lazyp")]
+        [Summary("otwiera pakiety pierwszy pakiet z domyślnie ustawionym niszczeniem kc na 4, oraz tagiem wymiana")]
+        [Remarks("1"), RequireWaifuCommandChannel]
+        public async Task OpenPacketLazyModeAsync([Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 4, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podenym tagiem")]string tag = "wymiana")
+            => await OpenPacketAsync(1, 1, true, destroyCards, changeToRelease, tag);
+
         [Command("pakiet")]
         [Alias("pakiet kart", "booster", "booster pack", "pack")]
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
