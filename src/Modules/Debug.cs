@@ -367,7 +367,9 @@ namespace Sanakan.Modules
         {
             using (var db = new Database.UserContext(Config))
             {
-                if (!db.Users.Any(x => x.Id == userId))
+
+                var deck = await db.GameDecks.Include(x => x.Wishes).FirstOrDefaultAsync(x => x.UserId == userId);
+                if (deck == null)
                 {
                     await ReplyAsync("", embed: "W bazie nie ma użytkownika o podanym id!".ToEmbedMessage(EMType.Error).Build());
                     return;
@@ -390,6 +392,9 @@ namespace Sanakan.Modules
                     thisCard.TagList.Clear();
                     thisCard.GameDeckId = userId;
                     thisCard.Expedition = CardExpedition.None;
+
+                    deck.RemoveCardFromWishList(thisCard.Id);
+                    await deck.RemoveCharacterFromWishListAsync(thisCard.Character, db);
                 }
 
                 await db.SaveChangesAsync();

@@ -6,6 +6,7 @@ using Sanakan.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sanakan.Extensions
 {
@@ -428,6 +429,18 @@ namespace Sanakan.Extensions
             if (en != null)
             {
                 db.CreateOrChangeWishlistCountBy(en.ObjectId, en.ObjectName, -1);
+                deck.Wishes.Remove(en);
+                return true;
+            }
+            return false;
+        }
+
+        public static async Task<bool> RemoveCharacterFromWishListAsync(this GameDeck deck, ulong id, Database.UserContext db)
+        {
+            var en = deck.Wishes.FirstOrDefault(x => x.Type == WishlistObjectType.Character && x.ObjectId == id);
+            if (en != null)
+            {
+                await db.WishlistCountData.CreateOrChangeWishlistCountByAsync(en.ObjectId, en.ObjectName, -1);
                 deck.Wishes.Remove(en);
                 return true;
             }
