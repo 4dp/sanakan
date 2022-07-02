@@ -2837,6 +2837,18 @@ namespace Sanakan.Modules
         [Remarks("konie wymiana"), RequireWaifuCommandChannel]
         public async Task ReplaceCardsTagAsync([Summary("stary tag")]string oldTag, [Summary("nowy tag")]string newTag = "%$-1")
         {
+            if (newTag.Contains(" "))
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            if (newTag == oldTag)
+            {
+                await ReplyAsync("", embed: $"{Context.User.Mention} nowe oznaczenie nie może być takie samo jak stare.".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
             using (var db = new Database.UserContext(Config))
             {
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
@@ -2845,12 +2857,6 @@ namespace Sanakan.Modules
                 if (cards.Count < 1)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono nieoznaczonych kart.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                if (newTag.Contains(" "))
-                {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} oznaczenie nie może zawierać spacji.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
