@@ -970,92 +970,71 @@ namespace Sanakan.Modules
                     }
 
                     bUser.GameDeck.BoosterPacks.Remove(pack);
+                    totalCards.AddRange(cards);
+                }
 
-                    using (var dba = new Database.AnalyticsContext(Config))
+                using (var dba = new Database.AnalyticsContext(Config))
+                {
+                    bool save = false;
+                    foreach (var card in totalCards)
                     {
-                        bool save = false;
-                        foreach (var card in cards)
+                        if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
                         {
-                            if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
-                            {
-                                charactersOnWishlist.Add(card.Name);
-                            }
-                            card.Affection += bUser.GameDeck.AffectionFromKarma();
-                            bUser.GameDeck.Cards.Add(card);
-                            totalCards.Add(card);
+                            charactersOnWishlist.Add(card.Name);
                         }
-                        if (save) await dba.SaveChangesAsync();
+
+                        if (checkWishlists && count == 1)
+                        {
+                            bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
+                            var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
+                            if (destroyCards > 0)
+                            {
+                                if (wishlists.Count < destroyCards && !isOnUserWishlist)
+                                {
+                                    card.DestroyOrRelease(bUser, changeToRelease);
+                                    continue;
+                                }
+
+                                card.WhoWantsCount = wishlists.Count;
+                                bUser.GameDeck.Cards.Add(card);
+
+                                if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
+                                    card.TagList.Add(new CardTag{ Name = tag });
+                            }
+                            else
+                            {
+                                card.WhoWantsCount = wishlists.Count;
+                                bUser.GameDeck.Cards.Add(card);
+                            }
+                        }
+                        card.Affection += bUser.GameDeck.AffectionFromKarma();
+                        bUser.GameDeck.Cards.Add(card);
                     }
+                    if (save) await dba.SaveChangesAsync();
                 }
 
                 await db.SaveChangesAsync();
-
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 string openString = "";
                 string packString = $"{count} pakietów";
                 if (count == 1) packString = $"pakietu **{packs.First().Name}**";
 
-                var toRemove = new List<Card>();
                 foreach (var card in totalCards)
                 {
                     if (checkWishlists && count == 1)
                     {
                         bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
-                        var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                        if (destroyCards > 0)
+                        if ((card.WhoWantsCount < destroyCards && !isOnUserWishlist) && destroyCards > 0)
                         {
-                            if (wishlists.Count < destroyCards && !isOnUserWishlist)
-                            {
-                                openString += "🖤 ";
-                                toRemove.Add(card);
-                            }
-                            else
-                            {
-                                openString += isOnUserWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
-                                card.WhoWantsCount = wishlists.Count;
-
-                                if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
-                                    card.TagList.Add(new CardTag{ Name = tag });
-                            }
+                            openString += "🖤 ";
                         }
                         else
                         {
-                            openString += isOnUserWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
-                            card.WhoWantsCount = wishlists.Count;
+                            openString += card.ToHeartWishlist(isOnUserWishlist);
                         }
                     }
                     openString += $"{card.GetString(false, false, true)}\n";
-                }
-
-                if (toRemove.Count > 0)
-                {
-                    var chLvl = bUser.GameDeck.ExpContainer.Level;
-                    foreach(var c in toRemove)
-                    {
-                        if (changeToRelease)
-                        {
-                            bUser.StoreExpIfPossible(((c.ExpCnt / 2) > c.GetMaxExpToChest(chLvl))
-                                ? c.GetMaxExpToChest(chLvl)
-                                : (c.ExpCnt / 2));
-
-                            bUser.GameDeck.Karma += 1;
-                            bUser.Stats.ReleasedCards += 1;
-                        }
-                        else
-                        {
-                            bUser.StoreExpIfPossible((c.ExpCnt > c.GetMaxExpToChest(chLvl))
-                                ? c.GetMaxExpToChest(chLvl)
-                                : c.ExpCnt);
-
-                            bUser.GameDeck.Karma -= 1;
-                            bUser.GameDeck.CTCnt += (long) c.GetValue();
-                            bUser.Stats.DestroyedCards += 1;
-                        }
-                        bUser.GameDeck.Cards.Remove(c);
-                    }
-
-                    await db.SaveChangesAsync();
                 }
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} z {packString} wypadło:\n\n{openString.TrimToLength(1950)}".ToEmbedMessage(EMType.Success).Build());

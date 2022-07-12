@@ -980,5 +980,43 @@ namespace Sanakan.Extensions
             if (cards.Count < 1) return (int) Rarity.E;
             return cards.Average(x => (int) x.Rarity);
         }
+
+        public static string ToHeartWishlist(this Card card, bool isOnUserWishlist = false)
+        {
+            if (isOnUserWishlist) return "💚 ";
+            if (card.WhoWantsCount < 1) return "🤍 ";
+            return $"💗 ({card.WhoWantsCount}) ";
+        }
+
+        public static void DestroyOrRelease(this Card card, User user, bool release)
+        {
+            if (release)
+                card.ReleaseCard(user);
+            else
+                card.DestroyCard(user);
+        }
+
+        public static void DestroyCard(this Card card, User user)
+        {
+            var chLvl = user.GameDeck.ExpContainer.Level;
+            user.StoreExpIfPossible((card.ExpCnt > card.GetMaxExpToChest(chLvl))
+                ? card.GetMaxExpToChest(chLvl)
+                : card.ExpCnt);
+
+            user.GameDeck.Karma -= 1;
+            user.Stats.DestroyedCards += 1;
+            user.GameDeck.CTCnt += (long)card.GetValue();
+        }
+
+        public static void ReleaseCard(this Card card, User user)
+        {
+            var chLvl = user.GameDeck.ExpContainer.Level;
+            user.StoreExpIfPossible(((card.ExpCnt / 2) > card.GetMaxExpToChest(chLvl))
+                ? card.GetMaxExpToChest(chLvl)
+                : (card.ExpCnt / 2));
+
+            user.GameDeck.Karma += 1;
+            user.Stats.ReleasedCards += 1;
+        }
     }
 }
