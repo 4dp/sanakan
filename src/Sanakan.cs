@@ -95,7 +95,8 @@ namespace Sanakan
 
             var tmpCnf = _config.Get();
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
-                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger, LogLevel.Error);
+                tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger,
+                LogLevel.Error, tmpCnf.Shinden.BaseUri);
 
             _helper = new Helper(_config);
             _events = new Events(_shindenClient);

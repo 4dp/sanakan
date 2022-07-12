@@ -7,5 +7,6 @@ namespace Sanakan.Config.Model
         public string Token { get; set; }
         public string UserAgent { get; set; }
         public string Marmolade { get; set; }
+        public string BaseUri { get; set; }
     }
 }
