@@ -1306,7 +1306,7 @@ namespace Sanakan.Services.PocketWaifu
             using (var image = await _img.GetWaifuCardAsync(card))
             {
                 image.SaveToPath(imageLocation);
-                image.SaveToPath(sImageLocation);
+                image.SaveToPath(sImageLocation, 133);
             }
 
             using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))

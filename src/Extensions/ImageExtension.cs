@@ -16,9 +16,16 @@ namespace Sanakan.Extensions
 {
     public static class ImageExtension
     {
-        private static IImageEncoder _jpgEncoder = new JpegEncoder() { Quality = 85 };
-        private static IImageEncoder _webpEncoder = new WebpEncoder();
         private static IImageEncoder _pngEncoder = new PngEncoder();
+        private static IImageEncoder _jpgEncoder = new JpegEncoder()
+        {
+            Quality = 85
+        };
+        private static IImageEncoder _webpEncoder = new WebpEncoder()
+        {
+            FileFormat = WebpFileFormatType.Lossy,
+            Quality = 85,
+        };
 
         public static Stream ToJpgStream(this Image img)
         {
