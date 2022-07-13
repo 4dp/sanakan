@@ -974,6 +974,7 @@ namespace Sanakan.Modules
                     totalCards.AddRange(cards);
                 }
 
+                var allWWCnt = await db.WishlistCountData.AsQueryable().ToListAsync();
                 foreach (var card in totalCards)
                 {
                     if (await bUser.GameDeck.RemoveCharacterFromWishListAsync(card.Character, db))
@@ -982,16 +983,16 @@ namespace Sanakan.Modules
                     if (checkWishlists && count == 1)
                     {
                         bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
-                        var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).ToList();
+                        var wishlistsCnt = allWWCnt.FirstOrDefault(x => x.Id == card.Character)?.Count ?? 0;
                         if (destroyCards > 0)
                         {
-                            if (wishlists.Count < destroyCards && !isOnUserWishlist)
+                            if (wishlistsCnt < destroyCards && !isOnUserWishlist)
                             {
                                 card.DestroyOrRelease(bUser, changeToRelease);
                                 continue;
                             }
 
-                            card.WhoWantsCount = wishlists.Count;
+                            card.WhoWantsCount = wishlistsCnt;
                             bUser.GameDeck.Cards.Add(card);
 
                             if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
@@ -999,7 +1000,7 @@ namespace Sanakan.Modules
                         }
                         else
                         {
-                            card.WhoWantsCount = wishlists.Count;
+                            card.WhoWantsCount = wishlistsCnt;
                             bUser.GameDeck.Cards.Add(card);
                         }
                     }
