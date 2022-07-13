@@ -973,44 +973,37 @@ namespace Sanakan.Modules
                     totalCards.AddRange(cards);
                 }
 
-                using (var dba = new Database.AnalyticsContext(Config))
+                foreach (var card in totalCards)
                 {
-                    bool save = false;
-                    foreach (var card in totalCards)
+                    if (await bUser.GameDeck.RemoveCharacterFromWishListAsync(card.Character, db))
+                        charactersOnWishlist.Add(card.Name);
+
+                    if (checkWishlists && count == 1)
                     {
-                        if (bUser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
+                        bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
+                        var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).ToList();
+                        if (destroyCards > 0)
                         {
-                            charactersOnWishlist.Add(card.Name);
-                        }
+                            if (wishlists.Count < destroyCards && !isOnUserWishlist)
+                            {
+                                card.DestroyOrRelease(bUser, changeToRelease);
+                                continue;
+                            }
 
-                        if (checkWishlists && count == 1)
+                            card.WhoWantsCount = wishlists.Count;
+                            bUser.GameDeck.Cards.Add(card);
+
+                            if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
+                                card.TagList.Add(new CardTag { Name = tag });
+                        }
+                        else
                         {
-                            bool isOnUserWishlist = charactersOnWishlist.Any(x => x == card.Name);
-                            var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                            if (destroyCards > 0)
-                            {
-                                if (wishlists.Count < destroyCards && !isOnUserWishlist)
-                                {
-                                    card.DestroyOrRelease(bUser, changeToRelease);
-                                    continue;
-                                }
-
-                                card.WhoWantsCount = wishlists.Count;
-                                bUser.GameDeck.Cards.Add(card);
-
-                                if (!string.IsNullOrEmpty(tag) && !isOnUserWishlist)
-                                    card.TagList.Add(new CardTag{ Name = tag });
-                            }
-                            else
-                            {
-                                card.WhoWantsCount = wishlists.Count;
-                                bUser.GameDeck.Cards.Add(card);
-                            }
+                            card.WhoWantsCount = wishlists.Count;
+                            bUser.GameDeck.Cards.Add(card);
                         }
-                        card.Affection += bUser.GameDeck.AffectionFromKarma();
-                        bUser.GameDeck.Cards.Add(card);
                     }
-                    if (save) await dba.SaveChangesAsync();
+                    card.Affection += bUser.GameDeck.AffectionFromKarma();
+                    bUser.GameDeck.Cards.Add(card);
                 }
 
                 await db.SaveChangesAsync();
@@ -1575,15 +1568,7 @@ namespace Sanakan.Modules
                 var card = _waifu.GenerateNewCard(Context.User, character,
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
-                bool wasOnWishlist = false;
-                using (var dba = new Database.AnalyticsContext(Config))
-                {
-                    if (botuser.GameDeck.RemoveCharacterFromWishList(card.Character, dba))
-                    {
-                        wasOnWishlist = true;
-                        await dba.SaveChangesAsync();
-                    }
-                }
+                bool wasOnWishlist = await botuser.GameDeck.RemoveCharacterFromWishListAsync(card.Character, db);
                 card.Affection += botuser.GameDeck.AffectionFromKarma();
                 card.Source = CardSource.Daily;
 
@@ -1591,8 +1576,8 @@ namespace Sanakan.Modules
 
                 await db.SaveChangesAsync();
 
-                var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == card.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character))).ToList();
-                var wishStr = wasOnWishlist ? "💚 " : ((wishlists.Count > 0) ? $"({wishlists.Count}) 💗 " : "🤍 ");
+                var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).ToList();
+                var wishStr = card.ToHeartWishlist(wasOnWishlist);
                 card.WhoWantsCount = wishlists.Count;
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
