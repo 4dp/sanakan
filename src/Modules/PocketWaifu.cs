@@ -974,7 +974,7 @@ namespace Sanakan.Modules
                     totalCards.AddRange(cards);
                 }
 
-                var allWWCnt = await db.WishlistCountData.AsQueryable().ToListAsync();
+                var allWWCnt = await db.WishlistCountData.AsQueryable().AsNoTracking().ToListAsync();
                 foreach (var card in totalCards)
                 {
                     if (await bUser.GameDeck.RemoveCharacterFromWishListAsync(card.Character, db))
