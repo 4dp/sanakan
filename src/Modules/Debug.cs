@@ -1231,7 +1231,7 @@ namespace Sanakan.Modules
         }
 
         [Command("removewebrmconfig"), Priority(1)]
-        [Summary("kasujewpis w konfiguracji powiadomień oparty o webhook")]
+        [Summary("kasuje wpis w konfiguracji powiadomień oparty o webhook")]
         [Remarks("News http://twojweebhook.com/1232412323")]
         public async Task RemoveWebRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("url")][Remainder] string url)
         {
