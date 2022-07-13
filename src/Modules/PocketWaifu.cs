@@ -898,6 +898,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
+                await db.Database.OpenConnectionAsync();
                 var bUser = await db.GetUserOrCreateAsync(Context.User.Id);
 
                 if (bUser.GameDeck.BoosterPacks.Count < 1)
@@ -1007,6 +1008,7 @@ namespace Sanakan.Modules
                 }
 
                 await db.SaveChangesAsync();
+                await db.Database.CloseConnectionAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 string openString = "";
