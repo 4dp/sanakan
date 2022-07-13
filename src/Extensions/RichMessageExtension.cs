@@ -50,6 +50,9 @@ namespace Sanakan.Extensions
             };
         }
 
+        public static List<Embed> ToEmbeds(this RichMessage msg)
+            => new List<Embed> { msg.ToEmbed() };
+
         public static Embed ToEmbed(this RichMessage msg)
         {
             var embed = new EmbedBuilder

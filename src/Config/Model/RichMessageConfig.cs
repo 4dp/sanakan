@@ -10,9 +10,11 @@ namespace Sanakan.Config.Model
         public ulong GuildId { get; set; }
         public ulong ChannelId { get; set; }
         public RichMessageType Type { get; set; }
+        public string WebHookUrl { get; set; }
 
         public override string ToString()
         {
+            if (!string.IsNullOrEmpty(WebHookUrl)) return $"Webhook:\nTyp: {Type}\nUrl: {WebHookUrl}";
             return $"Serwer: {GuildId}\nRola: {RoleId}\nKanał: {ChannelId}\nTyp: {Type}";
         }
     }

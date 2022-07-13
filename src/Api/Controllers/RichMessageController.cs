@@ -45,6 +45,15 @@ namespace Sanakan.Api.Controllers
             {
                 foreach (var rmc in config.RMConfig)
                 {
+                    if (!string.IsNullOrEmpty(rmc.WebHookUrl))
+                    {
+                        using (var webhook = new Discord.Webhook.DiscordWebhookClient(rmc.WebHookUrl))
+                        {
+                            await webhook.DeleteMessageAsync(id);
+                        }
+                        continue;
+                    }
+
                     var guild = _client.GetGuild(rmc.GuildId);
                     if (guild == null) continue;
 
@@ -82,6 +91,15 @@ namespace Sanakan.Api.Controllers
             {
                 foreach (var rmc in config.RMConfig)
                 {
+                    if (!string.IsNullOrEmpty(rmc.WebHookUrl))
+                    {
+                        using (var webhook = new Discord.Webhook.DiscordWebhookClient(rmc.WebHookUrl))
+                        {
+                            await webhook.ModifyMessageAsync(id, x => x.Embeds = message.ToEmbeds());
+                        }
+                        continue;
+                    }
+
                     var guild = _client.GetGuild(rmc.GuildId);
                     if (guild == null) continue;
 
@@ -119,6 +137,16 @@ namespace Sanakan.Api.Controllers
             var rmcs = config.RMConfig.Where(x => x.Type == message.MessageType);
             foreach (var rmc in rmcs)
             {
+                if (!string.IsNullOrEmpty(rmc.WebHookUrl))
+                {
+                    using (var webhook = new Discord.Webhook.DiscordWebhookClient(rmc.WebHookUrl))
+                    {
+                        var idm = await webhook.SendMessageAsync("", embeds: message.ToEmbeds());
+                        msgList.Add(idm);
+                    }
+                    continue;
+                }
+
                 if (rmc.Type == Models.RichMessageType.UserNotify)
                 {
                     var user = _client.GetUser(rmc.ChannelId);

@@ -747,6 +747,18 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("shuri"), Priority(1)]
+        [Summary("ustawia bazowe uri do api shindena")]
+        [Remarks("")]
+        public async Task SetBaseShindenUriAsync([Summary("uri do api")][Remainder] string uri)
+        {
+            var config = Config.Get();
+            config.Shinden.BaseUri = uri;
+            Config.Save();
+
+            await ReplyAsync("", embed: $"Ustawiono URI na `{uri}`".ToEmbedMessage(EMType.Success).Build());
+        }
+
         [Command("chpp"), Priority(1)]
         [Summary("ustawia liczbę znaków na pakiet")]
         [Remarks("true")]
@@ -1190,6 +1202,53 @@ namespace Sanakan.Modules
             if (save) Config.Save();
 
             await ReplyAsync("", embed: "Wpis został zmodyfikowany!".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("addwebrmconfig"), Priority(1)]
+        [Summary("dodaje nowy wpis w konfiguracji powiadomień oparty o webhook")]
+        [Remarks("News http://twojweebhook.com/1232412323")]
+        public async Task AddWebRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("url")][Remainder] string url)
+        {
+            var config = Config.Get();
+            var thisRM = config.RMConfig.FirstOrDefault(x => x.Type == type && x.WebHookUrl == url);
+            if (thisRM == null)
+            {
+                thisRM = new Config.Model.RichMessageConfig
+                {
+                    WebHookUrl = url,
+                    Type = type
+                };
+                config.RMConfig.Add(thisRM);
+                Config.Save();
+            }
+            else
+            {
+                await ReplyAsync("", embed: "Taki wpis już istnieje!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+
+            await ReplyAsync("", embed: "Wpis został dodany!".ToEmbedMessage(EMType.Success).Build());
+        }
+
+        [Command("removewebrmconfig"), Priority(1)]
+        [Summary("kasujewpis w konfiguracji powiadomień oparty o webhook")]
+        [Remarks("News http://twojweebhook.com/1232412323")]
+        public async Task RemoveWebRMConfigAsync([Summary("typ wpisu")]Api.Models.RichMessageType type, [Summary("url")][Remainder] string url)
+        {
+            var config = Config.Get();
+            var thisRM = config.RMConfig.FirstOrDefault(x => x.Type == type && x.WebHookUrl == url);
+            if (thisRM == null)
+            {
+                await ReplyAsync("", embed: "Taki wpis nie istnieje!".ToEmbedMessage(EMType.Error).Build());
+                return;
+            }
+            else
+            {
+                config.RMConfig.Remove(thisRM);
+                Config.Save();
+            }
+
+            await ReplyAsync("", embed: "Wpis został skasowany!".ToEmbedMessage(EMType.Success).Build());
         }
 
         [Command("ignore"), Priority(1)]
