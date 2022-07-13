@@ -1105,9 +1105,9 @@ namespace Sanakan.Services.PocketWaifu
                 id = Fun.GetOneRandomFrom(CharId.GetIds());
                 response = await _shClient.GetCharacterInfoAsync(id);
 
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
 
-                if (check-- == 0)
+                if (--check <= 0)
                     return null;
             }
             return response.Body;
@@ -1246,6 +1246,7 @@ namespace Sanakan.Services.PocketWaifu
 
         public async Task<List<Card>> OpenBoosterPackAsync(IUser user, BoosterPack pack)
         {
+            int errorCnt = 0;
             var cardsFromPack = new List<Card>();
 
             for (int i = 0; i < pack.CardCnt; i++)
@@ -1291,6 +1292,11 @@ namespace Sanakan.Services.PocketWaifu
                     newCard.Source = pack.CardSourceFromPack;
 
                     cardsFromPack.Add(newCard);
+                }
+                else
+                {
+                    if (++errorCnt > 2)
+                        break;
                 }
             }
 

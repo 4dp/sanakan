@@ -954,7 +954,7 @@ namespace Sanakan.Modules
                     var cards = await _waifu.OpenBoosterPackAsync(Context.User, pack);
                     if (cards.Count < pack.CardCnt)
                     {
-                        await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu.".ToEmbedMessage(EMType.Error).Build());
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie udało się otworzyć pakietu. Brak połączania z Shindenem!".ToEmbedMessage(EMType.Error).Build());
                         return;
                     }
 
@@ -1565,7 +1565,14 @@ namespace Sanakan.Modules
 
                 freeCard.EndsAt = DateTime.Now.AddHours(22);
 
-                var card = _waifu.GenerateNewCard(Context.User, await _waifu.GetRandomCharacterAsync(),
+                var character = await _waifu.GetRandomCharacterAsync();
+                if (character == null)
+                {
+                    await ReplyAsync("", embed: "Brak połączania z Shindenem!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var card = _waifu.GenerateNewCard(Context.User, character,
                     new List<Rarity>() { Rarity.SS, Rarity.S, Rarity.A });
 
                 bool wasOnWishlist = false;

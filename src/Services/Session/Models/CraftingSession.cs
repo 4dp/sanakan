@@ -252,8 +252,15 @@ namespace Sanakan.Services.Session.Models
                         error = false;
                         using (var db = new Database.UserContext(_config))
                         {
+                            var character = await _waifu.GetRandomCharacterAsync();
+                            if (character == null)
+                            {
+                                await msg.ModifyAsync(x => x.Embed = $"{Name}\n\nBrak połączenia z shindenem!".ToEmbedMessage(EMType.Error).Build());
+                                return true;
+                            }
+
                             var user = await db.GetUserOrCreateAsync(P1.User.Id);
-                            var newCard = _waifu.GenerateNewCard(P1.User, await _waifu.GetRandomCharacterAsync(), GetRarityFromValue(GetValue()));
+                            var newCard = _waifu.GenerateNewCard(P1.User, character, GetRarityFromValue(GetValue()));
 
                             var wwc = await db.WishlistCountData.AsQueryable().FirstOrDefaultAsync(x => x.Id == newCard.Character);
                             newCard.WhoWantsCount = wwc?.Count ?? 0;
