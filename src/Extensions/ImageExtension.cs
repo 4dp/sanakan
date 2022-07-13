@@ -23,8 +23,7 @@ namespace Sanakan.Extensions
         };
         private static IImageEncoder _webpEncoder = new WebpEncoder()
         {
-            FileFormat = WebpFileFormatType.Lossy,
-            Quality = 85,
+            FileFormat = WebpFileFormatType.Lossless
         };
 
         public static Stream ToJpgStream(this Image img)
