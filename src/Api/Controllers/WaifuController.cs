@@ -698,13 +698,14 @@ namespace Sanakan.Api.Controllers
                     var botUser = await db.GetUserOrCreateAsync(discordId);
 
                     botUser.Stats.OpenedBoosterPacks += packs.Count;
+                    var allWWCnt = await db.WishlistCountData.AsQueryable().AsNoTracking().ToListAsync();
 
                     foreach (var card in cards)
                     {
                         card.Affection += botUser.GameDeck.AffectionFromKarma();
                         card.FirstIdOwner = botUser.Id;
 
-                        var wwc = await db.WishlistCountData.AsQueryable().AsNoTracking().FirstOrDefaultAsync(x => x.Id == card.Character);
+                        var wwc = allWWCnt.FirstOrDefault(x => x.Id == card.Character);
                         card.WhoWantsCount = wwc?.Count ?? 0;
 
                         botUser.GameDeck.Cards.Add(card);
@@ -796,12 +797,14 @@ namespace Sanakan.Api.Controllers
                                 botUser.Stats.OpenedBoosterPacks += 1;
                             }
 
+                            var allWWCnt = await db.WishlistCountData.AsQueryable().AsNoTracking().ToListAsync();
+
                             foreach (var card in cards)
                             {
                                 card.Affection += botUser.GameDeck.AffectionFromKarma();
                                 card.FirstIdOwner = botUser.Id;
 
-                                var wwc = await db.WishlistCountData.AsQueryable().AsNoTracking().FirstOrDefaultAsync(x => x.Id == card.Character);
+                                var wwc = allWWCnt.FirstOrDefault(x => x.Id == card.Character);
                                 card.WhoWantsCount = wwc?.Count ?? 0;
 
                                 botUser.GameDeck.Cards.Add(card);
