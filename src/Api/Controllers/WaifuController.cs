@@ -108,7 +108,7 @@ namespace Sanakan.Api.Controllers
                 var query = db.Cards.AsQueryable().AsSplitQuery().Where(x => x.GameDeckId == user.GameDeck.Id).Include(x=> x.ArenaStats).Include(x => x.TagList).AsNoTracking();
                 if (!string.IsNullOrEmpty(filter.SearchText))
                 {
-                    query = query.Where(x => x.Name.Contains(filter.SearchText) || x.Title.Contains(filter.SearchText));
+                    query = query.Where(x => x.Name.Contains(filter.SearchText) || x.Title.Contains(filter.SearchText) || x.Id.ToString().Contains(filter.SearchText));
                 }
 
                 query = CardsQueryFilter.Use(filter.OrderBy, query);
