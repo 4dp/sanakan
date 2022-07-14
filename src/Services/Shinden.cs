@@ -195,7 +195,7 @@ namespace Sanakan.Services
                 return (res.IsSuccessStatusCode(), res.Code, res.Body);
             }
             catch (Exception) {}
-            return (false, HttpStatusCode.RequestTimeout, null);;
+            return (false, HttpStatusCode.RequestTimeout, null);
         }
     }
 }
