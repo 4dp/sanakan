@@ -12,6 +12,7 @@ using Sanakan.Database.Models;
 using Sanakan.Extensions;
 using Sanakan.Services.PocketWaifu.Fight;
 using Shinden;
+using Shinden.Logger;
 using Shinden.Models;
 using Z.EntityFramework.Plus;
 
@@ -160,13 +161,15 @@ namespace Sanakan.Services.PocketWaifu
         };
 
         private Events _events;
+        private ILogger _logger;
         private ImageProcessing _img;
         private ShindenClient _shClient;
 
-        public Waifu(ImageProcessing img, ShindenClient client, Events events)
+        public Waifu(ImageProcessing img, ShindenClient client, Events events, ILogger logger)
         {
             _img = img;
             _events = events;
+            _logger = logger;
             _shClient = client;
         }
 
@@ -1344,15 +1347,22 @@ namespace Sanakan.Services.PocketWaifu
             string sImageLocation = $"{Dir.CardsMiniatures}/{card.Id}.webp";
             string pImageLocation = $"{Dir.CardsInProfiles}/{card.Id}.webp";
 
-            using (var image = await _img.GetWaifuCardAsync(card))
+            try
             {
-                image.SaveToPath(imageLocation);
-                image.SaveToPath(sImageLocation, 133);
-            }
+                using (var image = await _img.GetWaifuCardAsync(card))
+                {
+                    image.SaveToPath(imageLocation);
+                    image.SaveToPath(sImageLocation, 133);
+                }
 
-            using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
+                using (var cardImage = await _img.GetWaifuInProfileCardAsync(card))
+                {
+                    cardImage.SaveToPath(pImageLocation);
+                }
+            }
+            catch (Exception ex)
             {
-                cardImage.SaveToPath(pImageLocation);
+                _logger.Log($"Error while generating card {card.Id}: {ex.Message}");
             }
 
             switch (type)

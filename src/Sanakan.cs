@@ -82,7 +82,7 @@ namespace Sanakan
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 GatewayIntents = GatewayIntents.All,
-                LogLevel = LogSeverity.Warning,
+                LogLevel = LogSeverity.Error,
                 AlwaysDownloadUsers = true,
                 MessageCacheSize = 200
             });
@@ -96,7 +96,7 @@ namespace Sanakan
             var tmpCnf = _config.Get();
             _shindenClient = new ShindenClient(new Auth(tmpCnf.Shinden.Token,
                 tmpCnf.Shinden.UserAgent, tmpCnf.Shinden.Marmolade), _logger,
-                LogLevel.Warning, tmpCnf.Shinden.BaseUri, TimeSpan.FromSeconds(5));
+                LogLevel.Error, tmpCnf.Shinden.BaseUri, TimeSpan.FromSeconds(5));
 
             _helper = new Helper(_config);
             _events = new Events(_shindenClient);
@@ -105,8 +105,8 @@ namespace Sanakan
             _chaos = new Chaos(_client, _config, _logger);
             _executor = new SynchronizedExecutor(_logger);
             _mod = new Moderator(_logger, _config, _client);
-            _waifu = new Waifu(_img, _shindenClient, _events);
             _daemon = new Daemonizer(_client, _logger, _config);
+            _waifu = new Waifu(_img, _shindenClient, _events, _logger);
             _sessions = new SessionManager(_client, _executor, _logger);
             _supervisor = new Supervisor(_client, _config, _logger, _mod);
             _greeting = new Greeting(_client, _logger, _config, _executor);
