@@ -1576,11 +1576,12 @@ namespace Sanakan.Modules
 
                 botuser.GameDeck.Cards.Add(card);
 
+                var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).ToList();
+                card.WhoWantsCount = wishlists.Count;
+
                 await db.SaveChangesAsync();
 
-                var wishlists = db.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == card.Character)).ToList();
                 var wishStr = card.ToHeartWishlist(wasOnWishlist);
-                card.WhoWantsCount = wishlists.Count;
 
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}", "users"});
 
