@@ -610,22 +610,22 @@ namespace Sanakan.Services.PocketWaifu
             {
                 case ItemType.RandomTitleBoosterPackSingleE:
                     if (itemCount < 0) itemCount = 0;
-                    var response = await _shClient.Title.GetInfoAsync((ulong)itemCount);
-                    if (!response.IsSuccessStatusCode())
+                    var titleInfo = await GetInfoFromTitleAsync((ulong)itemCount);
+                    if (titleInfo == null)
                     {
                         return $"{discordUser.Mention} nie odnaleziono tytułu o podanym id.".ToEmbedMessage(EMType.Error).Build();
                     }
-                    var response2 = await _shClient.Title.GetCharactersAsync(response.Body);
-                    if (!response2.IsSuccessStatusCode())
+                    var charsInTitle = await GetCharactersFromTitleAsync(titleInfo.Id);
+                    if (charsInTitle == null || charsInTitle.Count < 1)
                     {
                         return $"{discordUser.Mention} nie odnaleziono postaci pod podanym tytułem.".ToEmbedMessage(EMType.Error).Build();
                     }
-                    if (response2.Body.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
+                    if (charsInTitle.Select(x => x.CharacterId).Where(x => x.HasValue).Distinct().Count() < 8)
                     {
                         return $"{discordUser.Mention} nie można kupić pakietu z tytułu z mniejszą liczbą postaci jak 8.".ToEmbedMessage(EMType.Error).Build();
                     }
-                    boosterPackTitleName = $" ({response.Body.Title})";
-                    boosterPackTitleId = response.Body.Id;
+                    boosterPackTitleName = $" ({titleInfo.Title})";
+                    boosterPackTitleId = titleInfo.Id;
                     itemCount = 1;
                     break;
 
@@ -1091,26 +1091,30 @@ namespace Sanakan.Services.PocketWaifu
             int check = 2;
             if (CharId.IsNeedForUpdate())
             {
-                var characters = await _shClient.Ex.GetAllCharactersFromAnimeAsync();
-                if (!characters.IsSuccessStatusCode()) return null;
+                try
+                {
+                    var characters = await _shClient.Ex.GetAllCharactersFromAnimeAsync();
+                    if (!characters.IsSuccessStatusCode()) return null;
 
-                CharId.Update(characters.Body);
+                    CharId.Update(characters.Body);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
 
             ulong id = Fun.GetOneRandomFrom(CharId.GetIds());
-            var response = await _shClient.GetCharacterInfoAsync(id);
+            var chara = await GetCharacterInfoAsync(id);
 
-            while (!response.IsSuccessStatusCode())
+            while (chara is null && --check > 0)
             {
                 id = Fun.GetOneRandomFrom(CharId.GetIds());
-                response = await _shClient.GetCharacterInfoAsync(id);
+                chara = await GetCharacterInfoAsync(id);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(500));
-
-                if (--check <= 0)
-                    return null;
             }
-            return response.Body;
+            return chara;
         }
 
         public async Task<string> GetWaifuProfileImageAsync(Card card, ITextChannel trashCh)
@@ -1244,6 +1248,42 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
+        public async Task<ICharacterInfo> GetCharacterInfoAsync(ulong characterId)
+        {
+            ICharacterInfo character = null;
+            try
+            {
+                var res = await _shClient.GetCharacterInfoAsync(characterId);
+                if (res.IsSuccessStatusCode()) character = res.Body;
+            }
+            catch (Exception) {}
+            return character;
+        }
+
+        public async Task<List<IRelation>> GetCharactersFromTitleAsync(ulong titleId)
+        {
+            List<IRelation> characaters = null;
+            try
+            {
+                var res = await _shClient.Title.GetCharactersAsync(titleId);
+                if (res.IsSuccessStatusCode()) characaters = res.Body;
+            }
+            catch (Exception) {}
+            return characaters;
+        }
+
+        public async Task<ITitleInfo> GetInfoFromTitleAsync(ulong titleId)
+        {
+            ITitleInfo info = null;
+            try
+            {
+                var res = await _shClient.Title.GetInfoAsync(titleId);
+                if (res.IsSuccessStatusCode()) info = res.Body;
+            }
+            catch (Exception) {}
+            return info;
+        }
+
         public async Task<List<Card>> OpenBoosterPackAsync(IUser user, BoosterPack pack)
         {
             int errorCnt = 0;
@@ -1258,22 +1298,17 @@ namespace Sanakan.Services.PocketWaifu
                     if (pack.Characters.Count > 1)
                         id = Fun.GetOneRandomFrom(pack.Characters);
 
-                    var res = await _shClient.GetCharacterInfoAsync(id.Character);
-                    if (res.IsSuccessStatusCode()) chara = res.Body;
+                    chara = await GetCharacterInfoAsync(id.Character);
                 }
                 else if (pack.Title != 0)
                 {
-                    var res = await _shClient.Title.GetCharactersAsync(pack.Title);
-                    if (res.IsSuccessStatusCode())
+                    var charsInTitle = await GetCharactersFromTitleAsync(pack.Title);
+                    if (charsInTitle != null && charsInTitle.Count > 0)
                     {
-                        if (res.Body.Count > 0)
+                        var id = Fun.GetOneRandomFrom(charsInTitle).CharacterId;
+                        if (id.HasValue)
                         {
-                            var id = Fun.GetOneRandomFrom(res.Body).CharacterId;
-                            if (id.HasValue)
-                            {
-                                var response = await _shClient.GetCharacterInfoAsync(id.Value);
-                                if (response.IsSuccessStatusCode()) chara = response.Body;
-                            }
+                            chara = await GetCharacterInfoAsync(id.Value);
                         }
                     }
                 }
@@ -1512,10 +1547,10 @@ namespace Sanakan.Services.PocketWaifu
 
             foreach (var character in charactersId)
             {
-                var res = await _shClient.GetCharacterInfoAsync(character);
-                if (res.IsSuccessStatusCode())
+                var charInfo = await GetCharacterInfoAsync(character);
+                if (charInfo != null)
                 {
-                    contentTable.Add($"**P[{res.Body.Id}]** [{res.Body}]({res.Body.CharacterUrl})");
+                    contentTable.Add($"**P[{charInfo.Id}]** [{charInfo}]({charInfo.CharacterUrl})");
                 }
                 else
                 {
@@ -1525,14 +1560,14 @@ namespace Sanakan.Services.PocketWaifu
 
             foreach (var title in titlesId)
             {
-                var res = await _shClient.Title.GetInfoAsync(title);
-                if (res.IsSuccessStatusCode())
+                var titleInfo = await GetInfoFromTitleAsync(title);
+                if (titleInfo != null)
                 {
                     var url = "https://shinden.pl/";
-                    if (res.Body is IAnimeTitleInfo ai) url = ai.AnimeUrl;
-                    else if (res.Body is IMangaTitleInfo mi) url = mi.MangaUrl;
+                    if (titleInfo is IAnimeTitleInfo ai) url = ai.AnimeUrl;
+                    else if (titleInfo is IMangaTitleInfo mi) url = mi.MangaUrl;
 
-                    contentTable.Add($"**T[{res.Body.Id}]** [{res.Body}]({url})");
+                    contentTable.Add($"**T[{titleInfo.Id}]** [{titleInfo}]({url})");
                 }
                 else
                 {
@@ -1582,9 +1617,11 @@ namespace Sanakan.Services.PocketWaifu
             {
                 foreach (var id in titlesId)
                 {
-                    var response = await _shClient.Title.GetCharactersAsync(id);
-                    if (response.IsSuccessStatusCode())
-                        characters.AddRange(response.Body.Where(x => x.CharacterId.HasValue).Select(x => x.CharacterId.Value));
+                    var charsFromTitle = await GetCharactersFromTitleAsync(id);
+                    if (charsFromTitle != null && charsFromTitle.Count > 0)
+                    {
+                        characters.AddRange(charsFromTitle.Where(x => x.CharacterId.HasValue).Select(x => x.CharacterId.Value));
+                    }
                 }
             }
 

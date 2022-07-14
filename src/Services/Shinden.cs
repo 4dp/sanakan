@@ -1,5 +1,6 @@
 #pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using Sanakan.Extensions;
 using Sanakan.Services.Session;
 using Sanakan.Services.Session.Models;
 using Shinden;
+using Shinden.Models;
 
 namespace Sanakan.Services
 {
@@ -89,14 +91,14 @@ namespace Sanakan.Services
             var session = new SearchSession(context.User, _shClient);
             if (_session.SessionExist(session)) return;
 
-            var res = await _shClient.Search.QuickSearchAsync(title, type);
-            if (!res.IsSuccessStatusCode())
+            var res = await QuickSearchAsync(title, type);
+            if (!res.Item1)
             {
-                await context.Channel.SendMessageAsync("", false, GetResponseFromSearchCode(res).ToEmbedMessage(EMType.Error).Build());
+                await context.Channel.SendMessageAsync("", false, GetResponseFromSearchCode(res.Item2).ToEmbedMessage(EMType.Error).Build());
                 return;
             }
 
-            var list = res.Body;
+            var list = res.Item3;
             var toSend = GetSearchResponse(list, "Wybierz tytuł, który chcesz wyświetlić poprzez wpisanie numeru odpowiadającemu mu na liście.");
 
             if (list.Count == 1)
@@ -135,19 +137,65 @@ namespace Sanakan.Services
 
         public async Task<Stream> GetSiteStatisticAsync(ulong shindenId, SocketGuildUser user)
         {
-            var response = await _shClient.User.GetAsync(shindenId);
-            if (!response.IsSuccessStatusCode()) return null;
+            var userInfo = await GetUserInfoAsync(shindenId);
+            if (userInfo is null) return null;
 
-            var resLR = await _shClient.User.GetLastReadedAsync(shindenId);
-            var resLW = await _shClient.User.GetLastWatchedAsync(shindenId);
+            var resLR = await GetUserLastReadedAsync(shindenId);
+            var resLW = await GetUserLastWatchedAsync(shindenId);
 
-            using (var image = await _img.GetSiteStatisticAsync(response.Body,
+            using (var image = await _img.GetSiteStatisticAsync(userInfo,
                 user.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Discord.Color.DarkerGrey,
-                resLR.IsSuccessStatusCode() ? resLR.Body : null,
-                resLW.IsSuccessStatusCode() ? resLW.Body : null))
+                resLR, resLW))
             {
                 return image.ToPngStream();
             }
+        }
+
+        private async Task<List<ILastWatched>> GetUserLastWatchedAsync(ulong shindenId)
+        {
+            List<ILastWatched> lw = null;
+            try
+            {
+                var response = await _shClient.User.GetLastWatchedAsync(shindenId);
+                if (response.IsSuccessStatusCode()) lw = response.Body;
+            }
+            catch (Exception) {}
+            return lw;
+        }
+
+        private async Task<List<ILastReaded>> GetUserLastReadedAsync(ulong shindenId)
+        {
+            List<ILastReaded> lr = null;
+            try
+            {
+                var response = await _shClient.User.GetLastReadedAsync(shindenId);
+                if (response.IsSuccessStatusCode()) lr = response.Body;
+            }
+            catch (Exception) {}
+            return lr;
+        }
+
+        private async Task<IUserInfo> GetUserInfoAsync(ulong shindenId)
+        {
+            IUserInfo uInfo = null;
+            try
+            {
+                var response = await _shClient.User.GetAsync(shindenId);
+                if (response.IsSuccessStatusCode()) uInfo = response.Body;
+            }
+            catch (Exception) {}
+            return uInfo;
+        }
+
+        private async Task<(bool, HttpStatusCode, List<IQuickSearch>)> QuickSearchAsync(string title, QuickSearchType type)
+        {
+            try
+            {
+                var res = await _shClient.Search.QuickSearchAsync(title, type);
+                return (res.IsSuccessStatusCode(), res.Code, res.Body);
+            }
+            catch (Exception) {}
+            return (false, HttpStatusCode.RequestTimeout, null);;
         }
     }
 }
