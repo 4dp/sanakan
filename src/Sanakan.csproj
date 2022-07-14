@@ -7,7 +7,7 @@
     <Copyright>Sniku</Copyright>
     <Product>Sanakan</Product>
     <Authors>Sniku</Authors>
-    <Version>1.3.19.16</Version>
+    <Version>1.3.19.17</Version>
     <RootNamespace>Sanakan</RootNamespace>
     <StartupObject>Sanakan.Sanakan</StartupObject>
   </PropertyGroup>
@@ -35,7 +35,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.6.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-alpha.2" />
-    <PackageReference Include="Shinden.NET" Version="0.3.9-beta" />
+    <PackageReference Include="Shinden.NET" Version="0.3.10-beta" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="5.1.15" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
     <PackageReference Include="SixLabors.Fonts " Version="1.0.0-beta17" />

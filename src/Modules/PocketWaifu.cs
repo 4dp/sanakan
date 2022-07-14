@@ -949,6 +949,7 @@ namespace Sanakan.Modules
 
                 var totalCards = new List<Card>();
                 var charactersOnWishlist = new List<string>();
+                _logger.Log($"In open-packet: checks passed, starting to open packet...");
 
                 foreach (var pack in packs)
                 {
@@ -959,6 +960,7 @@ namespace Sanakan.Modules
                         return;
                     }
 
+                    _logger.Log($"In open-packet: opened pack, cards cnt: {cards.Count}");
                     mission.Count();
 
                     if (pack.CardSourceFromPack == CardSource.Activity || pack.CardSourceFromPack == CardSource.Migration)
@@ -975,6 +977,7 @@ namespace Sanakan.Modules
                 }
 
                 var allWWCnt = await db.WishlistCountData.AsQueryable().AsNoTracking().ToListAsync();
+                _logger.Log($"In open-packet: downloaded wwcnt");
                 foreach (var card in totalCards)
                 {
                     if (await bUser.GameDeck.RemoveCharacterFromWishListAsync(card.Character, db))
@@ -1007,7 +1010,7 @@ namespace Sanakan.Modules
                     card.Affection += bUser.GameDeck.AffectionFromKarma();
                     bUser.GameDeck.Cards.Add(card);
                 }
-
+                _logger.Log($"In open-packet: saving changes");
                 await db.SaveChangesAsync();
                 await db.Database.CloseConnectionAsync();
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
@@ -1016,6 +1019,7 @@ namespace Sanakan.Modules
                 string packString = $"{count} pakietów";
                 if (count == 1) packString = $"pakietu **{packs.First().Name}**";
 
+                _logger.Log($"In open-packet: building open string");
                 foreach (var card in totalCards)
                 {
                     if (checkWishlists && count == 1)
