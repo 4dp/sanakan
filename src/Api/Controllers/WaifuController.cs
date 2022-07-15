@@ -479,6 +479,7 @@ namespace Sanakan.Api.Controllers
         /// <param name="id">id karty (wid)</param>
         /// <response code="403">Card already exist</response>
         /// <response code="404">Card not found</response>
+        /// <response code="500">Card not generated</response>
         [HttpGet("card/{id}")]
         public async Task GetCardAsync(ulong id)
         {
@@ -495,6 +496,11 @@ namespace Sanakan.Api.Controllers
 
                     _waifu.DeleteCardImageIfExist(card);
                     var cardImage = await _waifu.GenerateAndSaveCardAsync(card);
+                    if (!System.IO.File.Exists(cardImage))
+                    {
+                        await "Card not generated!".ToResponse(500).ExecuteResultAsync(ControllerContext);
+                        return;
+                    }
                     await ControllerContext.HttpContext.Response.SendFileAsync(cardImage);
                 }
             }
