@@ -23,6 +23,14 @@ namespace Sanakan.Services
 
     public class Shinden
     {
+        private Dictionary<string, string> _customNames = new Dictionary<string, string>
+        {
+            {"fate/loli",   "Fate/kaleid Liner Prisma Illya"},
+            {"fateloli",    "Fate/kaleid Liner Prisma Illya"},
+            {"milfsekai",   "Tsuujou Kougeki ga Zentai Kougeki de Ni-kai"},
+            {"milfisekai",  "Tsuujou Kougeki ga Zentai Kougeki de Ni-kai"},
+        };
+
         private ShindenClient _shClient;
         private SessionManager _session;
         private ImageProcessing _img;
@@ -86,7 +94,9 @@ namespace Sanakan.Services
 
         public async Task SendSearchInfoAsync(SocketCommandContext context, string title, QuickSearchType type)
         {
-            if (title.Equals("fate/loli")) title = "Fate/kaleid Liner Prisma Illya";
+            var customTitle = title.ToLower().Replace(" ", "");
+            if (_customNames.ContainsKey(customTitle))
+                title = _customNames[customTitle];
 
             var session = new SearchSession(context.User, _shClient);
             if (_session.SessionExist(session)) return;
