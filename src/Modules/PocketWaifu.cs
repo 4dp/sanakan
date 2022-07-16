@@ -113,7 +113,24 @@ namespace Sanakan.Modules
 
                 if (numberOfItem <= 0)
                 {
-                    await ReplyAsync("", embed: _waifu.GetItemList(Context.User, itemList));
+                    var pages = _waifu.GetItemList(Context.User, itemList);
+                    if (pages.Count == 1)
+                    {
+                        await ReplyAsync("", embed: pages.FirstOrDefault());
+                    }
+                    else
+                    {
+                        var dmCh = await Context.User.CreateDMChannelAsync();
+                        if (dmCh == null) return;
+
+                        foreach (var page in pages)
+                        {
+                            await dmCh.SendMessageAsync("", embed: page);
+                            await Task.Delay(TimeSpan.FromSeconds(1));
+                        }
+
+                        await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());
+                    }
                     return;
                 }
 

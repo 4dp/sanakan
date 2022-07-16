@@ -271,12 +271,6 @@ namespace Sanakan.Extensions
         {
             switch (type)
             {
-                case ItemType.AffectionRecoveryGreat:
-                case ItemType.AffectionRecoveryBig:
-                case ItemType.AffectionRecoveryNormal:
-                case ItemType.AffectionRecoverySmall:
-                case ItemType.IncreaseExpSmall:
-                case ItemType.IncreaseExpBig:
                 case ItemType.FigureSkeleton:
                 case ItemType.FigureUniversalPart:
                 case ItemType.FigureHeadPart:
@@ -594,13 +588,25 @@ namespace Sanakan.Extensions
             };
         }
 
-        public static string ToItemList(this List<Item> list)
+        public static List<string> ToItemList(this List<Item> list)
         {
-            string packString = "";
+            var items = new List<string>();
             for (int i = 0; i < list.Count; i++)
-                packString += $"**[{i + 1}]** {list[i].Name} x{list[i].Count}\n";
+                items.Add($"**[{i + 1}]** {list[i].Name} x{list[i].Count}");
 
-            return packString;
+            return items;
+        }
+
+        public static List<List<T>> SplitList<T>(this List<T> locations, int nSize = 50)
+        {
+            var list = new List<List<T>>();
+
+            for (int i = 0; i < locations.Count; i += nSize)
+            {
+                list.Add(locations.GetRange(i, Math.Min(nSize, locations.Count - i)));
+            }
+
+            return list;
         }
     }
 }

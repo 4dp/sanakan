@@ -1242,13 +1242,22 @@ namespace Sanakan.Services.PocketWaifu
             }.Build();
         }
 
-        public Embed GetItemList(SocketUser user, List<Item> items)
+        public List<Embed> GetItemList(SocketUser user, List<Item> items)
         {
-            return new EmbedBuilder
+            var pages = new List<Embed>();
+            var list = items.ToItemList().SplitList(50);
+
+            for (int i = 0; i < list.Count; i++)
             {
-                Color = EMType.Info.Color(),
-                Description = $"{user.Mention} twoje przedmioty:\n\n{items.ToItemList().TrimToLength(1900)}"
-            }.Build();
+                var embed = new EmbedBuilder
+                {
+                    Color = EMType.Info.Color(),
+                    Description = $"{user.Mention} twoje przedmioty **({i+1}/{list.Count})**:\n\n{string.Join("\n", list[i]).TrimToLength(1900)}"
+                };
+                pages.Add(embed.Build());
+            }
+
+            return pages;
         }
 
         public async Task<ICharacterInfo> GetCharacterInfoAsync(ulong characterId)
