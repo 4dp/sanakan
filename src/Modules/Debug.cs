@@ -298,6 +298,7 @@ namespace Sanakan.Modules
                         return;
                     }
 
+                    bool wonSSS = false;
                     var cardsIds = new List<string>();
                     var idsToSelect = loteryCards.Select(x => x.Id).ToList();
 
@@ -308,6 +309,7 @@ namespace Sanakan.Modules
 
                         var wid = Services.Fun.GetOneRandomFrom(idsToSelect);
                         var thisCard = loteryCards.FirstOrDefault(x => x.Id == wid);
+                        if (thisCard.Rarity == Rarity.SSS) wonSSS = true;
 
                         cardsIds.Add(thisCard.GetString(false, false, true));
 
@@ -329,7 +331,7 @@ namespace Sanakan.Modules
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
-                    var msgType = loteryCards.Any(x => x.Rarity == Rarity.SSS) ? EMType.Winner : EMType.Success;
+                    var msgType = wonSSS ? EMType.Winner : EMType.Success;
                     msg = await ReplyAsync(embed: $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(msgType).Build());
 
                     try
