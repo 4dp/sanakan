@@ -1237,16 +1237,19 @@ namespace Sanakan.Modules
 
                 if (card.Rarity == Rarity.SSS)
                 {
-                    if (bUser.Stats.UpgradedToSSS % 10 == 0 && card.RestartCnt < 1)
+                    if (card.RestartCnt < 1)
                     {
                         ++bUser.Stats.UpgradedToSSS;
-                        var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
-                        if (inUserItem == null)
+                        if (bUser.Stats.UpgradedToSSS % 10 == 0)
                         {
-                            inUserItem = ItemType.SetCustomImage.ToItem();
-                            bUser.GameDeck.Items.Add(inUserItem);
+                            var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                            if (inUserItem == null)
+                            {
+                                inUserItem = ItemType.SetCustomImage.ToItem();
+                                bUser.GameDeck.Items.Add(inUserItem);
+                            }
+                            else inUserItem.Count++;
                         }
-                        else inUserItem.Count++;
                     }
                 }
 
