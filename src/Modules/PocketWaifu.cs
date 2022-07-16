@@ -3251,6 +3251,15 @@ namespace Sanakan.Modules
                 session.Tips = $"Polecenia: `dodaj/usuń [nr przedmiotu] [liczba]`.";
                 session.Items = duser1.GameDeck.Items.ToList();
 
+                var dmCh = await user1.CreateDMChannelAsync();
+                if (dmCh == null) return;
+
+                foreach (var page in _waifu.GetItemList(Context.User, session.Items))
+                {
+                    await dmCh.SendMessageAsync("", embed: page);
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+
                 var msg = await ReplyAsync("", embed: session.BuildEmbed());
                 await msg.AddReactionsAsync(session.StartReactions);
                 session.Message = msg;

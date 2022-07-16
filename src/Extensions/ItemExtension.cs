@@ -588,6 +588,15 @@ namespace Sanakan.Extensions
             };
         }
 
+        public static string ToItemListString(this List<Item> list)
+        {
+            var items = new System.Text.StringBuilder();
+            for (int i = 0; i < list.Count; i++)
+                items.AppendLine($"**[{i + 1}]** {list[i].Name} x{list[i].Count}");
+
+            return items.ToString();
+        }
+
         public static List<string> ToItemList(this List<Item> list)
         {
             var items = new List<string>();

@@ -69,10 +69,8 @@ namespace Sanakan.Services.Session.Models
 
         private string GetCraftingView()
         {
-            var owned = Items.ToItemList();
-            var used = P1.Items.ToItemList();
-
-            return $"**Posiadane:**\n{owned}\n**Użyte:**\n{used}\n**Karta:** {GetCardClassFromItems()}";
+            var used = P1.Items.ToItemListString();
+            return $"**Posiadane:**\nLista poszła na PW!\n**Użyte:**\n{used}\n**Karta:** {GetCardClassFromItems()}";
         }
 
         private string GetCardClassFromItems()
