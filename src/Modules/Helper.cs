@@ -145,10 +145,16 @@ namespace Sanakan.Modules
         {
             using (var proc = System.Diagnostics.Process.GetCurrentProcess())
             {
-                string info = $"**Sanakan ({typeof(Sanakan).Assembly.GetName().Version})**:\n"
-                    + $"**Czas działania**: `{(DateTime.Now - proc.StartTime).ToString(@"d'd 'hh\:mm\:ss")}`";
+                var info = new System.Text.StringBuilder()
+                .AppendLine($"**Sanakan ({typeof(Sanakan).Assembly.GetName().Version})**:")
+                .AppendLine($"**Czas działania**: `{(DateTime.Now - proc.StartTime).ToString(@"d'd 'hh\:mm\:ss")}`")
+                .AppendLine()
+                .Append("[**Strona**](https://sanakan.pl/) | ")
+                .Append("[**GitHub**](https://github.com/MrZnake/sanakan) | ")
+                .Append("[**Wiki**](https://wiki.sanakan.pl/) | ")
+                .Append("[**Karty**](https://waifu.sanakan.pl/#/)");
 
-                await ReplyAsync(info);
+                await ReplyAsync("", embed: info.ToString().ToEmbedMessage(EMType.Bot).Build());
             }
         }
 
