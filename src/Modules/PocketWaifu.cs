@@ -1239,7 +1239,6 @@ namespace Sanakan.Modules
                 {
                     if (card.RestartCnt < 1)
                     {
-                        ++bUser.Stats.UpgradedToSSS;
                         if (bUser.Stats.UpgradedToSSS % 10 == 0)
                         {
                             var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
@@ -1250,6 +1249,7 @@ namespace Sanakan.Modules
                             }
                             else inUserItem.Count++;
                         }
+                        ++bUser.Stats.UpgradedToSSS;
                     }
                 }
 
