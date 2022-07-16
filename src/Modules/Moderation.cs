@@ -391,6 +391,125 @@ namespace Sanakan.Modules
                 await ReplyAsync("", embed: content.ToEmbedMessage(EMType.Bot).Build());
         }
 
+        [Command("clean config")]
+        [Summary("przeczyszcza konfiguracje serwera z usuniętych ról i kanałów")]
+        [Remarks(""), RequireAdminRole]
+        public async Task CleanConfigAsync([Summary("id serwera (opcjonalne)")]ulong guildId = 0)
+        {
+            using (var db = new Database.GuildConfigContext(Config))
+            {
+                var guild = Context.Guild;
+                if (guildId != 0)
+                {
+                    guild = Context.Client.GetGuild(guildId);
+                    if (guild == null)
+                    {
+                        await ReplyAsync("", embed: $"Nie znaleziono serwera o id `{guildId}`".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+                }
+
+                var config = await db.GetGuildConfigOrCreateAsync(guild.Id, true);
+                if (config == null)
+                {
+                    await ReplyAsync("", embed: $"Konfiguracja tego serwera nie istnieje w bazie!".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                int clearedRows = 0;
+                foreach(var ch in config.ChannelsWithoutExp.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.ChannelsWithoutExp.Remove(ch);
+                    }
+                }
+
+                foreach(var ch in config.ChannelsWithoutSupervision.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.ChannelsWithoutSupervision.Remove(ch);
+                    }
+                }
+
+                foreach(var ch in config.CommandChannels.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.CommandChannels.Remove(ch);
+                    }
+                }
+
+                foreach(var ch in config.IgnoredChannels.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.IgnoredChannels.Remove(ch);
+                    }
+                }
+
+                foreach(var ch in config.WaifuConfig.CommandChannels.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.WaifuConfig.CommandChannels.Remove(ch);
+                    }
+                }
+
+                foreach(var ch in config.WaifuConfig.FightChannels.ToList())
+                {
+                    var channel = guild.GetTextChannel(ch.Channel);
+                    if (channel == null)
+                    {
+                        ++clearedRows;
+                        config.WaifuConfig.FightChannels.Remove(ch);
+                    }
+                }
+
+                foreach(var rl in config.RolesPerLevel.ToList())
+                {
+                    var role = guild.GetRole(rl.Role);
+                    if (role == null)
+                    {
+                        ++clearedRows;
+                        config.RolesPerLevel.Remove(rl);
+                    }
+                }
+
+                foreach(var rl in config.SelfRoles.ToList())
+                {
+                    var role = guild.GetRole(rl.Role);
+                    if (role == null)
+                    {
+                        ++clearedRows;
+                        config.SelfRoles.Remove(rl);
+                    }
+                }
+
+                if (clearedRows < 1)
+                {
+                    await ReplyAsync("", embed: $"Konfiguracja serwera nie wymaga czyszcenia!".ToEmbedMessage(EMType.Info).Build());
+                    return;
+                }
+
+                await db.SaveChangesAsync();
+                QueryCacheManager.ExpireTag(new string[] { $"config-{guild.Id}" });
+
+                await ReplyAsync("", embed:$"Przeczyszczono konfigurację serwera: **{guild.Name}**.\n\nZostało skasowanych **{clearedRows}** wpisów z bazy.".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
         [Command("config")]
         [Summary("wyświetla konfiguracje serwera")]
         [Remarks("mods"), RequireAdminRole]
@@ -404,11 +523,10 @@ namespace Sanakan.Modules
                     config = new Database.Models.Configuration.GuildOptions
                     {
                         SafariLimit = 50,
-                        Id = Context.Guild.Id
+                        Id = Context.Guild.Id,
+                        WaifuConfig = new Database.Models.Configuration.Waifu()
                     };
                     await db.Guilds.AddAsync(config);
-
-                    config.WaifuConfig = new Database.Models.Configuration.Waifu();
 
                     await db.SaveChangesAsync();
                 }

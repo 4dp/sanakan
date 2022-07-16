@@ -15,18 +15,19 @@ namespace Sanakan.Extensions
 {
     public static class ContextExtension
     {
-        public static async Task<GuildOptions> GetGuildConfigOrCreateAsync(this Database.GuildConfigContext context, ulong guildId)
+        public static async Task<GuildOptions> GetGuildConfigOrCreateAsync(this Database.GuildConfigContext context, ulong guildId, bool dontCreate = false)
         {
             var config = await context.Guilds.AsQueryable().Include(x => x.IgnoredChannels).Include(x => x.ChannelsWithoutExp).Include(x => x.ChannelsWithoutSupervision).Include(x => x.CommandChannels).Include(x => x.SelfRoles)
                 .Include(x => x.Lands).Include(x => x.ModeratorRoles).Include(x => x.RolesPerLevel).Include(x => x.WaifuConfig).ThenInclude(x => x.CommandChannels).Include(x => x.Raports)
                 .Include(x => x.WaifuConfig).ThenInclude(x => x.FightChannels).AsSplitQuery().FirstOrDefaultAsync(x => x.Id == guildId);
 
-            if (config == null)
+            if (config == null && !dontCreate)
             {
                 config = new GuildOptions
                 {
                     Id = guildId,
-                    SafariLimit = 50
+                    SafariLimit = 50,
+                    WaifuConfig = new Waifu()
                 };
                 await context.Guilds.AddAsync(config);
             }
