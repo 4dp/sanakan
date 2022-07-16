@@ -3329,9 +3329,9 @@ namespace Sanakan.Modules
 
         [Command("wyprawa")]
         [Alias("expedition")]
-        [Summary("wysyła kartę na wyprawę")]
-        [Remarks("11321 n"), RequireWaifuFightChannel]
-        public async Task SendCardToExpeditionAsync([Summary("WID")]ulong wid, [Summary("typ wyprawy")]CardExpedition expedition = CardExpedition.None)
+        [Summary("wysyła karty na wyprawę")]
+        [Remarks("n 11321 123112"), RequireWaifuFightChannel]
+        public async Task SendCardToExpeditionAsync([Summary("typ wyprawy")]CardExpedition expedition, [Summary("WIDy")]params ulong[] wids)
         {
             if (expedition == CardExpedition.None)
             {
@@ -3342,24 +3342,30 @@ namespace Sanakan.Modules
             using (var db = new Database.UserContext(Config))
             {
                 var botUser = await db.GetUserOrCreateAsync(Context.User.Id);
-                var thisCard = botUser.GameDeck.Cards.FirstOrDefault(x => x.Id == wid);
-                if (thisCard == null)
+                var cardsSelected = botUser.GameDeck.Cards.Where(x => wids.Any(c => c == x.Id)).ToList();
+                if (cardsSelected.Count < 1)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono karty.".ToEmbedMessage(EMType.Error).Build());
+                    await ReplyAsync("", embed: $"{Context.User.Mention} nie odnaleziono kart.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
                 var cardsOnExp = botUser.GameDeck.Cards.Count(x => x.Expedition != CardExpedition.None);
-                if (cardsOnExp >= botUser.GameDeck.LimitOfCardsOnExpedition())
+                if (cardsOnExp + cardsSelected.Count > botUser.GameDeck.LimitOfCardsOnExpedition())
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} nie możesz wysłać więcej kart na wyprawę.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                if (!thisCard.ValidExpedition(expedition, botUser.GameDeck.Karma))
+                foreach (var card in cardsSelected)
                 {
-                    await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie może się udać na tą wyprawę.".ToEmbedMessage(EMType.Error).Build());
-                    return;
+                    if (!card.ValidExpedition(expedition, botUser.GameDeck.Karma))
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} **[{card.Id}]** ta karta nie może się udać na tą wyprawę.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    card.Expedition = expedition;
+                    card.ExpeditionDate = DateTime.Now;
                 }
 
                 var mission = botUser.TimeStatuses.FirstOrDefault(x => x.Type == Database.Models.StatusType.DExpeditions);
@@ -3368,10 +3374,7 @@ namespace Sanakan.Modules
                     mission = Database.Models.StatusType.DExpeditions.NewTimeStatus();
                     botUser.TimeStatuses.Add(mission);
                 }
-                mission.Count();
-
-                thisCard.Expedition = expedition;
-                thisCard.ExpeditionDate = DateTime.Now;
+                mission.Count(cardsSelected.Count);
 
                 await db.SaveChangesAsync();
 
@@ -3379,8 +3382,16 @@ namespace Sanakan.Modules
 
                 _ = Task.Run(async () =>
                 {
-                    var max = thisCard.CalculateMaxTimeOnExpeditionInMinutes(botUser.GameDeck.Karma, expedition).ToString("F");
-                    await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!\nZmęczy się za {max} min.".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
+                    if (cardsSelected.Count == 1)
+                    {
+                        var thisCard = cardsSelected.FirstOrDefault();
+                        var max = thisCard.CalculateMaxTimeOnExpeditionInMinutes(botUser.GameDeck.Karma, expedition).ToString("F");
+                        await ReplyAsync("", embed: $"{thisCard.GetString(false, false, true)} udała się na {expedition.GetName("ą")} wyprawę!\nZmęczy się za {max} min.".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
+                    }
+                    else
+                    {
+                        await ReplyAsync("", embed: $"Wysłano **{cardsSelected.Count}** kart na {expedition.GetName("ą")} wyprawę!".ToEmbedMessage(EMType.Success).WithUser(Context.User).Build());
+                    }
                 });
             }
         }

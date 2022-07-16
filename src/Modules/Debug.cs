@@ -329,7 +329,8 @@ namespace Sanakan.Modules
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
-                    msg = await ReplyAsync(embed: $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(EMType.Success).Build());
+                    var msgType = loteryCards.Any(x => x.Rarity == Rarity.SSS) ? EMType.Winner : EMType.Success;
+                    msg = await ReplyAsync(embed: $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(msgType).Build());
 
                     try
                     {

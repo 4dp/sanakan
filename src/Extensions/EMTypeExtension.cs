@@ -6,7 +6,7 @@ namespace Sanakan.Extensions
 {
     public enum EMType
     {
-        Neutral, Warning, Success, Error, Info, Bot
+        Neutral, Warning, Success, Error, Info, Bot, Winner
     }
 
     public static class EMTypeExtension
@@ -32,6 +32,9 @@ namespace Sanakan.Extensions
                 case EMType.Warning:
                     return "⚠";
 
+                case EMType.Winner:
+                    return "🏆";
+
                 default:
                 case EMType.Neutral:
                     return "";
@@ -56,6 +59,9 @@ namespace Sanakan.Extensions
 
                 case EMType.Warning:
                     return new Color(255, 255, 0);
+
+                case EMType.Winner:
+                    return new Color(247, 222, 9);
 
                 default:
                 case EMType.Neutral:
