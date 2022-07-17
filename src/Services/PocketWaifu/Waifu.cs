@@ -1128,7 +1128,7 @@ namespace Sanakan.Services.PocketWaifu
             return im.Url;
         }
 
-        public List<Embed> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention)
+        public async Task<List<Embed>> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null)
         {
             var list = new List<Embed>();
             string contentString = $"{title}\n\n";
@@ -1136,9 +1136,15 @@ namespace Sanakan.Services.PocketWaifu
             foreach (var card in cards)
             {
                 string tempContentString = $"";
-                var thU = client.GetUser(card.GameDeck.UserId);
+                IUser user = await client.GetUserAsync(card.GameDeckId);
+                var usrName = user?.Mention ?? "????";
 
-                var usrName = (mention ? (thU?.Mention) : (thU?.Username)) ?? "????";
+                if (!mention)
+                {
+                    user = guild?.GetUser(card.GameDeckId) ?? user;
+                    usrName = user?.GetUserNickInGuild() ?? "????";
+                }
+
                 tempContentString += $"{usrName} **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
 
                 if ((contentString.Length + tempContentString.Length) <= 2000)
@@ -1167,7 +1173,7 @@ namespace Sanakan.Services.PocketWaifu
             return list;
         }
 
-        public List<Embed> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client, bool mention)
+        public async Task<List<Embed>> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null)
         {
             var list = new List<Embed>();
             var characters = cards.GroupBy(x => x.Character);
@@ -1178,8 +1184,14 @@ namespace Sanakan.Services.PocketWaifu
                 string tempContentString = $"\n**{cardsG.First().GetNameWithUrl()}**\n";
                 foreach (var card in cardsG)
                 {
-                    var user = client.GetUser(card.GameDeckId);
-                    var usrName = (mention ? (user?.Mention) : (user?.Username)) ?? "????";
+                    IUser user = await client.GetUserAsync(card.GameDeckId);
+                    var usrName = user?.Mention ?? "????";
+
+                    if (!mention)
+                    {
+                        user = guild?.GetUser(card.GameDeckId) ?? user;
+                        usrName = user?.GetUserNickInGuild() ?? "????";
+                    }
 
                     tempContentString += $"{usrName}: **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
                 }

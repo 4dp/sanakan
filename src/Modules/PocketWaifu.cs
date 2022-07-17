@@ -2236,7 +2236,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.CreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
+                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2308,7 +2308,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.CreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
+                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2349,8 +2349,9 @@ namespace Sanakan.Modules
                 {
                     foreach(var deck in wishlists)
                     {
-                        var dUser = Context.Client.GetUser(deck.Id);
-                        if (dUser != null) usersStr += $"{dUser.Username}\n";
+                        IUser dUser = Context.Guild.GetUser(deck.UserId);
+                        if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
+                        if (dUser != null) usersStr += $"{dUser.GetUserNickInGuild()}\n";
                     }
                 }
                 else
@@ -2389,8 +2390,9 @@ namespace Sanakan.Modules
                 {
                     foreach(var deck in wishlists)
                     {
-                        var dUser = Context.Client.GetUser(deck.Id);
-                        if (dUser != null) usersStr += $"{dUser.Username}\n";
+                        IUser dUser = Context.Guild.GetUser(deck.UserId);
+                        if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
+                        if (dUser != null) usersStr += $"{dUser.GetUserNickInGuild()}\n";
                     }
                 }
                 else
@@ -3028,7 +3030,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var msgs = _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client, !showNames);
+                var msgs = await _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client, !showNames, Context.Guild);
                 if (msgs.Count == 1)
                 {
                     await ReplyAsync("", embed: msgs.First());
@@ -3088,7 +3090,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.CreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
+                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -3135,7 +3137,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.CreateDMChannelAsync();
-                    foreach (var emb in _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames))
+                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));

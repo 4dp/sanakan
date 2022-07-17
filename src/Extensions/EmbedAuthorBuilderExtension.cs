@@ -18,6 +18,15 @@ namespace Sanakan.Extensions
             return avatar.Split("?")[0];
         }
 
+        public static string GetUserNickInGuild(this IUser user)
+        {
+            if (user is SocketGuildUser guildUser)
+            {
+                return guildUser.Nickname ?? user.Username;
+            }
+            return user.Username;
+        }
+
         public static EmbedBuilder WithUser(this EmbedBuilder builder, IUser user, bool includeId = false)
         {
             return builder.WithAuthor(new EmbedAuthorBuilder().WithUser(user, includeId));
