@@ -1545,7 +1545,7 @@ namespace Sanakan.Modules
         [Command("karta+")]
         [Alias("free card")]
         [Summary("dostajesz jedną darmową kartę")]
-        [Remarks(""), RequireAnyCommandChannelOrLevel(40)]
+        [Remarks(""), RequireAnyCommandChannelOrLevel(100)]
         public async Task GetFreeCardAsync()
         {
             using (var db = new Database.UserContext(Config))
