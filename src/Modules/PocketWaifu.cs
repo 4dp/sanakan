@@ -895,9 +895,9 @@ namespace Sanakan.Modules
 
         [Command("lazyp")]
         [Alias("lp")]
-        [Summary("otwiera pakiety pierwszy pakiet z domyślnie ustawionym niszczeniem kc na 4, oraz tagiem wymiana")]
-        [Remarks(""), RequireWaifuCommandChannel]
-        public async Task OpenPacketLazyModeAsync([Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 4, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podenym tagiem")]string tag = "wymiana")
+        [Summary("otwiera pierwszy pakiet z domyślnie ustawionym niszczeniem kc na 4 oraz tagiem wymiana")]
+        [Remarks(""), RequireAnyCommandChannelOrLevel(200)]
+        public async Task OpenPacketLazyModeAsync([Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 4, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podanym tagiem")]string tag = "wymiana")
             => await OpenPacketAsync(1, 1, true, destroyCards, changeToRelease, tag);
 
         [Command("pakiet")]
@@ -905,7 +905,7 @@ namespace Sanakan.Modules
         [Summary("wypisuje dostępne pakiety/otwiera pakiety(maksymalna suma kart z pakietów do otworzenia to 20)")]
         [Remarks("1"), RequireWaifuCommandChannel]
         public async Task OpenPacketAsync([Summary("nr pakietu kart")]int numberOfPack = 0, [Summary("liczba kolejnych pakietów")]int count = 1, [Summary("czy sprawdzić listy życzeń?")]bool checkWishlists = true,
-            [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podenym tagiem")]string tag = "")
+            [Summary("czy zniszczyć karty nie będące na liście życzeń i nie posiadające danej kc?")]uint destroyCards = 0, [Summary("czy zamienić niszczenie na uwalnianie")]bool changeToRelease = false, [Summary("oznacza niezniszczone karty podanym tagiem")]string tag = "")
         {
             if (!string.IsNullOrEmpty(tag) && tag.Contains(" "))
             {
