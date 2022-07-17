@@ -97,7 +97,7 @@ namespace Sanakan.Services
 
         private Font GetFontSize(FontFamily fontFamily, float size, string text, float maxWidth)
         {
-            var font = new Font(fontFamily, size);
+            var font = GetOrCreateFont(fontFamily, size);
             var measured = TextMeasurer.Measure(text, new TextOptions(font));
 
             while (measured.Width > maxWidth)
@@ -179,20 +179,26 @@ namespace Sanakan.Services
                 template.Dispose();
             }
 
-            using (var avatar = Image.Load(await GetImageFromUrlAsync(avatarUrl)))
+            using (var originalImage = Image.Load(await GetImageFromUrlAsync(avatarUrl)))
             {
-                using (var avBack = new Image<Rgba32>(82, 82))
+                using (var webpAvatarStream = originalImage.ToWebpStream())
                 {
-                    avBack.Mutate(x => x.BackgroundColor(GetOrCreateColor(colorRank)));
-                    avBack.Mutate(x => x.Round(42));
+                    using (var avatar = Image.Load(webpAvatarStream))
+                    {
+                        using (var avBack = new Image<Rgba32>(82, 82))
+                        {
+                            avBack.Mutate(x => x.BackgroundColor(GetOrCreateColor(colorRank)));
+                            avBack.Mutate(x => x.Round(42));
 
-                    profilePic.Mutate(x => x.DrawImage(avBack, new Point(20, 115), 1));
+                            profilePic.Mutate(x => x.DrawImage(avBack, new Point(20, 115), 1));
+                        }
+
+                        avatar.Mutate(x => x.Resize(new Size(80, 80)));
+                        avatar.Mutate(x => x.Round(42));
+
+                        profilePic.Mutate(x => x.DrawImage(avatar, new Point(21, 116), 1));
+                    }
                 }
-
-                avatar.Mutate(x => x.Resize(new Size(80, 80)));
-                avatar.Mutate(x => x.Round(42));
-
-                profilePic.Mutate(x => x.DrawImage(avatar, new Point(21, 116), 1));
             }
 
             var defFontColor = GetOrCreateColor("#7f7f7f");

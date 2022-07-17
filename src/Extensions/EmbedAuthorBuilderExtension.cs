@@ -7,9 +7,14 @@ namespace Sanakan.Extensions
 {
     public static class EmbedAuthorBuilderExtension
     {
-        public static string GetUserOrDefaultAvatarUrl(this IUser user)
+        public static string GetUserOrDefaultAvatarUrl(this IUser user, bool getFromGuild = false)
         {
             var avatar = user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
+            if (user is SocketGuildUser guildUser && getFromGuild)
+            {
+                var guildAvatar = guildUser.GetGuildAvatarUrl();
+                if (guildAvatar != null) avatar = guildAvatar;
+            }
             return avatar.Split("?")[0];
         }
 
@@ -33,7 +38,7 @@ namespace Sanakan.Extensions
                 builder.WithName($"{user.Username}{id}");
             }
 
-            return builder.WithIconUrl(user.GetUserOrDefaultAvatarUrl());
+            return builder.WithIconUrl(user.GetUserOrDefaultAvatarUrl(true));
         }
     }
 }

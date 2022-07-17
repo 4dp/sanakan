@@ -125,12 +125,12 @@ namespace Sanakan.Modules
         [Alias("avatar", "pfp")]
         [Summary("wyświetla awatar użytkownika")]
         [Remarks("Dzida"), RequireCommandChannel]
-        public async Task ShowUserAvatarAsync([Summary("nazwa użytkownika (opcjonalne)")]SocketUser user = null)
+        public async Task ShowUserAvatarAsync([Summary("nazwa użytkownika (opcjonalne)")]SocketUser user = null, [Summary("awatar serwera? (opcjonalne)")]bool fromGuild = false)
         {
             var usr = (user ?? Context.User);
             var embed = new EmbedBuilder
             {
-                ImageUrl = usr.GetUserOrDefaultAvatarUrl(),
+                ImageUrl = usr.GetUserOrDefaultAvatarUrl(fromGuild),
                 Author = new EmbedAuthorBuilder().WithUser(usr),
                 Color = EMType.Info.Color(),
             };
