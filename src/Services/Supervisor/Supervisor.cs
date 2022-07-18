@@ -147,7 +147,9 @@ namespace Sanakan.Services.Supervisor
 
                 bool isBannable = thisMessage.IsBannable();
                 if (_config.Get().GiveBanForUrlSpam)
+                {
                     isBannable |= thisMessage.ContainsUrl();
+                }
 
                 bool hasRole = user.Roles.Any(x => x.Id == gConfig.UserRole || x.Id == gConfig.MuteRole) || gConfig.UserRole == 0;
                 var action = MakeDecision(messageContent, susspect.Inc(), thisMessage.Inc(), hasRole && !isBannable);
@@ -180,7 +182,7 @@ namespace Sanakan.Services.Supervisor
                     break;
 
                 case Action.Ban:
-                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban) spam/flood/scam");
+                    await user.Guild.AddBanAsync(user, 1, "Supervisor(ban) spam/flood/scam urls:" + string.Join(" ", message.Content.GetURLs()));
                     break;
 
                 default:
