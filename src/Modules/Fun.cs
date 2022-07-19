@@ -25,10 +25,12 @@ namespace Sanakan.Modules
         private Services.Fun _fun;
         private Moderator _moderation;
         private SessionManager _session;
+        private Services.PocketWaifu.Spawn _spawn;
 
-        public Fun(Services.Fun fun, Moderator moderation, SessionManager session)
+        public Fun(Services.Fun fun, Moderator moderation, SessionManager session, Services.PocketWaifu.Spawn spawn)
         {
             _fun = fun;
+            _spawn = spawn;
             _session = session;
             _moderation = moderation;
         }
@@ -72,6 +74,23 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{botuser.Id}" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} łap drobne na waciki!".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("daleko jeszcze?", RunMode = RunMode.Async)]
+        [Alias("ilejeszczemuszespamicbydostactenzasranypakiet", "ijmsbdtzp", "how much to next packet")]
+        [Summary("wyświetla ile pozostało znaków do otrzymania pakietu")]
+        [Remarks("karna"), RequireAnyCommandChannelOrLevel(60), DelayNextUseBy(60)]
+        public async Task ShowHowMuchToPacketAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
+        {
+            var usr = user ?? Context.User;
+            if (usr == null) return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                long howMuch = Services.Fun.TakeATry(2) ? Services.Fun.GetRandomValue(1, 5000) : _spawn.HowMuchToPacket(usr.Id);
+                await ReplyAsync("", embed: $"{usr.Mention} potrzebuje **{howMuch}** znaków do następnego pakietu*(teoretycznie)*."
+                    .ToEmbedMessage(EMType.Info).Build());
             }
         }
 

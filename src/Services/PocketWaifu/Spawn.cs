@@ -57,6 +57,15 @@ namespace Sanakan.Services.PocketWaifu
             catch (Exception) { }
         }
 
+        public long HowMuchToPacket(ulong userId)
+        {
+            long count = 0;
+            if (UserCounter.ContainsKey(userId))
+                count = UserCounter[userId];
+
+            return _config.Get().CharPerPacket - count;
+        }
+
         private void LoadDumpedData()
         {
             try
