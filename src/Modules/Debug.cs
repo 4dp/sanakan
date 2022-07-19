@@ -28,19 +28,21 @@ namespace Sanakan.Modules
     public class Debug : SanakanModuleBase<SocketCommandContext>
     {
         private Waifu _waifu;
+        private Spawn _spawn;
         private IConfig _config;
         private IExecutor _executor;
         private Services.Helper _helper;
         private ShindenClient _shClient;
         private Services.ImageProcessing _img;
 
-        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img, IConfig config, IExecutor executor)
+        public Debug(Waifu waifu, ShindenClient shClient, Services.Helper helper, Services.ImageProcessing img, IConfig config, IExecutor executor, Spawn spawn)
         {
             _shClient = shClient;
             _executor = executor;
             _helper = helper;
             _config = config;
             _waifu = waifu;
+            _spawn = spawn;
             _img = img;
         }
 
@@ -1143,6 +1145,8 @@ namespace Sanakan.Modules
         {
             await ReplyAsync("", embed: "To dobry czas by umrzeć.".ToEmbedMessage(EMType.Bot).Build());
             await Context.Client.LogoutAsync();
+            _spawn.DumpData();
+
             await Task.Delay(1500);
             Environment.Exit(0);
         }
@@ -1155,6 +1159,8 @@ namespace Sanakan.Modules
             await ReplyAsync("", embed: "To już czas?".ToEmbedMessage(EMType.Bot).Build());
             await Context.Client.LogoutAsync();
             System.IO.File.Create("./updateNow");
+            _spawn.DumpData();
+
             await Task.Delay(1500);
             Environment.Exit(200);
         }

@@ -15,6 +15,7 @@ src/Properties
 src/Pictures/Duel
 src/Pictures/Poke
 src/nohup.out
+src/dump.json
 src/Config.json
 src/ConfigDebug.json
 src/sanakan_key

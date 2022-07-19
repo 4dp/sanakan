@@ -15,6 +15,19 @@ namespace Sanakan.Config
 
         public JsonFileReader(string path) => _path = path;
 
+        public bool Exist() => File.Exists(_path ?? DEFAULT);
+
+        public bool Delete()
+        {
+            var path = _path ?? DEFAULT;
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+            return false;
+        }
+
         public T Load<T>(string path = DEFAULT)
         {
             if (_path != null && path == DEFAULT)

@@ -43,8 +43,39 @@ namespace Sanakan.Services.PocketWaifu
             UserCounter = new Dictionary<ulong, long>();
 #if !DEBUG
             _client.MessageReceived += HandleMessageAsync;
+            LoadDumpedData();
 #endif
         }
+
+        public void DumpData()
+        {
+            try
+            {
+                var file = GetReader();
+                file.Save(UserCounter);
+            }
+            catch (Exception) { }
+        }
+
+        private void LoadDumpedData()
+        {
+            try
+            {
+                var file = GetReader();
+                if (file.Exist())
+                {
+                    var oldData = file.Load<Dictionary<ulong, long>>();
+                    if (oldData != null && oldData?.Count > 0)
+                    {
+                        UserCounter = oldData;
+                    }
+                    file.Delete();
+                }
+            }
+            catch (Exception) { }
+        }
+
+        private JsonFileReader GetReader() => new Config.JsonFileReader("./dump.json");
 
         private void HandleGuildAsync(ITextChannel spawnChannel, ITextChannel trashChannel, long daily, string mention, bool noExp, SocketRole muteRole)
         {
