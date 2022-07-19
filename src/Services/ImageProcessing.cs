@@ -159,6 +159,7 @@ namespace Sanakan.Services
                 color = Discord.Color.DarkerGrey;
 
             string rangName = shindenUser?.Rank ?? "";
+            if (botUser.Id == 1) rangName = "Safeguard";
             string colorRank = color.RawValue.ToString("X6");
 
             var nickFont = GetFontSize(_latoBold, 28, nickname, 290);

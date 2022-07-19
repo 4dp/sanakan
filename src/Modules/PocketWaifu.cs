@@ -2291,7 +2291,9 @@ namespace Sanakan.Modules
                 var c = bUser.GameDeck.GetCardsWishList();
 
                 var cards = await _waifu.GetCardsFromWishlist(c, p ,t, db, bUser.GameDeck.Cards);
-                cards = cards.Where(x => x.GameDeckId == userf.Id).ToList();
+
+                ulong searchId = userf.Id == Context.Client.CurrentUser.Id ? 1 : userf.Id;
+                cards = cards.Where(x => x.GameDeckId == searchId).ToList();
 
                 if (!showFavs)
                     cards = cards.Where(x => !x.HasTag("ulubione")).ToList();

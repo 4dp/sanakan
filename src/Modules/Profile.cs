@@ -264,17 +264,18 @@ namespace Sanakan.Modules
             var usr = user ?? Context.User as SocketGuildUser;
             if (usr == null) return;
 
+            ulong searchId = usr.Id == Context.Client.CurrentUser.Id ? 1 : usr.Id;
             using (var db = new Database.UserContext(Config))
             {
                 var allUsers = await db.GetCachedAllUsersLiteAsync();
-                var botUser = allUsers.FirstOrDefault(x => x.Id == usr.Id);
+                var botUser = allUsers.FirstOrDefault(x => x.Id == searchId);
                 if (botUser == null)
                 {
                     await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
 
-                botUser.GameDeck = await db.GetCachedUserGameDeckAsync(usr.Id);
+                botUser.GameDeck = await db.GetCachedUserGameDeckAsync(searchId);
                 using (var stream = await _profile.GetProfileImageAsync(usr, botUser, allUsers.OrderByDescending(x => x.ExpCnt).ToList().IndexOf(botUser) + 1))
                 {
                     await Context.Channel.SendFileAsync(stream, $"{usr.Id}.png");
