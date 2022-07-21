@@ -3585,7 +3585,7 @@ namespace Sanakan.Modules
         }
 
         [Command("ofiaruj")]
-        [Alias("doante")]
+        [Alias("donate")]
         [Summary("ofiaruj trzy krople swojej krwi, aby przeistoczyć kartę w anioła lub demona (wymagany odpowiedni poziom karmy)")]
         [Remarks("451"), RequireWaifuCommandChannel]
         public async Task ChangeCardAsync([Summary("WID")]ulong wid)
