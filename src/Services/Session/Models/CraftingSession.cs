@@ -176,7 +176,7 @@ namespace Sanakan.Services.Session.Models
             var thisItem2 = P1.Items.FirstOrDefault(x => x.Type == thisItem.Type && x.Quality == thisItem.Quality);
             if (thisItem2 == null)
             {
-                thisItem2 = thisItem.Type.ToItem(count, thisItem.Quality);
+                thisItem2 = thisItem.Type.ToItem(count, thisItem.Quality, true);
                 P1.Items.Add(thisItem2);
             }
             else thisItem2.Count += count;

@@ -459,9 +459,9 @@ namespace Sanakan.Extensions
             return ex;
         }
 
-        public static Item ToItem(this ItemType type, long count = 1, Quality quality = Quality.Broken)
+        public static Item ToItem(this ItemType type, long count = 1, Quality quality = Quality.Broken, bool forceQuality = false)
         {
-            if (!type.HasDifferentQualities() && quality != Quality.Broken)
+            if ((!type.HasDifferentQualities() && quality != Quality.Broken) && !forceQuality)
                 quality = Quality.Broken;
 
             return new Item
