@@ -61,9 +61,13 @@ namespace Sanakan.Preconditions
                 {
                     return PreconditionResult.FromError($"{context.User.Mention} możesz użyć polecenia tylko raz na jakiś czas.");
                 }
-            }
 
-            _entries.Add(cmdKey, DateTime.Now);
+                _entries[cmdKey] = DateTime.Now;
+            }
+            else
+            {
+                _entries.Add(cmdKey, DateTime.Now);
+            }
 
             return PreconditionResult.FromSuccess();
         }
