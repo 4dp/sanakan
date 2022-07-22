@@ -1165,6 +1165,34 @@ namespace Sanakan.Modules
             Environment.Exit(200);
         }
 
+        [Command("spawncof", RunMode = RunMode.Async)]
+        [Summary("tworzy nowe polowanie na karte")]
+        [Remarks("")]
+        public async Task SpawnCardOnSafariAsync()
+        {
+            using (var db = new Database.GuildConfigContext(_config))
+            {
+                var config = await db.GetCachedGuildFullConfigAsync(Context.Guild.Id);
+                if (config == null) return;
+
+                var sch = Context.Guild.GetTextChannel(config.WaifuConfig.SpawnChannel);
+                var tch = Context.Guild.GetTextChannel(config.WaifuConfig.TrashSpawnChannel);
+                if (sch != null && tch != null)
+                {
+                    string mention = "";
+                    var wRole = Context.Guild.GetRole(config.WaifuRole);
+                    if (wRole != null) mention = wRole.Mention;
+
+                    var muteRole = Context.Guild.GetRole(config.MuteRole);
+                    _spawn.ForceSpawnCard(sch, tch, mention, muteRole);
+
+                    await ReplyAsync("", embed: new EmbedBuilder().WithImageUrl("https://i.imgur.com/jjX9xxu.gif").WithColor(EMType.Bot.Color()).Build());
+                    return;
+                }
+                await ReplyAsync("", embed: "Serwer nie jest poprawnie skonfigurowany.".ToEmbedMessage(EMType.Error).Build());
+            }
+        }
+
         [Command("rmconfig", RunMode = RunMode.Async)]
         [Summary("wyświetla konfiguracje powiadomień na obecnym serwerze")]
         [Remarks("")]

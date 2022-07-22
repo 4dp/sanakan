@@ -66,6 +66,14 @@ namespace Sanakan.Services.PocketWaifu
             return _config.Get().CharPerPacket - count;
         }
 
+        public void ForceSpawnCard(ITextChannel spawnChannel, ITextChannel trashChannel, string mention, SocketRole muteRole)
+        {
+            _ = Task.Run(async () =>
+            {
+                await SpawnCardAsync(spawnChannel, trashChannel, mention, muteRole);
+            });
+        }
+
         private void LoadDumpedData()
         {
             try
