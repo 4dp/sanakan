@@ -59,17 +59,18 @@ namespace Sanakan.Services.PocketWaifu
             { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    1,    0.5,   1     }, //Yato
         };
 
-        private static List<ItemType> _ultimateExpeditionItems = new List<ItemType>
+        private static List<(ItemType, int)> _ultimateExpeditionItems = new List<(ItemType, int)>
         {
-            ItemType.FigureBodyPart,
-            ItemType.FigureClothesPart,
-            ItemType.FigureHeadPart,
-            ItemType.FigureLeftArmPart,
-            ItemType.FigureLeftLegPart,
-            ItemType.FigureRightArmPart,
-            ItemType.FigureRightLegPart,
-            ItemType.FigureUniversalPart,
-            ItemType.FigureSkeleton
+            (ItemType.FigureBodyPart,       3),
+            (ItemType.FigureClothesPart,    3),
+            (ItemType.FigureHeadPart,       3),
+            (ItemType.FigureLeftArmPart,    3),
+            (ItemType.FigureLeftLegPart,    3),
+            (ItemType.FigureRightArmPart,   3),
+            (ItemType.FigureRightLegPart,   3),
+            (ItemType.FigureUniversalPart,  4),
+            (ItemType.FigureSkeleton,       2),
+            (ItemType.LotteryTicket,        1)
         };
 
         private static Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>> _chanceOfItemsInExpedition = new Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>>
@@ -112,7 +113,7 @@ namespace Sanakan.Services.PocketWaifu
                     {ItemType.AffectionRecoveryGreat,   new Tuple<int, int>(8149, 8949)},
                     {ItemType.IncreaseUpgradeCnt,       new Tuple<int, int>(8949, 9049)},
                     {ItemType.IncreaseExpSmall,         new Tuple<int, int>(9049, 9849)},
-                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(-2,   -3)},
+                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(-3,   -4)},
                     {ItemType.BetterIncreaseUpgradeCnt, new Tuple<int, int>(9849, 10000)},
                 }
             },
@@ -140,7 +141,7 @@ namespace Sanakan.Services.PocketWaifu
                     {ItemType.AffectionRecoveryGreat,   new Tuple<int, int>(8199, 8699)},
                     {ItemType.IncreaseUpgradeCnt,       new Tuple<int, int>(8699, 8799)},
                     {ItemType.IncreaseExpSmall,         new Tuple<int, int>(8799, 9899)},
-                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(-2,   -3)},
+                    {ItemType.IncreaseExpBig,           new Tuple<int, int>(-3,   -4)},
                     {ItemType.BetterIncreaseUpgradeCnt, new Tuple<int, int>(9899, 10000)},
                 }
             },
@@ -1936,7 +1937,17 @@ namespace Sanakan.Services.PocketWaifu
 
         private static ItemType GetItemFromUltimateExpedition()
         {
-            return Fun.GetOneRandomFrom(_ultimateExpeditionItems);
+            return Fun.GetOneRandomFrom(BuildListOfItemsForUltimateExpedition(_ultimateExpeditionItems));
+        }
+
+        private static IEnumerable<ItemType> BuildListOfItemsForUltimateExpedition(IEnumerable<(ItemType, int)> chances)
+        {
+            var list = new List<ItemType>();
+            foreach (var item in chances)
+            {
+                list.AddRange(Enumerable.Repeat(item.Item1, item.Item2));
+            }
+            return list.Shuffle();
         }
 
         private Item RandomizeItemForExpedition(CardExpedition expedition)

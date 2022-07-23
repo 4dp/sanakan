@@ -438,6 +438,12 @@ namespace Sanakan.Modules
                 }
 
                 var item = itemList[itemNumber - 1];
+                if (!item.Type.CanBeUsedWithNormalUseCommand())
+                {
+                    await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie można użyć za pomocą komendy `użyj`.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 switch (item.Type)
                 {
                     case ItemType.AffectionRecoveryBig:

@@ -80,6 +80,8 @@ namespace Sanakan.Extensions
                     return $"Część, którą można zamontować jako prawą nogę figurki.";
                 case ItemType.ResetCardValue:
                     return $"Resetuje warość karty do początkowego poziomu.";
+                case ItemType.LotteryTicket:
+                    return $"Zapewnia jedno wejście na loterię.";
 
                 default:
                     return "Brak opisu.";
@@ -163,6 +165,8 @@ namespace Sanakan.Extensions
                     return $"Prawa noga{quality}";
                 case ItemType.ResetCardValue:
                     return $"Marker";
+                case ItemType.LotteryTicket:
+                    return $"Przepustka";
 
                 default:
                     return "Brak";
@@ -203,6 +207,18 @@ namespace Sanakan.Extensions
                 case ItemType.ResetCardValue:           return 0.1;
 
                 default: return 0;
+            }
+        }
+
+        public static bool CanBeUsedWithNormalUseCommand(this ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.LotteryTicket:
+                    return false;
+
+                default:
+                    return true;
             }
         }
 
