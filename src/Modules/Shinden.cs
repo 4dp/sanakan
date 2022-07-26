@@ -117,7 +117,7 @@ namespace Sanakan.Modules
         [Command("strona", RunMode = RunMode.Async)]
         [Alias("ile", "otaku", "site", "mangozjeb")]
         [Summary("wyświetla statystyki użytkownika z strony")]
-        [Remarks("karna")]
+        [Remarks("karna"), DelayNextUseBy(30)]
         public async Task ShowSiteStatisticAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser user = null)
         {
             var usr = user ?? Context.User as SocketGuildUser;

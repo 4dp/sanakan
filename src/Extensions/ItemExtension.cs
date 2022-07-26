@@ -337,6 +337,8 @@ namespace Sanakan.Extensions
                     return 10;
                 case ItemType.ResetCardValue:
                     return 5;
+                case ItemType.LotteryTicket:
+                    return 200;
 
                 default:
                     return 1;

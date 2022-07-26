@@ -80,7 +80,7 @@ namespace Sanakan.Modules
         [Command("daleko jeszcze?", RunMode = RunMode.Async)]
         [Alias("ilejeszczemuszespamicbydostactenzasranypakiet", "ijmsbdtzp", "how much to next packet")]
         [Summary("wyświetla ile pozostało znaków do otrzymania pakietu")]
-        [Remarks("karna"), RequireAnyCommandChannelOrLevel(60), DelayNextUseBy(60)]
+        [Remarks("karna"), RequireAnyCommandChannelOrLevel(60), DelayNextUseBy(120, DelayNextUseBy.ResType.Nothing)]
         public async Task ShowHowMuchToPacketAsync([Summary("użytkownik(opcjonalne)")]SocketUser user = null)
         {
             var usr = user ?? Context.User;

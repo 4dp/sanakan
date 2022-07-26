@@ -258,7 +258,7 @@ namespace Sanakan.Modules
         [Command("profil", RunMode = RunMode.Async)]
         [Alias("profile")]
         [Summary("wyświetla profil użytkownika")]
-        [Remarks("karna")]
+        [Remarks("karna"), DelayNextUseBy(30)]
         public async Task ShowUserProfileAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser user = null)
         {
             var usr = user ?? Context.User as SocketGuildUser;

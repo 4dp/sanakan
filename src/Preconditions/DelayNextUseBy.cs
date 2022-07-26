@@ -18,14 +18,21 @@ namespace Sanakan.Preconditions
             PerUser, Global
         }
 
+        public enum ResType
+        {
+            Nothing, MinSec, HourMin
+        }
+
+        private readonly ResType _responseType;
         private readonly DelayMethod _method;
         private readonly TimeSpan _time;
 
         private static Dictionary<(string, ulong), DateTime> _entries = new Dictionary<(string, ulong), DateTime>();
 
-        public DelayNextUseBy(double time_min, DelayMethod method = DelayMethod.PerUser)
+        public DelayNextUseBy(double time_min, ResType resType = ResType.MinSec, DelayMethod method = DelayMethod.PerUser)
         {
             _time = TimeSpan.FromMinutes(time_min);
+            _responseType = resType;
             _method = method;
         }
 
@@ -59,7 +66,20 @@ namespace Sanakan.Preconditions
                 var lastUse = _entries[cmdKey];
                 if (lastUse + _time > DateTime.Now)
                 {
-                    return PreconditionResult.FromError($"{context.User.Mention} możesz użyć polecenia tylko raz na jakiś czas.");
+                    switch (_responseType)
+                    {
+                        case ResType.Nothing:
+                            return PreconditionResult.FromError($"{context.User.Mention} to polecenie możesz użyć raz na jakiś czas.");
+
+                        case ResType.HourMin:
+                            var min = (int)(lastUse + _time - DateTime.Now).TotalMinutes;
+                            return PreconditionResult.FromError($"{context.User.Mention} to polecenie możesz użyć za {min / 60}h {min % 60}m.");
+
+                        default:
+                        case ResType.MinSec:
+                            var sec = (int)(lastUse + _time - DateTime.Now).TotalSeconds;
+                            return PreconditionResult.FromError($"{context.User.Mention} to polecenie możesz użyć za {sec / 60}m {sec % 60}s.");
+                    }
                 }
 
                 _entries[cmdKey] = DateTime.Now;
