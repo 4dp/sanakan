@@ -21,9 +21,20 @@ namespace Sanakan.Preconditions
             var user = context.User as SocketGuildUser;
             if (user == null) return PreconditionResult.FromSuccess();
 
-            await Task.CompletedTask;
-
             var config = (IConfig)services.GetService(typeof(IConfig));
+            using (var dbu = new Database.UserContext(config))
+            {
+                var botUser = await dbu.GetBaseUserAndDontTrackAsync(user.Id);
+                if (botUser != null)
+                {
+                    if (botUser.IsBlacklisted)
+                        return PreconditionResult.FromError($"{user.Mention} znajdujesz się na czarnej liście bota i nie możesz uzyć tego polecenia.");
+
+                    if (botUser.Level >= _level)
+                        return PreconditionResult.FromSuccess();
+                }
+            }
+
             using (var db = new Database.GuildConfigContext(config))
             {
                 var gConfig = await db.GetCachedGuildFullConfigAsync(context.Guild.Id);
@@ -41,16 +52,6 @@ namespace Sanakan.Preconditions
                     {
                         if (gConfig.WaifuConfig.CommandChannels.Any(x => x.Channel == context.Channel.Id))
                             return PreconditionResult.FromSuccess();
-                    }
-
-                    using (var dbu = new Database.UserContext(config))
-                    {
-                        var botUser = await dbu.GetBaseUserAndDontTrackAsync(user.Id);
-                        if (botUser != null)
-                        {
-                            if (botUser.Level >= _level)
-                                return PreconditionResult.FromSuccess();
-                        }
                     }
 
                     var channel = await context.Guild.GetTextChannelAsync(gConfig.CommandChannels.First().Channel);
