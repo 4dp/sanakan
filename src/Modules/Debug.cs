@@ -80,10 +80,22 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("sbl", RunMode = RunMode.Async)]
+        [Summary("wypisuje liste użytkowników na czarnej liśćie")]
+        [Remarks("")]
+        public async Task ShowBlacklistedUsersAsync()
+        {
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUsers = await db.Users.AsQueryable().Where(x => x.IsBlacklisted).AsNoTracking().ToListAsync();
+                await ReplyAsync("", embed: $"**Czarna lista:**\n\n{string.Join("\n", bUsers.Select(x => (Context.Client.GetUserAsync(x.Id).Result?.Username ?? "????") + $" {x.Id}"))}".ToEmbedMessage(EMType.Info).Build());
+            }
+        }
+
         [Command("blacklist")]
         [Summary("dodaje/usuwa użytkownika do czarnej listy")]
         [Remarks("Karna")]
-        public async Task TransferCardAsync([Summary("użytkownik")]SocketGuildUser user)
+        public async Task BlacklistUserAsync([Summary("użytkownik")]SocketGuildUser user)
         {
             using (var db = new Database.UserContext(Config))
             {
