@@ -2215,7 +2215,8 @@ namespace Sanakan.Modules
         [Alias("wishlist", "zyczenia")]
         [Summary("wyświetla liste życzeń użytkownika")]
         [Remarks("Dzida tak tak tak"), RequireWaifuCommandChannel]
-        public async Task ShowWishlistAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false, [Summary("czy pokazać niewymienialne (true/false) domyślnie pokazane")] bool showBlocked = true, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
+        public async Task ShowWishlistAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser usr = null, [Summary("czy pokazać ulubione (true/false) domyślnie ukryte, wymaga podania użytkownika")]bool showFavs = false,
+            [Summary("czy pokazać niewymienialne (true/false) domyślnie pokazane")] bool showBlocked = true, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
         {
             var user = (usr ?? Context.User) as SocketGuildUser;
             if (user == null) return;
@@ -2263,7 +2264,7 @@ namespace Sanakan.Modules
                 try
                 {
                     var dm = await Context.User.CreateDMChannelAsync();
-                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild))
+                    foreach (var emb in await _waifu.GetWaifuFromCharacterTitleSearchResult(cards, Context.Client, !showNames, Context.Guild, showShindenUrl))
                     {
                         await dm.SendMessageAsync("", embed: emb);
                         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -2355,7 +2356,7 @@ namespace Sanakan.Modules
         [Alias("who wants", "kc", "ww")]
         [Summary("wyszukuje na listach życzeń użytkowników danej karty, pomija tytuły")]
         [Remarks("51545"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
+        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -2366,7 +2367,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Include(x => x.User).Where(x => !x.WishlistIsPrivate && (x.Wishes.Any(c => c.Type == WishlistObjectType.Card && c.ObjectId == thisCards.Id) || x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character))).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie chce tej karty.".ToEmbedMessage(EMType.Error).Build());
@@ -2380,7 +2381,13 @@ namespace Sanakan.Modules
                     {
                         IUser dUser = Context.Guild.GetUser(deck.UserId);
                         if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
-                        if (dUser != null) usersStr += $"{dUser.GetUserNickInGuild()}\n";
+                        if (dUser != null)
+                        {
+                            if (showShindenUrl && deck.User.Shinden != 0 && deck.User.Id != 1)
+                                usersStr += $"[{dUser.GetUserNickInGuild()}](https://shinden.pl/user/{deck.User.Shinden})\n";
+                            else
+                                usersStr += $"{dUser.GetUserNickInGuild()}\n";
+                        }
                     }
                 }
                 else
@@ -2396,7 +2403,7 @@ namespace Sanakan.Modules
         [Alias("who wants anime", "kca", "wwa")]
         [Summary("wyszukuje na wishlistach danego anime")]
         [Remarks("21"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
+        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
         {
             var response = await _shclient.Title.GetInfoAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -2407,7 +2414,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var wishlists = db.GameDecks.Include(x => x.Wishes).Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
+                var wishlists = db.GameDecks.Include(x => x.Wishes).Include(x => x.User).Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Title && c.ObjectId == id)).ToList();
                 if (wishlists.Count < 1)
                 {
                     await ReplyAsync("", embed: $"Nikt nie ma tego tytułu wpisanego na listę życzeń.".ToEmbedMessage(EMType.Error).Build());
@@ -2421,7 +2428,13 @@ namespace Sanakan.Modules
                     {
                         IUser dUser = Context.Guild.GetUser(deck.UserId);
                         if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
-                        if (dUser != null) usersStr += $"{dUser.GetUserNickInGuild()}\n";
+                        if (dUser != null)
+                        {
+                            if (showShindenUrl && deck.User.Shinden != 0 && deck.User.Id != 1)
+                                usersStr += $"[{dUser.GetUserNickInGuild()}](https://shinden.pl/user/{deck.User.Shinden})\n";
+                            else
+                                usersStr += $"{dUser.GetUserNickInGuild()}\n";
+                        }
                     }
                 }
                 else
