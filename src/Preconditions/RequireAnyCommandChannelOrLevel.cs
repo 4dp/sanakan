@@ -21,6 +21,9 @@ namespace Sanakan.Preconditions
             var user = context.User as SocketGuildUser;
             if (user == null) return PreconditionResult.FromSuccess();
 
+            if (user.GuildPermissions.Administrator)
+                return PreconditionResult.FromSuccess();
+
             var config = (IConfig)services.GetService(typeof(IConfig));
             using (var dbu = new Database.UserContext(config))
             {
@@ -43,9 +46,6 @@ namespace Sanakan.Preconditions
                 if (gConfig.CommandChannels != null)
                 {
                     if (gConfig.CommandChannels.Any(x => x.Channel == context.Channel.Id))
-                        return PreconditionResult.FromSuccess();
-
-                    if (user.GuildPermissions.Administrator)
                         return PreconditionResult.FromSuccess();
 
                     if (gConfig?.WaifuConfig?.CommandChannels != null)
