@@ -1129,7 +1129,7 @@ namespace Sanakan.Services.PocketWaifu
             return im.Url;
         }
 
-        public async Task<List<Embed>> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null)
+        public async Task<List<Embed>> GetWaifuFromCharacterSearchResult(string title, IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null, bool shindenUrls = false)
         {
             var list = new List<Embed>();
             string contentString = $"{title}\n\n";
@@ -1144,6 +1144,11 @@ namespace Sanakan.Services.PocketWaifu
                 {
                     user = guild?.GetUser(card.GameDeckId) ?? user;
                     usrName = user?.GetUserNickInGuild() ?? "????";
+
+                    if (shindenUrls && card?.GameDeck?.User?.Shinden != 0 && card?.GameDeckId != 1)
+                    {
+                        usrName = $"[{usrName}](https://shinden.pl/user/{card.GameDeck.User.Shinden})";
+                    }
                 }
 
                 tempContentString += $"{usrName} **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";
@@ -1174,7 +1179,7 @@ namespace Sanakan.Services.PocketWaifu
             return list;
         }
 
-        public async Task<List<Embed>> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null)
+        public async Task<List<Embed>> GetWaifuFromCharacterTitleSearchResult(IEnumerable<Card> cards, DiscordSocketClient client, bool mention, SocketGuild guild = null, bool shindenUrls = false)
         {
             var list = new List<Embed>();
             var characters = cards.GroupBy(x => x.Character);
@@ -1192,6 +1197,11 @@ namespace Sanakan.Services.PocketWaifu
                     {
                         user = guild?.GetUser(card.GameDeckId) ?? user;
                         usrName = user?.GetUserNickInGuild() ?? "????";
+
+                        if (shindenUrls && card?.GameDeck?.User?.Shinden != 0 && card?.GameDeckId != 1)
+                        {
+                            usrName = $"[{usrName}](https://shinden.pl/user/{card.GameDeck.User.Shinden})";
+                        }
                     }
 
                     tempContentString += $"{usrName}: **[{card.Id}]** **{card.GetCardRealRarity()}** {card.GetStatusIcons()}\n";

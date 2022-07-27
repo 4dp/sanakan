@@ -3019,7 +3019,7 @@ namespace Sanakan.Modules
         [Alias("who")]
         [Summary("pozwala wyszukać użytkowników posiadających kartę danej postaci")]
         [Remarks("51 tak"), RequireWaifuCommandChannel]
-        public async Task SearchCharacterCardsAsync([Summary("id postaci na shinden")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
+        public async Task SearchCharacterCardsAsync([Summary("id postaci na shinden")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
         {
             var response = await _shclient.GetCharacterInfoAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -3030,7 +3030,7 @@ namespace Sanakan.Modules
 
             using (var db = new Database.UserContext(Config))
             {
-                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
+                var cards = await db.Cards.Include(x => x.TagList).Include(x => x.GameDeck).ThenInclude(x => x.User).Where(x => x.Character == id).AsNoTracking().FromCacheAsync( new[] {"users"});
 
                 if (cards.Count() < 1)
                 {
@@ -3038,7 +3038,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                var msgs = await _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client, !showNames, Context.Guild);
+                var msgs = await _waifu.GetWaifuFromCharacterSearchResult($"[**{response.Body}**]({response.Body.CharacterUrl}) posiadają:", cards, Context.Client, !showNames, Context.Guild, showShindenUrl);
                 if (msgs.Count == 1)
                 {
                     await ReplyAsync("", embed: msgs.First());
