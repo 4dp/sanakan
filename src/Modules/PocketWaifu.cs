@@ -315,6 +315,27 @@ namespace Sanakan.Modules
             }
         }
 
+        [Command("karma", RunMode = RunMode.Async)]
+        [Summary("pozwala wyświetlić stan karmy")]
+        [Remarks("Karma"), RequireAnyCommandChannelOrLevel(40)]
+        public async Task ShowKarmaAsync([Summary("użytkownik (opcjonalne)")]SocketUser user = null)
+        {
+            var usr = user ?? Context.User;
+            if (usr == null) return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var botuser = await db.GetCachedFullUserAsync(usr.Id);
+                if (botuser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                await ReplyAsync("", embed: $"**Karma:** {botuser.GameDeck.Karma.ToString("F")}".ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(usr)).Build());
+            }
+        }
+
         [Command("karta-", RunMode = RunMode.Async)]
         [Alias("card-")]
         [Summary("pozwala wyświetlić kartę w prostej postaci")]
