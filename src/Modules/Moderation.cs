@@ -1768,29 +1768,29 @@ namespace Sanakan.Modules
                         ++dbUser.Warnings;
                         await udb.SaveChangesAsync();
 
-                        if (dbUser.Warnings < 5)
+                        if (dbUser.Warnings < 3)
                         {
                             await _moderation.NotifyUserAsync(user, reason);
                             return;
                         }
 
                         var multiplier = 1;
-                        if (dbUser.Warnings > 30)
+                        if (dbUser.Warnings > 15)
                         {
                             multiplier = 30;
                         }
-                        else if (dbUser.Warnings > 20)
+                        else if (dbUser.Warnings > 10)
                         {
                             multiplier = 10;
                         }
-                        else if (dbUser.Warnings > 10)
+                        else if (dbUser.Warnings > 5)
                         {
                             multiplier = 2;
                         }
 
                         byWho = "automat";
                         duration = 24 * multiplier;
-                        reason = $"przekroczono maksymalną liczbę ostrzeżeń o {dbUser.Warnings - 4}";
+                        reason = $"przekroczono maksymalną liczbę ostrzeżeń ({dbUser.Warnings})";
                     }
                 }
 
