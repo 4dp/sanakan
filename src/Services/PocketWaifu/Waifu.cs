@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -1558,6 +1559,34 @@ namespace Sanakan.Services.PocketWaifu
                 },
                 Description = $"{card.GetDesc()}{imgUrls}".TrimToLength(1800)
             }.Build();
+        }
+
+        public async Task<string> GetWhoWantsCardsStringAsync(List<GameDeck> wishlists, bool showNames, SocketGuild guild, DiscordSocketClient client = null)
+        {
+            if (!showNames)
+            {
+                return string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"));
+            }
+
+            var str = new StringBuilder();
+            foreach (var deck in wishlists)
+            {
+                IUser dUser = guild.GetUser(deck.UserId);
+                if (dUser == null && client != null)
+                {
+                    dUser = await client.GetUserAsync(deck.Id);
+                }
+                if (dUser != null)
+                {
+                    if (deck.User.Shinden != 0 && deck.User.Id != 1)
+                    {
+                        str.AppendLine($"[{dUser.GetUserNickInGuild()}](https://shinden.pl/user/{deck.User.Shinden})");
+                        continue;
+                    }
+                    str.AppendLine(dUser.GetUserNickInGuild());
+                }
+            }
+            return str.ToString();
         }
 
         public Embed GetShopView(ItemWithCost[] items, string name = "Sklepik", string currency = "TC")

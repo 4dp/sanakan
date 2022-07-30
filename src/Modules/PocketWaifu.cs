@@ -2356,7 +2356,7 @@ namespace Sanakan.Modules
         [Alias("who wants", "kc", "ww")]
         [Summary("wyszukuje na listach życzeń użytkowników danej karty, pomija tytuły")]
         [Remarks("51545"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
+        public async Task WhoWantsCardAsync([Summary("wid karty")]ulong wid, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             using (var db = new Database.UserContext(Config))
             {
@@ -2374,27 +2374,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                string usersStr = "";
-                if (showNames)
-                {
-                    foreach(var deck in wishlists)
-                    {
-                        IUser dUser = Context.Guild.GetUser(deck.UserId);
-                        if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
-                        if (dUser != null)
-                        {
-                            if (showShindenUrl && deck.User.Shinden != 0 && deck.User.Id != 1)
-                                usersStr += $"[{dUser.GetUserNickInGuild()}](https://shinden.pl/user/{deck.User.Shinden})\n";
-                            else
-                                usersStr += $"{dUser.GetUserNickInGuild()}\n";
-                        }
-                    }
-                }
-                else
-                {
-                    usersStr = string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"));
-                }
-
+                var usersStr = await _waifu.GetWhoWantsCardsStringAsync(wishlists, showNames, Context.Guild, Context.Client);
                 await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {usersStr}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
             }
         }
@@ -2403,7 +2383,7 @@ namespace Sanakan.Modules
         [Alias("who wants anime", "kca", "wwa")]
         [Summary("wyszukuje na wishlistach danego anime")]
         [Remarks("21"), RequireWaifuCommandChannel]
-        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false, [Summary("czy dodać linki do profili?")]bool showShindenUrl = false)
+        public async Task WhoWantsCardsFromAnimeAsync([Summary("id anime")]ulong id, [Summary("czy zamienić oznaczenia na nicki?")]bool showNames = false)
         {
             var response = await _shclient.Title.GetInfoAsync(id);
             if (!response.IsSuccessStatusCode())
@@ -2421,27 +2401,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                string usersStr = "";
-                if (showNames)
-                {
-                    foreach(var deck in wishlists)
-                    {
-                        IUser dUser = Context.Guild.GetUser(deck.UserId);
-                        if (dUser == null) dUser = await Context.Client.GetUserAsync(deck.Id);
-                        if (dUser != null)
-                        {
-                            if (showShindenUrl && deck.User.Shinden != 0 && deck.User.Id != 1)
-                                usersStr += $"[{dUser.GetUserNickInGuild()}](https://shinden.pl/user/{deck.User.Shinden})\n";
-                            else
-                                usersStr += $"{dUser.GetUserNickInGuild()}\n";
-                        }
-                    }
-                }
-                else
-                {
-                    usersStr = string.Join("\n", wishlists.Select(x => $"<@{x.Id}>"));
-                }
-
+                var usersStr = await _waifu.GetWhoWantsCardsStringAsync(wishlists, showNames, Context.Guild, Context.Client);
                 await ReplyAsync("", embed: $"**Karty z {response.Body.Title} chcą:**\n\n {usersStr}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
             }
         }
