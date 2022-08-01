@@ -1214,7 +1214,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Rarity == Rarity.SSS)
+                if (card.Rarity == Rarity.SSS && card.Quality != Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma już najwyższy poziom.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -1226,13 +1226,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.UpgradesCnt < 1)
+                if (card.UpgradesCnt < 1 && card.Quality != Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie ma już dostępnych ulepszeń.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
-                if (card.ExpCnt < card.ExpToUpgrade())
+                if (card.ExpCnt < card.ExpToUpgrade() && card.Quality != Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia. Wymagane {card.ExpToUpgrade().ToString("F")}.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -1250,33 +1250,72 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                ++bUser.Stats.UpgaredCards;
-                bUser.GameDeck.Karma += 1;
-
-                card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
-                card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
-                card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 5 : 1);
-                card.Rarity = --card.Rarity;
-                card.Affection += 1;
-                card.ExpCnt = 0;
-
-                _ = card.CalculateCardPower();
-
-                if (card.Rarity == Rarity.SSS)
+                if (card.Quality != Quality.Broken)
                 {
-                    if (card.RestartCnt < 1)
+                    if (card.Quality == Quality.Omega)
                     {
-                        if (bUser.Stats.UpgradedToSSS % 10 == 0)
+                        await ReplyAsync("", embed: $"{Context.User.Mention} tej karty nie można już ulepszyć.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    var fig = bUser.GameDeck.Figures.FirstOrDefault(x => x.IsFocus);
+                    if (fig == null)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} nie posiadasz aktywnej figurki.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    if (fig.IsComplete)
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} z tej figurki powstała już karta.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    if (!fig.CanCreateUltimateCard())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} twoja figurka nie posiada wszystkich elementów.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    if (card.Quality != fig.GetAvgQuality())
+                    {
+                        await ReplyAsync("", embed: $"{Context.User.Mention} ta figurka nie ma takiej samej jakości jak karta którą chcesz ulepszyć.".ToEmbedMessage(EMType.Error).Build());
+                        return;
+                    }
+
+                    bUser.GameDeck.Figures.Remove(fig);
+                    card.Quality = card.Quality.Next();
+                }
+                else
+                {
+                    ++bUser.Stats.UpgaredCards;
+                    bUser.GameDeck.Karma += 1;
+
+                    card.Defence = _waifu.GetDefenceAfterLevelUp(card.Rarity, card.Defence);
+                    card.Attack = _waifu.GetAttactAfterLevelUp(card.Rarity, card.Attack);
+                    card.UpgradesCnt -= (card.Rarity == Rarity.SS ? 5 : 1);
+                    card.Rarity = --card.Rarity;
+                    card.Affection += 1;
+                    card.ExpCnt = 0;
+
+                    _ = card.CalculateCardPower();
+
+                    if (card.Rarity == Rarity.SSS)
+                    {
+                        if (card.RestartCnt < 1)
                         {
-                            var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
-                            if (inUserItem == null)
+                            if (bUser.Stats.UpgradedToSSS % 10 == 0)
                             {
-                                inUserItem = ItemType.SetCustomImage.ToItem();
-                                bUser.GameDeck.Items.Add(inUserItem);
+                                var inUserItem = bUser.GameDeck.Items.FirstOrDefault(x => x.Type == ItemType.SetCustomImage);
+                                if (inUserItem == null)
+                                {
+                                    inUserItem = ItemType.SetCustomImage.ToItem();
+                                    bUser.GameDeck.Items.Add(inUserItem);
+                                }
+                                else inUserItem.Count++;
                             }
-                            else inUserItem.Count++;
+                            ++bUser.Stats.UpgradedToSSS;
                         }
-                        ++bUser.Stats.UpgradedToSSS;
                     }
                 }
 
