@@ -90,6 +90,9 @@ namespace Sanakan.Services
 
         private async Task UserLeftAsync(SocketGuild guild, SocketUser user)
         {
+            ulong channelId = 0;
+            ulong adminRoleId = 0;
+
             if (user.IsBot || user.IsWebhook) return;
 
             if (!_config.Get().BlacklistedGuilds.Any(x => x == guild.Id))
@@ -101,37 +104,48 @@ namespace Sanakan.Services
                     if (config.GoodbyeMessage == "off") return;
 
                     await SendMessageAsync(ReplaceTags(user, config.GoodbyeMessage), guild.GetTextChannel(config.GreetingChannel));
+
+                    channelId = config.GreetingChannel;
+                    adminRoleId = config.AdminRole;
                 }
             }
 
-            var thisUser = _client.Guilds.FirstOrDefault(x => x.Id == user.Id);
-            if (thisUser != null) return;
+            if (_client.Guilds.Any(x => x.Id != guild.Id && x.Users.Any(u => u.Id == user.Id)))
+                return;
 
             var moveTask = new Task<Task>(async () =>
             {
-                using (var db = new Database.UserContext(_config))
+                try
                 {
-                    var duser = await db.GetUserOrCreateAsync(user.Id);
-                    var fakeu = await db.GetUserOrCreateAsync(1);
-
-                    foreach (var card in duser.GameDeck.Cards)
+                    using (var db = new Database.UserContext(_config))
                     {
-                        card.InCage = false;
-                        card.TagList.Clear();
-                        card.LastIdOwner = user.Id;
-                        card.GameDeckId = fakeu.GameDeck.Id;
+                        var duser = await db.GetUserOrCreateAsync(user.Id);
+                        var fakeu = await db.GetUserOrCreateAsync(1);
+
+                        foreach (var card in duser.GameDeck.Cards)
+                        {
+                            card.InCage = false;
+                            card.TagList.Clear();
+                            card.LastIdOwner = user.Id;
+                            card.GameDeckId = fakeu.GameDeck.Id;
+                        }
+
+                        foreach (var w in duser.GameDeck.Wishes.Where(x => x.Type == Database.Models.WishlistObjectType.Character))
+                        {
+                            await db.WishlistCountData.CreateOrChangeWishlistCountByAsync(w.ObjectId, w.ObjectName, -1);
+                        }
+
+                        db.Users.Remove(duser);
+
+                        await db.SaveChangesAsync();
+
+                        QueryCacheManager.ExpireTag(new string[] { "users" });
                     }
-
-                    foreach(var w in duser.GameDeck.Wishes.Where(x => x.Type == Database.Models.WishlistObjectType.Character))
-                    {
-                        await db.WishlistCountData.CreateOrChangeWishlistCountByAsync(w.ObjectId, w.ObjectName, -1);
-                    }
-
-                    db.Users.Remove(duser);
-
-                    await db.SaveChangesAsync();
-
-                    QueryCacheManager.ExpireTag(new string[] { "users" });
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log("In user leave:" + ex.ToString());
+                    await SendMessageAsync($"**ERR:** `{user.Id}` {guild.GetRole(adminRoleId)?.Mention}", guild.GetTextChannel(channelId));
                 }
             });
 
