@@ -366,8 +366,8 @@ namespace Sanakan.Services.PocketWaifu
                     return Quality.Alpha;
 
                 case CardExpedition.UltimateHard:
-                    if (num < 50) return Quality.Sigma;
-                    if (num < 200) return Quality.Lambda;
+                    if (num < 50) return Quality.Lambda;
+                    if (num < 200) return Quality.Jota;
                     if (num < 600) return Quality.Theta;
                     if (num < 1500) return Quality.Zeta;
                     if (num < 5000) return Quality.Epsilon;
@@ -377,9 +377,10 @@ namespace Sanakan.Services.PocketWaifu
                     return Quality.Alpha;
 
                 case CardExpedition.UltimateHardcore:
-                    if (num < 50) return Quality.Omega;
-                    if (num < 150) return Quality.Sigma;
-                    if (num < 2000) return Quality.Lambda;
+                    if (num < 15) return Quality.Omega;
+                    if (num < 50) return Quality.Sigma;
+                    if (num < 150) return Quality.Lambda;
+                    if (num < 1500) return Quality.Jota;
                     if (num < 5000) return Quality.Theta;
                     if (num < 10000) return Quality.Zeta;
                     if (num < 20000) return Quality.Epsilon;
