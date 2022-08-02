@@ -315,27 +315,6 @@ namespace Sanakan.Modules
             }
         }
 
-        [Command("karma", RunMode = RunMode.Async)]
-        [Summary("pozwala wyświetlić stan karmy")]
-        [Remarks("Karma"), RequireAnyCommandChannelOrLevel(40)]
-        public async Task ShowKarmaAsync([Summary("użytkownik (opcjonalne)")]SocketUser user = null)
-        {
-            var usr = user ?? Context.User;
-            if (usr == null) return;
-
-            using (var db = new Database.UserContext(Config))
-            {
-                var botuser = await db.GetCachedFullUserAsync(usr.Id);
-                if (botuser == null)
-                {
-                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
-                    return;
-                }
-
-                await ReplyAsync("", embed: $"**Karma:** {botuser.GameDeck.Karma.ToString("F")}".ToEmbedMessage(EMType.Info).WithAuthor(new EmbedAuthorBuilder().WithUser(usr)).Build());
-            }
-        }
-
         [Command("karta-", RunMode = RunMode.Async)]
         [Alias("card-")]
         [Summary("pozwala wyświetlić kartę w prostej postaci")]
@@ -3716,6 +3695,52 @@ namespace Sanakan.Modules
                 QueryCacheManager.ExpireTag(new string[] { $"user-{bUser.Id}", "users" });
 
                 await ReplyAsync("", embed: $"{Context.User.Mention} nowy charakter to {thisCard.Dere}".ToEmbedMessage(EMType.Success).Build());
+            }
+        }
+
+        [Command("karcianka-", RunMode = RunMode.Async)]
+        [Alias("cpf-")]
+        [Summary("wyświetla uproszczony profil PocketWaifu")]
+        [Remarks("Karna"), RequireAnyCommandChannelOrLevel(40)]
+        public async Task ShowSimpleProfileAsync([Summary("użytkownik (opcjonalne)")]SocketGuildUser usr = null)
+        {
+            var user = (usr ?? Context.User) as SocketGuildUser;
+            if (user == null) return;
+
+            using (var db = new Database.UserContext(Config))
+            {
+                var bUser = await db.GetCachedFullUserAsync(user.Id);
+                if (bUser == null)
+                {
+                    await ReplyAsync("", embed: "Ta osoba nie ma profilu bota.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
+                var seasonString = "----";
+                if (bUser.GameDeck.IsPVPSeasonalRankActive())
+                    seasonString = $"{bUser.GameDeck.GetRankName()} ({bUser.GameDeck.SeasonalPVPRank})";
+                var globalString = $"{bUser.GameDeck.GetRankName(bUser.GameDeck.GlobalPVPRank)} ({bUser.GameDeck.GlobalPVPRank})";
+
+                var embed = new EmbedBuilder()
+                {
+                    Color = EMType.Bot.Color(),
+                    Author = new EmbedAuthorBuilder().WithUser(user),
+                    Description = $"*{bUser.GameDeck.GetUserNameStatus()}*\n\n"
+                        + $"**Skrzynia({(int)bUser.GameDeck.ExpContainer.Level})**: {bUser.GameDeck.ExpContainer.ExpCount.ToString("F")}\n"
+                        + $"**CT**: {bUser.GameDeck.CTCnt}\n**Karma**: {bUser.GameDeck.Karma.ToString("F")}\n\n**Posiadane karty**: {bUser.GameDeck.Cards.Count}\n"
+                        + $"**GR**: {globalString}\n**SR**: {seasonString}"
+                };
+
+                if (bUser.GameDeck?.Waifu != 0)
+                {
+                    var tChar = bUser.GameDeck.Cards.FirstOrDefault(x => x.Character == bUser.GameDeck.Waifu);
+                    if (tChar != null)
+                    {
+                        embed.WithFooter(new EmbedFooterBuilder().WithText($"{tChar.Name}"));
+                    }
+                }
+
+                await ReplyAsync("", embed: embed.Build());
             }
         }
 
