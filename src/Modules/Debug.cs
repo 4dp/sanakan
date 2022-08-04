@@ -218,7 +218,7 @@ namespace Sanakan.Modules
         {
             for (uint i = 0; i < repeat; i++)
             {
-                await GiveawayCardsAsync(id, count, duration);
+                await GiveawayCardsAsync(id, count, duration, i, repeat);
                 await Task.Delay(TimeSpan.FromSeconds(10));
             }
         }
@@ -226,7 +226,7 @@ namespace Sanakan.Modules
         [Command("rozdaj", RunMode = RunMode.Async)]
         [Summary("rozdaje karty")]
         [Remarks("1 10 5")]
-        public async Task GiveawayCardsAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5)
+        public async Task GiveawayCardsAsync([Summary("id użytkownika")]ulong id, [Summary("liczba kart")]uint count, [Summary("czas w minutach")]uint duration = 5, [Summary("które wywołanie?")]long progress = -1, [Summary("ile wywołań?")]uint howMuch = 0)
         {
             var emote = Emote.Parse("<a:success:467493778752798730>");
             var time = DateTime.Now.AddMinutes(duration);
@@ -245,7 +245,9 @@ namespace Sanakan.Modules
                 }
             }
 
-            var msg = await ReplyAsync(mention, embed: $"Loteria kart. Zareaguj {emote}, aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot).Build());
+            var sendMsg = $"Loteria kart. Zareaguj {emote}, aby wziąć udział.\n\nKoniec `{time.ToShortTimeString()}:{time.Second.ToString("00")}`".ToEmbedMessage(EMType.Bot);
+            if (progress > -1) sendMsg.Footer = (new EmbedFooterBuilder()).WithText($"{progress+1}/{howMuch}");
+            var msg = await ReplyAsync(mention, embed: sendMsg.Build());
             await msg.AddReactionAsync(emote);
 
             await Task.Delay(TimeSpan.FromMinutes(duration));
