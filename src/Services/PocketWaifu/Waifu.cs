@@ -1194,7 +1194,8 @@ namespace Sanakan.Services.PocketWaifu
             string contentString = "";
             foreach (var cardsG in characters)
             {
-                string tempContentString = $"\n**{cardsG.First().GetNameWithUrl()}**\n";
+                var fC = cardsG.First();
+                string tempContentString = $"\n**{fC.GetNameWithUrl()}** ({fC.WhoWantsCount})\n";
                 foreach (var card in cardsG)
                 {
                     IUser user = await client.GetUserAsync(card.GameDeckId);
