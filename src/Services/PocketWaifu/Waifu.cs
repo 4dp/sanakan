@@ -1077,19 +1077,24 @@ namespace Sanakan.Services.PocketWaifu
             return new FightHistory(winner) { Rounds = rounds };
         }
 
-        public Embed GetActiveList(IEnumerable<Card> list)
+        public List<Embed> GetActiveList(IEnumerable<Card> list)
         {
-            var embed = new EmbedBuilder()
+            var page = 0;
+            var msg = new List<Embed>();
+            var cardsStrings = list.Select(x => $"**P:** {x.CardPower.ToString("F")} {x.GetString(false, false, true)}");
+            var perPage = cardsStrings.SplitList(10);
+
+            foreach (var p in perPage)
             {
-                Color = EMType.Info.Color(),
-                Footer = new EmbedFooterBuilder().WithText($"MOC {list.Sum(x => x.CalculateCardPower()).ToString("F")}"),
-                Description = "**Twoje aktywne karty to**:\n\n",
-            };
+                msg.Add(new EmbedBuilder()
+                {
+                    Color = EMType.Info.Color(),
+                    Footer = new EmbedFooterBuilder().WithText($"(S: {++page}) MOC {list.Sum(x => x.CalculateCardPower()).ToString("F")}"),
+                    Description = ("**Twoje aktywne karty to**:\n\n" + string.Join("\n", p)).TrimToLength(1800),
+                }.Build());
+            }
 
-            foreach(var card in list)
-                embed.Description += $"**P:** {card.CardPower.ToString("F")} {card.GetString(false, false, true)}\n";
-
-            return embed.Build();
+            return msg;
         }
 
         public async Task<ICharacterInfo> GetRandomCharacterAsync()

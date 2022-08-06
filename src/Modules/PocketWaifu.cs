@@ -2966,7 +2966,7 @@ namespace Sanakan.Modules
 
                 if (wid == 0)
                 {
-                    if (active.Count() < 1)
+                    if (active.Count < 1)
                     {
                         await ReplyAsync("", embed: $"{Context.User.Mention} nie masz aktywnych kart.".ToEmbedMessage(EMType.Info).Build());
                         return;
@@ -2975,7 +2975,13 @@ namespace Sanakan.Modules
                     try
                     {
                         var dm = await Context.User.CreateDMChannelAsync();
-                        await dm.SendMessageAsync("", embed: _waifu.GetActiveList(active));
+                        if (dm == null) return;
+
+                        foreach (var page in _waifu.GetActiveList(active))
+                        {
+                            await dm.SendMessageAsync("", embed: page);
+                            await Task.Delay(TimeSpan.FromSeconds(1));
+                        }
                         await dm.CloseAsync();
 
                         await ReplyAsync("", embed: $"{Context.User.Mention} lista poszła na PW!".ToEmbedMessage(EMType.Success).Build());

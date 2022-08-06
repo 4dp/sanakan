@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sanakan.Database.Models;
 
 namespace Sanakan.Extensions
@@ -631,6 +632,19 @@ namespace Sanakan.Extensions
             for (int i = 0; i < locations.Count; i += nSize)
             {
                 list.Add(locations.GetRange(i, Math.Min(nSize, locations.Count - i)));
+            }
+
+            return list;
+        }
+
+        public static List<List<T>> SplitList<T>(this IEnumerable<T> locations, int nSize = 50)
+        {
+            var locationsList = locations.ToList();
+            var list = new List<List<T>>();
+
+            for (int i = 0; i < locationsList.Count; i += nSize)
+            {
+                list.Add(locationsList.GetRange(i, Math.Min(nSize, locationsList.Count - i)));
             }
 
             return list;
