@@ -2394,6 +2394,17 @@ namespace Sanakan.Modules
 
                 var usersStr = await _waifu.GetWhoWantsCardsStringAsync(wishlists, showNames, Context.Guild, Context.Client);
                 await ReplyAsync("", embed: $"**{thisCards.GetNameWithUrl()} chcą:**\n\n {usersStr}".TrimToLength(2000).ToEmbedMessage(EMType.Info).Build());
+
+                var exe = new Executable($"kc-check-{thisCards.Character}", new Task<Task>(async () =>
+                {
+                    using (var dbs = new Database.UserContext(_config))
+                    {
+                        var wCount = await dbs.GameDecks.Include(x => x.Wishes).AsNoTracking().Where(x => !x.WishlistIsPrivate && x.Wishes.Any(c => c.Type == WishlistObjectType.Character && c.ObjectId == thisCards.Character)).CountAsync();
+                        await dbs.WishlistCountData.CreateOrChangeWishlistCountByAsync(thisCards.Character, thisCards.Name, wCount, true);
+                        await dbs.SaveChangesAsync();
+                    }
+                }));
+                await _executor.TryAdd(exe, TimeSpan.FromSeconds(1));
             }
         }
 
