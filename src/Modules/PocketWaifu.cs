@@ -1193,7 +1193,7 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.Rarity == Rarity.SSS && card.Quality != Quality.Broken)
+                if (card.Rarity == Rarity.SSS && card.Quality == Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma już najwyższy poziom.".ToEmbedMessage(EMType.Bot).Build());
                     return;
@@ -1205,13 +1205,13 @@ namespace Sanakan.Modules
                     return;
                 }
 
-                if (card.UpgradesCnt < 1 && card.Quality != Quality.Broken)
+                if (card.UpgradesCnt < 1 && card.Quality == Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta nie ma już dostępnych ulepszeń.".ToEmbedMessage(EMType.Bot).Build());
                     return;
                 }
 
-                if (card.ExpCnt < card.ExpToUpgrade() && card.Quality != Quality.Broken)
+                if (card.ExpCnt < card.ExpToUpgrade() && card.Quality == Quality.Broken)
                 {
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta ma niewystarczającą ilość punktów doświadczenia. Wymagane {card.ExpToUpgrade().ToString("F")}.".ToEmbedMessage(EMType.Bot).Build());
                     return;
