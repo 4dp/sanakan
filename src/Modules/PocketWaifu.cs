@@ -1405,7 +1405,7 @@ namespace Sanakan.Modules
                         bUser.GameDeck.Karma -= incKarma;
 
                     var incCt = card.GetValue() * card.MarketValue;
-                    if (incCt > 0 && incCt < 50)
+                    if (incCt > 0 && incCt < 80)
                         bUser.GameDeck.CTCnt += (long) incCt;
 
                     bUser.Stats.DestroyedCards += 1;
