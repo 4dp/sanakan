@@ -347,7 +347,7 @@ namespace Sanakan.Modules
 
                     QueryCacheManager.ExpireTag(new string[] { $"user-{Context.User.Id}", "users", $"user-{id}" });
 
-                    var msgType = wonSSS ? EMType.Winner : EMType.Success;
+                    var msgType = wonSSS ? EMType.Warning : EMType.Success;
                     msg = await ReplyAsync(embed: $"Loterie wygrywa {winner.Mention}.\nOtrzymuje: {string.Join("\n", cardsIds)}".TrimToLength(2000).ToEmbedMessage(msgType).Build());
 
                     try

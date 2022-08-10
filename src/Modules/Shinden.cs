@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Z.EntityFramework.Plus;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sanakan.Modules
 {
@@ -186,9 +187,17 @@ namespace Sanakan.Modules
 
                 using (var db = new Database.UserContext(Config))
                 {
-                    if (db.Users.Any(x => x.Shinden == shindenId))
+                    var anyUser = await db.Users.AsQueryable().AsNoTracking().FirstOrDefaultAsync(x => x.Shinden == shindenId);
+                    if (anyUser != null)
                     {
-                        await ReplyAsync("", embed: "Wygląda na to, że ktoś już połączył się z tym kontem.".ToEmbedMessage(EMType.Error).Build());
+                        if (anyUser.Id == Context.User.Id)
+                        {
+                            await ReplyAsync("", embed: "Jesteś już połączony z tym kontem.".ToEmbedMessage(EMType.Info).Build());
+                        }
+                        else
+                        {
+                            await ReplyAsync("", embed: $"Wygląda na to, że ktoś już połączył się z tym kontem: <@{anyUser.Id}>".ToEmbedMessage(EMType.Error).Build());
+                        }
                         return;
                     }
 
