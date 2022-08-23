@@ -916,6 +916,16 @@ namespace Sanakan.Extensions
             }
         }
 
+        public static bool CanUpgradePower(this Card card, int by = 1)
+        {
+            if (!card.FromFigure)
+                return false;
+
+            var currParams = card.AttackBonus + card.HealthBonus + card.DefenceBonus;
+            var maxParams = 4900 * (int) card.Quality;
+            return currParams + by <= maxParams;
+        }
+
         public static double ValueModifier(this Rarity rarity)
         {
             switch (rarity)

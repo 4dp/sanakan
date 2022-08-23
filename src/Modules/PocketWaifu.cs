@@ -544,13 +544,16 @@ namespace Sanakan.Modules
                             await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie można użyć na tej karcie.".ToEmbedMessage(EMType.Error).Build());
                             return;
 
-                        //TODO: set some limits for ultimate stats
                         case ItemType.IncreaseUltimateAttack:
                         case ItemType.IncreaseUltimateDefence:
                         case ItemType.IncreaseUltimateHealth:
                         case ItemType.IncreaseUltimateAll:
-                            await ReplyAsync("", embed: $"{Context.User.Mention} ten przedmiot bedzie można użyć dopiero w niedalekiej przyszłości.".ToEmbedMessage(EMType.Error).Build());
-                            return;
+                            if (!card.CanUpgradePower(itemCnt))
+                            {
+                                await ReplyAsync("", embed: $"{Context.User.Mention} nie można już bardziej zwiekszyć parametrów na tej karcie.".ToEmbedMessage(EMType.Error).Build());
+                                return;
+                            }
+                            break;
 
                         default:
                             break;

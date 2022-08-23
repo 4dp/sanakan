@@ -447,6 +447,7 @@ namespace Sanakan.Services.PocketWaifu
                 new ItemWithCost(46999,  ItemType.BetterIncreaseUpgradeCnt.ToItem()),
                 new ItemWithCost(4699,   ItemType.ChangeCardImage.ToItem()),
                 new ItemWithCost(269999, ItemType.SetCustomImage.ToItem()),
+                new ItemWithCost(699999, ItemType.IncreaseUltimateAll.ToItem()),
             };
         }
 
