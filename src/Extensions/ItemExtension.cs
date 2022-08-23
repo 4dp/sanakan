@@ -83,6 +83,14 @@ namespace Sanakan.Extensions
                     return $"Resetuje warość karty do początkowego poziomu.";
                 case ItemType.LotteryTicket:
                     return $"Zapewnia jedno wejście na loterię.";
+                case ItemType.IncreaseUltimateAttack:
+                    return $"Zwiększa atak karcie ultimate.";
+                case ItemType.IncreaseUltimateDefence:
+                    return $"Zwiększa obronę karcie ultimate.";
+                case ItemType.IncreaseUltimateHealth:
+                    return $"Zwiększa punkty życia karcie ultimate.";
+                case ItemType.IncreaseUltimateAll:
+                    return $"Zwiększa wszystkie parametry karcie ultimate.";
 
                 default:
                     return "Brak opisu.";
@@ -168,6 +176,14 @@ namespace Sanakan.Extensions
                     return $"Marker";
                 case ItemType.LotteryTicket:
                     return $"Przepustka";
+                case ItemType.IncreaseUltimateAttack:
+                    return $"Czerwona pigułka";
+                case ItemType.IncreaseUltimateDefence:
+                    return $"Niebieska pigułka";
+                case ItemType.IncreaseUltimateHealth:
+                    return $"Zielona pigułka";
+                case ItemType.IncreaseUltimateAll:
+                    return $"Czarna pigułka";
 
                 default:
                     return "Brak";
@@ -206,6 +222,10 @@ namespace Sanakan.Extensions
                 case ItemType.SetCustomBorder:          return 0.4;
                 case ItemType.ChangeCardImage:          return 0.1;
                 case ItemType.ResetCardValue:           return 0.1;
+                case ItemType.IncreaseUltimateAttack:   return 0.35;
+                case ItemType.IncreaseUltimateDefence:  return 0.35;
+                case ItemType.IncreaseUltimateHealth:   return 0.55;
+                case ItemType.IncreaseUltimateAll:      return 2.2;
 
                 default: return 0;
             }
@@ -340,6 +360,14 @@ namespace Sanakan.Extensions
                     return 5;
                 case ItemType.LotteryTicket:
                     return 200;
+                case ItemType.IncreaseUltimateAttack:
+                    return 80;
+                case ItemType.IncreaseUltimateDefence:
+                    return 70;
+                case ItemType.IncreaseUltimateHealth:
+                    return 100;
+                case ItemType.IncreaseUltimateAll:
+                    return 800;
 
                 default:
                     return 1;
@@ -649,5 +677,17 @@ namespace Sanakan.Extensions
 
             return list;
         }
+
+        public static IEnumerable<T> ToRealEnumerable<T>(this IEnumerable<(T, int)> chances)
+        {
+            var list = new List<T>();
+            foreach (var item in chances)
+            {
+                list.AddRange(Enumerable.Repeat(item.Item1, item.Item2));
+            }
+            return list.Shuffle();
+        }
+
+        public static List<T> ToRealList<T>(this IEnumerable<(T, int)> chances) => chances.ToRealEnumerable().ToList();
     }
 }

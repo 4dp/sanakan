@@ -44,7 +44,12 @@ namespace Sanakan.Database.Models
 
         BigRandomBoosterPackE,
         ResetCardValue,
-        LotteryTicket
+        LotteryTicket,
+
+        IncreaseUltimateAttack,
+        IncreaseUltimateDefence,
+        IncreaseUltimateHealth,
+        IncreaseUltimateAll
     }
 
     public class Item

@@ -453,6 +453,10 @@ namespace Sanakan.Modules
                     case ItemType.IncreaseUpgradeCnt:
                     case ItemType.IncreaseExpSmall:
                     case ItemType.IncreaseExpBig:
+                    case ItemType.IncreaseUltimateAttack:
+                    case ItemType.IncreaseUltimateDefence:
+                    case ItemType.IncreaseUltimateHealth:
+                    case ItemType.IncreaseUltimateAll:
                     // special case
                     case ItemType.CardParamsReRoll:
                     case ItemType.DereReRoll:
@@ -511,6 +515,22 @@ namespace Sanakan.Modules
                     return;
                 }
 
+                if (!noCardOperation && !card.FromFigure)
+                {
+                    switch (item.Type)
+                    {
+                        case ItemType.IncreaseUltimateAttack:
+                        case ItemType.IncreaseUltimateDefence:
+                        case ItemType.IncreaseUltimateHealth:
+                        case ItemType.IncreaseUltimateAll:
+                            await ReplyAsync("", embed: $"{Context.User.Mention} ten przedmiot można użyć tylko na karcie ultimate.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+
+                        default:
+                            break;
+                    }
+                }
+
                 if (!noCardOperation && card.FromFigure)
                 {
                     switch (item.Type)
@@ -522,6 +542,14 @@ namespace Sanakan.Modules
                         case ItemType.IncreaseUpgradeCnt:
                         case ItemType.BetterIncreaseUpgradeCnt:
                             await ReplyAsync("", embed: $"{Context.User.Mention} tego przedmiotu nie można użyć na tej karcie.".ToEmbedMessage(EMType.Error).Build());
+                            return;
+
+                        //TODO: set some limits for ultimate stats
+                        case ItemType.IncreaseUltimateAttack:
+                        case ItemType.IncreaseUltimateDefence:
+                        case ItemType.IncreaseUltimateHealth:
+                        case ItemType.IncreaseUltimateAll:
+                            await ReplyAsync("", embed: $"{Context.User.Mention} ten przedmiot bedzie można użyć dopiero w niedalekiej przyszłości.".ToEmbedMessage(EMType.Error).Build());
                             return;
 
                         default:
@@ -785,6 +813,36 @@ namespace Sanakan.Modules
                             bUser.GameDeck.Cards.Remove(card);
                         }
                         embed.Description += $"Rozpoczęto tworzenie figurki.";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.IncreaseUltimateAttack:
+                        card.AttackBonus += itemCnt;
+                        karmaChange += 0.4 * itemCnt;
+                        embed.Description += $"Zwiększono atak karty!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.IncreaseUltimateDefence:
+                        card.DefenceBonus += itemCnt;
+                        karmaChange += 0.4 * itemCnt;
+                        embed.Description += $"Zwiększono obronę karty!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.IncreaseUltimateHealth:
+                        card.HealthBonus += itemCnt;
+                        karmaChange += 0.6 * itemCnt;
+                        embed.Description += $"Zwiększono punkty życia karty!";
+                        _waifu.DeleteCardImageIfExist(card);
+                        break;
+
+                    case ItemType.IncreaseUltimateAll:
+                        card.AttackBonus += itemCnt;
+                        card.HealthBonus += itemCnt;
+                        card.DefenceBonus += itemCnt;
+                        karmaChange += 1.2 * itemCnt;
+                        embed.Description += $"Zwiększono parametry karty!";
                         _waifu.DeleteCardImageIfExist(card);
                         break;
 

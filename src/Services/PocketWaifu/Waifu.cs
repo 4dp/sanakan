@@ -60,19 +60,36 @@ namespace Sanakan.Services.PocketWaifu
             { 0.5,      0.5,      0.5,      0.5,     0.5,     0.5,     0.5,      0.5,    1,    0.5,   1     }, //Yato
         };
 
-        private static List<(ItemType, int)> _ultimateExpeditionItems = new List<(ItemType, int)>
+        private static IEnumerable<ItemType> _ultimateExpeditionItems = new List<(ItemType, int)>
         {
-            (ItemType.FigureBodyPart,       3),
-            (ItemType.FigureClothesPart,    3),
-            (ItemType.FigureHeadPart,       3),
-            (ItemType.FigureLeftArmPart,    3),
-            (ItemType.FigureLeftLegPart,    3),
-            (ItemType.FigureRightArmPart,   3),
-            (ItemType.FigureRightLegPart,   3),
-            (ItemType.FigureUniversalPart,  4),
-            (ItemType.FigureSkeleton,       2),
-            (ItemType.LotteryTicket,        1)
-        };
+            (ItemType.FigureBodyPart,           6),
+            (ItemType.FigureClothesPart,        6),
+            (ItemType.FigureHeadPart,           6),
+            (ItemType.FigureLeftArmPart,        6),
+            (ItemType.FigureLeftLegPart,        6),
+            (ItemType.FigureRightArmPart,       6),
+            (ItemType.FigureRightLegPart,       6),
+            (ItemType.FigureUniversalPart,      4),
+            (ItemType.FigureSkeleton,           5),
+            (ItemType.LotteryTicket,            1),
+        }.ToRealList();
+
+        private static IEnumerable<ItemType> _ultimateExpeditionHardcoreItems = new List<(ItemType, int)>
+        {
+            (ItemType.FigureBodyPart,           5),
+            (ItemType.FigureClothesPart,        5),
+            (ItemType.FigureHeadPart,           5),
+            (ItemType.FigureLeftArmPart,        5),
+            (ItemType.FigureLeftLegPart,        5),
+            (ItemType.FigureRightArmPart,       5),
+            (ItemType.FigureRightLegPart,       5),
+            (ItemType.FigureUniversalPart,      3),
+            (ItemType.FigureSkeleton,           5),
+            (ItemType.LotteryTicket,            2),
+            (ItemType.IncreaseUltimateAttack,   2),
+            (ItemType.IncreaseUltimateDefence,  3),
+            (ItemType.IncreaseUltimateHealth,   1),
+        }.ToRealList();
 
         private static Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>> _chanceOfItemsInExpedition = new Dictionary<CardExpedition, Dictionary<ItemType, Tuple<int, int>>>
         {
@@ -1981,21 +1998,6 @@ namespace Sanakan.Services.PocketWaifu
             return value + (duration * baseValue);
         }
 
-        private static ItemType GetItemFromUltimateExpedition()
-        {
-            return Fun.GetOneRandomFrom(BuildListOfItemsForUltimateExpedition(_ultimateExpeditionItems));
-        }
-
-        private static IEnumerable<ItemType> BuildListOfItemsForUltimateExpedition(IEnumerable<(ItemType, int)> chances)
-        {
-            var list = new List<ItemType>();
-            foreach (var item in chances)
-            {
-                list.AddRange(Enumerable.Repeat(item.Item1, item.Item2));
-            }
-            return list.Shuffle();
-        }
-
         private Item RandomizeItemForExpedition(CardExpedition expedition)
         {
             var quality = Quality.Broken;
@@ -2009,8 +2011,10 @@ namespace Sanakan.Services.PocketWaifu
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
                 case CardExpedition.UltimateHard:
+                    return Fun.GetOneRandomFrom(_ultimateExpeditionItems).ToItem(1, quality);
+
                 case CardExpedition.UltimateHardcore:
-                    return GetItemFromUltimateExpedition().ToItem(1, quality);
+                    return Fun.GetOneRandomFrom(_ultimateExpeditionHardcoreItems).ToItem(1, quality);
 
                 default:
                 break;
