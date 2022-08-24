@@ -156,7 +156,7 @@ namespace Sanakan.Modules
         [Alias("card image", "ci", "ko")]
         [Summary("pozwala wyświetlić obrazek karty")]
         [Remarks("685 nie"), RequireAnyCommandChannelOrLevel(40)]
-        public async Task ShowCardImageAsync([Summary("WID")]ulong wid, [Summary("czy wyświetlić statystyki?")]bool showStats = true)
+        public async Task ShowCardImageAsync([Summary("WID")]ulong wid, [Summary("czy wyświetlić statystyki?")]bool showStats = false)
         {
             using (var db = new Database.UserContext(Config))
             {
