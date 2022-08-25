@@ -154,6 +154,7 @@ namespace Sanakan.Extensions
                 Curse = CardCurse.None,
                 Attack = figure.Attack,
                 Title = figure.Title,
+                FigureId = figure.Id,
                 Rarity = Rarity.SSS,
                 CustomBorder = null,
                 CustomImage = null,

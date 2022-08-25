@@ -86,6 +86,7 @@ namespace Sanakan.Database.Models
 
         public int EnhanceCnt { get; set; }
         public bool FromFigure { get; set; }
+        public ulong FigureId { get; set; }
         public Quality Quality { get; set; }
         public int AttackBonus { get; set; }
         public int HealthBonus { get; set; }
