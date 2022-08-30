@@ -331,7 +331,7 @@ namespace Sanakan.Extensions
             if (card.FromFigure)
                 maxAttack = 9999;
 
-            var newAttack = card.Attack + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 8);
+            var newAttack = card.Attack + (card.RestartCnt * 4) + (card.GetTotalCardStarCount() * 20);
             if (card.FromFigure)
             {
                 newAttack += card.AttackBonus;
@@ -354,7 +354,7 @@ namespace Sanakan.Extensions
             if (card.FromFigure)
                 maxDefence = 9999;
 
-            var newDefence = card.Defence + card.RestartCnt;
+            var newDefence = card.Defence + (card.RestartCnt * 2) + (card.GetTotalCardStarCount() * 5);
             if (card.FromFigure)
             {
                 newDefence += card.DefenceBonus;
@@ -789,6 +789,7 @@ namespace Sanakan.Extensions
         public static double GetCostOfExpeditionPerMinuteRaw(this Card card, CardExpedition expedition = CardExpedition.None)
         {
             expedition = (expedition == CardExpedition.None) ? card.Expedition : expedition;
+            var mod = card.FromFigure ? 0.65 : 1;
 
             switch (expedition)
             {
@@ -810,13 +811,13 @@ namespace Sanakan.Extensions
 
                 case CardExpedition.UltimateEasy:
                 case CardExpedition.UltimateMedium:
-                    return 1;
+                    return 1 * mod;
 
                 case CardExpedition.UltimateHard:
-                    return 2;
+                    return 2 * mod;
 
                 case CardExpedition.UltimateHardcore:
-                    return 0.5;
+                    return 0.5 * mod;
 
                 default:
                     return 0;
