@@ -1406,7 +1406,8 @@ namespace Sanakan.Modules
                 {
                     messageId = Context.Message.Reference.MessageId.Value;
                 }
-                else if (messageId == 0)
+
+                if (messageId == 0)
                 {
                     await ReplyAsync("", embed: "Należy podać id wiadomości.".ToEmbedMessage(EMType.Error).Build());
                     return;

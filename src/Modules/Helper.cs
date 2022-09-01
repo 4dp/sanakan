@@ -161,6 +161,23 @@ namespace Sanakan.Modules
         [Command("zgłoś", RunMode = RunMode.Async)]
         [Alias("raport", "report", "zgłos", "zglos", "zgloś")]
         [Summary("zgłasza wiadomość użytkownika")]
+        [Remarks("Tak nie wolno!"), RequireUserRole]
+        public async Task ReportUserSimpleAsync([Summary("powód")][Remainder]string reason)
+        {
+            if (Context.Message.Reference.MessageId.IsSpecified)
+            {
+                await ReportUserAsync(Context.Message.Reference.MessageId.Value, reason);
+            }
+            else
+            {
+                await Context.Message.DeleteAsync();
+                await ReplyAsync("", embed: "Należy podać id wiadomości.".ToEmbedMessage(EMType.Error).Build());
+            }
+        }
+
+        [Command("zgłoś", RunMode = RunMode.Async)]
+        [Alias("raport", "report", "zgłos", "zglos", "zgloś")]
+        [Summary("zgłasza wiadomość użytkownika")]
         [Remarks("63312335634561 Tak nie wolno!"), RequireUserRole]
         public async Task ReportUserAsync([Summary("id wiadomości")]ulong messageId, [Summary("powód")][Remainder]string reason)
         {
