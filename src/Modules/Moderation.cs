@@ -1402,7 +1402,7 @@ namespace Sanakan.Modules
             using (var db = new Database.GuildConfigContext(Config))
             {
                 var guild = Context.Guild;
-                if (messageId == 0 && Context.Message.Reference.MessageId.IsSpecified)
+                if (messageId == 0 && Context.Message.Reference != null && Context.Message.Reference.MessageId.IsSpecified)
                 {
                     messageId = Context.Message.Reference.MessageId.Value;
                 }

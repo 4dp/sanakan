@@ -164,7 +164,7 @@ namespace Sanakan.Modules
         [Remarks("Tak nie wolno!"), RequireUserRole]
         public async Task ReportUserSimpleAsync([Summary("powód")][Remainder]string reason)
         {
-            if (Context.Message.Reference.MessageId.IsSpecified)
+            if (Context.Message.Reference != null && Context.Message.Reference.MessageId.IsSpecified)
             {
                 await ReportUserAsync(Context.Message.Reference.MessageId.Value, reason);
             }
