@@ -1397,11 +1397,21 @@ namespace Sanakan.Modules
         [Command("todo", RunMode = RunMode.Async)]
         [Summary("dodaje wiadomość do todo")]
         [Remarks("2342123444212"), RequireAdminOrModRole]
-        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId, [Summary("nazwa serwera (opcjonalne)")]string serverName = null)
+        public async Task MarkAsTodoAsync([Summary("id wiadomości")]ulong messageId = 0, [Summary("nazwa serwera (opcjonalne)")]string serverName = null)
         {
             using (var db = new Database.GuildConfigContext(Config))
             {
                 var guild = Context.Guild;
+                if (messageId == 0 && Context.Message.Reference.MessageId.IsSpecified)
+                {
+                    messageId = Context.Message.Reference.MessageId.Value;
+                }
+                else if (messageId == 0)
+                {
+                    await ReplyAsync("", embed: "Należy podać id wiadomości.".ToEmbedMessage(EMType.Error).Build());
+                    return;
+                }
+
                 if (serverName != null)
                 {
                     var customGuild = Context.Client.Guilds.FirstOrDefault(x => x.Name.Equals(serverName, StringComparison.CurrentCultureIgnoreCase));
