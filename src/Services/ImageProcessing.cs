@@ -27,45 +27,44 @@ namespace Sanakan.Services
         private FontFamily _latoLight = new FontCollection().Add("Fonts/Lato-Light.ttf");
         private FontFamily _latoRegular = new FontCollection().Add("Fonts/Lato-Regular.ttf");
 
+        private readonly HttpClient _httpClient;
         private readonly ShindenClient _shclient;
-        private Dictionary<(FontFamily, float), Font> _fonts;
         private Dictionary<string, Color> _colors;
+        private Dictionary<(FontFamily, float), Font> _fonts;
         private readonly string[] _extensions = new[] { "png", "jpg", "jpeg", "gif", "webp" };
 
         public ImageProcessing(ShindenClient shinden)
         {
             _shclient = shinden;
+            _httpClient = new HttpClient();
             _fonts = new Dictionary<(FontFamily, float), Font>();
             _colors = new Dictionary<string, Color>();
         }
 
         private async Task<Stream> GetImageFromUrlAsync(string url, bool fixExt = false)
         {
-            using (var client = new HttpClient())
+            try
             {
-                try
+                var res = await _httpClient.GetAsync(url);
+                if (res.IsSuccessStatusCode)
+                    return await res.Content.ReadAsStreamAsync();
+
+                if (fixExt)
                 {
-                    var res = await client.GetAsync(url);
-                    if (res.IsSuccessStatusCode)
-                        return await res.Content.ReadAsStreamAsync();
-
-                    if (fixExt)
+                    var splited = url.Split(".");
+                    foreach (var ext in _extensions)
                     {
-                        var splited = url.Split(".");
-                        foreach (var ext in _extensions)
-                        {
-                            splited[splited.Length - 1] = ext;
-                            res = await client.GetAsync(string.Join(".", splited));
+                        splited[splited.Length - 1] = ext;
+                        res = await _httpClient.GetAsync(string.Join(".", splited));
 
-                            if (res.IsSuccessStatusCode)
-                                return await res.Content.ReadAsStreamAsync();
-                        }
+                        if (res.IsSuccessStatusCode)
+                            return await res.Content.ReadAsStreamAsync();
                     }
                 }
-                catch (Exception)
-                {
-                    return Stream.Null;
-                }
+            }
+            catch (Exception)
+            {
+                return Stream.Null;
             }
 
             return null;
