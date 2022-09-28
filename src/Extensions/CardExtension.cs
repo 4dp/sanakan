@@ -70,30 +70,36 @@ namespace Sanakan.Extensions
             switch (card.Rarity)
             {
                 case Rarity.SSS:
-                    exp = 16d;
+                    exp = 14d;
                     break;
 
                 case Rarity.SS:
-                    exp = 8d;
+                    exp = 7d;
                     break;
 
                 case Rarity.S:
-                    exp = 4.8;
+                    exp = 5.2;
                     break;
 
                 case Rarity.A:
+                    exp = 3.9;
+                    break;
+
                 case Rarity.B:
-                    exp = 3.5;
+                    exp = 3.1;
                     break;
 
                 case Rarity.C:
-                    exp = 2.5;
+                    exp = 2.3;
+                    break;
+
+                case Rarity.D:
+                    exp = 1.5;
                     break;
 
                 default:
-                case Rarity.D:
                 case Rarity.E:
-                    exp = 1.5;
+                    exp = 1.2;
                     break;
             }
 
