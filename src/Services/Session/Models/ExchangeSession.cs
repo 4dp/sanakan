@@ -388,6 +388,9 @@ namespace Sanakan.Services.Session.Models
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user1.Id;
 
+                                    if (card.FromFigure)
+                                        card.IsTradable = false;
+
                                     user1.GameDeck.RemoveFromWaifu(card);
 
                                     card.GameDeckId = user2.GameDeck.Id;
@@ -417,6 +420,9 @@ namespace Sanakan.Services.Session.Models
 
                                     if (card.FirstIdOwner == 0)
                                         card.FirstIdOwner = user2.Id;
+
+                                    if (card.FromFigure)
+                                        card.IsTradable = false;
 
                                     user2.GameDeck.RemoveFromWaifu(card);
 
