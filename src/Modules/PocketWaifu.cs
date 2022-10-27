@@ -2498,7 +2498,7 @@ namespace Sanakan.Modules
 
         [Command("wyzwól")]
         [Alias("unleash", "wyzwol")]
-        [Summary("zmienia karte niewymienialną na wymienialną (250 CT)")]
+        [Summary("zmienia karte niewymienialną na wymienialną (250 CT lub 2000 CT w przypadku ultimate)")]
         [Remarks("8651"), RequireWaifuCommandChannel]
         public async Task UnleashCardAsync([Summary("WID")]ulong wid)
         {
@@ -2525,6 +2525,8 @@ namespace Sanakan.Modules
                     await ReplyAsync("", embed: $"{Context.User.Mention} ta karta jest na wyprawie!".ToEmbedMessage(EMType.Error).Build());
                     return;
                 }
+
+                if (thisCard.FromFigure) cost = 2000;
 
                 if (bUser.GameDeck.CTCnt < cost)
                 {
